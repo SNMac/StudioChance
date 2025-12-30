@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 
