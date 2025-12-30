@@ -10,6 +10,7 @@ abstract interface class AuthRepository {
   Future<void> signOut();
   Future<Either<Failure, void>> delete();
   Future<void> syncFcmToken();
+  Future<Either<Failure, void>> reauthenticate();
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
