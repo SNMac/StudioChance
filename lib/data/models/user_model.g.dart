@@ -17,8 +17,12 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   storeIds:
       (json['storeIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  createdAt: const TimestampConverter().fromJson(
+    json['createdAt'] as Timestamp,
+  ),
+  updatedAt: const TimestampConverter().fromJson(
+    json['updatedAt'] as Timestamp,
+  ),
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -29,8 +33,8 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'nickname': instance.nickname,
       'role': _$UserRoleEnumMap[instance.role]!,
       'storeIds': instance.storeIds,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'createdAt': const TimestampConverter().toJson(instance.createdAt),
+      'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
     };
 
 const _$UserRoleEnumMap = {
