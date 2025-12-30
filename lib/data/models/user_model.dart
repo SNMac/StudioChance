@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/domain/entities/user.dart';
 
 part 'user_model.freezed.dart';
 part 'user_model.g.dart';
@@ -22,6 +23,7 @@ abstract class UserModel with _$UserModel {
 
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
+    @TimestampConverter() required DateTime lastLoginAt,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

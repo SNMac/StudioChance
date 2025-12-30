@@ -23,6 +23,9 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   updatedAt: const TimestampConverter().fromJson(
     json['updatedAt'] as Timestamp,
   ),
+  lastLoginAt: const TimestampConverter().fromJson(
+    json['lastLoginAt'] as Timestamp,
+  ),
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -35,6 +38,7 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'storeIds': instance.storeIds,
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
+      'lastLoginAt': const TimestampConverter().toJson(instance.lastLoginAt),
     };
 
 const _$UserRoleEnumMap = {
