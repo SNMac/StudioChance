@@ -1,0 +1,34 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:studio_chance/common/converters/timestamp_converter.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
+
+part 'user_model.freezed.dart';
+part 'user_model.g.dart';
+
+@freezed
+abstract class UserModel with _$UserModel {
+  const factory UserModel({
+    required String id,
+    required String name,
+    @Default([]) List<String> fcmTokens,
+
+    String? nickname,
+
+    @Default(UserRole.none) UserRole role,
+
+    @Default([]) List<String> storeIds,
+
+    @TimestampConverter() required DateTime createdAt,
+    @TimestampConverter() required DateTime updatedAt,
+  }) = _UserModel;
+
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      _$UserModelFromJson(json);
+
+  // TODO: toEntity 작성 필요
+  // User toEntity() {
+  //   return User(
+  //
+  //   );
+  // }
+}
