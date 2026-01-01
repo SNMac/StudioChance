@@ -154,9 +154,16 @@ class AuthRepositoryImpl implements AuthRepository {
       UserModel? userModel = await _userDataSource.getUser(authModel.uid);
 
       if (userModel != null) {
-        // [기존 유저] 로그인 시간 갱신
+        // [기존 유저]
+        // 계정 복구
+        if (userModel.deletedAt != null) {
+          await _userDataSource.restoreUser(userModel.id);
+          _logger.i('탈퇴 대기 중인 계정이 복구되었습니다. (UID: ${userModel.id})');
+        }
+
+        // 로그인 정보 갱신
         final Map<String, dynamic> updates = {
-          'connectedProviders': authModel.authProviders,
+          'authProviders': authModel.authProviders,
           'lastLoginAt': DateTime.now(),
           'updatedAt': DateTime.now(),
         };
@@ -167,7 +174,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
         await _userDataSource.updateUser(userModel.id, updates);
       } else {
-        // [신규 유저] DB 생성
+        // [신규 유저]
+        // DB 생성
         userModel = UserModel(
           id: authModel.uid,
           name: authModel.displayName ?? '이름 없음',

@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
- String get id; String get name; String get nickname; List<String> get authProviders; List<String> get fcmTokens; UserRole get role; List<String> get storeIds;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@TimestampConverter() DateTime get lastLoginAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
+ String get id; String get name; String get nickname; List<String> get authProviders; List<String> get fcmTokens; UserRole get role; List<String> get storeIds;// DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
+@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@TimestampConverter() DateTime get lastLoginAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -248,6 +249,7 @@ class _UserModel implements UserModel {
   return EqualUnmodifiableListView(_storeIds);
 }
 
+// DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
 @override@TimestampConverter() final  DateTime createdAt;
 @override@TimestampConverter() final  DateTime updatedAt;
 @override@TimestampConverter() final  DateTime lastLoginAt;

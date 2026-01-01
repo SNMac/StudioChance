@@ -21,6 +21,10 @@ abstract interface class UserDataSource {
   /// `deletedAt` 필드에 현재 시간 추가
   /// - 실제 삭제 X
   Future<void> softDeleteUser(String uid);
+
+  /// 계정 복구 (탈퇴 취소)
+  /// - `deletedAt` 필드를 삭제하여 계정을 활성화 상태로 되돌립니다.
+  Future<void> restoreUser(String uid);
 }
 
 class UserFirestoreDataSource implements UserDataSource {
@@ -135,6 +139,14 @@ class UserFirestoreDataSource implements UserDataSource {
     await _firestore.collection('users').doc(uid).update({
       'deletedAt': FieldValue.serverTimestamp(),
       'fcmTokens': [], // FCM 토큰 초기화
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<void> restoreUser(String uid) async {
+    await _firestore.collection('users').doc(uid).update({
+      'deletedAt': FieldValue.delete(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
