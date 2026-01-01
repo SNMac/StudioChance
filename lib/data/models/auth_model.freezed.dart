@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthModel {
 
- String get uid; String? get displayName;
+ String get uid; String? get displayName; List<String> get authProviders;
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $AuthModelCopyWith<AuthModel> get copyWith => _$AuthModelCopyWithImpl<AuthModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&const DeepCollectionEquality().equals(other.authProviders, authProviders));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,uid,displayName);
+int get hashCode => Object.hash(runtimeType,uid,displayName,const DeepCollectionEquality().hash(authProviders));
 
 @override
 String toString() {
-  return 'AuthModel(uid: $uid, displayName: $displayName)';
+  return 'AuthModel(uid: $uid, displayName: $displayName, authProviders: $authProviders)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $AuthModelCopyWith<$Res>  {
   factory $AuthModelCopyWith(AuthModel value, $Res Function(AuthModel) _then) = _$AuthModelCopyWithImpl;
 @useResult
 $Res call({
- String uid, String? displayName
+ String uid, String? displayName, List<String> authProviders
 });
 
 
@@ -62,11 +62,12 @@ class _$AuthModelCopyWithImpl<$Res>
 
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? displayName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? displayName = freezed,Object? authProviders = null,}) {
   return _then(_self.copyWith(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -151,10 +152,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String? displayName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String? displayName,  List<String> authProviders)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthModel() when $default != null:
-return $default(_that.uid,_that.displayName);case _:
+return $default(_that.uid,_that.displayName,_that.authProviders);case _:
   return orElse();
 
 }
@@ -172,10 +173,10 @@ return $default(_that.uid,_that.displayName);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String? displayName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String? displayName,  List<String> authProviders)  $default,) {final _that = this;
 switch (_that) {
 case _AuthModel():
-return $default(_that.uid,_that.displayName);case _:
+return $default(_that.uid,_that.displayName,_that.authProviders);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +193,10 @@ return $default(_that.uid,_that.displayName);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String? displayName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String? displayName,  List<String> authProviders)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthModel() when $default != null:
-return $default(_that.uid,_that.displayName);case _:
+return $default(_that.uid,_that.displayName,_that.authProviders);case _:
   return null;
 
 }
@@ -207,11 +208,18 @@ return $default(_that.uid,_that.displayName);case _:
 
 
 class _AuthModel implements AuthModel {
-  const _AuthModel({required this.uid, this.displayName});
+  const _AuthModel({required this.uid, this.displayName, final  List<String> authProviders = const []}): _authProviders = authProviders;
   
 
 @override final  String uid;
 @override final  String? displayName;
+ final  List<String> _authProviders;
+@override@JsonKey() List<String> get authProviders {
+  if (_authProviders is EqualUnmodifiableListView) return _authProviders;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_authProviders);
+}
+
 
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +231,16 @@ _$AuthModelCopyWith<_AuthModel> get copyWith => __$AuthModelCopyWithImpl<_AuthMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,uid,displayName);
+int get hashCode => Object.hash(runtimeType,uid,displayName,const DeepCollectionEquality().hash(_authProviders));
 
 @override
 String toString() {
-  return 'AuthModel(uid: $uid, displayName: $displayName)';
+  return 'AuthModel(uid: $uid, displayName: $displayName, authProviders: $authProviders)';
 }
 
 
@@ -243,7 +251,7 @@ abstract mixin class _$AuthModelCopyWith<$Res> implements $AuthModelCopyWith<$Re
   factory _$AuthModelCopyWith(_AuthModel value, $Res Function(_AuthModel) _then) = __$AuthModelCopyWithImpl;
 @override @useResult
 $Res call({
- String uid, String? displayName
+ String uid, String? displayName, List<String> authProviders
 });
 
 
@@ -260,11 +268,12 @@ class __$AuthModelCopyWithImpl<$Res>
 
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? displayName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? displayName = freezed,Object? authProviders = null,}) {
   return _then(_AuthModel(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

@@ -12,6 +12,7 @@ abstract class User with _$User {
     required String id,
     required String name,
     required String nickname,
+    required List<String> authProviders,
     required UserRole role,
     required List<String> storeIds,
   }) = _User;

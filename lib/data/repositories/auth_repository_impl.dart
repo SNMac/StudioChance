@@ -156,6 +156,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userModel != null) {
         // [기존 유저] 로그인 시간 갱신
         final Map<String, dynamic> updates = {
+          'connectedProviders': authModel.authProviders,
           'lastLoginAt': DateTime.now(),
           'updatedAt': DateTime.now(),
         };
@@ -170,6 +171,7 @@ class AuthRepositoryImpl implements AuthRepository {
         userModel = UserModel(
           id: authModel.uid,
           name: authModel.displayName ?? '이름 없음',
+          authProviders: authModel.authProviders,
           fcmTokens: fcmToken != null ? [fcmToken] : [],
           role: UserRole.none,
           storeIds: [],

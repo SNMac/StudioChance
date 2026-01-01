@@ -10,6 +10,9 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   id: json['id'] as String,
   name: json['name'] as String,
   nickname: json['nickname'] as String,
+  authProviders: (json['authProviders'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
   role: $enumDecode(_$UserRoleEnumMap, json['role']),
   storeIds: (json['storeIds'] as List<dynamic>)
       .map((e) => e as String)
@@ -20,6 +23,7 @@ Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'nickname': instance.nickname,
+  'authProviders': instance.authProviders,
   'role': _$UserRoleEnumMap[instance.role]!,
   'storeIds': instance.storeIds,
 };

@@ -15,6 +15,7 @@ abstract class UserModel with _$UserModel {
     required String id,
     required String name,
     @Default('') String nickname,
+    @Default([]) List<String> authProviders,
     @Default([]) List<String> fcmTokens,
     @Default(UserRole.none) UserRole role,
     @Default([]) List<String> storeIds,
@@ -39,6 +40,7 @@ extension UserModelExtension on UserModel {
       id: id,
       name: name,
       nickname: nickname,
+      authProviders: authProviders,
       role: role,
       storeIds: storeIds,
     );
