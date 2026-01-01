@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/data/datasources/auth_data_source.dart';
+import 'package:studio_chance/data/datasources/notification_data_source.dart';
 import 'package:studio_chance/data/datasources/user_data_source.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/models/auth_model.dart';
@@ -20,16 +20,16 @@ class AuthRepositoryImpl implements AuthRepository {
   final Logger _logger = Logger();
 
   final AuthDataSource _authDataSource;
-  final FirebaseMessaging _messaging;
+  final NotificationDataSource _notificationDataSource;
   final UserDataSource _userDataSource;
 
   AuthRepositoryImpl({
     required AuthDataSource authDataSource,
+    required NotificationDataSource notificationDataSource,
     required UserDataSource userDataSource,
-    required FirebaseMessaging messaging,
   }) : _authDataSource = authDataSource,
-       _userDataSource = userDataSource,
-       _messaging = messaging;
+       _notificationDataSource = notificationDataSource,
+       _userDataSource = userDataSource;
 
   @override
   Future<Either<Exception, User>> signInWithGoogle() async {
@@ -57,7 +57,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final authModel = _authDataSource.getCurrentUser();
       if (authModel != null) {
-        final fcmToken = await _messaging.getToken();
+        final fcmToken = await _notificationDataSource.getFcmToken();
         if (fcmToken != null) {
           await _userDataSource.removeFcmToken(authModel.uid, fcmToken);
         }
@@ -98,7 +98,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (authModel == null) return;
 
     try {
-      final fcmToken = await _messaging.getToken();
+      final fcmToken = await _notificationDataSource.getFcmToken();
       if (fcmToken == null) return;
 
       await _userDataSource.addFcmToken(authModel.uid, fcmToken);
@@ -145,7 +145,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // 1. FCM 토큰 획득 (실패해도 로그인은 계속 진행)
       String? fcmToken;
       try {
-        fcmToken = await _messaging.getToken();
+        fcmToken = await _notificationDataSource.getFcmToken();
       } catch (e) {
         _logger.w('FCM 토큰 획득 실패', error: e);
       }
@@ -191,11 +191,12 @@ class AuthRepositoryImpl implements AuthRepository {
 @Riverpod(keepAlive: true)
 AuthRepository authRepository(Ref ref) {
   final authDataSource = ref.watch(authDataSourceProvider);
+  final notificationDataSource = ref.watch(notificationDataSourceProvider);
   final userDataSource = ref.watch(userDataSourceProvider);
 
   return AuthRepositoryImpl(
     authDataSource: authDataSource,
+    notificationDataSource: notificationDataSource,
     userDataSource: userDataSource,
-    messaging: FirebaseMessaging.instance,
   );
 }
