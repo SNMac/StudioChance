@@ -22,7 +22,10 @@ abstract class UserModel with _$UserModel {
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
     @TimestampConverter() required DateTime lastLoginAt,
+
+    @JsonKey(includeIfNull: false)
     @TimestampConverter() DateTime? deletedAt,
+    @JsonKey(includeIfNull: false)
     @TimestampConverter() DateTime? expiresAt,
   }) = _UserModel;
 

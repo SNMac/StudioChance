@@ -25,7 +25,10 @@ abstract class StoreModel with _$StoreModel {
 
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
+
+    @JsonKey(includeIfNull: false)
     @TimestampConverter() DateTime? deletedAt,
+    @JsonKey(includeIfNull: false)
     @TimestampConverter() DateTime? expiresAt,
 }) = _StoreModel;
 

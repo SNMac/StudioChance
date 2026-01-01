@@ -47,11 +47,11 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
       'lastLoginAt': const TimestampConverter().toJson(instance.lastLoginAt),
-      'deletedAt': _$JsonConverterToJson<Timestamp, DateTime>(
+      'deletedAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
         instance.deletedAt,
         const TimestampConverter().toJson,
       ),
-      'expiresAt': _$JsonConverterToJson<Timestamp, DateTime>(
+      'expiresAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
         instance.expiresAt,
         const TimestampConverter().toJson,
       ),
