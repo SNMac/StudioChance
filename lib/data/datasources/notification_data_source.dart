@@ -7,6 +7,9 @@ import 'package:studio_chance/common/exceptions/notification_exceptions.dart';
 part 'notification_data_source.g.dart';
 
 abstract interface class NotificationDataSource {
+  /// 토큰이 갱신되는 것을 감지하는 스트림
+  Stream<String> get onTokenRefresh;
+
   /// 알림 권한 요청
   Future<NotificationSettings> requestPermission();
 
@@ -22,6 +25,9 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
   final FirebaseMessaging _messaging;
 
   FirebaseMessagingDataSource(this._messaging);
+
+  @override
+  Stream<String> get onTokenRefresh => _messaging.onTokenRefresh;
 
   @override
   Future<NotificationSettings> requestPermission() async {
@@ -41,7 +47,7 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
       if (token == null) {
         throw NotificationPlatformException();
       }
-      return await _messaging.getToken();
+      return token;
     } catch (e) {
       throw _handleNotificationError(e);
     }

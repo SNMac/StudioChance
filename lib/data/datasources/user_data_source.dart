@@ -10,7 +10,7 @@ abstract interface class UserDataSource {
 
   /// `storeIds`, `fcmTokens를` 수정할 경우 사용 X
   /// - `storeIds` 수정 시: `addStoreId`, `removeStoreId` 메서드 사용
-  /// - `fcmTokens` 수정 시: `addFcmToken`, `removeFcmToken` 메서드 사용
+  /// - `fcmTokens` 수정 시: `addFcmToken`, `replaceFcmToken`, `removeFcmToken` 메서드 사용
   Future<void> updateUser(String uid, Map<String, dynamic> data);
   Future<void> addStoreId(String uid, String storeId);
   Future<void> removeStoreId(String uid, String storeId);
