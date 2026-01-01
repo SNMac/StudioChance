@@ -36,7 +36,9 @@ class UserFirestoreDataSource implements UserDataSource {
   Future<UserModel?> getUser(String uid) async {
     final docSnapshot = await _firestore.collection('users').doc(uid).get();
     if (docSnapshot.exists && docSnapshot.data() != null) {
-      return UserModel.fromJson(docSnapshot.data()!);
+      final data = docSnapshot.data()!;
+      data['id'] = docSnapshot.id;
+      return UserModel.fromJson(data);
     }
     return null;
   }

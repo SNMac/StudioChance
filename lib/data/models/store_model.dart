@@ -12,6 +12,7 @@ part 'store_model.g.dart';
 @freezed
 abstract class StoreModel with _$StoreModel {
   const factory StoreModel({
+    @JsonKey(includeToJson: false)
     required String id,
     required String ownerId,
     required String name,

@@ -38,7 +38,6 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
 
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'ownerId': instance.ownerId,
       'name': instance.name,
       'memberIds': instance.memberIds,

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreModel {
 
- String get id; String get ownerId; String get name; Map<String, String> get memberIds; String get address; String get memo; String get color; InviteInfoModel? get inviteInfo; PriceSettingsModel get priceSettings;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
+@JsonKey(includeToJson: false) String get id; String get ownerId; String get name; Map<String, String> get memberIds; String get address; String get memo; String get color; InviteInfoModel? get inviteInfo; PriceSettingsModel get priceSettings;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $StoreModelCopyWith<$Res>  {
   factory $StoreModelCopyWith(StoreModel value, $Res Function(StoreModel) _then) = _$StoreModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String ownerId, String name, Map<String, String> memberIds, String address, String memo, String color, InviteInfoModel? inviteInfo, PriceSettingsModel priceSettings,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String ownerId, String name, Map<String, String> memberIds, String address, String memo, String color, InviteInfoModel? inviteInfo, PriceSettingsModel priceSettings,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
@@ -186,7 +186,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String ownerId,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  InviteInfoModel? inviteInfo,  PriceSettingsModel priceSettings, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String ownerId,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  InviteInfoModel? inviteInfo,  PriceSettingsModel priceSettings, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
 return $default(_that.id,_that.ownerId,_that.name,_that.memberIds,_that.address,_that.memo,_that.color,_that.inviteInfo,_that.priceSettings,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
@@ -207,7 +207,7 @@ return $default(_that.id,_that.ownerId,_that.name,_that.memberIds,_that.address,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String ownerId,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  InviteInfoModel? inviteInfo,  PriceSettingsModel priceSettings, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String ownerId,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  InviteInfoModel? inviteInfo,  PriceSettingsModel priceSettings, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel():
 return $default(_that.id,_that.ownerId,_that.name,_that.memberIds,_that.address,_that.memo,_that.color,_that.inviteInfo,_that.priceSettings,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
@@ -227,7 +227,7 @@ return $default(_that.id,_that.ownerId,_that.name,_that.memberIds,_that.address,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String ownerId,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  InviteInfoModel? inviteInfo,  PriceSettingsModel priceSettings, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String ownerId,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  InviteInfoModel? inviteInfo,  PriceSettingsModel priceSettings, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
 return $default(_that.id,_that.ownerId,_that.name,_that.memberIds,_that.address,_that.memo,_that.color,_that.inviteInfo,_that.priceSettings,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
@@ -242,10 +242,10 @@ return $default(_that.id,_that.ownerId,_that.name,_that.memberIds,_that.address,
 @JsonSerializable()
 
 class _StoreModel implements StoreModel {
-  const _StoreModel({required this.id, required this.ownerId, required this.name, required final  Map<String, String> memberIds, required this.address, required this.memo, required this.color, this.inviteInfo, required this.priceSettings, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _memberIds = memberIds;
+  const _StoreModel({@JsonKey(includeToJson: false) required this.id, required this.ownerId, required this.name, required final  Map<String, String> memberIds, required this.address, required this.memo, required this.color, this.inviteInfo, required this.priceSettings, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _memberIds = memberIds;
   factory _StoreModel.fromJson(Map<String, dynamic> json) => _$StoreModelFromJson(json);
 
-@override final  String id;
+@override@JsonKey(includeToJson: false) final  String id;
 @override final  String ownerId;
 @override final  String name;
  final  Map<String, String> _memberIds;
@@ -298,7 +298,7 @@ abstract mixin class _$StoreModelCopyWith<$Res> implements $StoreModelCopyWith<$
   factory _$StoreModelCopyWith(_StoreModel value, $Res Function(_StoreModel) _then) = __$StoreModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String ownerId, String name, Map<String, String> memberIds, String address, String memo, String color, InviteInfoModel? inviteInfo, PriceSettingsModel priceSettings,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String ownerId, String name, Map<String, String> memberIds, String address, String memo, String color, InviteInfoModel? inviteInfo, PriceSettingsModel priceSettings,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
