@@ -201,7 +201,10 @@ class FirebaseAuthDataSource implements AuthDataSource {
     final sha256Nonce = sha256.convert(utf8.encode(rawNonce)).toString();
 
     final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [AppleIDAuthorizationScopes.fullName],
+      scopes: [
+        AppleIDAuthorizationScopes.fullName,
+        AppleIDAuthorizationScopes.email,
+      ],
       nonce: sha256Nonce,
     );
 

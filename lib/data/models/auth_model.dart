@@ -7,6 +7,7 @@ part 'auth_model.freezed.dart';
 abstract class AuthModel with _$AuthModel {
   const factory AuthModel({
     required String uid,
+    String? email,
     String? displayName,
     @Default([]) List<String> authProviders,
   }) = _AuthModel;
@@ -18,6 +19,7 @@ abstract class AuthModel with _$AuthModel {
 
     return AuthModel(
       uid: user.uid,
+      email: user.email,
       displayName: user.displayName,
       authProviders: authProviders,
     );

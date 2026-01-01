@@ -179,6 +179,7 @@ class AuthRepositoryImpl implements AuthRepository {
         userModel = UserModel(
           id: authModel.uid,
           name: authModel.displayName ?? '이름 없음',
+          email: authModel.email ?? '이메일 없음',
           authProviders: authModel.authProviders,
           fcmTokens: fcmToken != null ? [fcmToken] : [],
           role: UserRole.none,

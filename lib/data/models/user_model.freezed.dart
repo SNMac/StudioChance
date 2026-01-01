@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
-@JsonKey(includeToJson: false) String get id; String get name; String get nickname; List<String> get authProviders; List<String> get fcmTokens; UserRole get role; List<String> get storeIds;// DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
+@JsonKey(includeToJson: false) String get id; String get email; String get name; String get nickname; List<String> get authProviders; List<String> get fcmTokens; UserRole get role; List<String> get storeIds;// DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
 @TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@TimestampConverter() DateTime get lastLoginAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
@@ -29,16 +29,16 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.fcmTokens, fcmTokens)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.storeIds, storeIds)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.fcmTokens, fcmTokens)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.storeIds, storeIds)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(fcmTokens),role,const DeepCollectionEquality().hash(storeIds),createdAt,updatedAt,lastLoginAt,deletedAt,expiresAt);
+int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(fcmTokens),role,const DeepCollectionEquality().hash(storeIds),createdAt,updatedAt,lastLoginAt,deletedAt,expiresAt);
 
 @override
 String toString() {
-  return 'UserModel(id: $id, name: $name, nickname: $nickname, authProviders: $authProviders, fcmTokens: $fcmTokens, role: $role, storeIds: $storeIds, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
+  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, fcmTokens: $fcmTokens, role: $role, storeIds: $storeIds, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String name, String nickname, List<String> authProviders, List<String> fcmTokens, UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String email, String name, String nickname, List<String> authProviders, List<String> fcmTokens, UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
@@ -66,9 +66,10 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? nickname = null,Object? authProviders = null,Object? fcmTokens = null,Object? role = null,Object? storeIds = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = null,Object? authProviders = null,Object? fcmTokens = null,Object? role = null,Object? storeIds = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
@@ -165,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
   return orElse();
 
 }
@@ -186,10 +187,10 @@ return $default(_that.id,_that.name,_that.nickname,_that.authProviders,_that.fcm
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +207,10 @@ return $default(_that.id,_that.name,_that.nickname,_that.authProviders,_that.fcm
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String name,  String nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
   return null;
 
 }
@@ -221,10 +222,11 @@ return $default(_that.id,_that.name,_that.nickname,_that.authProviders,_that.fcm
 @JsonSerializable()
 
 class _UserModel implements UserModel {
-  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.name, this.nickname = '', final  List<String> authProviders = const [], final  List<String> fcmTokens = const [], this.role = UserRole.none, final  List<String> storeIds = const [], @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @TimestampConverter() required this.lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _authProviders = authProviders,_fcmTokens = fcmTokens,_storeIds = storeIds;
+  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname = '', final  List<String> authProviders = const [], final  List<String> fcmTokens = const [], this.role = UserRole.none, final  List<String> storeIds = const [], @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @TimestampConverter() required this.lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _authProviders = authProviders,_fcmTokens = fcmTokens,_storeIds = storeIds;
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
+@override final  String email;
 @override final  String name;
 @override@JsonKey() final  String nickname;
  final  List<String> _authProviders;
@@ -269,16 +271,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._fcmTokens, _fcmTokens)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._storeIds, _storeIds)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._fcmTokens, _fcmTokens)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._storeIds, _storeIds)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_fcmTokens),role,const DeepCollectionEquality().hash(_storeIds),createdAt,updatedAt,lastLoginAt,deletedAt,expiresAt);
+int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_fcmTokens),role,const DeepCollectionEquality().hash(_storeIds),createdAt,updatedAt,lastLoginAt,deletedAt,expiresAt);
 
 @override
 String toString() {
-  return 'UserModel(id: $id, name: $name, nickname: $nickname, authProviders: $authProviders, fcmTokens: $fcmTokens, role: $role, storeIds: $storeIds, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
+  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, fcmTokens: $fcmTokens, role: $role, storeIds: $storeIds, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -289,7 +291,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String name, String nickname, List<String> authProviders, List<String> fcmTokens, UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String email, String name, String nickname, List<String> authProviders, List<String> fcmTokens, UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
@@ -306,9 +308,10 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? nickname = null,Object? authProviders = null,Object? fcmTokens = null,Object? role = null,Object? storeIds = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = null,Object? authProviders = null,Object? fcmTokens = null,Object? role = null,Object? storeIds = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_UserModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable

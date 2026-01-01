@@ -11,6 +11,7 @@ abstract class User with _$User {
   const factory User({
     required String id,
     required String name,
+    required String email,
     required String nickname,
     required List<String> authProviders,
     required UserRole role,

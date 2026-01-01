@@ -14,6 +14,7 @@ abstract class UserModel with _$UserModel {
   const factory UserModel({
     @JsonKey(includeToJson: false)
     required String id,
+    required String email,
     required String name,
     @Default('') String nickname,
     @Default([]) List<String> authProviders,
@@ -41,6 +42,7 @@ extension UserModelExtension on UserModel {
     return User(
       id: id,
       name: name,
+      email: email,
       nickname: nickname,
       authProviders: authProviders,
       role: role,
