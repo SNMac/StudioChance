@@ -9,25 +9,25 @@ part of 'auth_repository_impl.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(authRepositoryImpl)
-final authRepositoryImplProvider = AuthRepositoryImplProvider._();
+@ProviderFor(authRepository)
+final authRepositoryProvider = AuthRepositoryProvider._();
 
-final class AuthRepositoryImplProvider
+final class AuthRepositoryProvider
     extends $FunctionalProvider<AuthRepository, AuthRepository, AuthRepository>
     with $Provider<AuthRepository> {
-  AuthRepositoryImplProvider._()
+  AuthRepositoryProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'authRepositoryImplProvider',
+        name: r'authRepositoryProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$authRepositoryImplHash();
+  String debugGetCreateSourceHash() => _$authRepositoryHash();
 
   @$internal
   @override
@@ -36,7 +36,7 @@ final class AuthRepositoryImplProvider
 
   @override
   AuthRepository create(Ref ref) {
-    return authRepositoryImpl(ref);
+    return authRepository(ref);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -48,5 +48,4 @@ final class AuthRepositoryImplProvider
   }
 }
 
-String _$authRepositoryImplHash() =>
-    r'75801ebe152327cc24423c933aa11973aea678c1';
+String _$authRepositoryHash() => r'82e40615953744389d59d28d1a8c55db67fd5f73';

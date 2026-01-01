@@ -8,7 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:studio_chance/data/exceptions/auth_exceptions.dart';
+import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/models/auth_model.dart';
 
 part 'auth_data_source.g.dart';
@@ -125,16 +125,29 @@ class FirebaseAuthDataSource implements AuthDataSource {
         throw AuthUnknownException(message: '현재 로그인된 User가 null입니다.');
       }
 
-      final providerId = user.providerData.first.providerId;
-      _logger.d('재인증 시도: Provider = $providerId');
+      String? targetProviderId;
+      for (final provider in user.providerData) {
+        if (provider.providerId == 'google.com') {
+          targetProviderId = 'google.com';
+          break;
+        } else if (provider.providerId == 'apple.com') {
+          targetProviderId = 'apple.com';
+          break;
+        }
+      }
+      _logger.d('재인증 시도: Provider = $targetProviderId');
 
       AuthCredential? credential;
-      if (providerId == 'google.com') {
+      if (targetProviderId == 'google.com') {
         credential = await _getGoogleCredential();
-      } else if (providerId == 'apple.com') {
+      } else if (targetProviderId == 'apple.com') {
         credential = await _getAppleCredential();
       } else {
-        throw AuthMethodNotSupportedException();
+        // 구글도 애플도 아니면(이메일 등) 지원하지 않음 처리
+        throw AuthMethodNotSupportedException(
+          message:
+              '재인증을 지원하지 않는 로그인 방식입니다. (Provider: ${user.providerData.map((e) => e.providerId)})',
+        );
       }
 
       await user.reauthenticateWithCredential(credential);
