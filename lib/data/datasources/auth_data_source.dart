@@ -239,7 +239,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
   // ===========================================================================
 
   Exception _handleFirebaseError(Object e) {
-    _logger.e('Firebase Auth Error', error: e);
+    _logger.e('Auth Error', error: e);
 
     // 1. 이미 변환된 예외는 그대로 통과
     if (e is AuthException) return e;

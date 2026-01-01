@@ -1,7 +1,9 @@
 /// 인증 관련 최상위 예외
 abstract class AuthException implements Exception {
-  final String message; // 개발자가 볼 상세 메시지 (한글)
-  final String? code; // Firebase 원본 에러 코드 (디버깅용)
+  /// 개발자가 볼 상세 메시지 (한글)
+  final String message;
+  /// 원본 에러 코드 (디버깅용)
+  final String? code;
 
   AuthException(this.message, {this.code});
 
@@ -11,7 +13,7 @@ abstract class AuthException implements Exception {
 }
 
 // -----------------------------------------------------------------------------
-// 각 상황별 예외 클래스
+// Exception classes
 // -----------------------------------------------------------------------------
 
 class AuthCancelledException extends AuthException {
