@@ -20,6 +20,7 @@ abstract class UserModel with _$UserModel {
     @Default(UserRole.none) UserRole role,
     @Default([]) List<String> storeIds,
 
+    // DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
     @TimestampConverter() required DateTime lastLoginAt,

@@ -39,22 +39,32 @@ class UserFirestoreDataSource implements UserDataSource {
 
   @override
   Future<void> createUser(UserModel userModel) async {
-    await _firestore
-        .collection('users')
-        .doc(userModel.id)
-        .set(userModel.toJson());
+    final json = userModel.toJson();
+    json['createdAt'] = FieldValue.serverTimestamp();
+    json['updatedAt'] = FieldValue.serverTimestamp();
+    json['lastLoginAt'] = FieldValue.serverTimestamp();
+
+    await _firestore.collection('users').doc(userModel.id).set(json);
   }
 
   @override
   Future<void> updateUser(String uid, Map<String, dynamic> data) async {
-    await _firestore.collection('users').doc(uid).update(data);
+    final updates = Map<String, dynamic>.from(data);
+    if (updates.containsKey('updatedAt')) {
+      updates['updatedAt'] = FieldValue.serverTimestamp();
+    }
+    if (updates.containsKey('lastLoginAt')) {
+      updates['lastLoginAt'] = FieldValue.serverTimestamp();
+    }
+
+    await _firestore.collection('users').doc(uid).update(updates);
   }
 
   @override
   Future<void> addStoreId(String uid, String storeId) async {
     await _firestore.collection('users').doc(uid).update({
       'storeIds': FieldValue.arrayUnion([storeId]),
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -62,7 +72,7 @@ class UserFirestoreDataSource implements UserDataSource {
   Future<void> addFcmToken(String uid, String token) async {
     await _firestore.collection('users').doc(uid).update({
       'fcmTokens': FieldValue.arrayUnion([token]),
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -96,7 +106,7 @@ class UserFirestoreDataSource implements UserDataSource {
 
         transaction.update(docRef, {
           'fcmTokens': tokens,
-          'updatedAt': Timestamp.now(),
+          'updatedAt': FieldValue.serverTimestamp(),
         });
       });
     } catch (e) {
@@ -108,7 +118,7 @@ class UserFirestoreDataSource implements UserDataSource {
   Future<void> removeFcmToken(String uid, String token) async {
     await _firestore.collection('users').doc(uid).update({
       'fcmTokens': FieldValue.arrayRemove([token]),
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -116,16 +126,16 @@ class UserFirestoreDataSource implements UserDataSource {
   Future<void> removeStoreId(String uid, String storeId) async {
     await _firestore.collection('users').doc(uid).update({
       'storeIds': FieldValue.arrayRemove([storeId]),
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   @override
   Future<void> softDeleteUser(String uid) async {
     await _firestore.collection('users').doc(uid).update({
-      'deletedAt': Timestamp.now(),
+      'deletedAt': FieldValue.serverTimestamp(),
       'fcmTokens': [], // FCM 토큰 초기화
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 }
