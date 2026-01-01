@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,12 +13,19 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final provideAndroid = kDebugMode
+      ? const AndroidDebugProvider()
+      : const AndroidPlayIntegrityProvider();
+
+  final provideApple = kDebugMode
+      ? const AppleDebugProvider()
+      : const AppleAppAttestProvider();
+
   await FirebaseAppCheck.instance.activate(
-    providerAndroid: const AndroidDebugProvider(),
-    providerApple: const AppleDebugProvider(),
+    providerAndroid: provideAndroid,
+    providerApple: provideApple,
   );
   await setPreferredOrientations();
 
@@ -25,9 +33,5 @@ void main() async {
     await FlutterDisplayMode.setHighRefreshRate();
   }
 
-  runApp(
-    ProviderScope(
-      child: const MyApp(),
-    ),
-  );
+  runApp(ProviderScope(child: const MyApp()));
 }
