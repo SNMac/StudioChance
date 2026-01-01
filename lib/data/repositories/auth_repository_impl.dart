@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,14 +24,14 @@ class AuthRepositoryImpl implements AuthRepository {
   bool _isGoogleSignInInitialized = false;
 
   final logger = Logger();
-  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   @override
   Future<Either<Failure, User>> signInWithGoogle() async {
     try {
-      auth.OAuthCredential googleCredential = await _getGoogleCredential();
+      firebase_auth.OAuthCredential googleCredential = await _getGoogleCredential();
       return _authenticate(googleCredential);
     } catch (e) {
       return left(_handleAuthError(e));
@@ -41,7 +41,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> signInWithApple() async {
     try {
-      auth.OAuthCredential appleCredential = await _getAppleCredential();
+      firebase_auth.OAuthCredential appleCredential = await _getAppleCredential();
       return _authenticate(appleCredential);
     } catch (e) {
       return left(_handleAuthError(e));
@@ -110,7 +110,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final providerId = user.providerData.first.providerId;
 
-      auth.AuthCredential? credential;
+      firebase_auth.AuthCredential? credential;
       logger.d('재인증 시도: Provider = $providerId');
 
       if (providerId == 'google.com') {
@@ -137,7 +137,7 @@ class AuthRepositoryImpl implements AuthRepository {
   // ===========================================================================
 
   /// Google 로그인 로직
-  Future<auth.OAuthCredential> _getGoogleCredential() async {
+  Future<firebase_auth.OAuthCredential> _getGoogleCredential() async {
     logger.d('Google 로그인 시작');
 
     if (!_isGoogleSignInInitialized) {
@@ -158,7 +158,7 @@ class AuthRepositoryImpl implements AuthRepository {
       throw AuthFailure('Google 로그인에 실패했습니다.');
     }
 
-    final credential = auth.GoogleAuthProvider.credential(
+    final credential = firebase_auth.GoogleAuthProvider.credential(
       idToken: googleAuth.idToken,
     );
     logger.d('Google 로그인 성공');
@@ -167,7 +167,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   /// Apple 로그인 로직
-  Future<auth.OAuthCredential> _getAppleCredential() async {
+  Future<firebase_auth.OAuthCredential> _getAppleCredential() async {
     logger.d('Apple 로그인 시작');
 
     final rawNonce = _generateNonce();
@@ -178,7 +178,7 @@ class AuthRepositoryImpl implements AuthRepository {
       nonce: sha256Nonce,
     );
 
-    final credential = auth.OAuthProvider('apple.com').credential(
+    final credential = firebase_auth.OAuthProvider('apple.com').credential(
       idToken: appleCredential.identityToken,
       accessToken: appleCredential.authorizationCode,
       rawNonce: rawNonce,
@@ -190,7 +190,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   /// Firebase Authentication 공통 메서드
   Future<Either<Failure, User>> _authenticate(
-    auth.AuthCredential credential,
+    firebase_auth.AuthCredential credential,
   ) async {
     try {
       final userCredential = await _auth.signInWithCredential(credential);
@@ -279,7 +279,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return e;
     }
 
-    if (e is auth.FirebaseAuthException) {
+    if (e is firebase_auth.FirebaseAuthException) {
       switch (e.code) {
         // 재로그인이 필요할 때
         case 'requires-recent-login':

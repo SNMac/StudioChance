@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$User {
 
- String get id; String get name; String get nickname; UserRole get role; List<Store> get stores;
+ String get id; String get name; String get nickname; UserRole get role; List<String> get storeIds;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.stores, stores));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.storeIds, storeIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,nickname,role,const DeepCollectionEquality().hash(stores));
+int get hashCode => Object.hash(runtimeType,id,name,nickname,role,const DeepCollectionEquality().hash(storeIds));
 
 @override
 String toString() {
-  return 'User(id: $id, name: $name, nickname: $nickname, role: $role, stores: $stores)';
+  return 'User(id: $id, name: $name, nickname: $nickname, role: $role, storeIds: $storeIds)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserCopyWith<$Res>  {
   factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String nickname, UserRole role, List<Store> stores
+ String id, String name, String nickname, UserRole role, List<String> storeIds
 });
 
 
@@ -65,14 +65,14 @@ class _$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? nickname = null,Object? role = null,Object? stores = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? nickname = null,Object? role = null,Object? storeIds = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,stores: null == stores ? _self.stores : stores // ignore: cast_nullable_to_non_nullable
-as List<Store>,
+as UserRole,storeIds: null == storeIds ? _self.storeIds : storeIds // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -157,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String nickname,  UserRole role,  List<Store> stores)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String nickname,  UserRole role,  List<String> storeIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.nickname,_that.role,_that.stores);case _:
+return $default(_that.id,_that.name,_that.nickname,_that.role,_that.storeIds);case _:
   return orElse();
 
 }
@@ -178,10 +178,10 @@ return $default(_that.id,_that.name,_that.nickname,_that.role,_that.stores);case
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String nickname,  UserRole role,  List<Store> stores)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String nickname,  UserRole role,  List<String> storeIds)  $default,) {final _that = this;
 switch (_that) {
 case _User():
-return $default(_that.id,_that.name,_that.nickname,_that.role,_that.stores);case _:
+return $default(_that.id,_that.name,_that.nickname,_that.role,_that.storeIds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +198,10 @@ return $default(_that.id,_that.name,_that.nickname,_that.role,_that.stores);case
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String nickname,  UserRole role,  List<Store> stores)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String nickname,  UserRole role,  List<String> storeIds)?  $default,) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.nickname,_that.role,_that.stores);case _:
+return $default(_that.id,_that.name,_that.nickname,_that.role,_that.storeIds);case _:
   return null;
 
 }
@@ -213,18 +213,18 @@ return $default(_that.id,_that.name,_that.nickname,_that.role,_that.stores);case
 @JsonSerializable()
 
 class _User implements User {
-  const _User({required this.id, required this.name, required this.nickname, required this.role, required final  List<Store> stores}): _stores = stores;
+  const _User({required this.id, required this.name, required this.nickname, required this.role, required final  List<String> storeIds}): _storeIds = storeIds;
   factory _User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  String nickname;
 @override final  UserRole role;
- final  List<Store> _stores;
-@override List<Store> get stores {
-  if (_stores is EqualUnmodifiableListView) return _stores;
+ final  List<String> _storeIds;
+@override List<String> get storeIds {
+  if (_storeIds is EqualUnmodifiableListView) return _storeIds;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_stores);
+  return EqualUnmodifiableListView(_storeIds);
 }
 
 
@@ -241,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._stores, _stores));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._storeIds, _storeIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,nickname,role,const DeepCollectionEquality().hash(_stores));
+int get hashCode => Object.hash(runtimeType,id,name,nickname,role,const DeepCollectionEquality().hash(_storeIds));
 
 @override
 String toString() {
-  return 'User(id: $id, name: $name, nickname: $nickname, role: $role, stores: $stores)';
+  return 'User(id: $id, name: $name, nickname: $nickname, role: $role, storeIds: $storeIds)';
 }
 
 
@@ -261,7 +261,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
   factory _$UserCopyWith(_User value, $Res Function(_User) _then) = __$UserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String nickname, UserRole role, List<Store> stores
+ String id, String name, String nickname, UserRole role, List<String> storeIds
 });
 
 
@@ -278,14 +278,14 @@ class __$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? nickname = null,Object? role = null,Object? stores = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? nickname = null,Object? role = null,Object? storeIds = null,}) {
   return _then(_User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,stores: null == stores ? _self._stores : stores // ignore: cast_nullable_to_non_nullable
-as List<Store>,
+as UserRole,storeIds: null == storeIds ? _self._storeIds : storeIds // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

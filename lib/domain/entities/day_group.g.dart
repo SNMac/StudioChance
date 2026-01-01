@@ -18,6 +18,6 @@ _DayGroup _$DayGroupFromJson(Map<String, dynamic> json) => _DayGroup(
 
 Map<String, dynamic> _$DayGroupToJson(_DayGroup instance) => <String, dynamic>{
   'days': instance.days,
-  'headcountRules': instance.headcountRules,
-  'timeSlots': instance.timeSlots,
+  'headcountRules': instance.headcountRules.map((e) => e.toJson()).toList(),
+  'timeSlots': instance.timeSlots.map((e) => e.toJson()).toList(),
 };

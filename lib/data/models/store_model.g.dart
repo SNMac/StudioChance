@@ -1,30 +1,30 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_model.dart';
+part of 'store_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
+_StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   id: json['id'] as String,
+  ownerId: json['ownerId'] as String,
   name: json['name'] as String,
-  nickname: json['nickname'] as String? ?? '',
-  fcmTokens:
-      (json['fcmTokens'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
-  role: $enumDecodeNullable(_$UserRoleEnumMap, json['role']) ?? UserRole.none,
-  storeIds:
-      (json['storeIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
+  memberIds: Map<String, String>.from(json['memberIds'] as Map),
+  address: json['address'] as String,
+  memo: json['memo'] as String,
+  color: json['color'] as String,
+  inviteInfo: json['inviteInfo'] == null
+      ? null
+      : InviteInfoModel.fromJson(json['inviteInfo'] as Map<String, dynamic>),
+  priceSettings: PriceSettingsModel.fromJson(
+    json['priceSettings'] as Map<String, dynamic>,
+  ),
   createdAt: const TimestampConverter().fromJson(
     json['createdAt'] as Timestamp,
   ),
   updatedAt: const TimestampConverter().fromJson(
     json['updatedAt'] as Timestamp,
-  ),
-  lastLoginAt: const TimestampConverter().fromJson(
-    json['lastLoginAt'] as Timestamp,
   ),
   deletedAt: _$JsonConverterFromJson<Timestamp, DateTime>(
     json['deletedAt'],
@@ -36,17 +36,19 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   ),
 );
 
-Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
+Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'ownerId': instance.ownerId,
       'name': instance.name,
-      'nickname': instance.nickname,
-      'fcmTokens': instance.fcmTokens,
-      'role': _$UserRoleEnumMap[instance.role]!,
-      'storeIds': instance.storeIds,
+      'memberIds': instance.memberIds,
+      'address': instance.address,
+      'memo': instance.memo,
+      'color': instance.color,
+      'inviteInfo': instance.inviteInfo?.toJson(),
+      'priceSettings': instance.priceSettings.toJson(),
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
-      'lastLoginAt': const TimestampConverter().toJson(instance.lastLoginAt),
       'deletedAt': _$JsonConverterToJson<Timestamp, DateTime>(
         instance.deletedAt,
         const TimestampConverter().toJson,
@@ -56,13 +58,6 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
         const TimestampConverter().toJson,
       ),
     };
-
-const _$UserRoleEnumMap = {
-  UserRole.none: 'none',
-  UserRole.admin: 'admin',
-  UserRole.staff: 'staff',
-  UserRole.viewer: 'viewer',
-};
 
 Value? _$JsonConverterFromJson<Json, Value>(
   Object? json,

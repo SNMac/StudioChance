@@ -24,6 +24,6 @@ Map<String, dynamic> _$StoreToJson(_Store instance) => <String, dynamic>{
   'ownerId': instance.ownerId,
   'name': instance.name,
   'color': instance.color,
-  'members': instance.members,
-  'priceSettings': instance.priceSettings,
+  'members': instance.members.map((e) => e.toJson()).toList(),
+  'priceSettings': instance.priceSettings.map((e) => e.toJson()).toList(),
 };
