@@ -20,6 +20,10 @@ import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
+final authRepositoryImplProvider = Provider<AuthRepositoryImpl>((ref) {
+  return AuthRepositoryImpl();
+});
+
 class AuthRepositoryImpl implements AuthRepository {
   bool _isGoogleSignInInitialized = false;
 
