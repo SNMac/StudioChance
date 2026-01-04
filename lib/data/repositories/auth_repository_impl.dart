@@ -32,10 +32,52 @@ class AuthRepositoryImpl implements AuthRepository {
        _userDataSource = userDataSource;
 
   @override
+  Stream<User?> authStateChanges() {
+    return _authDataSource.authStateChanges().asyncMap((authModel) async {
+      if (authModel == null) return null;
+
+      try {
+        final userModel = await _userDataSource.getUser(authModel.uid);
+        if (userModel != null) {
+          return userModel.toEntity();
+        }
+
+        _logger.i('사용자가 Auth엔 존재하지만 DB엔 존재하지 않습니다. DB에 사용자를 생성합니다.');
+
+        String? fcmToken;
+        try {
+          fcmToken = await _notificationDataSource.getFcmToken();
+        } catch (e) {
+          _logger.w('FCM 토큰 획득 실패', error: e);
+        }
+
+        final newUserModel = UserModel(
+          id: authModel.uid,
+          name: authModel.displayName ?? '이름 없음',
+          email: authModel.email ?? '',
+          authProviders: authModel.authProviders,
+          fcmTokens: fcmToken != null ? [fcmToken] : [],
+          role: UserRole.none,
+          storeIds: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          lastLoginAt: DateTime.now(),
+        );
+
+        await _userDataSource.createUser(newUserModel);
+
+        return newUserModel.toEntity();
+      } catch (e) {
+        _logger.e('authStateChanges 중 에러 발생', error: e);
+        return null;
+      }
+    });
+  }
+
+  @override
   Future<Either<Exception, User>> signInWithGoogle() async {
     try {
       final authModel = await _authDataSource.signInWithGoogle();
-
       return _authenticate(authModel);
     } catch (e) {
       return left(e is Exception ? e : Exception(e.toString()));
@@ -154,7 +196,7 @@ class AuthRepositoryImpl implements AuthRepository {
       UserModel? userModel = await _userDataSource.getUser(authModel.uid);
 
       if (userModel != null) {
-        // [기존 유저]
+        // [기존 사용자]
         // 계정 복구
         if (userModel.deletedAt != null) {
           await _userDataSource.restoreUser(userModel.id);
@@ -174,12 +216,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
         await _userDataSource.updateUser(userModel.id, updates);
       } else {
-        // [신규 유저]
+        // [신규 사용자]
         // DB 생성
         userModel = UserModel(
           id: authModel.uid,
           name: authModel.displayName ?? '이름 없음',
-          email: authModel.email ?? '이메일 없음',
+          email: authModel.email ?? '',
           authProviders: authModel.authProviders,
           fcmTokens: fcmToken != null ? [fcmToken] : [],
           role: UserRole.none,

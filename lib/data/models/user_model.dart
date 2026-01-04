@@ -16,10 +16,10 @@ abstract class UserModel with _$UserModel {
     required String id,
     required String email,
     required String name,
-    @Default('') String nickname,
+    String? nickname,
     @Default([]) List<String> authProviders,
     @Default([]) List<String> fcmTokens,
-    @Default(UserRole.none) UserRole role,
+    required UserRole role,
     @Default([]) List<String> storeIds,
 
     // DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력

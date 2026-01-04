@@ -10,7 +10,7 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   id: json['id'] as String,
   email: json['email'] as String,
   name: json['name'] as String,
-  nickname: json['nickname'] as String? ?? '',
+  nickname: json['nickname'] as String?,
   authProviders:
       (json['authProviders'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -19,7 +19,7 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   fcmTokens:
       (json['fcmTokens'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
-  role: $enumDecodeNullable(_$UserRoleEnumMap, json['role']) ?? UserRole.none,
+  role: $enumDecode(_$UserRoleEnumMap, json['role']),
   storeIds:
       (json['storeIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
@@ -65,10 +65,10 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
     };
 
 const _$UserRoleEnumMap = {
-  UserRole.none: 'none',
   UserRole.admin: 'admin',
   UserRole.staff: 'staff',
   UserRole.viewer: 'viewer',
+  UserRole.none: 'none',
 };
 
 Value? _$JsonConverterFromJson<Json, Value>(

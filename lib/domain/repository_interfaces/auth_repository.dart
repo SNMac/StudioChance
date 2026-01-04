@@ -3,6 +3,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 
 abstract interface class AuthRepository {
+  /// 로그인 상태 변경 `Stream`
+  Stream<User?> authStateChanges();
+
   /// Google 로그인
   Future<Either<Exception, User>> signInWithGoogle();
 

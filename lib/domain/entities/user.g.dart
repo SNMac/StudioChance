@@ -10,7 +10,7 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   id: json['id'] as String,
   name: json['name'] as String,
   email: json['email'] as String,
-  nickname: json['nickname'] as String,
+  nickname: json['nickname'] as String?,
   authProviders: (json['authProviders'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
@@ -31,8 +31,8 @@ Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
 };
 
 const _$UserRoleEnumMap = {
-  UserRole.none: 'none',
   UserRole.admin: 'admin',
   UserRole.staff: 'staff',
   UserRole.viewer: 'viewer',
+  UserRole.none: 'none',
 };

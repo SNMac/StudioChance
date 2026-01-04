@@ -1,6 +1,6 @@
 enum UserRole {
-  none,
   admin,
   staff,
-  viewer
+  viewer,
+  none
 }

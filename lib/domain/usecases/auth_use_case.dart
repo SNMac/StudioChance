@@ -8,6 +8,9 @@ import 'package:studio_chance/data/repositories/auth_repository_impl.dart';
 part 'auth_use_case.g.dart';
 
 abstract interface class AuthUseCase {
+  /// 로그인 상태 변경 `Stream`
+  Stream<User?> authStateChanges();
+
   /// Google 로그인
   Future<Either<Exception, User>> signInWithGoogle();
 
@@ -37,6 +40,11 @@ class AuthUseCaseImpl implements AuthUseCase {
   final AuthRepository _repository;
 
   const AuthUseCaseImpl(this._repository);
+
+  @override
+  Stream<User?> authStateChanges() {
+    return _repository.authStateChanges();
+  }
 
   @override
   Future<Either<Exception, User>> signInWithGoogle() {

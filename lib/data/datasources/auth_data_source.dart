@@ -17,6 +17,9 @@ abstract interface class AuthDataSource {
   /// 현재 로그인된 유저 정보 가져오기
   AuthModel? getCurrentUser();
 
+  /// 로그인 상태 변경 `Stream`
+  Stream<AuthModel?> authStateChanges();
+
   /// Google 로그인
   Future<AuthModel> signInWithGoogle();
 
@@ -38,7 +41,6 @@ class FirebaseAuthDataSource implements AuthDataSource {
   bool _isGoogleSignInInitialized = false;
 
   final FirebaseAuth _auth;
-
   FirebaseAuthDataSource(this._auth);
 
   @override
@@ -46,6 +48,14 @@ class FirebaseAuthDataSource implements AuthDataSource {
     final user = _auth.currentUser;
     if (user == null) return null;
     return AuthModel.fromFirebase(user);
+  }
+
+  @override
+  Stream<AuthModel?> authStateChanges() {
+    return _auth.authStateChanges().map((firebaseUser) {
+      if (firebaseUser == null) return null;
+      return AuthModel.fromFirebase(firebaseUser);
+    });
   }
 
   @override
