@@ -18,16 +18,6 @@ class SignInView extends ConsumerWidget {
     final isDarkMode =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
 
-    final appleBackgroundColor = CupertinoDynamicColor.resolve(
-      CupertinoColors.label,
-      context,
-    );
-
-    final appleContentColor = CupertinoDynamicColor.resolve(
-      CupertinoColors.systemBackground,
-      context,
-    );
-
     void showErrorDialog(String title, String content) {
       showAdaptiveDialog(
         context: context,
@@ -68,12 +58,12 @@ class SignInView extends ConsumerWidget {
       );
     });
 
-    return CupertinoPageScaffold(
+    return Scaffold(
       backgroundColor: CupertinoDynamicColor.resolve(
         CupertinoColors.systemBackground,
         context,
       ),
-      child: SafeArea(
+      body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -87,15 +77,7 @@ class SignInView extends ConsumerWidget {
                 Text(
                   'Studio Chance',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.label,
-                      context,
-                    ),
-                    decoration: TextDecoration.none,
-                  ),
+                  style: Theme.of(context).textTheme.headlineLarge,
                 ),
               ],
             ),
@@ -139,9 +121,15 @@ class SignInView extends ConsumerWidget {
                       onPressed: onAppleButtonTapped,
                       iconPath: 'assets/images/logos/apple_logo.svg',
                       label: 'Apple로 로그인',
-                      backgroundColor: appleBackgroundColor,
-                      textColor: appleContentColor,
-                      logoColor: appleContentColor,
+                      backgroundColor: isDarkMode
+                          ? appleSignInBackgroundDarkColor
+                          : appleSignInBackgroundColor,
+                      textColor: isDarkMode
+                          ? appleSignInTextDarkColor
+                          : appleSignInTextColor,
+                      logoColor: isDarkMode
+                          ? appleSignInTextDarkColor
+                          : appleSignInTextColor,
                     ),
                   ],
                 ],
