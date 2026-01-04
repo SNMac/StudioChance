@@ -14,5 +14,6 @@ abstract class DayGroup with _$DayGroup {
     required List<TimeSlot> timeSlots,
   }) = _DayGroup;
 
-  factory DayGroup.fromJson(Map<String, dynamic> json) => _$DayGroupFromJson(json);
+  factory DayGroup.fromJson(Map<String, dynamic> json) =>
+      _$DayGroupFromJson(json);
 }

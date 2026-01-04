@@ -12,8 +12,7 @@ part 'user_model.g.dart';
 @freezed
 abstract class UserModel with _$UserModel {
   const factory UserModel({
-    @JsonKey(includeToJson: false)
-    required String id,
+    @JsonKey(includeToJson: false) required String id,
     required String email,
     required String name,
     String? nickname,
@@ -27,10 +26,8 @@ abstract class UserModel with _$UserModel {
     @TimestampConverter() required DateTime updatedAt,
     @TimestampConverter() required DateTime lastLoginAt,
 
-    @JsonKey(includeIfNull: false)
-    @TimestampConverter() DateTime? deletedAt,
-    @JsonKey(includeIfNull: false)
-    @TimestampConverter() DateTime? expiresAt,
+    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? deletedAt,
+    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? expiresAt,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

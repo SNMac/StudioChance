@@ -38,7 +38,7 @@ extension AuthExceptionExtension on AuthException {
       AuthCancelledException() => '작업이 취소되었습니다.',
 
       // 5. 기타
-      _ => '잠시 후 다시 시도해주세요.',
+      _ => '문제가 지속될 경우 개발자에게 문의해주세요.',
     };
   }
 

@@ -67,7 +67,8 @@ GoRouter goRouter(Ref ref) {
       final isLoggedIn = user != null;
 
       final isGoingToSignIn = state.matchedLocation == SCRoute.signIn.fullPath;
-      final isGoingToOnboarding = state.matchedLocation == SCRoute.onboarding.fullPath;
+      final isGoingToOnboarding =
+          state.matchedLocation == SCRoute.onboarding.fullPath;
 
       if (!isLoggedIn) {
         return isGoingToSignIn ? null : SCRoute.signIn.fullPath;

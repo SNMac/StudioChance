@@ -12,8 +12,7 @@ part 'store_model.g.dart';
 @freezed
 abstract class StoreModel with _$StoreModel {
   const factory StoreModel({
-    @JsonKey(includeToJson: false)
-    required String id,
+    @JsonKey(includeToJson: false) required String id,
     required String ownerId,
     required String name,
     required Map<String, String> memberIds,
@@ -27,11 +26,9 @@ abstract class StoreModel with _$StoreModel {
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
 
-    @JsonKey(includeIfNull: false)
-    @TimestampConverter() DateTime? deletedAt,
-    @JsonKey(includeIfNull: false)
-    @TimestampConverter() DateTime? expiresAt,
-}) = _StoreModel;
+    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? deletedAt,
+    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? expiresAt,
+  }) = _StoreModel;
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
       _$StoreModelFromJson(json);
