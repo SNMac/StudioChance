@@ -45,7 +45,9 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
     try {
       final token = await _messaging.getToken();
       if (token == null) {
-        throw NotificationPlatformException();
+        throw NotificationPlatformException(
+          message: 'FCM Token returned null (Platform issue)',
+        );
       }
       return token;
     } catch (e) {
@@ -72,31 +74,31 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
     if (e is NotificationException) return e;
 
     if (e is FirebaseException) {
-      switch (e.code) {
+      final msg = e.message ?? 'Firebase Messaging Error';
+      final code = e.code;
+
+      switch (code) {
         case 'permission-blocked':
         case 'notifications-blocked':
-          return NotificationPermissionDeniedException(code: e.code);
+          return NotificationPermissionDeniedException(
+            message: msg,
+            code: code,
+          );
 
         case 'failed-precondition':
         case 'missing-dependencies':
-          return NotificationPlatformException(
-            message: '알림 서비스 실행을 위한 조건이 충족되지 않았습니다. (Play Services 등)',
-            code: e.code,
-          );
+          return NotificationPlatformException(message: msg, code: code);
 
         case 'network-request-failed':
         case 'unavailable':
-          return NotificationNetworkException(code: e.code);
+          return NotificationNetworkException(message: msg, code: code);
 
         default:
-          return NotificationUnknownException(
-            message: 'FCM 오류 발생: ${e.message}',
-            code: e.code,
-          );
+          return NotificationUnknownException(message: msg, code: code);
       }
     }
 
-    return NotificationUnknownException(message: '알 수 없는 오류: $e');
+    return NotificationUnknownException(message: e.toString());
   }
 }
 

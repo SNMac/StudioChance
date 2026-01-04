@@ -6,6 +6,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+
 import 'package:studio_chance/my_app.dart';
 
 import 'firebase_options.dart';
@@ -15,12 +16,12 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final provideAndroid = kDebugMode
-      ? const AndroidDebugProvider()
-      : const AndroidPlayIntegrityProvider();
+      ? AndroidDebugProvider()
+      : AndroidPlayIntegrityProvider();
 
   final provideApple = kDebugMode
-      ? const AppleDebugProvider()
-      : const AppleAppAttestProvider();
+      ? AppleDebugProvider()
+      : AppleAppAttestProvider();
 
   await FirebaseAppCheck.instance.activate(
     providerAndroid: provideAndroid,

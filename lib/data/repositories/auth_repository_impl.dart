@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:studio_chance/data/datasources/auth_data_source.dart';
-import 'package:studio_chance/data/datasources/notification_data_source.dart';
-import 'package:studio_chance/data/datasources/user_data_source.dart';
+import 'package:studio_chance/data/data_sources/auth_data_source.dart';
+import 'package:studio_chance/data/data_sources/notification_data_source.dart';
+import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/models/auth_model.dart';
 

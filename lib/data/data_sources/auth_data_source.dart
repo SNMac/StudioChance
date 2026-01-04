@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -254,96 +253,56 @@ class FirebaseAuthDataSource implements AuthDataSource {
   Exception _handleFirebaseError(Object e) {
     _logger.e('Auth Error', error: e);
 
-    // 1. 이미 변환된 예외는 그대로 통과
     if (e is AuthException) return e;
 
-    // 2. Platform Exception (취소 등)
-    if (e is PlatformException) {
-      if (e.code == 'sign_in_canceled' || e.code == 'canceled') {
+    if (e is GoogleSignInException) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
         return AuthCancelledException(
-          message: '소셜 로그인 팝업이 닫혔거나 사용자가 취소 버튼을 눌렀습니다.',
-          code: e.code,
+          message: e.description ?? 'Canceled by user',
+          code: e.code.toString(),
         );
       }
     }
 
-    // 3. Firebase Auth Exception 상세 매핑
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
-        case 'requires-recent-login':
-          return AuthRequiresRecentLoginException(
-            message: '계정 삭제나 비밀번호 변경 같은 민감한 작업 전에는 다시 로그인해야 합니다.',
-            code: e.code,
-          );
-
-        case 'invalid-credential':
-        case 'invalid-token':
-          return AuthInvalidCredentialException(
-            message: '자격 증명이 만료되었거나 형식이 잘못되었습니다. (ID 토큰 또는 Access 토큰 확인 필요)',
-            code: e.code,
-          );
-
-        case 'wrong-password':
-          return AuthInvalidCredentialException(
-            message: '비밀번호가 일치하지 않습니다. (이메일 로그인)',
-            code: e.code,
-          );
-
-        case 'user-disabled':
-          return AuthUserDisabledException(
-            message: 'Firebase 관리자 콘솔에 의해 사용이 중지된 계정입니다.',
-            code: e.code,
-          );
-
-        case 'user-not-found':
-          return AuthUserNotFoundException(
-            message: '가입된 계정이 없거나 삭제되었습니다.',
-            code: e.code,
-          );
-
-        case 'operation-not-allowed':
-          return AuthOperationNotAllowedException(
-            message:
-                'Firebase Console > Authentication > Sign-in method 탭에서 해당 제공업체가 꺼져있습니다.',
-            code: e.code,
-          );
-
-        case 'network-request-failed':
-          return AuthNetworkException(
-            message: 'Firebase 서버에 도달하지 못했습니다. 인터넷 연결이나 DNS 설정을 확인하세요.',
-            code: e.code,
-          );
-
-        case 'too-many-requests':
-          return AuthTooManyRequestsException(
-            message: '비정상적으로 많은 로그인 시도가 감지되어 일시적으로 차단되었습니다. 잠시 후 시도하세요.',
-            code: e.code,
-          );
-
-        // 자주 발생하진 않지만 명시하면 좋은 에러들
-        case 'email-already-in-use':
-          return AuthInvalidCredentialException(
-            message: '이미 다른 계정에서 사용 중인 이메일입니다.',
-            code: e.code,
-          );
-
-        case 'credential-already-in-use':
-          return AuthInvalidCredentialException(
-            message: '해당 소셜 계정은 이미 다른 유저와 연동되어 있습니다.',
-            code: e.code,
-          );
-
-        default:
-          return AuthUnknownException(
-            message:
-                '정의되지 않은 Firebase Auth 에러가 발생했습니다. 메시지를 확인하세요: ${e.message}',
-            code: e.code,
-          );
+    if (e is SignInWithAppleAuthorizationException) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        return AuthCancelledException(
+          message: e.message,
+          code: e.code.toString(),
+        );
       }
     }
 
-    // 4. 기타 에러
-    return AuthUnknownException(message: '예상치 못한 시스템 오류가 발생했습니다. ($e)');
+    if (e is FirebaseAuthException) {
+      final msg = e.message ?? 'Firebase Auth Error';
+      final code = e.code;
+
+      switch (e.code) {
+        case 'requires-recent-login':
+          return AuthRequiresRecentLoginException(message: msg, code: code);
+        case 'invalid-credential':
+        case 'invalid-token':
+        case 'wrong-password':
+          return AuthInvalidCredentialException(message: msg, code: code);
+        case 'user-disabled':
+          return AuthUserDisabledException(message: msg, code: code);
+        case 'user-not-found':
+          return AuthUserNotFoundException(message: msg, code: code);
+        case 'operation-not-allowed':
+          return AuthOperationNotAllowedException(message: msg, code: code);
+        case 'network-request-failed':
+          return AuthNetworkException(message: msg, code: code);
+        case 'too-many-requests':
+          return AuthTooManyRequestsException(message: msg, code: code);
+        case 'email-already-in-use':
+        case 'credential-already-in-use':
+          return AuthInvalidCredentialException(message: msg, code: code);
+        default:
+          return AuthUnknownException(message: msg, code: code);
+      }
+    }
+
+    return AuthUnknownException(message: e.toString());
   }
 }
 

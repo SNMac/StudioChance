@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/presentation/providers/auth_state_provider.dart';
 import 'package:studio_chance/presentation/sign_in/views/sign_in_view.dart';
 import 'package:studio_chance/presentation/home/views/home_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/onboarding_view.dart';
+import 'package:studio_chance/presentation/onboarding/views/nickname_view.dart';
 
 part 'app_router.g.dart';
 
@@ -50,7 +50,7 @@ GoRouter goRouter(Ref ref) {
         routes: [
           GoRoute(
             path: SCRoute.onboarding.path,
-            builder: (context, state) => const OnboardingView(),
+            builder: (context, state) => const NicknameView(),
           ),
         ],
       ),
@@ -75,7 +75,7 @@ GoRouter goRouter(Ref ref) {
 
       if (isLoggedIn) {
         // 신규 사용자 (온보딩 필요 사용자)
-        if (user!.isNewUser) {
+        if (user.isNewUser) {
           return isGoingToOnboarding ? null : SCRoute.onboarding.fullPath;
         }
 
