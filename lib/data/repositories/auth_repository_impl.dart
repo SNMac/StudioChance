@@ -196,7 +196,7 @@ class AuthRepositoryImpl implements AuthRepository {
       UserModel? userModel = await _userDataSource.getUser(authModel.uid);
 
       if (userModel != null) {
-        // [기존 사용자]
+        // 기존 사용자
         // 계정 복구
         if (userModel.deletedAt != null) {
           await _userDataSource.restoreUser(userModel.id);
@@ -216,7 +216,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
         await _userDataSource.updateUser(userModel.id, updates);
       } else {
-        // [신규 사용자]
+        // 신규 사용자
         // DB 생성
         userModel = UserModel(
           id: authModel.uid,
