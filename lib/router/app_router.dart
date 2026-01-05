@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -62,8 +61,6 @@ GoRouter goRouter(Ref ref) {
     ],
     redirect: (BuildContext context, GoRouterState state) {
       if (authState.isLoading) return null;
-      FlutterNativeSplash.remove();
-
       if (authState.hasError) return SCRoute.signIn.fullPath;
 
       final user = authState.value;
