@@ -220,7 +220,7 @@ class UserFirestoreDataSource implements UserDataSource {
         case 'not-found':
           return UserNotFoundException(message: msg, code: code);
 
-        // 3. 이미 존재함 (생성 충돌)
+        // 3. 이미 존재함
         case 'already-exists':
           return UserAlreadyExistsException(message: msg, code: code);
 
@@ -233,7 +233,7 @@ class UserFirestoreDataSource implements UserDataSource {
         case 'deadline-exceeded':
           return UserNetworkException(message: msg, code: code);
 
-        // 6. 트랜잭션 충돌 (순수 경합)
+        // 6. 트랜잭션 충돌
         case 'aborted':
         case 'failed-precondition':
           return UserTransactionException(message: msg, code: code);

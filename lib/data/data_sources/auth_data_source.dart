@@ -94,11 +94,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
   @override
   Future<void> signOut() async {
     try {
-      try {
-        await _googleSignOutSafe();
-      } catch (e) {
-        _logger.d('Google 로그아웃 실패 (무시 가능)', error: e);
-      }
+      await _googleSignOut();
       await _auth.signOut();
     } catch (e) {
       throw _handleFirebaseError(e);
@@ -240,7 +236,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
     return credential;
   }
 
-  Future<void> _googleSignOutSafe() async {
+  Future<void> _googleSignOut() async {
     try {
       await GoogleSignIn.instance.signOut();
     } catch (e) {
@@ -258,9 +254,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
     final authorizationCode = appleCredential.authorizationCode;
 
     if (authorizationCode.isEmpty) {
-      throw AuthUnknownException(
-        message: 'Apple Authorization Code를 받아오지 못했습니다.',
-      );
+      throw AuthUnknownException(message: 'Apple Authorization Code가 없습니다.');
     }
 
     await _auth.revokeTokenWithAuthorizationCode(authorizationCode);
@@ -340,7 +334,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
         case 'provider-already-linked':
           return AuthProviderAlreadyLinkedException(message: msg, code: code);
 
-        // 4. 기타 자격 증명 오류 (포괄적)
+        // 4. 기타 자격 증명 오류
         case 'invalid-credential':
         case 'user-mismatch':
         case 'no-such-provider': // unlink 실패 등

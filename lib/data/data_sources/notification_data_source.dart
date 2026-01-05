@@ -46,7 +46,7 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
       final token = await _messaging.getToken();
       if (token == null) {
         throw NotificationPlatformException(
-          message: 'FCM Token returned null (Platform issue)',
+          message: 'FCM Token이 null입니다.',
         );
       }
       return token;
