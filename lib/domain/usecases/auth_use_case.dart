@@ -88,6 +88,5 @@ class AuthUseCaseImpl implements AuthUseCase {
 @riverpod
 AuthUseCase authUseCase(Ref ref) {
   final repository = ref.watch(authRepositoryProvider);
-
   return AuthUseCaseImpl(repository);
 }
