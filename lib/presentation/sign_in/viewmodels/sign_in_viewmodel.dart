@@ -1,3 +1,4 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
@@ -32,7 +33,7 @@ class SignInViewModel extends _$SignInViewModel {
     _handleAuthResult(result);
   }
 
-  void _handleAuthResult(dynamic result) {
+  void _handleAuthResult(Either<Exception, User> result) {
     result.fold(
       (exception) {
         if (exception is AuthException && exception.isSilentable) {

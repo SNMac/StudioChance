@@ -41,7 +41,7 @@ final class SignInViewModelProvider
   }
 }
 
-String _$signInViewModelHash() => r'9a29a0a27aa1c9a95d9d670b518bc23a8044c84a';
+String _$signInViewModelHash() => r'13565ad8fb4909fa994a8b49daadd6ba3892df11';
 
 abstract class _$SignInViewModel extends $Notifier<AsyncValue<User?>> {
   AsyncValue<User?> build();
