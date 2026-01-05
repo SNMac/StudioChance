@@ -10,7 +10,7 @@ part 'day_group.g.dart';
 abstract class DayGroup with _$DayGroup {
   const factory DayGroup({
     required List<int> days,
-    required List<HeadcountRule> headcountRules,
+    required HeadcountRule headcountRule,
     required List<TimeSlot> timeSlots,
   }) = _DayGroup;
 

@@ -8,9 +8,9 @@ part of 'day_group.dart';
 
 _DayGroup _$DayGroupFromJson(Map<String, dynamic> json) => _DayGroup(
   days: (json['days'] as List<dynamic>).map((e) => (e as num).toInt()).toList(),
-  headcountRules: (json['headcountRules'] as List<dynamic>)
-      .map((e) => HeadcountRule.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  headcountRule: HeadcountRule.fromJson(
+    json['headcountRule'] as Map<String, dynamic>,
+  ),
   timeSlots: (json['timeSlots'] as List<dynamic>)
       .map((e) => TimeSlot.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -18,6 +18,6 @@ _DayGroup _$DayGroupFromJson(Map<String, dynamic> json) => _DayGroup(
 
 Map<String, dynamic> _$DayGroupToJson(_DayGroup instance) => <String, dynamic>{
   'days': instance.days,
-  'headcountRules': instance.headcountRules.map((e) => e.toJson()).toList(),
+  'headcountRule': instance.headcountRule.toJson(),
   'timeSlots': instance.timeSlots.map((e) => e.toJson()).toList(),
 };
