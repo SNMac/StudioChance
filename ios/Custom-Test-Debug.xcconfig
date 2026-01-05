@@ -1,0 +1,12 @@
+//
+//  Custom-Debug.xcconfig
+//  Runner
+//
+//  Created by 서동환 on 1/2/26.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+#include "GoogleConfig.xcconfig"
+#include "Pods/Target Support Files/Pods-Runner/Pods-RunnerTests.debug.xcconfig"

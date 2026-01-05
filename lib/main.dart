@@ -1,49 +1,73 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:studio_chance/domain/usecases/auth_use_case.dart';
+
+import 'package:studio_chance/my_app.dart';
 
 import 'firebase_options.dart';
 
-part 'main.g.dart';
-
-// 값을 저장할 "provider"를 생성합니다(여기서는 "Hello world").
-// provider를 사용하면 노출된 값을 모의(mock)//재정의(override)할 수 있습니다.
-@riverpod
-String helloWorld(Ref ref) {
-  return 'Hello world';
-}
-
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final provideAndroid = kDebugMode
+      ? AndroidDebugProvider()
+      : AndroidPlayIntegrityProvider();
+
+  final provideApple = kDebugMode
+      ? AppleDebugProvider()
+      : AppleAppAttestProvider();
+
+  await FirebaseAppCheck.instance.activate(
+    providerAndroid: provideAndroid,
+    providerApple: provideApple,
   );
 
-  runApp(
-    // 위젯이 providers를 읽을 수 있게 하려면 전체 애플리케이션을 "ProviderScope" 위젯으로 감싸야 합니다.
-    // 여기에 providers의 상태가 저장됩니다.
-    ProviderScope(
-      child: const MyApp(),
-    ),
-  );
+  await _setPreferredOrientations();
+  await _checkFirstLaunchAndClearData();
+
+  if (Platform.isAndroid) {
+    await FlutterDisplayMode.setHighRefreshRate();
+  }
+
+  runApp(ProviderScope(child: const MyApp()));
 }
 
-// Riverpod에 의해 노출되는 StatelessWidget 대신 ConsumerWidget을 확장합니다.
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+Future<void> _setPreferredOrientations() {
+  return SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+}
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final String value = ref.watch(helloWorldProvider);
+Future<void> _checkFirstLaunchAndClearData() async {
+  final Logger logger = Logger();
+  final prefs = await SharedPreferences.getInstance();
 
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Example')),
-        body: Center(
-          child: Text(value),
-        ),
-      ),
-    );
+  final hasLaunchedBefore = prefs.getBool('hasLaunchedBefore') ?? false;
+
+  if (!hasLaunchedBefore) {
+    final container = ProviderContainer();
+
+    try {
+      await container.read(authUseCaseProvider).signOut();
+
+      logger.i('앱 최초 실행 감지 - 기존 인증 데이터 삭제');
+    } catch (e) {
+      logger.e('기존 인증 데이터 삭제 중 오류 발생', error: e);
+    } finally {
+      container.dispose();
+    }
+
+    await prefs.setBool('hasLaunchedBefore', true);
   }
 }
