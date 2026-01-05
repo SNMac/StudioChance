@@ -113,13 +113,27 @@ class FirebaseAuthDataSource implements AuthDataSource {
         throw AuthUnknownException(message: '현재 로그인된 User가 null입니다.');
       }
 
-      try {
-        await GoogleSignIn.instance.disconnect();
-      } catch (e) {
-        _logger.d('Google 계정 disconnect 실패 (무시 가능)', error: e);
+      for (final provider in user.providerData) {
+        // Google 연결 해제
+        if (provider.providerId == 'google.com') {
+          try {
+            await GoogleSignIn.instance.disconnect();
+          } catch (e) {
+            _logger.d('Google 계정 disconnect 실패 (무시 가능)', error: e);
+          }
+        }
+        // Apple 연결 해제
+        else if (provider.providerId == 'apple.com') {
+          try {
+            await _revokeAppleSignIn();
+          } catch (e) {
+            if (e is AuthCancelledException) rethrow;
+          }
+        }
       }
 
       await user.delete();
+
       await signOut();
     } catch (e) {
       throw _handleFirebaseError(e);
@@ -152,7 +166,6 @@ class FirebaseAuthDataSource implements AuthDataSource {
       } else if (targetProviderId == 'apple.com') {
         credential = await _getAppleCredential();
       } else {
-        // 구글도 애플도 아니면(이메일 등) 지원하지 않음 처리
         throw AuthMethodNotSupportedException(
           message:
               '재인증을 지원하지 않는 로그인 방식입니다. (Provider: ${user.providerData.map((e) => e.providerId)})',
@@ -235,6 +248,25 @@ class FirebaseAuthDataSource implements AuthDataSource {
     }
   }
 
+  Future<void> _revokeAppleSignIn() async {
+    _logger.d('Apple 계정 Revoke 시작');
+
+    final appleCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [],
+    );
+
+    final authorizationCode = appleCredential.authorizationCode;
+
+    if (authorizationCode.isEmpty) {
+      throw AuthUnknownException(
+        message: 'Apple Authorization Code를 받아오지 못했습니다.',
+      );
+    }
+
+    await _auth.revokeTokenWithAuthorizationCode(authorizationCode);
+    _logger.d('Apple 계정 Revoke 성공');
+  }
+
   /// Apple 로그인용 Nonce 생성 메서드
   String _generateNonce([int length = 32]) {
     const charset =
@@ -258,7 +290,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
     if (e is GoogleSignInException) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         return AuthCancelledException(
-          message: e.description ?? 'Canceled by user',
+          message: e.description ?? '사용자에 의해 취소되었습니다.',
           code: e.code.toString(),
         );
       }
@@ -278,12 +310,9 @@ class FirebaseAuthDataSource implements AuthDataSource {
       final code = e.code;
 
       switch (e.code) {
+        // 1. 보안 및 상태
         case 'requires-recent-login':
           return AuthRequiresRecentLoginException(message: msg, code: code);
-        case 'invalid-credential':
-        case 'invalid-token':
-        case 'wrong-password':
-          return AuthInvalidCredentialException(message: msg, code: code);
         case 'user-disabled':
           return AuthUserDisabledException(message: msg, code: code);
         case 'user-not-found':
@@ -294,9 +323,29 @@ class FirebaseAuthDataSource implements AuthDataSource {
           return AuthNetworkException(message: msg, code: code);
         case 'too-many-requests':
           return AuthTooManyRequestsException(message: msg, code: code);
+
+        // 2. 이메일/비밀번호 입력 오류
+        case 'invalid-email':
+          return AuthInvalidEmailException(message: msg, code: code);
+        case 'wrong-password':
+          return AuthWrongPasswordException(message: msg, code: code);
         case 'email-already-in-use':
+          return AuthEmailAlreadyInUseException(message: msg, code: code);
+
+        // 3. 계정 연동 및 충돌 오류
         case 'credential-already-in-use':
+        case 'account-exists-with-different-credential':
+          return AuthCredentialAlreadyInUseException(message: msg, code: code);
+
+        case 'provider-already-linked':
+          return AuthProviderAlreadyLinkedException(message: msg, code: code);
+
+        // 4. 기타 자격 증명 오류 (포괄적)
+        case 'invalid-credential':
+        case 'user-mismatch':
+        case 'no-such-provider': // unlink 실패 등
           return AuthInvalidCredentialException(message: msg, code: code);
+
         default:
           return AuthUnknownException(message: msg, code: code);
       }

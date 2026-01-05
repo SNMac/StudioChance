@@ -35,7 +35,7 @@ class SignInViewModel extends _$SignInViewModel {
   void _handleAuthResult(dynamic result) {
     result.fold(
       (exception) {
-        if (exception is AuthException && exception.isSilent) {
+        if (exception is AuthException && exception.isSilentable) {
           state = const AsyncValue.data(null);
         } else {
           state = AsyncValue.error(exception, StackTrace.current);

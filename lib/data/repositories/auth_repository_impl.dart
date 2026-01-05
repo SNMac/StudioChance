@@ -42,8 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
           return userModel.toEntity();
         }
 
-        _logger.i('사용자가 Auth엔 존재하지만 DB엔 존재하지 않습니다. DB에 사용자를 생성합니다.');
-
+        _logger.i('인증된 사용자가 DB에 존재하지 않음 -> DB에 사용자 생성 시작');
         String? fcmToken;
         try {
           fcmToken = await _notificationDataSource.getFcmToken();
@@ -65,10 +64,11 @@ class AuthRepositoryImpl implements AuthRepository {
         );
 
         await _userDataSource.createUser(newUserModel);
+        _logger.i('DB에 사용자 생성 완료');
 
         return newUserModel.toEntity();
       } catch (e) {
-        _logger.e('authStateChanges 중 에러 발생', error: e);
+        _logger.e('authStateChanges 처리 실패', error: e);
         return null;
       }
     });
@@ -121,7 +121,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final authModel = _authDataSource.getCurrentUser();
       if (authModel == null) {
-        return left(AuthUnknownException(message: '로그인 정보가 없습니다.'));
+        return left(AuthUnknownException(message: '로그인 정보 없음'));
       }
 
       await _userDataSource.softDeleteUser(authModel.uid);
@@ -184,7 +184,6 @@ class AuthRepositoryImpl implements AuthRepository {
   /// AuthModel(인증 정보)을 받아 DB와 동기화하고 User Entity를 반환합니다.
   Future<Either<Exception, User>> _authenticate(AuthModel authModel) async {
     try {
-      // 1. FCM 토큰 획득 (실패해도 로그인은 계속 진행)
       String? fcmToken;
       try {
         fcmToken = await _notificationDataSource.getFcmToken();
@@ -192,7 +191,6 @@ class AuthRepositoryImpl implements AuthRepository {
         _logger.w('FCM 토큰 획득 실패', error: e);
       }
 
-      // 2. DB에서 유저 조회
       UserModel? userModel = await _userDataSource.getUser(authModel.uid);
 
       if (userModel != null) {
@@ -200,7 +198,7 @@ class AuthRepositoryImpl implements AuthRepository {
         // 계정 복구
         if (userModel.deletedAt != null) {
           await _userDataSource.restoreUser(userModel.id);
-          _logger.i('탈퇴 대기 중인 계정이 복구되었습니다. (UID: ${userModel.id})');
+          _logger.i('탈퇴 대기 중인 계정 복구');
         }
 
         // 로그인 정보 갱신

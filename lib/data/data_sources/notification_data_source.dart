@@ -78,6 +78,7 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
       final code = e.code;
 
       switch (code) {
+        // 1. 권한 관련
         case 'permission-blocked':
         case 'notifications-blocked':
           return NotificationPermissionDeniedException(
@@ -85,13 +86,23 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
             code: code,
           );
 
+        // 2. 플랫폼/환경 문제
         case 'failed-precondition':
         case 'missing-dependencies':
+        case 'operation-not-allowed':
           return NotificationPlatformException(message: msg, code: code);
 
+        // 3. 설정 오류
+        case 'no-app':
+        case 'invalid-options':
+          return NotificationConfigException(message: msg, code: code);
+
+        // 4. 네트워크 및 요청 제한
         case 'network-request-failed':
         case 'unavailable':
           return NotificationNetworkException(message: msg, code: code);
+        case 'too-many-requests':
+          return NotificationTooManyRequestsException(message: msg, code: code);
 
         default:
           return NotificationUnknownException(message: msg, code: code);
