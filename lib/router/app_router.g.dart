@@ -48,4 +48,4 @@ final class GoRouterProvider
   }
 }
 
-String _$goRouterHash() => r'e69d89dd45e0f97754881fb62f20532af8c48c18';
+String _$goRouterHash() => r'13a72bd0554be9ec6c243424853dd5bc6c0d1681';

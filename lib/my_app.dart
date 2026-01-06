@@ -11,6 +11,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final GoRouter router = ref.watch(goRouterProvider);
+
     final textTheme = TextTheme(
       displayLarge: TextStyle(
         fontSize: 57.0,

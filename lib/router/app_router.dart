@@ -2,20 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/presentation/providers/auth_state_provider.dart';
-import 'package:studio_chance/presentation/sign_in/views/sign_in_view.dart';
 import 'package:studio_chance/presentation/home/views/home_view.dart';
 import 'package:studio_chance/presentation/onboarding/views/nickname_view.dart';
+import 'package:studio_chance/presentation/providers/auth_state_provider.dart';
+import 'package:studio_chance/presentation/sign_in/views/sign_in_view.dart';
+import 'package:studio_chance/presentation/splash/views/splash_view.dart';
+import 'package:studio_chance/router/auth_notifier.dart';
 
 part 'app_router.g.dart';
 
 enum SCRoute {
+  splash,
   signIn,
   onboarding,
   home;
 
   String get path {
     switch (this) {
+      case SCRoute.splash:
+        return '/splash';
       case SCRoute.signIn:
         return '/sign_in';
       case SCRoute.home:
@@ -27,6 +32,8 @@ enum SCRoute {
 
   String get fullPath {
     switch (this) {
+      case SCRoute.splash:
+        return '/splash';
       case SCRoute.signIn:
         return '/sign_in';
       case SCRoute.home:
@@ -39,11 +46,15 @@ enum SCRoute {
 
 @riverpod
 GoRouter goRouter(Ref ref) {
-  final authState = ref.watch(authStateProvider);
-
   return GoRouter(
-    initialLocation: SCRoute.signIn.fullPath,
+    initialLocation: SCRoute.signIn.path,
+    debugLogDiagnostics: true,
+    refreshListenable: AuthNotifier(ref),
     routes: <GoRoute>[
+      GoRoute(
+        path: SCRoute.splash.path,
+        builder: (context, state) => const SplashView(),
+      ),
       GoRoute(
         path: SCRoute.signIn.path,
         builder: (context, state) => const SignInView(),
@@ -60,6 +71,7 @@ GoRouter goRouter(Ref ref) {
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
+      final authState = ref.read(authStateProvider);
       if (authState.isLoading) return null;
       if (authState.hasError) return SCRoute.signIn.fullPath;
 
@@ -74,16 +86,14 @@ GoRouter goRouter(Ref ref) {
         return isGoingToSignIn ? null : SCRoute.signIn.fullPath;
       }
 
-      if (isLoggedIn) {
-        // 신규 사용자 (온보딩 필요 사용자)
-        if (user.isNewUser) {
-          return isGoingToOnboarding ? null : SCRoute.onboarding.fullPath;
-        }
+      // 신규 사용자 (온보딩 필요 사용자)
+      if (user.isNewUser) {
+        return isGoingToOnboarding ? null : SCRoute.onboarding.fullPath;
+      }
 
-        // 기존 사용자
-        if (isGoingToSignIn || isGoingToOnboarding) {
-          return SCRoute.home.fullPath;
-        }
+      // 기존 사용자
+      if (isGoingToSignIn || isGoingToOnboarding) {
+        return SCRoute.home.fullPath;
       }
 
       return null;
