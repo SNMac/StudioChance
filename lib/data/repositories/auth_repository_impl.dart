@@ -8,11 +8,11 @@ import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/models/auth_model.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/data/models/user_model.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 
 part 'auth_repository_impl.g.dart';
 
@@ -64,7 +64,7 @@ class AuthRepositoryImpl implements AuthRepository {
         );
 
         await _userDataSource.createUser(newUserModel);
-        _logger.i('DB에 사용자 생성 완료');
+        _logger.i('DB에 사용자 생성 완료\nuid: ${newUserModel.id}\n$newUserModel');
 
         return newUserModel.toEntity();
       } catch (e) {
@@ -144,7 +144,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (fcmToken == null) return;
 
       await _userDataSource.addFcmToken(authModel.uid, fcmToken);
-      _logger.d('FCM 토큰 등록 완료');
+      _logger.d('FCM 토큰 등록 완료\ntoken: $fcmToken)');
     } catch (e) {
       _logger.w('FCM 토큰 등록 실패', error: e);
     }
@@ -160,7 +160,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       await _userDataSource.replaceFcmToken(authModel.uid, oldToken, newToken);
-      _logger.d('FCM 토큰 교체 완료');
+      _logger.d('FCM 토큰 교체 완료\noldToken: $oldToken\nnewToken: $newToken');
     } catch (e) {
       _logger.e('FCM 토큰 교체 실패', error: e);
     }
@@ -195,10 +195,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (userModel != null) {
         // 기존 사용자
-        // 계정 복구
+        // 탈퇴 철회
         if (userModel.deletedAt != null) {
           await _userDataSource.restoreUser(userModel.id);
-          _logger.i('탈퇴 대기 중인 계정 복구');
+          _logger.i('사용자 탈퇴 철회 완료\nuid: ${userModel.id}');
         }
 
         // 로그인 정보 갱신
@@ -210,9 +210,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
         if (fcmToken != null) {
           await _userDataSource.addFcmToken(userModel.id, fcmToken);
+          _logger.d('FCM 토큰 등록 완료\ntoken: $fcmToken)');
         }
 
         await _userDataSource.updateUser(userModel.id, updates);
+        _logger.i('사용자 업데이트 완료:\nuid: ${userModel.id}\n$updates');
       } else {
         // 신규 사용자
         // DB 생성

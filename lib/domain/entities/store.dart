@@ -10,7 +10,7 @@ part 'store.g.dart';
 abstract class Store with _$Store {
   const factory Store({
     required String id,
-    required String ownerId,
+    required List<String> adminIds,
     required String name,
     required String color,
     required List<User> members,

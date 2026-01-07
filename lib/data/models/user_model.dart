@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/common/converters/timestamp_converter.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 
 part 'user_model.freezed.dart';
 part 'user_model.g.dart';

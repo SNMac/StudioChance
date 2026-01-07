@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/usecases/auth_use_case.dart';
 
-class NicknameView extends ConsumerWidget {
-  const NicknameView({super.key});
+class OnboardingNicknameView extends ConsumerWidget {
+  const OnboardingNicknameView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -8,7 +8,9 @@ part of 'store_model.dart';
 
 _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   id: json['id'] as String,
-  ownerId: json['ownerId'] as String,
+  adminIds:
+      (json['adminIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
   name: json['name'] as String,
   memberIds: Map<String, String>.from(json['memberIds'] as Map),
   address: json['address'] as String,
@@ -38,7 +40,7 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
 
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
     <String, dynamic>{
-      'ownerId': instance.ownerId,
+      'adminIds': instance.adminIds,
       'name': instance.name,
       'memberIds': instance.memberIds,
       'address': instance.address,

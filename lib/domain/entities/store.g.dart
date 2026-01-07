@@ -8,7 +8,9 @@ part of 'store.dart';
 
 _Store _$StoreFromJson(Map<String, dynamic> json) => _Store(
   id: json['id'] as String,
-  ownerId: json['ownerId'] as String,
+  adminIds: (json['adminIds'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
   name: json['name'] as String,
   color: json['color'] as String,
   members: (json['members'] as List<dynamic>)
@@ -21,7 +23,7 @@ _Store _$StoreFromJson(Map<String, dynamic> json) => _Store(
 
 Map<String, dynamic> _$StoreToJson(_Store instance) => <String, dynamic>{
   'id': instance.id,
-  'ownerId': instance.ownerId,
+  'adminIds': instance.adminIds,
   'name': instance.name,
   'color': instance.color,
   'members': instance.members.map((e) => e.toJson()).toList(),

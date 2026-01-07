@@ -13,7 +13,7 @@ part 'store_model.g.dart';
 abstract class StoreModel with _$StoreModel {
   const factory StoreModel({
     @JsonKey(includeToJson: false) required String id,
-    required String ownerId,
+    @Default([]) List<String> adminIds,
     required String name,
     required Map<String, String> memberIds,
     required String address,
