@@ -4,14 +4,25 @@ import 'package:flutter/material.dart';
 Future<void> showCustomAlertDialog({
   required BuildContext context,
   required String title,
+  String? content,
   String cancelText = '취소',
   String confirmText = '확인',
+  bool showCancel = true,
+  bool isDestructive = false,
   required VoidCallback onConfirm,
 }) {
   return showAdaptiveDialog(
     context: context,
     builder: (context) => AlertDialog.adaptive(
       title: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      content: content != null
+          ? Text(
+              content,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.normal),
+            )
+          : null,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -23,7 +34,6 @@ Future<void> showCustomAlertDialog({
             ),
           ),
         ),
-        // 확인 버튼
         TextButton(
           onPressed: () {
             Navigator.pop(context);
@@ -32,7 +42,9 @@ Future<void> showCustomAlertDialog({
           child: Text(
             confirmText,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
+              color: isDestructive
+                  ? Theme.of(context).colorScheme.error
+                  : Theme.of(context).colorScheme.primary,
             ),
           ),
         ),

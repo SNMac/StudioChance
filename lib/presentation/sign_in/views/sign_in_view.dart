@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/common/exceptions/extensions/auth_exception_extension.dart';
 import 'package:studio_chance/presentation/colors.dart';
+import 'package:studio_chance/presentation/components/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/sign_in/views/components/social_sign_in_button.dart';
 import 'package:studio_chance/presentation/sign_in/viewmodels/sign_in_viewmodel.dart';
 
@@ -19,20 +20,12 @@ class SignInView extends ConsumerWidget {
         MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     void showErrorDialog(String title, String content) {
-      showAdaptiveDialog(
+      showCustomAlertDialog(
         context: context,
-        builder: (context) {
-          return AlertDialog.adaptive(
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('확인'),
-              ),
-            ],
-          );
-        },
+        title: title,
+        content: content,
+        showCancel: false,
+        onConfirm: () => Navigator.pop(context),
       );
     }
 
