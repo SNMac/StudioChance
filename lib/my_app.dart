@@ -101,12 +101,14 @@ class MyApp extends ConsumerWidget {
         brightness: Brightness.light,
         textTheme: textTheme,
         appBarTheme: AppBarTheme(
-          backgroundColor: CupertinoColors.systemBackground.color,
+          backgroundColor: CupertinoColors.tertiarySystemBackground.color,
+          shape: const Border(
+            bottom: BorderSide(color: Color(0x4D000000), width: 0.33),
+          ),
         ),
-        scaffoldBackgroundColor:
-            CupertinoColors.secondarySystemBackground.color,
+        scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground.color,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: CupertinoColors.systemTeal.color,
+          seedColor: CupertinoColors.systemBlue.color,
           brightness: Brightness.light,
         ),
       ),
@@ -117,12 +119,15 @@ class MyApp extends ConsumerWidget {
         brightness: Brightness.dark,
         textTheme: textTheme,
         appBarTheme: AppBarTheme(
-          backgroundColor: CupertinoColors.systemBackground.darkColor,
+          backgroundColor: CupertinoColors.tertiarySystemBackground.darkColor,
+          shape: const Border(
+            bottom: BorderSide(color: Color(0x26FFFFFF), width: 0.33),
+          ),
         ),
         scaffoldBackgroundColor:
-            CupertinoColors.secondarySystemBackground.darkColor,
+            CupertinoColors.systemGroupedBackground.darkColor,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: CupertinoColors.systemTeal.darkColor,
+          seedColor: CupertinoColors.systemBlue.darkColor,
           brightness: Brightness.dark,
         ),
       ),

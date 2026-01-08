@@ -42,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
           return userModel.toEntity();
         }
 
-        _logger.i('인증된 사용자가 DB에 존재하지 않음 -> DB에 사용자 생성 시작');
+        _logger.i('인증된 사용자가 DB에 존재하지 않음\nDB에 사용자 생성 시작');
         String? fcmToken;
         try {
           fcmToken = await _notificationDataSource.getFcmToken();
