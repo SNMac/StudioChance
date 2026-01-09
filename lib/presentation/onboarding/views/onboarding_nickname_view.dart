@@ -116,10 +116,11 @@ class _OnboardingNicknameViewState
                 child: Text(
                   '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.secondary,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                 ),
               ),
+
               const Spacer(),
             ],
           ),

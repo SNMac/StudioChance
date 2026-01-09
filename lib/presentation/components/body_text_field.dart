@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class BodyTextField extends StatelessWidget {
-  final TextEditingController? controller;
   final String hintText;
+  final TextEditingController? controller;
   final void Function(String)? onChanged;
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
@@ -12,8 +12,8 @@ class BodyTextField extends StatelessWidget {
 
   const BodyTextField({
     super.key,
-    this.controller,
     required this.hintText,
+    this.controller,
     this.onChanged,
     this.autofocus = false,
     this.inputFormatters,
@@ -22,6 +22,7 @@ class BodyTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
@@ -36,10 +37,7 @@ class BodyTextField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: textTheme.bodyLarge?.copyWith(
-            color: CupertinoDynamicColor.resolve(
-              CupertinoColors.tertiaryLabel,
-              context,
-            ),
+            color: colorScheme.outlineVariant,
           ),
           filled: true,
           fillColor: CupertinoDynamicColor.resolve(

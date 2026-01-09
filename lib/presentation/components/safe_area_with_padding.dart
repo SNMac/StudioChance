@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 
 class SafeAreaWithPadding extends StatelessWidget {
   final Widget? child;
+  final EdgeInsets padding;
 
-  const SafeAreaWithPadding({super.key, this.child});
+  const SafeAreaWithPadding({
+    super.key,
+    this.child,
+    this.padding = const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+  });
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-        child: child,
-      ),
+      child: Padding(padding: padding, child: child),
     );
   }
 }

@@ -21,16 +21,12 @@ class RoleSelectionButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final backgroundColor = isSelected
-        ? colorScheme.primary
-        : colorScheme.primaryContainer;
+        ? colorScheme.secondary
+        : colorScheme.surfaceContainerHighest;
 
-    final titleColor = isSelected
-        ? colorScheme.onPrimary
-        : colorScheme.onPrimaryContainer;
-
-    final descriptionColor = isSelected
-        ? colorScheme.onPrimary
-        : colorScheme.onPrimaryContainer;
+    final labelColor = isSelected
+        ? colorScheme.onSecondary
+        : colorScheme.onSurfaceVariant;
 
     return CupertinoButton(
       color: backgroundColor,
@@ -38,10 +34,10 @@ class RoleSelectionButton extends StatelessWidget {
       child: Column(
         spacing: 4,
         children: [
-          Text(title, style: textTheme.titleLarge?.copyWith(color: titleColor)),
+          Text(title, style: textTheme.titleLarge?.copyWith(color: labelColor)),
           Text(
             description,
-            style: textTheme.labelLarge?.copyWith(color: descriptionColor),
+            style: textTheme.labelLarge?.copyWith(color: labelColor),
           ),
         ],
       ),
