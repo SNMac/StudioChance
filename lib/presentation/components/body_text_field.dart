@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 class BodyTextField extends StatelessWidget {
   final String hintText;
   final TextEditingController? controller;
+  final TextAlign textAlign;
   final void Function(String)? onChanged;
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
@@ -14,6 +15,7 @@ class BodyTextField extends StatelessWidget {
     super.key,
     required this.hintText,
     this.controller,
+    this.textAlign = TextAlign.start,
     this.onChanged,
     this.autofocus = false,
     this.inputFormatters,
@@ -22,13 +24,13 @@ class BodyTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
       height: 48,
       child: TextField(
         controller: controller,
+        textAlign: textAlign,
         autofocus: autofocus,
         onChanged: onChanged,
         inputFormatters: inputFormatters,
@@ -37,7 +39,11 @@ class BodyTextField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: textTheme.bodyLarge?.copyWith(
-            color: colorScheme.outlineVariant,
+            fontWeight: FontWeight.normal,
+            color: CupertinoDynamicColor.resolve(
+              CupertinoColors.secondaryLabel,
+              context,
+            ),
           ),
           filled: true,
           fillColor: CupertinoDynamicColor.resolve(

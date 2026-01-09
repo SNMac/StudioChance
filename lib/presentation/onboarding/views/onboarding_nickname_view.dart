@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:studio_chance/presentation/components/app_bar_action_button.dart
 import 'package:studio_chance/presentation/components/body_text_field.dart';
 import 'package:studio_chance/presentation/components/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/components/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/grouped_form_container.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/onboarding/viewmodels/onboarding_viewmodel.dart';
@@ -61,8 +63,8 @@ class _OnboardingNicknameViewState
     return PopScope(
       canPop: false,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('닉네임 설정'),
+        appBar: CustomAppBar(
+          title: '닉네임 설정',
           leading: AppBarBackButton(onPressed: showExitDialog),
           actions: [
             AppBarActionButton(
@@ -116,7 +118,10 @@ class _OnboardingNicknameViewState
                 child: Text(
                   '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
+                    color: CupertinoDynamicColor.resolve(
+                      CupertinoColors.secondaryLabel,
+                      context,
+                    ),
                   ),
                 ),
               ),

@@ -6,6 +6,7 @@ import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/components/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/components/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/components/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/onboarding/viewmodels/onboarding_viewmodel.dart';
 import 'package:studio_chance/presentation/onboarding/views/components/role_selection_button.dart';
@@ -28,9 +29,9 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
     final isSelected = state?.isRoleSelected ?? false;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('역할 선택'),
-        leading: AppBarBackButton(),
+      appBar: CustomAppBar(
+        title: '역할 선택',
+        leading: const AppBarBackButton(),
         actions: [
           AppBarActionButton(
             label: '다음',

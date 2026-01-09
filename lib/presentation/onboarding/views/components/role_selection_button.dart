@@ -21,12 +21,12 @@ class RoleSelectionButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final backgroundColor = isSelected
-        ? colorScheme.secondary
-        : colorScheme.surfaceContainerHighest;
+        ? colorScheme.primary
+        : colorScheme.primaryContainer;
 
     final labelColor = isSelected
-        ? colorScheme.onSecondary
-        : colorScheme.onSurfaceVariant;
+        ? colorScheme.onPrimary
+        : colorScheme.onPrimaryContainer;
 
     return CupertinoButton(
       color: backgroundColor,
