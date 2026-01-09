@@ -60,7 +60,7 @@ class SignInView extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Spacer(),
+            const Spacer(flex: 2),
 
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +75,7 @@ class SignInView extends ConsumerWidget {
               ],
             ),
 
-            const Spacer(),
+            const Spacer(flex: 2),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -129,7 +129,7 @@ class SignInView extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 72),
+            const Spacer(flex: 1),
           ],
         ),
       ),

@@ -14,10 +14,13 @@ class AppBarActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseStyle = style ?? Theme.of(context).textTheme.titleLarge;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final baseStyle = style ?? textTheme.titleLarge;
 
     final color = onPressed != null
-        ? Theme.of(context).colorScheme.primary
+        ? colorScheme.primary
         : Theme.of(context).disabledColor;
 
     final effectiveStyle = baseStyle?.copyWith(color: color);

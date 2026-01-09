@@ -22,6 +22,8 @@ class BodyTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return SizedBox(
       height: 48,
       child: TextField(
@@ -30,10 +32,10 @@ class BodyTextField extends StatelessWidget {
         onChanged: onChanged,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
-        style: Theme.of(context).textTheme.bodyLarge,
+        style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.normal),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(
+          hintStyle: textTheme.bodyLarge?.copyWith(
             color: CupertinoDynamicColor.resolve(
               CupertinoColors.tertiaryLabel,
               context,
@@ -45,15 +47,9 @@ class BodyTextField extends StatelessWidget {
             context,
           ),
           contentPadding: const EdgeInsets.all(0),
-          border: OutlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
+          border: OutlineInputBorder(borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(borderSide: BorderSide.none),
         ),
       ),
     );

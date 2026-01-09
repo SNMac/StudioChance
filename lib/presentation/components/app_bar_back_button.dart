@@ -7,9 +7,8 @@ class AppBarBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BackButton(
-      onPressed: onPressed,
-      color: Theme.of(context).colorScheme.primary,
-    );
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return BackButton(onPressed: onPressed, color: colorScheme.primary);
   }
 }

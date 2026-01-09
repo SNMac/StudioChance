@@ -74,19 +74,19 @@ class MyApp extends ConsumerWidget {
         fontWeight: FontWeight.w500,
       ),
       labelLarge: TextStyle(
-        fontSize: 16.0,
+        fontSize: 14.0,
         height: 1.5,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.normal,
       ),
       labelMedium: TextStyle(
         fontSize: 12.0,
         height: 1.5,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.normal,
       ),
       labelSmall: TextStyle(
         fontSize: 10.0,
         height: 1.5,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.normal,
       ),
     );
 

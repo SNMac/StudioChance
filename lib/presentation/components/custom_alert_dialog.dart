@@ -11,25 +11,23 @@ Future<void> showCustomAlertDialog({
   bool isDestructive = false,
   required VoidCallback onConfirm,
 }) {
+  final colorScheme = Theme.of(context).colorScheme;
+  final textTheme = Theme.of(context).textTheme;
+
   return showAdaptiveDialog(
     context: context,
     builder: (context) => AlertDialog.adaptive(
-      title: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      title: Text(title, style: textTheme.titleLarge),
       content: content != null
-          ? Text(
-              content,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.normal),
-            )
+          ? Text(content, style: textTheme.bodyMedium)
           : null,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
             cancelText,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
+            style: textTheme.titleLarge?.copyWith(
+              color: colorScheme.primary,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -41,10 +39,8 @@ Future<void> showCustomAlertDialog({
           },
           child: Text(
             confirmText,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: isDestructive
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
+            style: textTheme.titleLarge?.copyWith(
+              color: isDestructive ? colorScheme.error : colorScheme.primary,
             ),
           ),
         ),
