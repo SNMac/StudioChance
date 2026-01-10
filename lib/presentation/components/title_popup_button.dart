@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class TitlePopupButton<T> extends StatelessWidget {
+class TitlePopupButton<T> extends StatefulWidget {
   final String title;
   final T selectedValue;
   final List<T> items;
@@ -20,90 +20,111 @@ class TitlePopupButton<T> extends StatelessWidget {
   });
 
   @override
+  State<TitlePopupButton<T>> createState() => _TitlePopupButtonState<T>();
+}
+
+class _TitlePopupButtonState<T> extends State<TitlePopupButton<T>> {
+  final GlobalKey<PopupMenuButtonState<T>> _menuKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
       height: 48,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(title, style: textTheme.bodyLarge),
-          PopupMenuButton<T>(
-            onSelected: onSelected,
-            color: CupertinoDynamicColor.resolve(
-              CupertinoColors.tertiarySystemGroupedBackground,
-              context,
-            ),
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (itemLeadingBuilder != null) ...[
-                  itemLeadingBuilder!(selectedValue),
-                  const SizedBox(width: 8),
-                ],
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => _menuKey.currentState?.showButtonMenu(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(widget.title, style: textTheme.bodyLarge),
 
-                Text(
-                  itemLabelBuilder(selectedValue),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.normal,
+            PopupMenuButton<T>(
+              key: _menuKey,
+              onSelected: widget.onSelected,
+              color: CupertinoDynamicColor.resolve(
+                CupertinoColors.tertiarySystemGroupedBackground,
+                context,
+              ),
+              surfaceTintColor: Colors.transparent,
+              elevation: 1,
+              offset: const Offset(0, 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.itemLeadingBuilder != null) ...[
+                    widget.itemLeadingBuilder!(widget.selectedValue),
+                    const SizedBox(width: 8),
+                  ],
+
+                  Text(
+                    widget.itemLabelBuilder(widget.selectedValue),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.normal,
+                      color: CupertinoDynamicColor.resolve(
+                        CupertinoColors.secondaryLabel,
+                        context,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 4),
+
+                  Icon(
+                    CupertinoIcons.chevron_up_chevron_down,
+                    size: 16,
                     color: CupertinoDynamicColor.resolve(
                       CupertinoColors.secondaryLabel,
                       context,
                     ),
                   ),
-                ),
+                ],
+              ),
 
-                const SizedBox(width: 4),
+              itemBuilder: (BuildContext context) {
+                return widget.items.map((T item) {
+                  final bool isSelected = item == widget.selectedValue;
+                  return PopupMenuItem<T>(
+                    value: item,
+                    child: SizedBox(
+                      height: 44,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            child: isSelected
+                                ? const Icon(
+                                    CupertinoIcons.check_mark,
+                                    size: 16,
+                                  )
+                                : null,
+                          ),
 
-                Icon(
-                  CupertinoIcons.chevron_up_chevron_down,
-                  size: 16,
-                  color: CupertinoDynamicColor.resolve(
-                    CupertinoColors.secondaryLabel,
-                    context,
-                  ),
-                ),
-              ],
-            ),
+                          if (widget.itemLeadingBuilder != null) ...[
+                            widget.itemLeadingBuilder!(item),
+                          ],
 
-            itemBuilder: (BuildContext context) {
-              return items.map((T item) {
-                final bool isSelected = item == selectedValue;
-                return PopupMenuItem<T>(
-                  value: item,
-                  child: SizedBox(
-                    height: 44,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        isSelected
-                            ? const Icon(CupertinoIcons.check_mark, size: 16)
-                            : const SizedBox(width: 16),
-
-                        if (itemLeadingBuilder != null) ...[
-                          itemLeadingBuilder!(item),
+                          Text(
+                            widget.itemLabelBuilder(item),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.normal),
+                          ),
                         ],
-
-                        Text(
-                          itemLabelBuilder(item),
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.normal),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              }).toList();
-            },
-          ),
-        ],
+                  );
+                }).toList();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

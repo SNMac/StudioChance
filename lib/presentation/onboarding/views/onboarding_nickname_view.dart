@@ -94,13 +94,14 @@ class _OnboardingNicknameViewState
                 children: [
                   BodyTextField(
                     controller: _controller,
+                    maxLines: 1,
                     autofocus: true,
                     onChanged: (value) {
                       ref
                           .read(onboardingViewModelProvider.notifier)
                           .setNickname(value);
                     },
-                    hintText: '닉네임',
+                    placeholder: '닉네임',
                     inputFormatters: [
                       LengthLimitingTextInputFormatter(10),
                       FilteringTextInputFormatter.allow(

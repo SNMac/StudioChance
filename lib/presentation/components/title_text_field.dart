@@ -7,6 +7,7 @@ class TitleTextField extends StatelessWidget {
   final String? hintText;
   final TextEditingController? controller;
   final void Function(String)? onChanged;
+  final int? maxLines;
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
@@ -17,6 +18,7 @@ class TitleTextField extends StatelessWidget {
     this.hintText,
     this.controller,
     this.onChanged,
+    this.maxLines = 1,
     this.autofocus = false,
     this.inputFormatters,
     this.keyboardType,
@@ -31,14 +33,16 @@ class TitleTextField extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 4,
         children: [
           Text(title, style: textTheme.bodyLarge),
           Expanded(
             child: BodyTextField(
-              hintText: hintText ?? title,
+              placeholder: hintText ?? title,
               controller: controller,
               textAlign: TextAlign.end,
               autofocus: autofocus,
+              maxLines: maxLines,
               onChanged: onChanged,
               inputFormatters: inputFormatters,
               keyboardType: keyboardType,
