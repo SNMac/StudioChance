@@ -16,12 +16,14 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   address: json['address'] as String,
   memo: json['memo'] as String,
   color: json['color'] as String,
-  inviteInfo: json['inviteInfo'] == null
-      ? null
-      : InviteInfoModel.fromJson(json['inviteInfo'] as Map<String, dynamic>),
-  priceSettings: PriceSettingsModel.fromJson(
-    json['priceSettings'] as Map<String, dynamic>,
+  priceSettingsModel: PriceSettingsModel.fromJson(
+    json['priceSettingsModel'] as Map<String, dynamic>,
   ),
+  inviteInfoModel: json['inviteInfoModel'] == null
+      ? null
+      : InviteInfoModel.fromJson(
+          json['inviteInfoModel'] as Map<String, dynamic>,
+        ),
   createdAt: const TimestampConverter().fromJson(
     json['createdAt'] as Timestamp,
   ),
@@ -46,8 +48,8 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
       'address': instance.address,
       'memo': instance.memo,
       'color': instance.color,
-      'inviteInfo': instance.inviteInfo?.toJson(),
-      'priceSettings': instance.priceSettings.toJson(),
+      'priceSettingsModel': instance.priceSettingsModel.toJson(),
+      'inviteInfoModel': instance.inviteInfoModel?.toJson(),
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
       'deletedAt': ?_$JsonConverterToJson<Timestamp, DateTime>(

@@ -16,9 +16,12 @@ _Store _$StoreFromJson(Map<String, dynamic> json) => _Store(
   members: (json['members'] as List<dynamic>)
       .map((e) => User.fromJson(e as Map<String, dynamic>))
       .toList(),
-  priceSettings: (json['priceSettings'] as List<dynamic>)
-      .map((e) => DayGroup.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  priceSettings: PriceSetting.fromJson(
+    json['priceSettings'] as Map<String, dynamic>,
+  ),
+  inviteInfo: json['inviteInfo'] == null
+      ? null
+      : InviteInfo.fromJson(json['inviteInfo'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$StoreToJson(_Store instance) => <String, dynamic>{
@@ -27,5 +30,6 @@ Map<String, dynamic> _$StoreToJson(_Store instance) => <String, dynamic>{
   'name': instance.name,
   'color': instance.color,
   'members': instance.members.map((e) => e.toJson()).toList(),
-  'priceSettings': instance.priceSettings.map((e) => e.toJson()).toList(),
+  'priceSettings': instance.priceSettings.toJson(),
+  'inviteInfo': instance.inviteInfo?.toJson(),
 };

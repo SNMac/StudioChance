@@ -5,6 +5,7 @@ import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/price_settings_model.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/common/converters/timestamp_converter.dart';
+import 'package:studio_chance/domain/entities/user.dart';
 
 part 'store_model.freezed.dart';
 part 'store_model.g.dart';
@@ -20,8 +21,8 @@ abstract class StoreModel with _$StoreModel {
     required String memo,
     required String color,
 
-    InviteInfoModel? inviteInfo,
-    required PriceSettingsModel priceSettings,
+    required PriceSettingsModel priceSettingsModel,
+    InviteInfoModel? inviteInfoModel,
 
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
@@ -32,4 +33,18 @@ abstract class StoreModel with _$StoreModel {
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
       _$StoreModelFromJson(json);
+}
+
+extension StoreModelExtension on StoreModel {
+  Store toEntity(List<User> members) {
+    return Store(
+      id: id,
+      adminIds: adminIds,
+      name: name,
+      color: color,
+      members: members,
+      priceSettings: priceSettingsModel.toEntity(),
+      inviteInfo: inviteInfoModel?.toEntity(),
+    );
+  }
 }
