@@ -11,7 +11,6 @@ part of 'headcount_rule.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$HeadcountRule {
 
@@ -22,8 +21,6 @@ mixin _$HeadcountRule {
 @pragma('vm:prefer-inline')
 $HeadcountRuleCopyWith<HeadcountRule> get copyWith => _$HeadcountRuleCopyWithImpl<HeadcountRule>(this as HeadcountRule, _$identity);
 
-  /// Serializes this HeadcountRule to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is HeadcountRule&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.headcountExtraPrice, headcountExtraPrice) || other.headcountExtraPrice == headcountExtraPrice)&&(identical(other.isHeadcountHourly, isHeadcountHourly) || other.isHeadcountHourly == isHeadcountHourly)&&(identical(other.isHeadcountPerPerson, isHeadcountPerPerson) || other.isHeadcountPerPerson == isHeadcountPerPerson));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,headcountBase,headcountExtraPrice,isHeadcountHourly,isHeadcountPerPerson);
 
@@ -209,11 +206,11 @@ return $default(_that.headcountBase,_that.headcountExtraPrice,_that.isHeadcountH
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _HeadcountRule implements HeadcountRule {
   const _HeadcountRule({required this.headcountBase, required this.headcountExtraPrice, required this.isHeadcountHourly, required this.isHeadcountPerPerson});
-  factory _HeadcountRule.fromJson(Map<String, dynamic> json) => _$HeadcountRuleFromJson(json);
+  
 
 @override final  int headcountBase;
 @override final  int headcountExtraPrice;
@@ -226,17 +223,14 @@ class _HeadcountRule implements HeadcountRule {
 @pragma('vm:prefer-inline')
 _$HeadcountRuleCopyWith<_HeadcountRule> get copyWith => __$HeadcountRuleCopyWithImpl<_HeadcountRule>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$HeadcountRuleToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeadcountRule&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.headcountExtraPrice, headcountExtraPrice) || other.headcountExtraPrice == headcountExtraPrice)&&(identical(other.isHeadcountHourly, isHeadcountHourly) || other.isHeadcountHourly == isHeadcountHourly)&&(identical(other.isHeadcountPerPerson, isHeadcountPerPerson) || other.isHeadcountPerPerson == isHeadcountPerPerson));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,headcountBase,headcountExtraPrice,isHeadcountHourly,isHeadcountPerPerson);
 

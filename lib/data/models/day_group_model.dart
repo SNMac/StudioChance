@@ -10,6 +10,8 @@ part 'day_group_model.g.dart';
 
 @freezed
 abstract class DayGroupModel with _$DayGroupModel {
+  const DayGroupModel._();
+
   const factory DayGroupModel({
     @Default([]) List<int> days, // 1~7
     required HeadcountRuleModel headcountRuleModel,
@@ -18,9 +20,17 @@ abstract class DayGroupModel with _$DayGroupModel {
 
   factory DayGroupModel.fromJson(Map<String, dynamic> json) =>
       _$DayGroupModelFromJson(json);
-}
 
-extension DayGroupModelExtension on DayGroupModel {
+  factory DayGroupModel.fromEntity(DayGroup entity) {
+    return DayGroupModel(
+      days: entity.days,
+      headcountRuleModel: HeadcountRuleModel.fromEntity(entity.headcountRule),
+      timeSlots: entity.timeSlots
+          .map((timeSlot) => TimeSlotModel.fromEntity(timeSlot))
+          .toList(),
+    );
+  }
+
   DayGroup toEntity() {
     return DayGroup(
       days: days,

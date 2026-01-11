@@ -7,6 +7,8 @@ part 'headcount_rule_model.g.dart';
 
 @freezed
 abstract class HeadcountRuleModel with _$HeadcountRuleModel {
+  const HeadcountRuleModel._();
+
   const factory HeadcountRuleModel({
     required int headcountBase,
     required int headcountExtraPrice,
@@ -16,9 +18,16 @@ abstract class HeadcountRuleModel with _$HeadcountRuleModel {
 
   factory HeadcountRuleModel.fromJson(Map<String, dynamic> json) =>
       _$HeadcountRuleModelFromJson(json);
-}
 
-extension HeadcountRuleModelExtension on HeadcountRuleModel {
+  factory HeadcountRuleModel.fromEntity(HeadcountRule entity) {
+    return HeadcountRuleModel(
+      headcountBase: entity.headcountBase,
+      headcountExtraPrice: entity.headcountExtraPrice,
+      isHeadcountHourly: entity.isHeadcountHourly,
+      isHeadcountPerPerson: entity.isHeadcountPerPerson,
+    );
+  }
+
   HeadcountRule toEntity() {
     return HeadcountRule(
       headcountBase: headcountBase,

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreModel {
 
-@JsonKey(includeToJson: false) String get id; List<String> get adminIds; String get name; Map<String, String> get memberIds; String get address; String get memo; String get color; PriceSettingsModel get priceSettingsModel; InviteInfoModel? get inviteInfoModel;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
+@JsonKey(includeToJson: false) String get id; String get name;@JsonKey(unknownEnumValue: StoreColor.red) StoreColor get color; String get address; String get memo; PriceSettingsModel get priceSettingsModel; Map<String, String> get memberIds; Map<String, String> get waitingMemberIds; InviteInfoModel? get inviteInfoModel;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StoreModelCopyWith<StoreModel> get copyWith => _$StoreModelCopyWithImpl<StoreMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreModel&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.adminIds, adminIds)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.memberIds, memberIds)&&(identical(other.address, address) || other.address == address)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.address, address) || other.address == address)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&const DeepCollectionEquality().equals(other.memberIds, memberIds)&&const DeepCollectionEquality().equals(other.waitingMemberIds, waitingMemberIds)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,const DeepCollectionEquality().hash(adminIds),name,const DeepCollectionEquality().hash(memberIds),address,memo,color,priceSettingsModel,inviteInfoModel,createdAt,updatedAt,deletedAt,expiresAt);
+int get hashCode => Object.hash(runtimeType,id,name,color,address,memo,priceSettingsModel,const DeepCollectionEquality().hash(memberIds),const DeepCollectionEquality().hash(waitingMemberIds),inviteInfoModel,createdAt,updatedAt,deletedAt,expiresAt);
 
 @override
 String toString() {
-  return 'StoreModel(id: $id, adminIds: $adminIds, name: $name, memberIds: $memberIds, address: $address, memo: $memo, color: $color, priceSettingsModel: $priceSettingsModel, inviteInfoModel: $inviteInfoModel, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
+  return 'StoreModel(id: $id, name: $name, color: $color, address: $address, memo: $memo, priceSettingsModel: $priceSettingsModel, memberIds: $memberIds, waitingMemberIds: $waitingMemberIds, inviteInfoModel: $inviteInfoModel, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StoreModelCopyWith<$Res>  {
   factory $StoreModelCopyWith(StoreModel value, $Res Function(StoreModel) _then) = _$StoreModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, List<String> adminIds, String name, Map<String, String> memberIds, String address, String memo, String color, PriceSettingsModel priceSettingsModel, InviteInfoModel? inviteInfoModel,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String name,@JsonKey(unknownEnumValue: StoreColor.red) StoreColor color, String address, String memo, PriceSettingsModel priceSettingsModel, Map<String, String> memberIds, Map<String, String> waitingMemberIds, InviteInfoModel? inviteInfoModel,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
@@ -65,17 +65,17 @@ class _$StoreModelCopyWithImpl<$Res>
 
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? adminIds = null,Object? name = null,Object? memberIds = null,Object? address = null,Object? memo = null,Object? color = null,Object? priceSettingsModel = null,Object? inviteInfoModel = freezed,Object? createdAt = null,Object? updatedAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? color = null,Object? address = null,Object? memo = null,Object? priceSettingsModel = null,Object? memberIds = null,Object? waitingMemberIds = null,Object? inviteInfoModel = freezed,Object? createdAt = null,Object? updatedAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,adminIds: null == adminIds ? _self.adminIds : adminIds // ignore: cast_nullable_to_non_nullable
-as List<String>,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,memberIds: null == memberIds ? _self.memberIds : memberIds // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as StoreColor,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,priceSettingsModel: null == priceSettingsModel ? _self.priceSettingsModel : priceSettingsModel // ignore: cast_nullable_to_non_nullable
-as PriceSettingsModel,inviteInfoModel: freezed == inviteInfoModel ? _self.inviteInfoModel : inviteInfoModel // ignore: cast_nullable_to_non_nullable
+as PriceSettingsModel,memberIds: null == memberIds ? _self.memberIds : memberIds // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,waitingMemberIds: null == waitingMemberIds ? _self.waitingMemberIds : waitingMemberIds // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,inviteInfoModel: freezed == inviteInfoModel ? _self.inviteInfoModel : inviteInfoModel // ignore: cast_nullable_to_non_nullable
 as InviteInfoModel?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
@@ -186,10 +186,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  List<String> adminIds,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  PriceSettingsModel priceSettingsModel,  InviteInfoModel? inviteInfoModel, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name, @JsonKey(unknownEnumValue: StoreColor.red)  StoreColor color,  String address,  String memo,  PriceSettingsModel priceSettingsModel,  Map<String, String> memberIds,  Map<String, String> waitingMemberIds,  InviteInfoModel? inviteInfoModel, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
-return $default(_that.id,_that.adminIds,_that.name,_that.memberIds,_that.address,_that.memo,_that.color,_that.priceSettingsModel,_that.inviteInfoModel,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
+return $default(_that.id,_that.name,_that.color,_that.address,_that.memo,_that.priceSettingsModel,_that.memberIds,_that.waitingMemberIds,_that.inviteInfoModel,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
   return orElse();
 
 }
@@ -207,10 +207,10 @@ return $default(_that.id,_that.adminIds,_that.name,_that.memberIds,_that.address
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  List<String> adminIds,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  PriceSettingsModel priceSettingsModel,  InviteInfoModel? inviteInfoModel, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name, @JsonKey(unknownEnumValue: StoreColor.red)  StoreColor color,  String address,  String memo,  PriceSettingsModel priceSettingsModel,  Map<String, String> memberIds,  Map<String, String> waitingMemberIds,  InviteInfoModel? inviteInfoModel, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel():
-return $default(_that.id,_that.adminIds,_that.name,_that.memberIds,_that.address,_that.memo,_that.color,_that.priceSettingsModel,_that.inviteInfoModel,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
+return $default(_that.id,_that.name,_that.color,_that.address,_that.memo,_that.priceSettingsModel,_that.memberIds,_that.waitingMemberIds,_that.inviteInfoModel,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -227,10 +227,10 @@ return $default(_that.id,_that.adminIds,_that.name,_that.memberIds,_that.address
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  List<String> adminIds,  String name,  Map<String, String> memberIds,  String address,  String memo,  String color,  PriceSettingsModel priceSettingsModel,  InviteInfoModel? inviteInfoModel, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String name, @JsonKey(unknownEnumValue: StoreColor.red)  StoreColor color,  String address,  String memo,  PriceSettingsModel priceSettingsModel,  Map<String, String> memberIds,  Map<String, String> waitingMemberIds,  InviteInfoModel? inviteInfoModel, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
-return $default(_that.id,_that.adminIds,_that.name,_that.memberIds,_that.address,_that.memo,_that.color,_that.priceSettingsModel,_that.inviteInfoModel,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
+return $default(_that.id,_that.name,_that.color,_that.address,_that.memo,_that.priceSettingsModel,_that.memberIds,_that.waitingMemberIds,_that.inviteInfoModel,_that.createdAt,_that.updatedAt,_that.deletedAt,_that.expiresAt);case _:
   return null;
 
 }
@@ -241,19 +241,16 @@ return $default(_that.id,_that.adminIds,_that.name,_that.memberIds,_that.address
 /// @nodoc
 @JsonSerializable()
 
-class _StoreModel implements StoreModel {
-  const _StoreModel({@JsonKey(includeToJson: false) required this.id, final  List<String> adminIds = const [], required this.name, required final  Map<String, String> memberIds, required this.address, required this.memo, required this.color, required this.priceSettingsModel, this.inviteInfoModel, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _adminIds = adminIds,_memberIds = memberIds;
+class _StoreModel extends StoreModel {
+  const _StoreModel({@JsonKey(includeToJson: false) required this.id, required this.name, @JsonKey(unknownEnumValue: StoreColor.red) required this.color, required this.address, required this.memo, required this.priceSettingsModel, required final  Map<String, String> memberIds, final  Map<String, String> waitingMemberIds = const {}, this.inviteInfoModel, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _memberIds = memberIds,_waitingMemberIds = waitingMemberIds,super._();
   factory _StoreModel.fromJson(Map<String, dynamic> json) => _$StoreModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
- final  List<String> _adminIds;
-@override@JsonKey() List<String> get adminIds {
-  if (_adminIds is EqualUnmodifiableListView) return _adminIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_adminIds);
-}
-
 @override final  String name;
+@override@JsonKey(unknownEnumValue: StoreColor.red) final  StoreColor color;
+@override final  String address;
+@override final  String memo;
+@override final  PriceSettingsModel priceSettingsModel;
  final  Map<String, String> _memberIds;
 @override Map<String, String> get memberIds {
   if (_memberIds is EqualUnmodifiableMapView) return _memberIds;
@@ -261,10 +258,13 @@ class _StoreModel implements StoreModel {
   return EqualUnmodifiableMapView(_memberIds);
 }
 
-@override final  String address;
-@override final  String memo;
-@override final  String color;
-@override final  PriceSettingsModel priceSettingsModel;
+ final  Map<String, String> _waitingMemberIds;
+@override@JsonKey() Map<String, String> get waitingMemberIds {
+  if (_waitingMemberIds is EqualUnmodifiableMapView) return _waitingMemberIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_waitingMemberIds);
+}
+
 @override final  InviteInfoModel? inviteInfoModel;
 @override@TimestampConverter() final  DateTime createdAt;
 @override@TimestampConverter() final  DateTime updatedAt;
@@ -284,16 +284,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreModel&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other._adminIds, _adminIds)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._memberIds, _memberIds)&&(identical(other.address, address) || other.address == address)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.address, address) || other.address == address)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&const DeepCollectionEquality().equals(other._memberIds, _memberIds)&&const DeepCollectionEquality().equals(other._waitingMemberIds, _waitingMemberIds)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_adminIds),name,const DeepCollectionEquality().hash(_memberIds),address,memo,color,priceSettingsModel,inviteInfoModel,createdAt,updatedAt,deletedAt,expiresAt);
+int get hashCode => Object.hash(runtimeType,id,name,color,address,memo,priceSettingsModel,const DeepCollectionEquality().hash(_memberIds),const DeepCollectionEquality().hash(_waitingMemberIds),inviteInfoModel,createdAt,updatedAt,deletedAt,expiresAt);
 
 @override
 String toString() {
-  return 'StoreModel(id: $id, adminIds: $adminIds, name: $name, memberIds: $memberIds, address: $address, memo: $memo, color: $color, priceSettingsModel: $priceSettingsModel, inviteInfoModel: $inviteInfoModel, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
+  return 'StoreModel(id: $id, name: $name, color: $color, address: $address, memo: $memo, priceSettingsModel: $priceSettingsModel, memberIds: $memberIds, waitingMemberIds: $waitingMemberIds, inviteInfoModel: $inviteInfoModel, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -304,7 +304,7 @@ abstract mixin class _$StoreModelCopyWith<$Res> implements $StoreModelCopyWith<$
   factory _$StoreModelCopyWith(_StoreModel value, $Res Function(_StoreModel) _then) = __$StoreModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, List<String> adminIds, String name, Map<String, String> memberIds, String address, String memo, String color, PriceSettingsModel priceSettingsModel, InviteInfoModel? inviteInfoModel,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String name,@JsonKey(unknownEnumValue: StoreColor.red) StoreColor color, String address, String memo, PriceSettingsModel priceSettingsModel, Map<String, String> memberIds, Map<String, String> waitingMemberIds, InviteInfoModel? inviteInfoModel,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
@@ -321,17 +321,17 @@ class __$StoreModelCopyWithImpl<$Res>
 
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? adminIds = null,Object? name = null,Object? memberIds = null,Object? address = null,Object? memo = null,Object? color = null,Object? priceSettingsModel = null,Object? inviteInfoModel = freezed,Object? createdAt = null,Object? updatedAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? color = null,Object? address = null,Object? memo = null,Object? priceSettingsModel = null,Object? memberIds = null,Object? waitingMemberIds = null,Object? inviteInfoModel = freezed,Object? createdAt = null,Object? updatedAt = null,Object? deletedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_StoreModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,adminIds: null == adminIds ? _self._adminIds : adminIds // ignore: cast_nullable_to_non_nullable
-as List<String>,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,memberIds: null == memberIds ? _self._memberIds : memberIds // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as StoreColor,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,priceSettingsModel: null == priceSettingsModel ? _self.priceSettingsModel : priceSettingsModel // ignore: cast_nullable_to_non_nullable
-as PriceSettingsModel,inviteInfoModel: freezed == inviteInfoModel ? _self.inviteInfoModel : inviteInfoModel // ignore: cast_nullable_to_non_nullable
+as PriceSettingsModel,memberIds: null == memberIds ? _self._memberIds : memberIds // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,waitingMemberIds: null == waitingMemberIds ? _self._waitingMemberIds : waitingMemberIds // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,inviteInfoModel: freezed == inviteInfoModel ? _self.inviteInfoModel : inviteInfoModel // ignore: cast_nullable_to_non_nullable
 as InviteInfoModel?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable

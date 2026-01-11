@@ -6,8 +6,8 @@ import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/common/exceptions/extensions/auth_exception_extension.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/components/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/sign_in/view_models/sign_in_view_model.dart';
 import 'package:studio_chance/presentation/sign_in/views/components/social_sign_in_button.dart';
-import 'package:studio_chance/presentation/sign_in/viewmodels/sign_in_viewmodel.dart';
 
 class SignInView extends ConsumerWidget {
   const SignInView({super.key});

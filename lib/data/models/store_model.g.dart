@@ -8,17 +8,23 @@ part of 'store_model.dart';
 
 _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   id: json['id'] as String,
-  adminIds:
-      (json['adminIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
   name: json['name'] as String,
-  memberIds: Map<String, String>.from(json['memberIds'] as Map),
+  color: $enumDecode(
+    _$StoreColorEnumMap,
+    json['color'],
+    unknownValue: StoreColor.red,
+  ),
   address: json['address'] as String,
   memo: json['memo'] as String,
-  color: json['color'] as String,
   priceSettingsModel: PriceSettingsModel.fromJson(
     json['priceSettingsModel'] as Map<String, dynamic>,
   ),
+  memberIds: Map<String, String>.from(json['memberIds'] as Map),
+  waitingMemberIds:
+      (json['waitingMemberIds'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      const {},
   inviteInfoModel: json['inviteInfoModel'] == null
       ? null
       : InviteInfoModel.fromJson(
@@ -42,13 +48,13 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
 
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
     <String, dynamic>{
-      'adminIds': instance.adminIds,
       'name': instance.name,
-      'memberIds': instance.memberIds,
+      'color': _$StoreColorEnumMap[instance.color]!,
       'address': instance.address,
       'memo': instance.memo,
-      'color': instance.color,
       'priceSettingsModel': instance.priceSettingsModel.toJson(),
+      'memberIds': instance.memberIds,
+      'waitingMemberIds': instance.waitingMemberIds,
       'inviteInfoModel': instance.inviteInfoModel?.toJson(),
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
@@ -61,6 +67,16 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
         const TimestampConverter().toJson,
       ),
     };
+
+const _$StoreColorEnumMap = {
+  StoreColor.red: 'RED',
+  StoreColor.orange: 'ORANGE',
+  StoreColor.yellow: 'YELLOW',
+  StoreColor.green: 'GREEN',
+  StoreColor.blue: 'BLUE',
+  StoreColor.indigo: 'INDIGO',
+  StoreColor.purple: 'PURPLE',
+};
 
 Value? _$JsonConverterFromJson<Json, Value>(
   Object? json,

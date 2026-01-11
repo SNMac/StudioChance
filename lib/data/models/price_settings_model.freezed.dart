@@ -208,8 +208,8 @@ return $default(_that.dayGroupModels);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _PriceSettingsModel implements PriceSettingsModel {
-  const _PriceSettingsModel({final  List<DayGroupModel> dayGroupModels = const []}): _dayGroupModels = dayGroupModels;
+class _PriceSettingsModel extends PriceSettingsModel {
+  const _PriceSettingsModel({final  List<DayGroupModel> dayGroupModels = const []}): _dayGroupModels = dayGroupModels,super._();
   factory _PriceSettingsModel.fromJson(Map<String, dynamic> json) => _$PriceSettingsModelFromJson(json);
 
  final  List<DayGroupModel> _dayGroupModels;

@@ -11,7 +11,6 @@ part of 'day_group.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$DayGroup {
 
@@ -22,8 +21,6 @@ mixin _$DayGroup {
 @pragma('vm:prefer-inline')
 $DayGroupCopyWith<DayGroup> get copyWith => _$DayGroupCopyWithImpl<DayGroup>(this as DayGroup, _$identity);
 
-  /// Serializes this DayGroup to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroup&&const DeepCollectionEquality().equals(other.days, days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other.timeSlots, timeSlots));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days),headcountRule,const DeepCollectionEquality().hash(timeSlots));
 
@@ -217,11 +214,11 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _DayGroup implements DayGroup {
   const _DayGroup({required final  List<int> days, required this.headcountRule, required final  List<TimeSlot> timeSlots}): _days = days,_timeSlots = timeSlots;
-  factory _DayGroup.fromJson(Map<String, dynamic> json) => _$DayGroupFromJson(json);
+  
 
  final  List<int> _days;
 @override List<int> get days {
@@ -245,17 +242,14 @@ class _DayGroup implements DayGroup {
 @pragma('vm:prefer-inline')
 _$DayGroupCopyWith<_DayGroup> get copyWith => __$DayGroupCopyWithImpl<_DayGroup>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$DayGroupToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroup&&const DeepCollectionEquality().equals(other._days, _days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other._timeSlots, _timeSlots));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRule,const DeepCollectionEquality().hash(_timeSlots));
 

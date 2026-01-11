@@ -11,6 +11,8 @@ part 'user_model.g.dart';
 
 @freezed
 abstract class UserModel with _$UserModel {
+  const UserModel._();
+
   const factory UserModel({
     @JsonKey(includeToJson: false) required String id,
     required String email,
@@ -18,7 +20,7 @@ abstract class UserModel with _$UserModel {
     String? nickname,
     @Default([]) List<String> authProviders,
     @Default([]) List<String> fcmTokens,
-    required UserRole role,
+    @JsonKey(unknownEnumValue: UserRole.none) required UserRole role,
     @Default([]) List<String> storeIds,
 
     // DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
@@ -32,10 +34,23 @@ abstract class UserModel with _$UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);
-}
 
-extension UserModelExtension on UserModel {
-  User toEntity() {
+  factory UserModel.fromEntity(User entity) {
+    return UserModel(
+      id: entity.id,
+      email: entity.email,
+      name: entity.name,
+      nickname: entity.nickname,
+      authProviders: entity.authProviders,
+      role: entity.role,
+      storeIds: entity.stores.map((store) => store.id).toList(),
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      lastLoginAt: entity.lastLoginAt,
+    );
+  }
+
+  User toEntity({required List<Store> stores}) {
     return User(
       id: id,
       name: name,
@@ -43,7 +58,10 @@ extension UserModelExtension on UserModel {
       nickname: nickname,
       authProviders: authProviders,
       role: role,
-      storeIds: storeIds,
+      stores: stores,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      lastLoginAt: lastLoginAt,
     );
   }
 }

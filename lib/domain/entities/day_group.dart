@@ -4,7 +4,6 @@ import 'package:studio_chance/domain/entities/headcount_rule.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 
 part 'day_group.freezed.dart';
-part 'day_group.g.dart';
 
 @freezed
 abstract class DayGroup with _$DayGroup {
@@ -13,7 +12,4 @@ abstract class DayGroup with _$DayGroup {
     required HeadcountRule headcountRule,
     required List<TimeSlot> timeSlots,
   }) = _DayGroup;
-
-  factory DayGroup.fromJson(Map<String, dynamic> json) =>
-      _$DayGroupFromJson(json);
 }

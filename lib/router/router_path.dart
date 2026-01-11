@@ -18,13 +18,13 @@ enum SCRoute {
         return '/home';
 
       case SCRoute.onboardingNickname:
-        return 'onboarding-nickname';
+        return '/onboarding/nickname';
       case SCRoute.onboardingRole:
-        return 'onboarding-role';
+        return 'role'; // /onboarding/role
       case SCRoute.onboardingStore:
-        return 'onboarding-store';
+        return 'store'; // /onboarding/store
       case SCRoute.onboardingInvitation:
-        return 'onboarding-invitation';
+        return 'invitation';
     }
   }
 
@@ -39,13 +39,13 @@ enum SCRoute {
         return '/home';
 
       case SCRoute.onboardingNickname:
-        return '/sign-in/onboarding-nickname';
+        return '/onboarding/nickname';
       case SCRoute.onboardingRole:
-        return '/sign-in/onboarding-role';
+        return '/onboarding/role';
       case SCRoute.onboardingStore:
-        return '/sign-in/onboarding-store';
+        return '/onboarding/store';
       case SCRoute.onboardingInvitation:
-        return '/sign-in/onboarding-invitation';
+        return '/onboarding/invitation';
     }
   }
 }

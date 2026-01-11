@@ -11,7 +11,6 @@ part of 'time_slot.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$TimeSlot {
 
@@ -22,8 +21,6 @@ mixin _$TimeSlot {
 @pragma('vm:prefer-inline')
 $TimeSlotCopyWith<TimeSlot> get copyWith => _$TimeSlotCopyWithImpl<TimeSlot>(this as TimeSlot, _$identity);
 
-  /// Serializes this TimeSlot to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlot&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,startTime,endTime,price,isHourly,isPerPerson);
 
@@ -210,11 +207,11 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _TimeSlot implements TimeSlot {
   const _TimeSlot({required this.startTime, required this.endTime, required this.price, required this.isHourly, required this.isPerPerson});
-  factory _TimeSlot.fromJson(Map<String, dynamic> json) => _$TimeSlotFromJson(json);
+  
 
 @override final  int startTime;
 @override final  int endTime;
@@ -228,17 +225,14 @@ class _TimeSlot implements TimeSlot {
 @pragma('vm:prefer-inline')
 _$TimeSlotCopyWith<_TimeSlot> get copyWith => __$TimeSlotCopyWithImpl<_TimeSlot>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$TimeSlotToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlot&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,startTime,endTime,price,isHourly,isPerPerson);
 

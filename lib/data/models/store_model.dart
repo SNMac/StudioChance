@@ -6,22 +6,26 @@ import 'package:studio_chance/data/models/price_settings_model.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 
 part 'store_model.freezed.dart';
 part 'store_model.g.dart';
 
 @freezed
 abstract class StoreModel with _$StoreModel {
+  const StoreModel._();
+
   const factory StoreModel({
     @JsonKey(includeToJson: false) required String id,
-    @Default([]) List<String> adminIds,
     required String name,
-    required Map<String, String> memberIds,
+    @JsonKey(unknownEnumValue: StoreColor.red) required StoreColor color,
     required String address,
     required String memo,
-    required String color,
 
     required PriceSettingsModel priceSettingsModel,
+    required Map<String, String> memberIds,
+    @Default({}) Map<String, String> waitingMemberIds,
+
     InviteInfoModel? inviteInfoModel,
 
     @TimestampConverter() required DateTime createdAt,
@@ -33,18 +37,46 @@ abstract class StoreModel with _$StoreModel {
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
       _$StoreModelFromJson(json);
-}
 
-extension StoreModelExtension on StoreModel {
-  Store toEntity(List<User> members) {
+  factory StoreModel.fromEntity(Store entity) {
+    final now = DateTime.now();
+    return StoreModel(
+      id: entity.id,
+      name: entity.name,
+      color: entity.color,
+      address: entity.address,
+      memo: entity.memo,
+      priceSettingsModel: PriceSettingsModel.fromEntity(entity.priceSettings),
+      memberIds: {
+        for (var member in entity.members) member.id: member.role.name,
+      },
+      waitingMemberIds: {
+        for (var m in entity.waitingMembers) m.id: m.role.name,
+      },
+      inviteInfoModel: entity.inviteInfo != null
+          ? InviteInfoModel.fromEntity(entity.inviteInfo!)
+          : null,
+      createdAt: entity.createdAt ?? now,
+      updatedAt: entity.updatedAt ?? now,
+    );
+  }
+
+  Store toEntity({
+    required List<User> members,
+    required List<User> waitingMembers,
+  }) {
     return Store(
       id: id,
-      adminIds: adminIds,
       name: name,
       color: color,
-      members: members,
+      address: address,
+      memo: memo,
       priceSettings: priceSettingsModel.toEntity(),
+      members: members,
+      waitingMembers: waitingMembers,
       inviteInfo: inviteInfoModel?.toEntity(),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }

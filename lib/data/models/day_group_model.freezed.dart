@@ -220,8 +220,8 @@ return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _DayGroupModel implements DayGroupModel {
-  const _DayGroupModel({final  List<int> days = const [], required this.headcountRuleModel, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots;
+class _DayGroupModel extends DayGroupModel {
+  const _DayGroupModel({final  List<int> days = const [], required this.headcountRuleModel, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots,super._();
   factory _DayGroupModel.fromJson(Map<String, dynamic> json) => _$DayGroupModelFromJson(json);
 
  final  List<int> _days;

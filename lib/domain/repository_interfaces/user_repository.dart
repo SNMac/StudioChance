@@ -1,9 +1,13 @@
 import 'package:fpdart/fpdart.dart';
 
+import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 
 abstract interface class UserRepository {
+  /// 로그인 후 호출: DB 조회 후 없으면 생성, 있으면 갱신하여 반환
+  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo);
+
   /// 현재 로그인된 사용자 정보 반환
   /// - 로그인 상태가 아니거나 DB에 정보가 없으면 null 반환
   Future<Either<Exception, User?>> getCurrentUser();
@@ -13,7 +17,6 @@ abstract interface class UserRepository {
   Future<Either<Exception, User?>> getUser(String uid);
 
   /// 사용자 프로필 정보 업데이트
-  /// - 온보딩이나 마이페이지에서 닉네임, 역할 등을 수정할 때 사용
   Future<Either<Exception, void>> updateUser({
     required String uid,
     String? email,
@@ -21,17 +24,9 @@ abstract interface class UserRepository {
     UserRole? role,
   });
 
-  /// 사용자의 소속 가게 ID 추가
-  /// - 점포 생성 혹은 초대 수락 시 호출
-  Future<Either<Exception, void>> addStoreId({
-    required String uid,
-    required String storeId,
-  });
+  /// 현재 기기의 FCM 토큰을 찾아 DB에서 제거 (로그아웃용)
+  Future<void> removeCurrentDeviceFcmToken(String uid);
 
-  /// 사용자의 소속 점포 ID 제거
-  /// - 점포 삭제 혹은 점포 탈퇴 시 호출
-  Future<Either<Exception, void>> removeStoreId({
-    required String uid,
-    required String storeId,
-  });
+  /// 유저 데이터를 Soft Delete 처리 (탈퇴용)
+  Future<void> softDeleteUser(String uid);
 }

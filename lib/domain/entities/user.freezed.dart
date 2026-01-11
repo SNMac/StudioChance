@@ -11,33 +11,30 @@ part of 'user.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$User {
 
- String get id; String get name; String get email; String? get nickname; List<String> get authProviders; UserRole get role; List<String> get storeIds;
+ String get id; String get name; String get email; String? get nickname; List<String> get authProviders; UserRole get role; List<Store> get stores; DateTime get createdAt; DateTime get updatedAt; DateTime get lastLoginAt;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$identity);
 
-  /// Serializes this User to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.storeIds, storeIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.stores, stores)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(authProviders),role,const DeepCollectionEquality().hash(storeIds));
+int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(authProviders),role,const DeepCollectionEquality().hash(stores),createdAt,updatedAt,lastLoginAt);
 
 @override
 String toString() {
-  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, role: $role, storeIds: $storeIds)';
+  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, role: $role, stores: $stores, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt)';
 }
 
 
@@ -48,7 +45,7 @@ abstract mixin class $UserCopyWith<$Res>  {
   factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String? nickname, List<String> authProviders, UserRole role, List<String> storeIds
+ String id, String name, String email, String? nickname, List<String> authProviders, UserRole role, List<Store> stores, DateTime createdAt, DateTime updatedAt, DateTime lastLoginAt
 });
 
 
@@ -65,7 +62,7 @@ class _$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? role = null,Object? storeIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? role = null,Object? stores = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -73,8 +70,11 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,storeIds: null == storeIds ? _self.storeIds : storeIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as UserRole,stores: null == stores ? _self.stores : stores // ignore: cast_nullable_to_non_nullable
+as List<Store>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,lastLoginAt: null == lastLoginAt ? _self.lastLoginAt : lastLoginAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 
@@ -159,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  UserRole role,  List<String> storeIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  UserRole role,  List<Store> stores,  DateTime createdAt,  DateTime updatedAt,  DateTime lastLoginAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.role,_that.storeIds);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.role,_that.stores,_that.createdAt,_that.updatedAt,_that.lastLoginAt);case _:
   return orElse();
 
 }
@@ -180,10 +180,10 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  UserRole role,  List<String> storeIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  UserRole role,  List<Store> stores,  DateTime createdAt,  DateTime updatedAt,  DateTime lastLoginAt)  $default,) {final _that = this;
 switch (_that) {
 case _User():
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.role,_that.storeIds);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.role,_that.stores,_that.createdAt,_that.updatedAt,_that.lastLoginAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +200,10 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  UserRole role,  List<String> storeIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  UserRole role,  List<Store> stores,  DateTime createdAt,  DateTime updatedAt,  DateTime lastLoginAt)?  $default,) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.role,_that.storeIds);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.role,_that.stores,_that.createdAt,_that.updatedAt,_that.lastLoginAt);case _:
   return null;
 
 }
@@ -212,11 +212,11 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _User extends User {
-  const _User({required this.id, required this.name, required this.email, this.nickname, required final  List<String> authProviders, required this.role, required final  List<String> storeIds}): _authProviders = authProviders,_storeIds = storeIds,super._();
-  factory _User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  const _User({required this.id, required this.name, required this.email, required this.nickname, required final  List<String> authProviders, required this.role, required final  List<Store> stores, required this.createdAt, required this.updatedAt, required this.lastLoginAt}): _authProviders = authProviders,_stores = stores,super._();
+  
 
 @override final  String id;
 @override final  String name;
@@ -230,13 +230,16 @@ class _User extends User {
 }
 
 @override final  UserRole role;
- final  List<String> _storeIds;
-@override List<String> get storeIds {
-  if (_storeIds is EqualUnmodifiableListView) return _storeIds;
+ final  List<Store> _stores;
+@override List<Store> get stores {
+  if (_stores is EqualUnmodifiableListView) return _stores;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_storeIds);
+  return EqualUnmodifiableListView(_stores);
 }
 
+@override final  DateTime createdAt;
+@override final  DateTime updatedAt;
+@override final  DateTime lastLoginAt;
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
@@ -244,23 +247,20 @@ class _User extends User {
 @pragma('vm:prefer-inline')
 _$UserCopyWith<_User> get copyWith => __$UserCopyWithImpl<_User>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$UserToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._storeIds, _storeIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._stores, _stores)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(_authProviders),role,const DeepCollectionEquality().hash(_storeIds));
+int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(_authProviders),role,const DeepCollectionEquality().hash(_stores),createdAt,updatedAt,lastLoginAt);
 
 @override
 String toString() {
-  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, role: $role, storeIds: $storeIds)';
+  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, role: $role, stores: $stores, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt)';
 }
 
 
@@ -271,7 +271,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
   factory _$UserCopyWith(_User value, $Res Function(_User) _then) = __$UserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String? nickname, List<String> authProviders, UserRole role, List<String> storeIds
+ String id, String name, String email, String? nickname, List<String> authProviders, UserRole role, List<Store> stores, DateTime createdAt, DateTime updatedAt, DateTime lastLoginAt
 });
 
 
@@ -288,7 +288,7 @@ class __$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? role = null,Object? storeIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? role = null,Object? stores = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,}) {
   return _then(_User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -296,8 +296,11 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,storeIds: null == storeIds ? _self._storeIds : storeIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as UserRole,stores: null == stores ? _self._stores : stores // ignore: cast_nullable_to_non_nullable
+as List<Store>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,lastLoginAt: null == lastLoginAt ? _self.lastLoginAt : lastLoginAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 

@@ -11,33 +11,30 @@ part of 'invite_info.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$InviteInfo {
 
- String get inviteCode;
+ String get inviteCode; DateTime get createdAt;
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InviteInfoCopyWith<InviteInfo> get copyWith => _$InviteInfoCopyWithImpl<InviteInfo>(this as InviteInfo, _$identity);
 
-  /// Serializes this InviteInfo to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode);
+int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode)';
+  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +45,7 @@ abstract mixin class $InviteInfoCopyWith<$Res>  {
   factory $InviteInfoCopyWith(InviteInfo value, $Res Function(InviteInfo) _then) = _$InviteInfoCopyWithImpl;
 @useResult
 $Res call({
- String inviteCode
+ String inviteCode, DateTime createdAt
 });
 
 
@@ -65,10 +62,11 @@ class _$InviteInfoCopyWithImpl<$Res>
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,Object? createdAt = null,}) {
   return _then(_self.copyWith(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String,
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 
@@ -153,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InviteInfo() when $default != null:
-return $default(_that.inviteCode);case _:
+return $default(_that.inviteCode,_that.createdAt);case _:
   return orElse();
 
 }
@@ -174,10 +172,10 @@ return $default(_that.inviteCode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _InviteInfo():
-return $default(_that.inviteCode);case _:
+return $default(_that.inviteCode,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +192,10 @@ return $default(_that.inviteCode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _InviteInfo() when $default != null:
-return $default(_that.inviteCode);case _:
+return $default(_that.inviteCode,_that.createdAt);case _:
   return null;
 
 }
@@ -206,13 +204,14 @@ return $default(_that.inviteCode);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
 
-class _InviteInfo implements InviteInfo {
-  const _InviteInfo({required this.inviteCode});
-  factory _InviteInfo.fromJson(Map<String, dynamic> json) => _$InviteInfoFromJson(json);
+
+class _InviteInfo extends InviteInfo {
+  const _InviteInfo({required this.inviteCode, required this.createdAt}): super._();
+  
 
 @override final  String inviteCode;
+@override final  DateTime createdAt;
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -220,23 +219,20 @@ class _InviteInfo implements InviteInfo {
 @pragma('vm:prefer-inline')
 _$InviteInfoCopyWith<_InviteInfo> get copyWith => __$InviteInfoCopyWithImpl<_InviteInfo>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$InviteInfoToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode);
+int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode)';
+  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 
@@ -247,7 +243,7 @@ abstract mixin class _$InviteInfoCopyWith<$Res> implements $InviteInfoCopyWith<$
   factory _$InviteInfoCopyWith(_InviteInfo value, $Res Function(_InviteInfo) _then) = __$InviteInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String inviteCode
+ String inviteCode, DateTime createdAt
 });
 
 
@@ -264,10 +260,11 @@ class __$InviteInfoCopyWithImpl<$Res>
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,Object? createdAt = null,}) {
   return _then(_InviteInfo(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String,
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
-@JsonKey(includeToJson: false) String get id; String get email; String get name; String? get nickname; List<String> get authProviders; List<String> get fcmTokens; UserRole get role; List<String> get storeIds;// DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
+@JsonKey(includeToJson: false) String get id; String get email; String get name; String? get nickname; List<String> get authProviders; List<String> get fcmTokens;@JsonKey(unknownEnumValue: UserRole.none) UserRole get role; List<String> get storeIds;// DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
 @TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@TimestampConverter() DateTime get lastLoginAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get expiresAt;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
@@ -49,7 +49,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, List<String> fcmTokens, UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, List<String> fcmTokens,@JsonKey(unknownEnumValue: UserRole.none) UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 
@@ -166,7 +166,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  List<String> fcmTokens, @JsonKey(unknownEnumValue: UserRole.none)  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
 return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
@@ -187,7 +187,7 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  List<String> fcmTokens, @JsonKey(unknownEnumValue: UserRole.none)  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
 return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
@@ -207,7 +207,7 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  List<String> fcmTokens,  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  List<String> fcmTokens, @JsonKey(unknownEnumValue: UserRole.none)  UserRole role,  List<String> storeIds, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @TimestampConverter()  DateTime lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? expiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
 return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.role,_that.storeIds,_that.createdAt,_that.updatedAt,_that.lastLoginAt,_that.deletedAt,_that.expiresAt);case _:
@@ -221,8 +221,8 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// @nodoc
 @JsonSerializable()
 
-class _UserModel implements UserModel {
-  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname, final  List<String> authProviders = const [], final  List<String> fcmTokens = const [], required this.role, final  List<String> storeIds = const [], @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @TimestampConverter() required this.lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _authProviders = authProviders,_fcmTokens = fcmTokens,_storeIds = storeIds;
+class _UserModel extends UserModel {
+  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname, final  List<String> authProviders = const [], final  List<String> fcmTokens = const [], @JsonKey(unknownEnumValue: UserRole.none) required this.role, final  List<String> storeIds = const [], @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @TimestampConverter() required this.lastLoginAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt, @JsonKey(includeIfNull: false)@TimestampConverter() this.expiresAt}): _authProviders = authProviders,_fcmTokens = fcmTokens,_storeIds = storeIds,super._();
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -243,7 +243,7 @@ class _UserModel implements UserModel {
   return EqualUnmodifiableListView(_fcmTokens);
 }
 
-@override final  UserRole role;
+@override@JsonKey(unknownEnumValue: UserRole.none) final  UserRole role;
  final  List<String> _storeIds;
 @override@JsonKey() List<String> get storeIds {
   if (_storeIds is EqualUnmodifiableListView) return _storeIds;
@@ -291,7 +291,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, List<String> fcmTokens, UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
+@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, List<String> fcmTokens,@JsonKey(unknownEnumValue: UserRole.none) UserRole role, List<String> storeIds,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@TimestampConverter() DateTime lastLoginAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? expiresAt
 });
 
 

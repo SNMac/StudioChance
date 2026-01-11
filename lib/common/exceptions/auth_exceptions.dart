@@ -1,4 +1,4 @@
-/// 인증 관련 최상위 예외
+/// 인증(Auth) 관련 최상위 예외
 abstract class AuthException implements Exception {
   /// 개발자/로그용 원본 메시지
   final String message;
