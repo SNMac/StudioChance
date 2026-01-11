@@ -14,8 +14,8 @@ class SignInView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncState = ref.watch(signInViewModelProvider);
-    final isLoading = asyncState.isLoading;
+    final state = ref.watch(signInViewModelProvider);
+
     final isDarkMode =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
 
@@ -84,7 +84,7 @@ class SignInView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: 12,
                 children: [
-                  if (isLoading)
+                  if (state.isLoading)
                     const SizedBox(
                       height: 108,
                       child: Center(

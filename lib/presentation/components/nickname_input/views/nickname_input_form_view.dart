@@ -35,7 +35,7 @@ class _NicknameInputFormState extends ConsumerState<NicknameInputFormView> {
   @override
   Widget build(BuildContext context) {
     final provider = nicknameInputFormViewModelProvider(widget.initialNickname);
-    final viewModel = ref.read(provider.notifier);
+    final notifier = ref.read(provider.notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -46,7 +46,7 @@ class _NicknameInputFormState extends ConsumerState<NicknameInputFormView> {
               controller: _controller,
               maxLines: 1,
               autofocus: true,
-              onChanged: (value) => viewModel.onNicknameChanged(value),
+              onChanged: (value) => notifier.onNicknameChanged(value),
               placeholder: '닉네임',
               inputFormatters: [
                 LengthLimitingTextInputFormatter(10),

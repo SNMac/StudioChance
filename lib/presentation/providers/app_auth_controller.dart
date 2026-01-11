@@ -5,13 +5,12 @@ import 'package:studio_chance/presentation/providers/auth_provider.dart';
 
 part 'app_auth_controller.g.dart';
 
-// 앱의 전체 상태 정의
-enum AppStatus {
-  unauthenticated, // 비로그인
-  onboarding, // DB는 있는데 닉네임 없음 (신규)
-  authenticated, // 모든 정보 완벽함 (홈으로)
-  error, // 에러 발생
-}
+/// 앱의 전체 상태 정의
+/// - `unauthenticated`: 비로그인
+/// - `onboarding`: 로그인) 신규 사용자 or 온보딩 미완수 사용자
+/// - `authenticated`: 로그인) 기존 사용자
+/// - `error`: 에러 발생
+enum AppStatus { unauthenticated, onboarding, authenticated, error }
 
 @Riverpod(keepAlive: true)
 class AppAuthController extends _$AppAuthController {

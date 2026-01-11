@@ -44,14 +44,14 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
   Widget build(BuildContext context) {
     final provider = storeInputFormViewModelProvider(widget.initialStore);
     final state = ref.watch(provider);
-    final viewModel = ref.read(provider.notifier);
+    final notifier = ref.read(provider.notifier);
 
     return GroupedFormContainer(
       children: [
         TitleTextField(
           title: '점포명',
           controller: _nameController,
-          onChanged: viewModel.setName,
+          onChanged: notifier.setName,
           inputFormatters: [LengthLimitingTextInputFormatter(15)],
         ),
 
@@ -62,7 +62,7 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
             // 임시 주소 입력 다이얼로그 (나중에 실제 주소 검색으로 교체)
             final result = await _showAddressInput(context, state.address);
             if (result != null && result.isNotEmpty) {
-              viewModel.setAddress(result);
+              notifier.setAddress(result);
             }
           },
         ),
@@ -70,7 +70,7 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
         BodyTextField(
           placeholder: '메모',
           controller: _memoController,
-          onChanged: viewModel.setMemo,
+          onChanged: notifier.setMemo,
           maxLines: null,
           inputFormatters: [LengthLimitingTextInputFormatter(150)],
         ),

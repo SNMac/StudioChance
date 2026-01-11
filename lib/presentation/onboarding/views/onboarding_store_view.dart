@@ -18,7 +18,7 @@ class OnboardingStoreView extends ConsumerWidget {
 
     final formProvider = storeInputFormViewModelProvider(sessionStore);
     final formState = ref.watch(formProvider);
-    final formViewModel = ref.read(formProvider.notifier);
+    final formNotifier = ref.read(formProvider.notifier);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -29,7 +29,7 @@ class OnboardingStoreView extends ConsumerWidget {
             label: '완료',
             onPressed: formState.isValid
                 ? () {
-                    final result = formViewModel.getFormData();
+                    final result = formNotifier.getFormData();
                     if (result != null) {}
                   }
                 : null,

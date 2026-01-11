@@ -22,22 +22,21 @@ class OnboardingRoleView extends ConsumerStatefulWidget {
 class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
   @override
   Widget build(BuildContext context) {
-    final currentRole = ref.watch(onboardingRoleViewModelProvider);
-    final viewModel = ref.read(onboardingRoleViewModelProvider.notifier);
+    final state = ref.watch(onboardingRoleViewModelProvider);
+    final notifier = ref.read(onboardingRoleViewModelProvider.notifier);
 
-    final isSelected = viewModel.isRoleSelected;
+    final isSelected = notifier.isRoleSelected;
 
     void onNextPressed() {
       showCustomAlertDialog(
         context: context,
-        title: '${currentRole.displayName}로 진행할까요?',
+        title: '${state.displayName}로 진행할까요?',
         onConfirm: () {
-          viewModel.saveToSession();
+          notifier.saveToSession();
 
-          if (currentRole == UserRole.admin) {
+          if (state == UserRole.admin) {
             context.push(SCRoute.onboardingStore.fullPath);
-          } else if (currentRole == UserRole.staff ||
-              currentRole == UserRole.viewer) {
+          } else if (state == UserRole.staff || state == UserRole.viewer) {
             context.push(SCRoute.onboardingInvitation.fullPath);
           }
         },
@@ -66,9 +65,9 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
                 child: RoleSelectionButton(
                   title: UserRole.admin.displayName,
                   description: UserRole.admin.displayDescription,
-                  isSelected: currentRole == UserRole.admin,
+                  isSelected: state == UserRole.admin,
                   onPressed: () {
-                    viewModel.selectRole(UserRole.admin);
+                    notifier.selectRole(UserRole.admin);
                   },
                 ),
               ),
@@ -77,9 +76,9 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
                 child: RoleSelectionButton(
                   title: UserRole.staff.displayName,
                   description: UserRole.staff.displayDescription,
-                  isSelected: currentRole == UserRole.staff,
+                  isSelected: state == UserRole.staff,
                   onPressed: () {
-                    viewModel.selectRole(UserRole.staff);
+                    notifier.selectRole(UserRole.staff);
                   },
                 ),
               ),
@@ -88,9 +87,9 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
                 child: RoleSelectionButton(
                   title: UserRole.viewer.displayName,
                   description: UserRole.viewer.displayDescription,
-                  isSelected: currentRole == UserRole.viewer,
+                  isSelected: state == UserRole.viewer,
                   onPressed: () {
-                    viewModel.selectRole(UserRole.viewer);
+                    notifier.selectRole(UserRole.viewer);
                   },
                 ),
               ),
