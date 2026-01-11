@@ -18,11 +18,11 @@ enum SCRoute {
         return '/home';
 
       case SCRoute.onboardingNickname:
-        return '/onboarding/nickname';
+        return 'nickname';
       case SCRoute.onboardingRole:
-        return 'role'; // /onboarding/role
+        return 'role';
       case SCRoute.onboardingStore:
-        return 'store'; // /onboarding/store
+        return 'store';
       case SCRoute.onboardingInvitation:
         return 'invitation';
     }

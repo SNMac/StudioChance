@@ -13,7 +13,8 @@ part of 'nickname_input_form_view_model.dart';
 final nicknameInputFormViewModelProvider = NicknameInputFormViewModelFamily._();
 
 final class NicknameInputFormViewModelProvider
-    extends $NotifierProvider<NicknameInputFormViewModel, String> {
+    extends
+        $NotifierProvider<NicknameInputFormViewModel, NicknameInputFormState> {
   NicknameInputFormViewModelProvider._({
     required NicknameInputFormViewModelFamily super.from,
     required String? super.argument,
@@ -40,10 +41,10 @@ final class NicknameInputFormViewModelProvider
   NicknameInputFormViewModel create() => NicknameInputFormViewModel();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String value) {
+  Override overrideWithValue(NicknameInputFormState value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<String>(value),
+      providerOverride: $SyncValueProvider<NicknameInputFormState>(value),
     );
   }
 
@@ -60,15 +61,15 @@ final class NicknameInputFormViewModelProvider
 }
 
 String _$nicknameInputFormViewModelHash() =>
-    r'b8120f5f313eb87b50f08e125312cb57b07d831e';
+    r'692aa046d189c571aa52b11abd694de8cb10eda8';
 
 final class NicknameInputFormViewModelFamily extends $Family
     with
         $ClassFamilyOverride<
           NicknameInputFormViewModel,
-          String,
-          String,
-          String,
+          NicknameInputFormState,
+          NicknameInputFormState,
+          NicknameInputFormState,
           String?
         > {
   NicknameInputFormViewModelFamily._()
@@ -87,20 +88,22 @@ final class NicknameInputFormViewModelFamily extends $Family
   String toString() => r'nicknameInputFormViewModelProvider';
 }
 
-abstract class _$NicknameInputFormViewModel extends $Notifier<String> {
+abstract class _$NicknameInputFormViewModel
+    extends $Notifier<NicknameInputFormState> {
   late final _$args = ref.$arg as String?;
   String? get initialValue => _$args;
 
-  String build(String? initialValue);
+  NicknameInputFormState build(String? initialValue);
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<String, String>;
+    final ref =
+        this.ref as $Ref<NicknameInputFormState, NicknameInputFormState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<String, String>,
-              String,
+              AnyNotifier<NicknameInputFormState, NicknameInputFormState>,
+              NicknameInputFormState,
               Object?,
               Object?
             >;

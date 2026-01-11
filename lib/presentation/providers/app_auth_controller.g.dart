@@ -13,7 +13,7 @@ part of 'app_auth_controller.dart';
 final appAuthControllerProvider = AppAuthControllerProvider._();
 
 final class AppAuthControllerProvider
-    extends $StreamNotifierProvider<AppAuthController, AppStatus> {
+    extends $AsyncNotifierProvider<AppAuthController, AppStatus> {
   AppAuthControllerProvider._()
     : super(
         from: null,
@@ -33,10 +33,10 @@ final class AppAuthControllerProvider
   AppAuthController create() => AppAuthController();
 }
 
-String _$appAuthControllerHash() => r'39409f7b09c417407f7e08d90e95200e09a511c1';
+String _$appAuthControllerHash() => r'acc4f7d4070d6d2f61481c76bed9ed85c38ea300';
 
-abstract class _$AppAuthController extends $StreamNotifier<AppStatus> {
-  Stream<AppStatus> build();
+abstract class _$AppAuthController extends $AsyncNotifier<AppStatus> {
+  FutureOr<AppStatus> build();
   @$mustCallSuper
   @override
   void runBuild() {

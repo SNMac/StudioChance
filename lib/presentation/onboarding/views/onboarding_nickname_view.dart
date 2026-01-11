@@ -19,27 +19,11 @@ class OnboardingNicknameView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionNickname = ref.watch(onboardingSessionProvider).nickname;
-
     final formProvider = nicknameInputFormViewModelProvider(sessionNickname);
-    final formViewModel = ref.read(formProvider.notifier);
 
-    // 유효성 체크 (Strict Validation)
-    final isValid = ref.watch(
-      formProvider.select((value) {
-        // ViewModel 내부에 isValid getter 로직을 복제하거나,
-        // ViewModel 상태 자체가 String이므로 여기서 직접 검사해도 됨.
-        // 하지만 로직 파편화를 막기 위해 ViewModel 인스턴스의 getter를 쓰는 게 좋지만
-        // Riverpod 상태 구독 안에서는 notifier 접근이 애매할 수 있으므로
-        // 여기서는 깔끔하게 ViewModel의 로직을 그대로 사용하도록 유도합니다.
-        return ref.read(formProvider.notifier).isValid;
-      }),
+    final isFormValid = ref.watch(
+      formProvider.select((state) => state.isValid),
     );
-
-    // *참고: 위의 isValid 방식이 복잡하다면, ViewModel 상태를 객체로 만들거나
-    // 아래처럼 build 안에서 watch 후 notifier.isValid 호출이 일반적입니다.
-    // 여기서는 가장 간단한 방식(watch 후 접근)으로 처리하겠습니다.
-    ref.watch(formProvider); // 리빌드 트리거
-    final isFormValid = formViewModel.isValid;
 
     void showExitDialog() {
       showCustomAlertDialog(
@@ -55,9 +39,10 @@ class OnboardingNicknameView extends ConsumerWidget {
     }
 
     void onNextPressed() {
-      final inputNickname = ref.read(formProvider);
-      ref.read(onboardingSessionProvider.notifier).setNickname(inputNickname);
+      final currentFormState = ref.read(formProvider);
+      final inputNickname = currentFormState.nickname;
 
+      ref.read(onboardingSessionProvider.notifier).setNickname(inputNickname);
       context.push(SCRoute.onboardingRole.fullPath);
     }
 
