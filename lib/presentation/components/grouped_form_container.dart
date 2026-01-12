@@ -36,12 +36,17 @@ class GroupedFormContainer extends StatelessWidget {
                 for (int i = 0; i < children.length; i++) ...[
                   children[i],
                   if (i != children.length - 1)
-                    Divider(
-                      height: 1,
-                      thickness: 0.5,
-                      color: CupertinoDynamicColor.resolve(
-                        CupertinoColors.separator,
-                        context,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: CupertinoDynamicColor.resolve(
+                          CupertinoColors.separator,
+                          context,
+                        ),
                       ),
                     ),
                 ],
