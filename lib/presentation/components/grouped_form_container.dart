@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
+
 class GroupedFormContainer extends StatelessWidget {
-  final String? header;
-  final String? footer;
+  final Widget? header;
+  final Widget? footer;
   final List<Widget> children;
 
   const GroupedFormContainer({
@@ -18,18 +20,17 @@ class GroupedFormContainer extends StatelessWidget {
     return Column(
       spacing: 8,
       children: [
-        if (header != null) Text(header!),
+        if (header != null) header!,
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: CupertinoDynamicColor.resolve(
               CupertinoColors.secondarySystemGroupedBackground,
               context,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(formBorderRadius),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(formBorderRadius),
             child: Column(
               children: [
                 for (int i = 0; i < children.length; i++) ...[
@@ -48,7 +49,7 @@ class GroupedFormContainer extends StatelessWidget {
             ),
           ),
         ),
-        if (footer != null) Text(footer!),
+        if (footer != null) footer!,
       ],
     );
   }

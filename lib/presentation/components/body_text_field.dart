@@ -2,10 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
+
 class BodyTextField extends StatelessWidget {
   final String placeholder;
   final TextEditingController? controller;
-  final TextAlign textAlign;
   final void Function(String)? onChanged;
   final int? maxLines;
   final bool autofocus;
@@ -16,7 +17,6 @@ class BodyTextField extends StatelessWidget {
     super.key,
     required this.placeholder,
     this.controller,
-    this.textAlign = TextAlign.start,
     this.onChanged,
     required this.maxLines,
     this.autofocus = false,
@@ -31,7 +31,7 @@ class BodyTextField extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
       child: CupertinoTextField.borderless(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         placeholder: placeholder,
         placeholderStyle: textTheme.bodyLarge?.copyWith(
           fontWeight: FontWeight.normal,
@@ -42,16 +42,13 @@ class BodyTextField extends StatelessWidget {
         ),
         cursorHeight: 20,
         controller: controller,
-        textAlign: textAlign,
         textAlignVertical: TextAlignVertical.center,
         maxLines: maxLines,
         autofocus: autofocus,
         onChanged: onChanged,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
-        style: textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.normal,
-        ),
+        style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.normal),
       ),
     );
   }

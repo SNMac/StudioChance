@@ -1,13 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:studio_chance/presentation/components/body_text_field.dart';
+
+import 'package:studio_chance/constants/ui_constants.dart';
 
 class TitleTextField extends StatelessWidget {
   final String title;
-  final String? hintText;
+  final String? placeholder;
   final TextEditingController? controller;
   final void Function(String)? onChanged;
-  final int? maxLines;
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
@@ -15,10 +16,9 @@ class TitleTextField extends StatelessWidget {
   const TitleTextField({
     super.key,
     required this.title,
-    this.hintText,
+    this.placeholder,
     this.controller,
     this.onChanged,
-    this.maxLines = 1,
     this.autofocus = false,
     this.inputFormatters,
     this.keyboardType,
@@ -28,27 +28,42 @@ class TitleTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return SizedBox(
-      height: 48,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: 4,
-        children: [
-          Text(title, style: textTheme.bodyLarge),
-          Expanded(
-            child: BodyTextField(
-              placeholder: hintText ?? title,
-              controller: controller,
-              textAlign: TextAlign.end,
-              autofocus: autofocus,
-              maxLines: maxLines,
-              onChanged: onChanged,
-              inputFormatters: inputFormatters,
-              keyboardType: keyboardType,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 4,
+          children: [
+            Text(title, style: textTheme.bodyLarge),
+            Expanded(
+              child: CupertinoTextField.borderless(
+                padding: EdgeInsets.zero,
+                placeholder: placeholder ?? title,
+                placeholderStyle: textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.normal,
+                  color: CupertinoDynamicColor.resolve(
+                    CupertinoColors.secondaryLabel,
+                    context,
+                  ),
+                ),
+                cursorHeight: 20,
+                controller: controller,
+                textAlign: TextAlign.end,
+                textAlignVertical: TextAlignVertical.center,
+                autofocus: autofocus,
+                onChanged: onChanged,
+                inputFormatters: inputFormatters,
+                keyboardType: keyboardType,
+                style: textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

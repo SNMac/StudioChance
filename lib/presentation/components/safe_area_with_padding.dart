@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
+
 class SafeAreaWithPadding extends StatelessWidget {
   final Widget? child;
   final EdgeInsets padding;
@@ -7,7 +9,10 @@ class SafeAreaWithPadding extends StatelessWidget {
   const SafeAreaWithPadding({
     super.key,
     this.child,
-    this.padding = const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+    this.padding = const EdgeInsets.symmetric(
+      vertical: verticalPadding,
+      horizontal: horizontalPadding,
+    ),
   });
 
   @override

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
+
 class TitleNavigationButton extends StatelessWidget {
   final String title;
   final String? content;
@@ -20,7 +22,7 @@ class TitleNavigationButton extends StatelessWidget {
     return SizedBox(
       height: 48,
       child: CupertinoButton(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         onPressed: onPressed,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -28,7 +30,7 @@ class TitleNavigationButton extends StatelessWidget {
           children: [
             Text(title, style: textTheme.bodyLarge),
             Row(
-              spacing: 16,
+              spacing: 12,
               children: [
                 if (content != null)
                   Text(
@@ -41,12 +43,14 @@ class TitleNavigationButton extends StatelessWidget {
                       ),
                     ),
                   ),
-                Icon(
-                  CupertinoIcons.chevron_forward,
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoDynamicColor.resolve(
-                    CupertinoColors.tertiaryLabel,
-                    context,
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 10),
+                  child: Icon(
+                    CupertinoIcons.chevron_forward,
+                    color: CupertinoDynamicColor.resolve(
+                      CupertinoColors.tertiaryLabel,
+                      context,
+                    ),
                   ),
                 ),
               ],

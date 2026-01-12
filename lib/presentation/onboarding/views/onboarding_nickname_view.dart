@@ -67,6 +67,7 @@ class OnboardingNicknameView extends ConsumerWidget {
         body: SafeAreaWithPadding(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 '사용하실 닉네임을 입력해주세요',
