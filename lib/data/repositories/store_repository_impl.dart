@@ -1,14 +1,17 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
+import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
+import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
-import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 
@@ -27,25 +30,36 @@ class StoreRepositoryImpl implements StoreRepository {
        _userDataSource = userDataSource;
 
   @override
-  Future<Either<Exception, Store>> createStore(Store store) async {
+  Future<Either<Exception, Store>> createStore({
+    required Store store,
+    required StoreColor color,
+  }) async {
     try {
-      if (store.members.isEmpty) {
+      if (store.memberInfos.isEmpty) {
         return left(StoreValidationException(message: '초기 멤버 정보가 누락되었습니다.'));
       }
 
-      final creatorId = store.members.first.id;
+      final creator = store.memberInfos.first;
+      final creatorId = creator.user.id;
 
       final storeModel = StoreModel.fromEntity(store);
+
+      final creatorInfo = UserStoreInfoModel(
+        name: store.name,
+        color: color,
+        role: creator.role,
+      );
 
       final createdModel = await _storeDataSource.createStore(
         storeModel,
         creatorId,
+        creatorInfo,
       );
 
       return right(
         createdModel.toEntity(
-          members: store.members,
-          waitingMembers: store.waitingMembers,
+          memberInfos: store.memberInfos,
+          waitingMemberInfos: store.waitingMemberInfos,
         ),
       );
     } catch (e) {
@@ -64,12 +78,15 @@ class StoreRepositoryImpl implements StoreRepository {
       }
 
       final results = await Future.wait([
-        _fetchMembersWithRoles(storeModel.memberIds),
-        _fetchMembersWithRoles(storeModel.waitingMemberIds),
+        _fetchMembersWithRoles(storeModel.memberById),
+        _fetchMembersWithRoles(storeModel.waitingMemberById),
       ]);
 
       return right(
-        storeModel.toEntity(members: results[0], waitingMembers: results[1]),
+        storeModel.toEntity(
+          memberInfos: results[0],
+          waitingMemberInfos: results[1],
+        ),
       );
     } catch (e) {
       _logger.e('getStore 실패');
@@ -78,13 +95,23 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
-  Future<Either<Exception, void>> updateStore(
-    String storeId,
-    Map<String, dynamic> data,
-  ) async {
+  Future<Either<Exception, void>> updateStore({
+    required String storeId,
+    required String uid,
+    required Map<String, dynamic> storeData,
+    StoreColor? newColor,
+  }) async {
     try {
-      await _storeDataSource.updateStore(storeId, data);
-      _logger.i('점포 업데이트 완료\nid: $storeId\n$data');
+      if (storeData.isNotEmpty) {
+        await _storeDataSource.updateStore(storeId, storeData);
+      }
+
+      if (newColor != null) {
+        await _userDataSource.updateStoreInfo(uid, storeId, {
+          'color': newColor.name,
+        });
+      }
+
       return right(null);
     } catch (e) {
       _logger.e('점포 업데이트 실패');
@@ -136,12 +163,15 @@ class StoreRepositoryImpl implements StoreRepository {
       }
 
       final results = await Future.wait([
-        _fetchMembersWithRoles(storeModel.memberIds),
-        _fetchMembersWithRoles(storeModel.waitingMemberIds),
+        _fetchMembersWithRoles(storeModel.memberById),
+        _fetchMembersWithRoles(storeModel.waitingMemberById),
       ]);
 
       return right(
-        storeModel.toEntity(members: results[0], waitingMembers: results[1]),
+        storeModel.toEntity(
+          memberInfos: results[0],
+          waitingMemberInfos: results[1],
+        ),
       );
     } catch (e) {
       _logger.e('초대코드로 점포 조회 실패');
@@ -156,10 +186,12 @@ class StoreRepositoryImpl implements StoreRepository {
     required UserRole role,
   }) async {
     try {
-      await _storeDataSource.addWaitingMember(storeId, uid, role.name);
+      final memberInfo = StoreMemberInfoModel(role: role);
+
+      await _storeDataSource.addWaitingMember(storeId, uid, memberInfo);
 
       _logger.i('점포 가입 신청 완료 (대기열 추가)\nstoreId: $storeId, uid: $uid');
-      // TODO: 여기서 Admin에게 알림 발송 로직 추가 가능
+      // TODO: FCM 알림
 
       return right(null);
     } catch (e) {
@@ -175,7 +207,26 @@ class StoreRepositoryImpl implements StoreRepository {
     required UserRole role,
   }) async {
     try {
-      await _storeDataSource.approveMemberWithBatch(storeId, uid, role.name);
+      final storeModel = await _storeDataSource.getStore(storeId);
+      if (storeModel == null) {
+        return left(StoreNotFoundException(message: '점포를 찾을 수 없습니다.'));
+      }
+
+      final memberInfo = StoreMemberInfoModel(role: role);
+
+      final userStoreInfo = UserStoreInfoModel(
+        name: storeModel.name,
+        color: StoreColor.red,
+        role: role,
+      );
+
+      await _storeDataSource.approveMemberWithBatch(
+        storeId,
+        uid,
+        memberInfo,
+        userStoreInfo,
+      );
+
       _logger.i('멤버 승인 및 데이터 동기화 완료\nstoreId: $storeId, uid: $uid');
       return right(null);
     } catch (e) {
@@ -184,33 +235,47 @@ class StoreRepositoryImpl implements StoreRepository {
     }
   }
 
+  @override
+  Future<Either<Exception, void>> updateMemberRole({
+    required String storeId,
+    required String uid,
+    required UserRole newRole,
+  }) async {
+    try {
+      await _storeDataSource.updateMemberRole(storeId, uid, newRole.name);
+
+      _logger.i(
+        '멤버 권한 변경 완료\nstoreId: $storeId, uid: $uid, role: ${newRole.name}',
+      );
+      return right(null);
+    } catch (e) {
+      _logger.e('멤버 권한 변경 실패');
+      return left(e is Exception ? e : Exception(e.toString()));
+    }
+  }
+
   // ===========================================================================
   // Private Helpers
   // ===========================================================================
 
-  /// memberIds Map을 받아 UserEntity 목록을 반환 (Role 주입 포함)
-  /// - input: `Map<UserID, RoleString>`
-  ///   - 예: `{'user1': 'admin', 'user2': 'staff'}`
-  Future<List<User>> _fetchMembersWithRoles(
-    Map<String, String> memberIdsMap,
+  /// StoreMemberInfoModel Map을 받아 StoreMemberInfo Entity 목록으로 변환
+  /// - input: `Map<UserID, StoreMemberInfoModel>`
+  Future<List<StoreMemberInfo>> _fetchMembersWithRoles(
+    Map<String, StoreMemberInfoModel> memberMap,
   ) async {
-    if (memberIdsMap.isEmpty) return [];
+    if (memberMap.isEmpty) return [];
 
-    final userIds = memberIdsMap.keys.toList();
+    final userIds = memberMap.keys.toList();
 
     final futures = userIds.map((uid) => _userDataSource.getUser(uid));
     final userModels = await Future.wait(futures);
 
-    return userModels.where((model) => model != null).map((model) {
-      final userEntity = model!.toEntity(stores: []);
+    return userModels.where((model) => model != null).map((userModel) {
+      final userEntity = userModel!.toEntity();
 
-      final roleString = memberIdsMap[model.id];
-      final role = UserRole.values.firstWhere(
-        (e) => e.name == roleString,
-        orElse: () => UserRole.none,
-      );
+      final infoModel = memberMap[userModel.id]!;
 
-      return userEntity.copyWith(role: role);
+      return infoModel.toEntity(user: userEntity);
     }).toList();
   }
 }

@@ -14,8 +14,11 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OnboardingState {
 
- String get nickname; UserRole get selectedRole;/// Admin일 때 입력받을 점포 정보
- Store? get storeToMake;/// Staff/Viewer일 때 입력받을 초대된 점포 ID
+ String get nickname; UserRole get selectedRole;/// 점포를 신규 생성하는 중인지 여부
+/// - 관리자 역할 선택인 경우 한정
+ bool get isCreatingStore;/// 점포 생성 시 입력받을 점포 정보
+ Store? get storeToMake;/// 점포 생성 시 선택한 점포 색상
+ StoreColor? get selectedStoreColor;/// Staff/Viewer일 때 입력받을 초대된 점포 ID
  String? get invitedStoreId;
 /// Create a copy of OnboardingState
 /// with the given fields replaced by the non-null parameter values.
@@ -27,16 +30,16 @@ $OnboardingStateCopyWith<OnboardingState> get copyWith => _$OnboardingStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingState&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.selectedRole, selectedRole) || other.selectedRole == selectedRole)&&(identical(other.storeToMake, storeToMake) || other.storeToMake == storeToMake)&&(identical(other.invitedStoreId, invitedStoreId) || other.invitedStoreId == invitedStoreId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingState&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.selectedRole, selectedRole) || other.selectedRole == selectedRole)&&(identical(other.isCreatingStore, isCreatingStore) || other.isCreatingStore == isCreatingStore)&&(identical(other.storeToMake, storeToMake) || other.storeToMake == storeToMake)&&(identical(other.selectedStoreColor, selectedStoreColor) || other.selectedStoreColor == selectedStoreColor)&&(identical(other.invitedStoreId, invitedStoreId) || other.invitedStoreId == invitedStoreId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nickname,selectedRole,storeToMake,invitedStoreId);
+int get hashCode => Object.hash(runtimeType,nickname,selectedRole,isCreatingStore,storeToMake,selectedStoreColor,invitedStoreId);
 
 @override
 String toString() {
-  return 'OnboardingState(nickname: $nickname, selectedRole: $selectedRole, storeToMake: $storeToMake, invitedStoreId: $invitedStoreId)';
+  return 'OnboardingState(nickname: $nickname, selectedRole: $selectedRole, isCreatingStore: $isCreatingStore, storeToMake: $storeToMake, selectedStoreColor: $selectedStoreColor, invitedStoreId: $invitedStoreId)';
 }
 
 
@@ -47,7 +50,7 @@ abstract mixin class $OnboardingStateCopyWith<$Res>  {
   factory $OnboardingStateCopyWith(OnboardingState value, $Res Function(OnboardingState) _then) = _$OnboardingStateCopyWithImpl;
 @useResult
 $Res call({
- String nickname, UserRole selectedRole, Store? storeToMake, String? invitedStoreId
+ String nickname, UserRole selectedRole, bool isCreatingStore, Store? storeToMake, StoreColor? selectedStoreColor, String? invitedStoreId
 });
 
 
@@ -64,12 +67,14 @@ class _$OnboardingStateCopyWithImpl<$Res>
 
 /// Create a copy of OnboardingState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? nickname = null,Object? selectedRole = null,Object? storeToMake = freezed,Object? invitedStoreId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? nickname = null,Object? selectedRole = null,Object? isCreatingStore = null,Object? storeToMake = freezed,Object? selectedStoreColor = freezed,Object? invitedStoreId = freezed,}) {
   return _then(_self.copyWith(
 nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,selectedRole: null == selectedRole ? _self.selectedRole : selectedRole // ignore: cast_nullable_to_non_nullable
-as UserRole,storeToMake: freezed == storeToMake ? _self.storeToMake : storeToMake // ignore: cast_nullable_to_non_nullable
-as Store?,invitedStoreId: freezed == invitedStoreId ? _self.invitedStoreId : invitedStoreId // ignore: cast_nullable_to_non_nullable
+as UserRole,isCreatingStore: null == isCreatingStore ? _self.isCreatingStore : isCreatingStore // ignore: cast_nullable_to_non_nullable
+as bool,storeToMake: freezed == storeToMake ? _self.storeToMake : storeToMake // ignore: cast_nullable_to_non_nullable
+as Store?,selectedStoreColor: freezed == selectedStoreColor ? _self.selectedStoreColor : selectedStoreColor // ignore: cast_nullable_to_non_nullable
+as StoreColor?,invitedStoreId: freezed == invitedStoreId ? _self.invitedStoreId : invitedStoreId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -167,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nickname,  UserRole selectedRole,  Store? storeToMake,  String? invitedStoreId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String nickname,  UserRole selectedRole,  bool isCreatingStore,  Store? storeToMake,  StoreColor? selectedStoreColor,  String? invitedStoreId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OnboardingState() when $default != null:
-return $default(_that.nickname,_that.selectedRole,_that.storeToMake,_that.invitedStoreId);case _:
+return $default(_that.nickname,_that.selectedRole,_that.isCreatingStore,_that.storeToMake,_that.selectedStoreColor,_that.invitedStoreId);case _:
   return orElse();
 
 }
@@ -188,10 +193,10 @@ return $default(_that.nickname,_that.selectedRole,_that.storeToMake,_that.invite
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nickname,  UserRole selectedRole,  Store? storeToMake,  String? invitedStoreId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String nickname,  UserRole selectedRole,  bool isCreatingStore,  Store? storeToMake,  StoreColor? selectedStoreColor,  String? invitedStoreId)  $default,) {final _that = this;
 switch (_that) {
 case _OnboardingState():
-return $default(_that.nickname,_that.selectedRole,_that.storeToMake,_that.invitedStoreId);case _:
+return $default(_that.nickname,_that.selectedRole,_that.isCreatingStore,_that.storeToMake,_that.selectedStoreColor,_that.invitedStoreId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +213,10 @@ return $default(_that.nickname,_that.selectedRole,_that.storeToMake,_that.invite
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nickname,  UserRole selectedRole,  Store? storeToMake,  String? invitedStoreId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String nickname,  UserRole selectedRole,  bool isCreatingStore,  Store? storeToMake,  StoreColor? selectedStoreColor,  String? invitedStoreId)?  $default,) {final _that = this;
 switch (_that) {
 case _OnboardingState() when $default != null:
-return $default(_that.nickname,_that.selectedRole,_that.storeToMake,_that.invitedStoreId);case _:
+return $default(_that.nickname,_that.selectedRole,_that.isCreatingStore,_that.storeToMake,_that.selectedStoreColor,_that.invitedStoreId);case _:
   return null;
 
 }
@@ -223,13 +228,18 @@ return $default(_that.nickname,_that.selectedRole,_that.storeToMake,_that.invite
 
 
 class _OnboardingState extends OnboardingState {
-  const _OnboardingState({this.nickname = '', this.selectedRole = UserRole.none, this.storeToMake, this.invitedStoreId}): super._();
+  const _OnboardingState({this.nickname = '', this.selectedRole = UserRole.none, this.isCreatingStore = false, this.storeToMake, this.selectedStoreColor, this.invitedStoreId}): super._();
   
 
 @override@JsonKey() final  String nickname;
 @override@JsonKey() final  UserRole selectedRole;
-/// Admin일 때 입력받을 점포 정보
+/// 점포를 신규 생성하는 중인지 여부
+/// - 관리자 역할 선택인 경우 한정
+@override@JsonKey() final  bool isCreatingStore;
+/// 점포 생성 시 입력받을 점포 정보
 @override final  Store? storeToMake;
+/// 점포 생성 시 선택한 점포 색상
+@override final  StoreColor? selectedStoreColor;
 /// Staff/Viewer일 때 입력받을 초대된 점포 ID
 @override final  String? invitedStoreId;
 
@@ -243,16 +253,16 @@ _$OnboardingStateCopyWith<_OnboardingState> get copyWith => __$OnboardingStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingState&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.selectedRole, selectedRole) || other.selectedRole == selectedRole)&&(identical(other.storeToMake, storeToMake) || other.storeToMake == storeToMake)&&(identical(other.invitedStoreId, invitedStoreId) || other.invitedStoreId == invitedStoreId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingState&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.selectedRole, selectedRole) || other.selectedRole == selectedRole)&&(identical(other.isCreatingStore, isCreatingStore) || other.isCreatingStore == isCreatingStore)&&(identical(other.storeToMake, storeToMake) || other.storeToMake == storeToMake)&&(identical(other.selectedStoreColor, selectedStoreColor) || other.selectedStoreColor == selectedStoreColor)&&(identical(other.invitedStoreId, invitedStoreId) || other.invitedStoreId == invitedStoreId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,nickname,selectedRole,storeToMake,invitedStoreId);
+int get hashCode => Object.hash(runtimeType,nickname,selectedRole,isCreatingStore,storeToMake,selectedStoreColor,invitedStoreId);
 
 @override
 String toString() {
-  return 'OnboardingState(nickname: $nickname, selectedRole: $selectedRole, storeToMake: $storeToMake, invitedStoreId: $invitedStoreId)';
+  return 'OnboardingState(nickname: $nickname, selectedRole: $selectedRole, isCreatingStore: $isCreatingStore, storeToMake: $storeToMake, selectedStoreColor: $selectedStoreColor, invitedStoreId: $invitedStoreId)';
 }
 
 
@@ -263,7 +273,7 @@ abstract mixin class _$OnboardingStateCopyWith<$Res> implements $OnboardingState
   factory _$OnboardingStateCopyWith(_OnboardingState value, $Res Function(_OnboardingState) _then) = __$OnboardingStateCopyWithImpl;
 @override @useResult
 $Res call({
- String nickname, UserRole selectedRole, Store? storeToMake, String? invitedStoreId
+ String nickname, UserRole selectedRole, bool isCreatingStore, Store? storeToMake, StoreColor? selectedStoreColor, String? invitedStoreId
 });
 
 
@@ -280,12 +290,14 @@ class __$OnboardingStateCopyWithImpl<$Res>
 
 /// Create a copy of OnboardingState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? nickname = null,Object? selectedRole = null,Object? storeToMake = freezed,Object? invitedStoreId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? nickname = null,Object? selectedRole = null,Object? isCreatingStore = null,Object? storeToMake = freezed,Object? selectedStoreColor = freezed,Object? invitedStoreId = freezed,}) {
   return _then(_OnboardingState(
 nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,selectedRole: null == selectedRole ? _self.selectedRole : selectedRole // ignore: cast_nullable_to_non_nullable
-as UserRole,storeToMake: freezed == storeToMake ? _self.storeToMake : storeToMake // ignore: cast_nullable_to_non_nullable
-as Store?,invitedStoreId: freezed == invitedStoreId ? _self.invitedStoreId : invitedStoreId // ignore: cast_nullable_to_non_nullable
+as UserRole,isCreatingStore: null == isCreatingStore ? _self.isCreatingStore : isCreatingStore // ignore: cast_nullable_to_non_nullable
+as bool,storeToMake: freezed == storeToMake ? _self.storeToMake : storeToMake // ignore: cast_nullable_to_non_nullable
+as Store?,selectedStoreColor: freezed == selectedStoreColor ? _self.selectedStoreColor : selectedStoreColor // ignore: cast_nullable_to_non_nullable
+as StoreColor?,invitedStoreId: freezed == invitedStoreId ? _self.invitedStoreId : invitedStoreId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

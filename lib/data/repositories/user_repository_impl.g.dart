@@ -48,4 +48,4 @@ final class UserRepositoryProvider
   }
 }
 
-String _$userRepositoryHash() => r'8bb32b4c7b12430abe1aad95f2025c387aadebe8';
+String _$userRepositoryHash() => r'4bff83d80d9c5840a2fcb48d0bd13004377f906f';

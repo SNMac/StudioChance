@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/onboarding/view_models/onboarding_state.dart';
 
@@ -21,8 +22,8 @@ class OnboardingSession extends _$OnboardingSession {
     state = state.copyWith(selectedRole: role);
   }
 
-  void setStoreToMake(Store store) {
-    state = state.copyWith(storeToMake: store);
+  void setStoreToMake(Store store, StoreColor color) {
+    state = state.copyWith(storeToMake: store, selectedStoreColor: color);
   }
 
   void setInvitedStoreId(String storeId) {

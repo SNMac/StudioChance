@@ -6,13 +6,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
+import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
+import 'package:studio_chance/data/models/user_store_info_model.dart';
 
 part 'store_data_source.g.dart';
 
 abstract interface class StoreDataSource {
   /// 점포 생성
-  Future<StoreModel> createStore(StoreModel store, String uid);
+  Future<StoreModel> createStore(
+    StoreModel store,
+    String uid,
+    UserStoreInfoModel creatorInfo,
+  );
 
   /// 점포 단일 조회
   Future<StoreModel?> getStore(String storeId);
@@ -30,10 +36,19 @@ abstract interface class StoreDataSource {
   Future<void> removeMember(String storeId, String uid);
 
   /// 가입 신청
-  Future<void> addWaitingMember(String storeId, String uid, String role);
+  Future<void> addWaitingMember(
+    String storeId,
+    String uid,
+    StoreMemberInfoModel memberInfo,
+  );
 
   /// 가입 승인
-  Future<void> approveMemberWithBatch(String storeId, String uid, String role);
+  Future<void> approveMemberWithBatch(
+    String storeId,
+    String uid,
+    StoreMemberInfoModel memberInfo,
+    UserStoreInfoModel userStoreInfo,
+  );
 
   /// 초대 코드 발급
   /// - [forceRegenerate]: true면 무조건 새로 생성, false면 유효한 기존 코드 반환
@@ -54,11 +69,14 @@ class StoreFirestoreDataSource implements StoreDataSource {
   StoreFirestoreDataSource(this._firestore);
 
   @override
-  Future<StoreModel> createStore(StoreModel store, String uid) async {
+  Future<StoreModel> createStore(
+    StoreModel store,
+    String uid,
+    UserStoreInfoModel creatorInfo,
+  ) async {
     try {
       final batch = _firestore.batch();
       final serverTimestamp = FieldValue.serverTimestamp();
-
       final docRef = _firestore.collection('stores').doc();
 
       final json = store.toJson();
@@ -69,7 +87,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       final userRef = _firestore.collection('users').doc(uid);
       batch.update(userRef, {
-        'storeIds': FieldValue.arrayUnion([docRef.id]),
+        'storeById.${docRef.id}': creatorInfo.toJson(),
         'updatedAt': serverTimestamp,
       });
 
@@ -119,10 +137,21 @@ class StoreFirestoreDataSource implements StoreDataSource {
   @override
   Future<void> updateMemberRole(String storeId, String uid, String role) async {
     try {
-      await _firestore.collection('stores').doc(storeId).update({
-        'memberIds.$uid': role,
+      final batch = _firestore.batch();
+
+      final storeRef = _firestore.collection('stores').doc(storeId);
+      batch.update(storeRef, {
+        'memberById.$uid.role': role,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      final userRef = _firestore.collection('users').doc(uid);
+      batch.update(userRef, {
+        'storeById.$storeId.role': role,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -135,14 +164,14 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       final storeRef = _firestore.collection('stores').doc(storeId);
       batch.update(storeRef, {
-        'memberIds.$uid': FieldValue.delete(),
-        'waitingMemberIds.$uid': FieldValue.delete(),
+        'memberById.$uid': FieldValue.delete(),
+        'waitingMemberById.$uid': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       final userRef = _firestore.collection('users').doc(uid);
       batch.update(userRef, {
-        'storeIds': FieldValue.arrayRemove([storeId]),
+        'storeById.$storeId': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
@@ -153,10 +182,14 @@ class StoreFirestoreDataSource implements StoreDataSource {
   }
 
   @override
-  Future<void> addWaitingMember(String storeId, String uid, String role) async {
+  Future<void> addWaitingMember(
+    String storeId,
+    String uid,
+    StoreMemberInfoModel memberInfo,
+  ) async {
     try {
       await _firestore.collection('stores').doc(storeId).update({
-        'waitingMemberIds.$uid': role,
+        'waitingMemberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -168,7 +201,8 @@ class StoreFirestoreDataSource implements StoreDataSource {
   Future<void> approveMemberWithBatch(
     String storeId,
     String uid,
-    String role,
+    StoreMemberInfoModel memberInfo,
+    UserStoreInfoModel userStoreInfo,
   ) async {
     try {
       final batch = _firestore.batch();
@@ -176,13 +210,13 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final userRef = _firestore.collection('users').doc(uid);
 
       batch.update(storeRef, {
-        'waitingMemberIds.$uid': FieldValue.delete(),
-        'memberIds.$uid': role,
+        'waitingMemberById.$uid': FieldValue.delete(),
+        'memberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       batch.update(userRef, {
-        'storeIds': FieldValue.arrayUnion([storeId]),
+        'storeById.$storeId': userStoreInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 

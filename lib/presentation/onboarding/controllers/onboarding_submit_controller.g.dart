@@ -43,7 +43,7 @@ final class OnboardingSubmitControllerProvider
 }
 
 String _$onboardingSubmitControllerHash() =>
-    r'd88f5efe0ff07834a87bf368775e7fc456befc5b';
+    r'd4bb2ff3c1a337235e0eb62eb01d5f359c6885a8';
 
 abstract class _$OnboardingSubmitController
     extends $Notifier<AsyncValue<void>> {

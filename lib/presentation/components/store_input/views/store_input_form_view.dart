@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/presentation/components/body_text_field.dart';
 import 'package:studio_chance/presentation/components/grouped_form_container.dart';
 import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
@@ -11,8 +12,13 @@ import 'package:studio_chance/presentation/components/title_text_field.dart';
 
 class StoreInputFormView extends ConsumerStatefulWidget {
   final Store? initialStore;
+  final StoreColor? initialColor;
 
-  const StoreInputFormView({super.key, required this.initialStore});
+  const StoreInputFormView({
+    super.key,
+    required this.initialStore,
+    this.initialColor,
+  });
 
   @override
   ConsumerState<StoreInputFormView> createState() => _StoreInputFormViewState();
@@ -42,7 +48,10 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = storeInputFormViewModelProvider(widget.initialStore);
+    final provider = storeInputFormViewModelProvider(
+      initialStore: widget.initialStore,
+      initialColor: widget.initialColor,
+    );
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
 

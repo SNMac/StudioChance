@@ -2,12 +2,15 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 
 abstract interface class StoreRepository {
   /// 점포 생성
-  /// - Entity를 받아 Model로 변환하여 생성 후, 완성된 Entity 반환
-  Future<Either<Exception, Store>> createStore(Store store);
+  Future<Either<Exception, Store>> createStore({
+    required Store store,
+    required StoreColor color,
+  });
 
   /// 점포 조회
   /// - ID로 조회. 없으면 null 반환
@@ -15,10 +18,12 @@ abstract interface class StoreRepository {
 
   /// 점포 정보 수정
   /// - 부분 수정을 위해 Map 사용
-  Future<Either<Exception, void>> updateStore(
-    String storeId,
-    Map<String, dynamic> data,
-  );
+  Future<Either<Exception, void>> updateStore({
+    required String storeId,
+    required String uid,
+    required Map<String, dynamic> storeData,
+    StoreColor? newColor,
+  });
 
   /// 점포 삭제 (Soft Delete)
   Future<Either<Exception, void>> softDeleteStore(String storeId);
@@ -45,5 +50,12 @@ abstract interface class StoreRepository {
     required String storeId,
     required String uid,
     required UserRole role,
+  });
+
+  /// 멤버 권한 변경
+  Future<Either<Exception, void>> updateMemberRole({
+    required String storeId,
+    required String uid,
+    required UserRole newRole,
   });
 }

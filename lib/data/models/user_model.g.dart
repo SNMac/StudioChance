@@ -19,14 +19,12 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   fcmTokens:
       (json['fcmTokens'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
-  role: $enumDecode(
-    _$UserRoleEnumMap,
-    json['role'],
-    unknownValue: UserRole.none,
-  ),
-  storeIds:
-      (json['storeIds'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
+  storeById:
+      (json['storeById'] as Map<String, dynamic>?)?.map(
+        (k, e) =>
+            MapEntry(k, UserStoreInfoModel.fromJson(e as Map<String, dynamic>)),
+      ) ??
+      const {},
   createdAt: const TimestampConverter().fromJson(
     json['createdAt'] as Timestamp,
   ),
@@ -53,8 +51,7 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'nickname': instance.nickname,
       'authProviders': instance.authProviders,
       'fcmTokens': instance.fcmTokens,
-      'role': _$UserRoleEnumMap[instance.role]!,
-      'storeIds': instance.storeIds,
+      'storeById': instance.storeById.map((k, e) => MapEntry(k, e.toJson())),
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
       'lastLoginAt': const TimestampConverter().toJson(instance.lastLoginAt),
@@ -67,13 +64,6 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
         const TimestampConverter().toJson,
       ),
     };
-
-const _$UserRoleEnumMap = {
-  UserRole.admin: 'ADMIN',
-  UserRole.staff: 'STAFF',
-  UserRole.viewer: 'VIEWER',
-  UserRole.none: 'NONE',
-};
 
 Value? _$JsonConverterFromJson<Json, Value>(
   Object? json,

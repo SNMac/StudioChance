@@ -9,20 +9,21 @@ part of 'store_model.dart';
 _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   id: json['id'] as String,
   name: json['name'] as String,
-  color: $enumDecode(
-    _$StoreColorEnumMap,
-    json['color'],
-    unknownValue: StoreColor.red,
-  ),
   address: json['address'] as String,
   memo: json['memo'] as String,
   priceSettingsModel: PriceSettingsModel.fromJson(
     json['priceSettingsModel'] as Map<String, dynamic>,
   ),
-  memberIds: Map<String, String>.from(json['memberIds'] as Map),
-  waitingMemberIds:
-      (json['waitingMemberIds'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
+  memberById: (json['memberById'] as Map<String, dynamic>).map(
+    (k, e) =>
+        MapEntry(k, StoreMemberInfoModel.fromJson(e as Map<String, dynamic>)),
+  ),
+  waitingMemberById:
+      (json['waitingMemberById'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(
+          k,
+          StoreMemberInfoModel.fromJson(e as Map<String, dynamic>),
+        ),
       ) ??
       const {},
   inviteInfoModel: json['inviteInfoModel'] == null
@@ -49,12 +50,13 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
     <String, dynamic>{
       'name': instance.name,
-      'color': _$StoreColorEnumMap[instance.color]!,
       'address': instance.address,
       'memo': instance.memo,
       'priceSettingsModel': instance.priceSettingsModel.toJson(),
-      'memberIds': instance.memberIds,
-      'waitingMemberIds': instance.waitingMemberIds,
+      'memberById': instance.memberById.map((k, e) => MapEntry(k, e.toJson())),
+      'waitingMemberById': instance.waitingMemberById.map(
+        (k, e) => MapEntry(k, e.toJson()),
+      ),
       'inviteInfoModel': instance.inviteInfoModel?.toJson(),
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
@@ -67,16 +69,6 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
         const TimestampConverter().toJson,
       ),
     };
-
-const _$StoreColorEnumMap = {
-  StoreColor.red: 'RED',
-  StoreColor.orange: 'ORANGE',
-  StoreColor.yellow: 'YELLOW',
-  StoreColor.green: 'GREEN',
-  StoreColor.blue: 'BLUE',
-  StoreColor.indigo: 'INDIGO',
-  StoreColor.purple: 'PURPLE',
-};
 
 Value? _$JsonConverterFromJson<Json, Value>(
   Object? json,

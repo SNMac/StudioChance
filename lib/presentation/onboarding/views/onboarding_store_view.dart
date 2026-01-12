@@ -14,9 +14,12 @@ class OnboardingStoreView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionStore = ref.watch(onboardingSessionProvider).storeToMake;
+    final session = ref.watch(onboardingSessionProvider);
 
-    final formProvider = storeInputFormViewModelProvider(sessionStore);
+    final formProvider = storeInputFormViewModelProvider(
+      initialStore: session.storeToMake,
+      initialColor: session.selectedStoreColor,
+    );
     final formState = ref.watch(formProvider);
     final formNotifier = ref.read(formProvider.notifier);
 
@@ -38,7 +41,12 @@ class OnboardingStoreView extends ConsumerWidget {
       ),
       body: SafeAreaWithPadding(
         child: Column(
-          children: [StoreInputFormView(initialStore: sessionStore)],
+          children: [
+            StoreInputFormView(
+              initialStore: session.storeToMake,
+              initialColor: session.selectedStoreColor,
+            ),
+          ],
         ),
       ),
     );

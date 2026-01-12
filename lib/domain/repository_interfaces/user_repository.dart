@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 
 abstract interface class UserRepository {
   /// 로그인 후 호출: DB 조회 후 없으면 생성, 있으면 갱신하여 반환
@@ -21,7 +21,13 @@ abstract interface class UserRepository {
     required String uid,
     String? email,
     String? nickname,
-    UserRole? role,
+  });
+
+  Future<Either<Exception, void>> updateStoreInfo({
+    required String uid,
+    required String storeId,
+    String? name,
+    StoreColor? color,
   });
 
   /// 현재 기기의 FCM 토큰을 찾아 DB에서 제거 (로그아웃용)

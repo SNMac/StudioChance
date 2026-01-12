@@ -4,13 +4,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
-import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
-import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
 part 'user_repository_impl.g.dart';
@@ -20,17 +18,14 @@ class UserRepositoryImpl implements UserRepository {
 
   final AuthDataSource _authDataSource;
   final UserDataSource _userDataSource;
-  final StoreDataSource _storeDataSource;
   final NotificationDataSource _notificationDataSource;
 
   UserRepositoryImpl({
     required AuthDataSource authDataSource,
     required UserDataSource userDataSource,
-    required StoreDataSource storeDataSource,
     required NotificationDataSource notificationDataSource,
   }) : _authDataSource = authDataSource,
        _userDataSource = userDataSource,
-       _storeDataSource = storeDataSource,
        _notificationDataSource = notificationDataSource;
 
   @override
@@ -43,9 +38,7 @@ class UserRepositoryImpl implements UserRepository {
         _logger.w('FCM 토큰 획득 실패 (무시)', error: e);
       }
 
-      // 2. DB 조회
       var userModel = await _userDataSource.getUser(authInfo.uid);
-
       if (userModel != null) {
         // 기존 유저
         // 탈퇴 복구
@@ -57,14 +50,17 @@ class UserRepositoryImpl implements UserRepository {
         if (fcmToken != null) {
           await _userDataSource.addFcmToken(userModel.id, fcmToken);
         }
+
+        final now = DateTime.now();
         await _userDataSource.updateUser(userModel.id, {
           'authProviders': authInfo.authProviders,
-          'lastLoginAt': DateTime.now(),
-          'updatedAt': DateTime.now(),
+          'lastLoginAt': now,
+          'updatedAt': now,
         });
       } else {
         // 신규 유저
         // DB 생성
+        final now = DateTime.now();
         final newUserModel = UserModel(
           id: authInfo.uid,
           name: authInfo.displayName ?? '이름 없음',
@@ -72,11 +68,10 @@ class UserRepositoryImpl implements UserRepository {
           nickname: null,
           authProviders: authInfo.authProviders,
           fcmTokens: fcmToken != null ? [fcmToken] : [],
-          role: UserRole.none,
-          storeIds: [],
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          lastLoginAt: DateTime.now(),
+          storeById: {},
+          createdAt: now,
+          updatedAt: now,
+          lastLoginAt: now,
         );
 
         await _userDataSource.createUser(newUserModel);
@@ -84,9 +79,7 @@ class UserRepositoryImpl implements UserRepository {
         _logger.i('신규 유저 DB 생성 완료: ${newUserModel.id}');
       }
 
-      final stores = await _fetchStores(userModel.storeIds);
-
-      return right(userModel.toEntity(stores: stores));
+      return right(userModel.toEntity());
     } catch (e) {
       _logger.e('fetchOrCreateUser 실패');
       return left(e is Exception ? e : Exception(e.toString()));
@@ -102,9 +95,7 @@ class UserRepositoryImpl implements UserRepository {
       final userModel = await _userDataSource.getUser(authModel.uid);
       if (userModel == null) return right(null);
 
-      final stores = await _fetchStores(userModel.storeIds);
-
-      return right(userModel.toEntity(stores: stores));
+      return right(userModel.toEntity());
     } catch (e) {
       _logger.e('getCurrentUser 실패');
       return left(e is Exception ? e : Exception(e.toString()));
@@ -117,9 +108,7 @@ class UserRepositoryImpl implements UserRepository {
       final userModel = await _userDataSource.getUser(uid);
       if (userModel == null) return right(null);
 
-      final stores = await _fetchStores(userModel.storeIds);
-
-      return right(userModel.toEntity(stores: stores));
+      return right(userModel.toEntity());
     } catch (e) {
       _logger.e('getUser 실패');
       return left(e is Exception ? e : Exception(e.toString()));
@@ -131,14 +120,12 @@ class UserRepositoryImpl implements UserRepository {
     required String uid,
     String? email,
     String? nickname,
-    UserRole? role,
   }) async {
     try {
       final Map<String, dynamic> updates = {};
 
       if (email != null) updates['email'] = email;
       if (nickname != null) updates['nickname'] = nickname;
-      if (role != null) updates['role'] = role.name;
 
       if (updates.isEmpty) return right(null);
 
@@ -147,6 +134,31 @@ class UserRepositoryImpl implements UserRepository {
       return right(null);
     } catch (e) {
       _logger.e('사용자 업데이트 실패\nuid: $uid');
+      return left(e is Exception ? e : Exception(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> updateStoreInfo({
+    required String uid,
+    required String storeId,
+    String? name,
+    StoreColor? color,
+  }) async {
+    try {
+      final Map<String, dynamic> data = {};
+
+      if (name != null) data['name'] = name;
+      if (color != null) data['color'] = color.name;
+
+      if (data.isEmpty) return right(null);
+
+      await _userDataSource.updateStoreInfo(uid, storeId, data);
+
+      _logger.i('사용자 점포 설정 변경 완료\nuid: $uid, storeId: $storeId\n$data');
+      return right(null);
+    } catch (e) {
+      _logger.e('사용자 점포 설정 변경 실패');
       return left(e is Exception ? e : Exception(e.toString()));
     }
   }
@@ -180,43 +192,17 @@ class UserRepositoryImpl implements UserRepository {
       throw e is Exception ? e : Exception(e.toString());
     }
   }
-
-  // ===========================================================================
-  // Private Helpers
-  // ===========================================================================
-
-  /// Store ID 목록을 받아 Store Entity 목록으로 변환
-  Future<List<Store>> _fetchStores(List<String> storeIds) async {
-    if (storeIds.isEmpty) return [];
-
-    final futures = storeIds.map((id) async {
-      try {
-        return await _storeDataSource.getStore(id);
-      } catch (e) {
-        _logger.w('특정 점포 조회 실패 (ID: $id)');
-        return null;
-      }
-    });
-    final storeModels = await Future.wait(futures);
-
-    return storeModels
-        .where((model) => model != null)
-        .map((model) => model!.toEntity(members: [], waitingMembers: []))
-        .toList();
-  }
 }
 
 @Riverpod(keepAlive: true)
 UserRepository userRepository(Ref ref) {
   final authDataSource = ref.watch(authDataSourceProvider);
   final userDataSource = ref.watch(userDataSourceProvider);
-  final storeDataSource = ref.watch(storeDataSourceProvider);
   final notificationDataSource = ref.watch(notificationDataSourceProvider);
 
   return UserRepositoryImpl(
     authDataSource: authDataSource,
     userDataSource: userDataSource,
-    storeDataSource: storeDataSource,
     notificationDataSource: notificationDataSource,
   );
 }

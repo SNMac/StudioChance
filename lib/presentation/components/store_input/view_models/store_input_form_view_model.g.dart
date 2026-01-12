@@ -16,7 +16,7 @@ final class StoreInputFormViewModelProvider
     extends $NotifierProvider<StoreInputFormViewModel, StoreInputFormState> {
   StoreInputFormViewModelProvider._({
     required StoreInputFormViewModelFamily super.from,
-    required Store? super.argument,
+    required ({Store? initialStore, StoreColor? initialColor}) super.argument,
   }) : super(
          retry: null,
          name: r'storeInputFormViewModelProvider',
@@ -32,7 +32,7 @@ final class StoreInputFormViewModelProvider
   String toString() {
     return r'storeInputFormViewModelProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -60,7 +60,7 @@ final class StoreInputFormViewModelProvider
 }
 
 String _$storeInputFormViewModelHash() =>
-    r'ebf57ca9f9f4833f29db74282f64aecd501e4ef6';
+    r'ea9fdb3bbabcc6a0d509d1c6550a5bbf11909734';
 
 final class StoreInputFormViewModelFamily extends $Family
     with
@@ -69,7 +69,7 @@ final class StoreInputFormViewModelFamily extends $Family
           StoreInputFormState,
           StoreInputFormState,
           StoreInputFormState,
-          Store?
+          ({Store? initialStore, StoreColor? initialColor})
         > {
   StoreInputFormViewModelFamily._()
     : super(
@@ -80,8 +80,13 @@ final class StoreInputFormViewModelFamily extends $Family
         isAutoDispose: true,
       );
 
-  StoreInputFormViewModelProvider call(Store? initialStore) =>
-      StoreInputFormViewModelProvider._(argument: initialStore, from: this);
+  StoreInputFormViewModelProvider call({
+    Store? initialStore,
+    StoreColor? initialColor,
+  }) => StoreInputFormViewModelProvider._(
+    argument: (initialStore: initialStore, initialColor: initialColor),
+    from: this,
+  );
 
   @override
   String toString() => r'storeInputFormViewModelProvider';
@@ -89,10 +94,12 @@ final class StoreInputFormViewModelFamily extends $Family
 
 abstract class _$StoreInputFormViewModel
     extends $Notifier<StoreInputFormState> {
-  late final _$args = ref.$arg as Store?;
-  Store? get initialStore => _$args;
+  late final _$args =
+      ref.$arg as ({Store? initialStore, StoreColor? initialColor});
+  Store? get initialStore => _$args.initialStore;
+  StoreColor? get initialColor => _$args.initialColor;
 
-  StoreInputFormState build(Store? initialStore);
+  StoreInputFormState build({Store? initialStore, StoreColor? initialColor});
   @$mustCallSuper
   @override
   void runBuild() {
@@ -105,6 +112,12 @@ abstract class _$StoreInputFormViewModel
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    element.handleCreate(
+      ref,
+      () => build(
+        initialStore: _$args.initialStore,
+        initialColor: _$args.initialColor,
+      ),
+    );
   }
 }

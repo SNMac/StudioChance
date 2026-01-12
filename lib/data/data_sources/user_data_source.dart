@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
 import 'package:studio_chance/data/models/user_model.dart';
+import 'package:studio_chance/data/models/user_store_info_model.dart';
 
 part 'user_data_source.g.dart';
 
@@ -19,11 +20,22 @@ abstract interface class UserDataSource {
   /// - `fcmTokens` 수정 시: `addFcmToken`, `replaceFcmToken`, `removeFcmToken` 메서드 사용
   Future<void> updateUser(String uid, Map<String, dynamic> data);
 
-  /// 점포 ID 추가
-  Future<void> addStoreId(String uid, String storeId);
+  /// 점포 정보 추가
+  Future<void> addStoreInfo(
+    String uid,
+    String storeId,
+    UserStoreInfoModel info,
+  );
 
-  /// 점포 ID 삭제
-  Future<void> removeStoreId(String uid, String storeId);
+  /// 점포 정보 업데이트
+  Future<void> updateStoreInfo(
+    String uid,
+    String storeId,
+    Map<String, dynamic> data,
+  );
+
+  /// 점포 정보 삭제
+  Future<void> removeStoreInfo(String uid, String storeId);
 
   /// FCM 토큰 추가
   Future<void> addFcmToken(String uid, String token);
@@ -100,10 +112,46 @@ class UserFirestoreDataSource implements UserDataSource {
   }
 
   @override
-  Future<void> addStoreId(String uid, String storeId) async {
+  Future<void> addStoreInfo(
+    String uid,
+    String storeId,
+    UserStoreInfoModel info,
+  ) async {
     try {
       await _firestore.collection('users').doc(uid).update({
-        'storeIds': FieldValue.arrayUnion([storeId]),
+        'storeById.$storeId': info.toJson(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<void> updateStoreInfo(
+    String uid,
+    String storeId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final Map<String, dynamic> updates = {};
+      data.forEach((key, value) {
+        updates['storeById.$storeId.$key'] = value;
+      });
+
+      updates['updatedAt'] = FieldValue.serverTimestamp();
+
+      await _firestore.collection('users').doc(uid).update(updates);
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<void> removeStoreInfo(String uid, String storeId) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'storeById.$storeId': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -153,18 +201,6 @@ class UserFirestoreDataSource implements UserDataSource {
     try {
       await _firestore.collection('users').doc(uid).update({
         'fcmTokens': FieldValue.arrayRemove([token]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw _handleFirestoreError(e);
-    }
-  }
-
-  @override
-  Future<void> removeStoreId(String uid, String storeId) async {
-    try {
-      await _firestore.collection('users').doc(uid).update({
-        'storeIds': FieldValue.arrayRemove([storeId]),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {

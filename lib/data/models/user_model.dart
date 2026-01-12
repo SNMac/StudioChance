@@ -2,9 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/common/converters/timestamp_converter.dart';
-import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
 
 part 'user_model.freezed.dart';
 part 'user_model.g.dart';
@@ -20,8 +19,7 @@ abstract class UserModel with _$UserModel {
     String? nickname,
     @Default([]) List<String> authProviders,
     @Default([]) List<String> fcmTokens,
-    @JsonKey(unknownEnumValue: UserRole.none) required UserRole role,
-    @Default([]) List<String> storeIds,
+    @Default({}) Map<String, UserStoreInfoModel> storeById,
 
     // DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
     @TimestampConverter() required DateTime createdAt,
@@ -42,23 +40,26 @@ abstract class UserModel with _$UserModel {
       name: entity.name,
       nickname: entity.nickname,
       authProviders: entity.authProviders,
-      role: entity.role,
-      storeIds: entity.stores.map((store) => store.id).toList(),
+      storeById: {
+        for (var info in entity.storeInfos)
+          info.id: UserStoreInfoModel.fromEntity(info),
+      },
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       lastLoginAt: entity.lastLoginAt,
     );
   }
 
-  User toEntity({required List<Store> stores}) {
+  User toEntity() {
     return User(
       id: id,
       name: name,
       email: email,
       nickname: nickname,
       authProviders: authProviders,
-      role: role,
-      stores: stores,
+      storeInfos: storeById.entries
+          .map((entry) => entry.value.toEntity(storeId: entry.key))
+          .toList(),
       createdAt: createdAt,
       updatedAt: updatedAt,
       lastLoginAt: lastLoginAt,
