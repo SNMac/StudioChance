@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:studio_chance/presentation/components/app_bar_action_button.dart';
-import 'package:studio_chance/presentation/components/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
@@ -25,8 +24,7 @@ class OnboardingStoreView extends ConsumerWidget {
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: '점포 등록',
-        leading: const AppBarBackButton(),
+        title: '점포 생성',
         actions: [
           AppBarActionButton(
             label: '완료',

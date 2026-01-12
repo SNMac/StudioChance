@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/presentation/home/views/home_view.dart';
+import 'package:studio_chance/presentation/onboarding/views/onboarding_admin_view.dart';
 import 'package:studio_chance/presentation/onboarding/views/onboarding_invitation_view.dart';
 import 'package:studio_chance/presentation/onboarding/views/onboarding_nickname_view.dart';
 import 'package:studio_chance/presentation/onboarding/views/onboarding_role_view.dart';
@@ -64,19 +65,21 @@ GoRouter goRouter(Ref ref) {
             pageBuilder: (context, state) =>
                 _fadePage(state: state, child: const OnboardingNicknameView()),
           ),
-
           GoRoute(
             path: SCRoute.onboardingRole.path,
             name: SCRoute.onboardingRole.name,
             builder: (context, state) => const OnboardingRoleView(),
           ),
-
+          GoRoute(
+            path: SCRoute.onboardingAdmin.path,
+            name: SCRoute.onboardingAdmin.name,
+            builder: (context, state) => const OnboardingAdminView(),
+          ),
           GoRoute(
             path: SCRoute.onboardingStore.path,
             name: SCRoute.onboardingStore.name,
             builder: (context, state) => const OnboardingStoreView(),
           ),
-
           GoRoute(
             path: SCRoute.onboardingInvitation.path,
             name: SCRoute.onboardingInvitation.name,

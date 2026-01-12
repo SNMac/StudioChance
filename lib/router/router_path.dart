@@ -4,6 +4,7 @@ enum SCRoute {
   home,
   onboardingNickname,
   onboardingRole,
+  onboardingAdmin,
   onboardingStore,
   onboardingInvitation;
 
@@ -21,6 +22,8 @@ enum SCRoute {
         return 'nickname';
       case SCRoute.onboardingRole:
         return 'role';
+      case SCRoute.onboardingAdmin:
+        return 'admin';
       case SCRoute.onboardingStore:
         return 'store';
       case SCRoute.onboardingInvitation:
@@ -42,6 +45,8 @@ enum SCRoute {
         return '/onboarding/nickname';
       case SCRoute.onboardingRole:
         return '/onboarding/role';
+      case SCRoute.onboardingAdmin:
+        return '/onboarding/admin';
       case SCRoute.onboardingStore:
         return '/onboarding/store';
       case SCRoute.onboardingInvitation:

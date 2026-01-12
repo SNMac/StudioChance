@@ -4,12 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/components/app_bar_action_button.dart';
-import 'package:studio_chance/presentation/components/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/components/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/onboarding/view_models/onboarding_role_view_model.dart';
-import 'package:studio_chance/presentation/onboarding/views/components/role_selection_button.dart';
+import 'package:studio_chance/presentation/onboarding/views/components/selection_button.dart';
 import 'package:studio_chance/router/router_path.dart';
 
 class OnboardingRoleView extends ConsumerStatefulWidget {
@@ -35,7 +34,7 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
           notifier.saveToSession();
 
           if (state == UserRole.admin) {
-            context.push(SCRoute.onboardingStore.fullPath);
+            context.push(SCRoute.onboardingAdmin.fullPath);
           } else if (state == UserRole.staff || state == UserRole.viewer) {
             context.push(SCRoute.onboardingInvitation.fullPath);
           }
@@ -46,7 +45,6 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
     return Scaffold(
       appBar: CustomAppBar(
         title: '역할 선택',
-        leading: const AppBarBackButton(),
         actions: [
           AppBarActionButton(
             label: '다음',
@@ -56,44 +54,32 @@ class _OnboardingRoleViewState extends ConsumerState<OnboardingRoleView> {
       ),
       body: SafeAreaWithPadding(
         child: Center(
-          child: Column(
-            spacing: 32,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 200,
-                child: RoleSelectionButton(
+          child: SizedBox(
+            width: 240,
+            child: Column(
+              spacing: 32,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SelectionButton(
                   title: UserRole.admin.displayName,
                   description: UserRole.admin.displayDescription,
                   isSelected: state == UserRole.admin,
-                  onPressed: () {
-                    notifier.selectRole(UserRole.admin);
-                  },
+                  onPressed: () => notifier.selectRole(UserRole.admin),
                 ),
-              ),
-              SizedBox(
-                width: 200,
-                child: RoleSelectionButton(
+                SelectionButton(
                   title: UserRole.staff.displayName,
                   description: UserRole.staff.displayDescription,
                   isSelected: state == UserRole.staff,
-                  onPressed: () {
-                    notifier.selectRole(UserRole.staff);
-                  },
+                  onPressed: () => notifier.selectRole(UserRole.staff),
                 ),
-              ),
-              SizedBox(
-                width: 200,
-                child: RoleSelectionButton(
+                SelectionButton(
                   title: UserRole.viewer.displayName,
                   description: UserRole.viewer.displayDescription,
                   isSelected: state == UserRole.viewer,
-                  onPressed: () {
-                    notifier.selectRole(UserRole.viewer);
-                  },
+                  onPressed: () => notifier.selectRole(UserRole.viewer),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

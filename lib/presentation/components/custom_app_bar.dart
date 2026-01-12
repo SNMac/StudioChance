@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/presentation/components/app_bar_back_button.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final Widget? leading;
@@ -11,7 +13,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
     required this.title,
-    this.leading,
+    this.leading = const AppBarBackButton(),
     this.actions,
   });
 
