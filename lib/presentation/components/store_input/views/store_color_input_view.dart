@@ -3,14 +3,14 @@ import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/presentation/components/grouped_form_container.dart';
 import 'package:studio_chance/presentation/components/input_form_selection_button.dart';
 
-class StoreColorSelectView extends StatefulWidget {
-  const StoreColorSelectView({super.key});
+class StoreColorInputView extends StatefulWidget {
+  const StoreColorInputView({super.key});
 
   @override
-  State<StoreColorSelectView> createState() => _StoreColorSelectViewState();
+  State<StoreColorInputView> createState() => _StoreColorInputViewState();
 }
 
-class _StoreColorSelectViewState extends State<StoreColorSelectView> {
+class _StoreColorInputViewState extends State<StoreColorInputView> {
   StoreColor selectedColor = StoreColor.red;
 
   @override

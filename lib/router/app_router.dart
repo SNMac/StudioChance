@@ -7,8 +7,8 @@ import 'package:studio_chance/presentation/onboarding/views/onboarding_admin_vie
 import 'package:studio_chance/presentation/onboarding/views/onboarding_invitation_view.dart';
 import 'package:studio_chance/presentation/onboarding/views/onboarding_nickname_view.dart';
 import 'package:studio_chance/presentation/onboarding/views/onboarding_role_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/onboarding_store_color_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/store_creation_view.dart';
+import 'package:studio_chance/presentation/components/store_input/views/store_color_selection_view.dart';
+import 'package:studio_chance/presentation/components/store_input/views/store_creation_view.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/sign_in/views/sign_in_view.dart';
 import 'package:studio_chance/presentation/splash/views/splash_view.dart';
@@ -84,7 +84,7 @@ GoRouter goRouter(Ref ref) {
               GoRoute(
                 path: SCRoute.onboardingStoreColor.path,
                 name: SCRoute.onboardingStoreColor.name,
-                builder: (context, state) => const OnboardingStoreColorView(),
+                builder: (context, state) => const StoreColorSelectionView(),
               ),
             ],
           ),

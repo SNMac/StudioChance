@@ -6,7 +6,7 @@ import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
 import 'package:studio_chance/presentation/components/store_input/views/store_input_form_view.dart';
-import 'package:studio_chance/presentation/onboarding/view_models/store_creation_controller.dart';
+import 'package:studio_chance/presentation/components/store_input/view_models/store_creation_controller.dart';
 
 class StoreCreationView extends ConsumerWidget {
   const StoreCreationView({super.key});
@@ -25,7 +25,7 @@ class StoreCreationView extends ConsumerWidget {
 
     ref.listen(storeCreationControllerProvider, (previous, next) {
       if (next.hasError) {
-        // 에러 다이얼로그 표시 로직...
+        // TODO: 에러 다이얼로그 표시 로직
       }
     });
 
@@ -37,11 +37,8 @@ class StoreCreationView extends ConsumerWidget {
             label: '완료',
             onPressed: formState.isValid
                 ? () {
-                    // 1. 폼 데이터 가져오기 (Record 타입 반환)
                     final data = formNotifier.getFormData();
-
                     if (data != null) {
-                      // 2. 컨트롤러에게 제출 위임
                       submitController.submit(data);
                     }
                   }
