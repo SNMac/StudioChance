@@ -3,24 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/presentation/components/input_form_body_text_field.dart';
 import 'package:studio_chance/presentation/components/grouped_form_container.dart';
-import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
+import 'package:studio_chance/presentation/components/input_form_body_text_field.dart';
 import 'package:studio_chance/presentation/components/input_form_title_navigation_button.dart';
 import 'package:studio_chance/presentation/components/input_form_title_text_field.dart';
+import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
 import 'package:studio_chance/router/router_path.dart';
 
 class StoreInputFormView extends ConsumerStatefulWidget {
-  final Store? initialStore;
-  final StoreColor? initialColor;
+  final StoreInputFormViewModelProvider provider;
 
-  const StoreInputFormView({
-    super.key,
-    required this.initialStore,
-    this.initialColor,
-  });
+  const StoreInputFormView({super.key, required this.provider});
 
   @override
   ConsumerState<StoreInputFormView> createState() => _StoreInputFormViewState();
@@ -33,12 +26,10 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: widget.initialStore?.name ?? '',
-    );
-    _memoController = TextEditingController(
-      text: widget.initialStore?.memo ?? '',
-    );
+
+    final initialState = ref.read(widget.provider);
+    _nameController = TextEditingController(text: initialState.name);
+    _memoController = TextEditingController(text: initialState.memo);
   }
 
   @override
@@ -50,12 +41,8 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = storeInputFormViewModelProvider(
-      initialStore: widget.initialStore,
-      initialColor: widget.initialColor,
-    );
-    final state = ref.watch(provider);
-    final notifier = ref.read(provider.notifier);
+    final state = ref.watch(widget.provider);
+    final notifier = ref.read(widget.provider.notifier);
 
     return GroupedFormContainer(
       children: [
@@ -86,7 +73,7 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
           title: '주소',
           content: state.address.isEmpty ? '주소 검색' : state.address,
           onPressed: () async {
-            // 임시 주소 입력 다이얼로그 (나중에 실제 주소 검색으로 교체)
+            // 임시 주소 입력 (실제 구현 시 API 연동)
             final result = await _showAddressInput(context, state.address);
             if (result != null && result.isNotEmpty) {
               notifier.setAddress(result);
@@ -105,7 +92,6 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
     );
   }
 
-  /// (임시) 주소 입력용 다이얼로그
   Future<String?> _showAddressInput(BuildContext context, String current) {
     String temp = current;
     return showDialog<String>(

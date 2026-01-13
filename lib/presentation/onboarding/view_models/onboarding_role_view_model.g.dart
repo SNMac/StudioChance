@@ -42,7 +42,7 @@ final class OnboardingRoleViewModelProvider
 }
 
 String _$onboardingRoleViewModelHash() =>
-    r'0b17b98dcdd10d5b822ed10af4ece9dbc8612fbe';
+    r'ed444b694cf7005217135eb936a8e38744a5d68e';
 
 abstract class _$OnboardingRoleViewModel extends $Notifier<UserRole> {
   UserRole build();

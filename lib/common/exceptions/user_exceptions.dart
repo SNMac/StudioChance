@@ -98,3 +98,9 @@ class UserCancelledException extends UserException {
   UserCancelledException({String message = 'Operation cancelled', String? code})
     : super(message, code: code);
 }
+
+/// 사용자 정보 등록, 수정 시 형식에 맞지 않는 데이터가 있을 때 발생하는 예외
+class UserValidationException extends UserException {
+  UserValidationException({required String message, String? code})
+    : super(message, code: code);
+}

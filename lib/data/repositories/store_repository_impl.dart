@@ -36,7 +36,7 @@ class StoreRepositoryImpl implements StoreRepository {
   }) async {
     try {
       if (store.memberInfos.isEmpty) {
-        return left(StoreValidationException(message: '초기 멤버 정보가 누락되었습니다.'));
+        return left(StoreValidationException(message: '관리자 정보가 누락되었습니다.'));
       }
 
       final creator = store.memberInfos.first;

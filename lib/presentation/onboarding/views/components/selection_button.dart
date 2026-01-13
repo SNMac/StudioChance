@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class SelectionButton extends StatelessWidget {
   final String title;
-  final String description;
+  final String? description;
   final bool isSelected;
   final bool isNavigation;
   final VoidCallback? onPressed;
@@ -11,7 +11,7 @@ class SelectionButton extends StatelessWidget {
   const SelectionButton({
     super.key,
     required this.title,
-    required this.description,
+    this.description,
     this.isSelected = false,
     this.isNavigation = false,
     this.onPressed,
@@ -45,10 +45,11 @@ class SelectionButton extends StatelessWidget {
                   title,
                   style: textTheme.titleLarge?.copyWith(color: labelColor),
                 ),
-                Text(
-                  description,
-                  style: textTheme.labelLarge?.copyWith(color: labelColor),
-                ),
+                if (description != null)
+                  Text(
+                    description!,
+                    style: textTheme.labelLarge?.copyWith(color: labelColor),
+                  ),
               ],
             ),
             if (isNavigation)

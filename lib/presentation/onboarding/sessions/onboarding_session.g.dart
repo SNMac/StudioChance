@@ -41,7 +41,7 @@ final class OnboardingSessionProvider
   }
 }
 
-String _$onboardingSessionHash() => r'9ec8befede1da7cb9f16bd8ead3afca882ac3b6e';
+String _$onboardingSessionHash() => r'4e1027e9df9caf0e12db80910752ac32f2c7d609';
 
 abstract class _$OnboardingSession extends $Notifier<OnboardingState> {
   OnboardingState build();

@@ -9,8 +9,8 @@ import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/nickname_input/view_models/nickname_input_form_view_model.dart';
 import 'package:studio_chance/presentation/components/nickname_input/views/nickname_input_form_view.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
-import 'package:studio_chance/presentation/onboarding/controllers/onboarding_submit_controller.dart';
 import 'package:studio_chance/presentation/onboarding/sessions/onboarding_session.dart';
+import 'package:studio_chance/presentation/onboarding/view_models/onboarding_nickname_view_model.dart';
 import 'package:studio_chance/router/router_path.dart';
 
 class OnboardingNicknameView extends ConsumerWidget {
@@ -20,6 +20,7 @@ class OnboardingNicknameView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionNickname = ref.watch(onboardingSessionProvider).nickname;
     final formProvider = nicknameInputFormViewModelProvider(sessionNickname);
+    final viewModelProvider = onboardingNicknameViewModelProvider;
 
     final isFormValid = ref.watch(
       formProvider.select((state) => state.isValid),
@@ -29,8 +30,8 @@ class OnboardingNicknameView extends ConsumerWidget {
       showCustomAlertDialog(
         context: context,
         title: '로그인 화면으로 돌아갈까요?',
-        onConfirm: () {
-          ref.read(onboardingSubmitControllerProvider.notifier).cancel();
+        onConfirm: () async {
+          await ref.read(viewModelProvider.notifier).cancelOnboarding();
           if (context.mounted && context.canPop()) {
             context.pop();
           }
@@ -63,7 +64,6 @@ class OnboardingNicknameView extends ConsumerWidget {
             ),
           ],
         ),
-
         body: SafeAreaWithPadding(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -73,11 +73,8 @@ class OnboardingNicknameView extends ConsumerWidget {
                 '사용하실 닉네임을 입력해주세요',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-
               const SizedBox(height: 12),
-
               NicknameInputFormView(initialNickname: sessionNickname),
-
               const Spacer(),
             ],
           ),

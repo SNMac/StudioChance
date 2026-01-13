@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'onboarding_submit_controller.dart';
+part of 'store_creation_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,29 +9,28 @@ part of 'onboarding_submit_controller.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(OnboardingSubmitController)
-final onboardingSubmitControllerProvider =
-    OnboardingSubmitControllerProvider._();
+@ProviderFor(StoreCreationController)
+final storeCreationControllerProvider = StoreCreationControllerProvider._();
 
-final class OnboardingSubmitControllerProvider
-    extends $NotifierProvider<OnboardingSubmitController, AsyncValue<void>> {
-  OnboardingSubmitControllerProvider._()
+final class StoreCreationControllerProvider
+    extends $NotifierProvider<StoreCreationController, AsyncValue<void>> {
+  StoreCreationControllerProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'onboardingSubmitControllerProvider',
+        name: r'storeCreationControllerProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$onboardingSubmitControllerHash();
+  String debugGetCreateSourceHash() => _$storeCreationControllerHash();
 
   @$internal
   @override
-  OnboardingSubmitController create() => OnboardingSubmitController();
+  StoreCreationController create() => StoreCreationController();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AsyncValue<void> value) {
@@ -42,11 +41,10 @@ final class OnboardingSubmitControllerProvider
   }
 }
 
-String _$onboardingSubmitControllerHash() =>
-    r'd4bb2ff3c1a337235e0eb62eb01d5f359c6885a8';
+String _$storeCreationControllerHash() =>
+    r'74f44f1d238bcd608839575e049a269d855e1f9c';
 
-abstract class _$OnboardingSubmitController
-    extends $Notifier<AsyncValue<void>> {
+abstract class _$StoreCreationController extends $Notifier<AsyncValue<void>> {
   AsyncValue<void> build();
   @$mustCallSuper
   @override

@@ -92,6 +92,7 @@ class StoreCancelledException extends StoreException {
   }) : super(message, code: code);
 }
 
+/// 점포 등록, 수정 시 형식에 맞지 않는 데이터가 있을 때 발생하는 예외
 class StoreValidationException extends StoreException {
   StoreValidationException({required String message, String? code})
     : super(message, code: code);

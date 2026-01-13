@@ -6,21 +6,28 @@ import 'package:studio_chance/presentation/components/custom_app_bar.dart';
 import 'package:studio_chance/presentation/components/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
 import 'package:studio_chance/presentation/components/store_input/views/store_input_form_view.dart';
-import 'package:studio_chance/presentation/onboarding/sessions/onboarding_session.dart';
+import 'package:studio_chance/presentation/onboarding/view_models/store_creation_controller.dart';
 
-class OnboardingStoreView extends ConsumerWidget {
-  const OnboardingStoreView({super.key});
+class StoreCreationView extends ConsumerWidget {
+  const StoreCreationView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(onboardingSessionProvider);
-
     final formProvider = storeInputFormViewModelProvider(
-      initialStore: session.storeToMake,
-      initialColor: session.selectedStoreColor,
+      initialStore: null,
+      initialColor: null,
     );
     final formState = ref.watch(formProvider);
     final formNotifier = ref.read(formProvider.notifier);
+
+    final submitState = ref.watch(storeCreationControllerProvider);
+    final submitController = ref.read(storeCreationControllerProvider.notifier);
+
+    ref.listen(storeCreationControllerProvider, (previous, next) {
+      if (next.hasError) {
+        // 에러 다이얼로그 표시 로직...
+      }
+    });
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -30,8 +37,13 @@ class OnboardingStoreView extends ConsumerWidget {
             label: '완료',
             onPressed: formState.isValid
                 ? () {
-                    final result = formNotifier.getFormData();
-                    if (result != null) {}
+                    // 1. 폼 데이터 가져오기 (Record 타입 반환)
+                    final data = formNotifier.getFormData();
+
+                    if (data != null) {
+                      // 2. 컨트롤러에게 제출 위임
+                      submitController.submit(data);
+                    }
                   }
                 : null,
           ),
@@ -40,10 +52,9 @@ class OnboardingStoreView extends ConsumerWidget {
       body: SafeAreaWithPadding(
         child: Column(
           children: [
-            StoreInputFormView(
-              initialStore: session.storeToMake,
-              initialColor: session.selectedStoreColor,
-            ),
+            StoreInputFormView(provider: formProvider),
+            if (submitState.isLoading)
+              const Center(child: CircularProgressIndicator.adaptive()),
           ],
         ),
       ),

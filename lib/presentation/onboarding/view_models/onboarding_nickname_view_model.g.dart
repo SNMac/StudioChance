@@ -43,7 +43,7 @@ final class OnboardingNicknameViewModelProvider
 }
 
 String _$onboardingNicknameViewModelHash() =>
-    r'b38307f3821065ccaf530222034d5cc55dcbba99';
+    r'37fe5a82e3ef02a75d1b4772fa0ec3eeeef4ac96';
 
 abstract class _$OnboardingNicknameViewModel extends $Notifier<String> {
   String build();
