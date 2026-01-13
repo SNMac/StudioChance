@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 
-class TitleTextField extends StatelessWidget {
+class InputFormTitleTextField extends StatelessWidget {
   final String title;
   final String? placeholder;
   final TextEditingController? controller;
@@ -13,7 +13,7 @@ class TitleTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
 
-  const TitleTextField({
+  const InputFormTitleTextField({
     super.key,
     required this.title,
     this.placeholder,

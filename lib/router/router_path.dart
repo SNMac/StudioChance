@@ -6,6 +6,7 @@ enum SCRoute {
   onboardingRole,
   onboardingAdmin,
   onboardingStore,
+  onboardingStoreColor,
   onboardingInvitation;
 
   /// [정의용] GoRoute path (상대 경로)
@@ -26,6 +27,8 @@ enum SCRoute {
         return 'admin';
       case SCRoute.onboardingStore:
         return 'store';
+      case SCRoute.onboardingStoreColor:
+        return 'color';
       case SCRoute.onboardingInvitation:
         return 'invitation';
     }
@@ -49,6 +52,8 @@ enum SCRoute {
         return '/onboarding/admin';
       case SCRoute.onboardingStore:
         return '/onboarding/store';
+      case SCRoute.onboardingStoreColor:
+        return '/onboarding/store/color';
       case SCRoute.onboardingInvitation:
         return '/onboarding/invitation';
     }

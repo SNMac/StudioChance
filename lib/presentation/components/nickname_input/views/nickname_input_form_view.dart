@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
-import 'package:studio_chance/presentation/components/body_text_field.dart';
+import 'package:studio_chance/presentation/components/input_form_body_text_field.dart';
 import 'package:studio_chance/presentation/components/grouped_form_container.dart';
 import 'package:studio_chance/presentation/components/nickname_input/view_models/nickname_input_form_view_model.dart';
 
@@ -43,7 +43,7 @@ class _NicknameInputFormState extends ConsumerState<NicknameInputFormView> {
       children: [
         GroupedFormContainer(
           children: [
-            BodyTextField(
+            InputFormBodyTextField(
               controller: _controller,
               maxLines: 1,
               autofocus: true,

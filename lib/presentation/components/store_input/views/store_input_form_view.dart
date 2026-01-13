@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/presentation/components/body_text_field.dart';
+import 'package:studio_chance/presentation/components/input_form_body_text_field.dart';
 import 'package:studio_chance/presentation/components/grouped_form_container.dart';
 import 'package:studio_chance/presentation/components/store_input/view_models/store_input_form_view_model.dart';
-import 'package:studio_chance/presentation/components/title_navigation_button.dart';
-import 'package:studio_chance/presentation/components/title_text_field.dart';
+import 'package:studio_chance/presentation/components/input_form_title_navigation_button.dart';
+import 'package:studio_chance/presentation/components/input_form_title_text_field.dart';
+import 'package:studio_chance/router/router_path.dart';
 
 class StoreInputFormView extends ConsumerStatefulWidget {
   final Store? initialStore;
@@ -57,14 +59,30 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
 
     return GroupedFormContainer(
       children: [
-        TitleTextField(
+        InputFormTitleTextField(
           title: '점포명',
           controller: _nameController,
           onChanged: notifier.setName,
           inputFormatters: [LengthLimitingTextInputFormatter(15)],
         ),
 
-        TitleNavigationButton(
+        InputFormTitleNavigationButton(
+          title: '색상',
+          content: state.color.displayName,
+          contentLeading: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: Color(state.color.foregroundColorValue),
+              shape: BoxShape.circle,
+            ),
+          ),
+          onPressed: () {
+            context.push(SCRoute.onboardingStoreColor.fullPath);
+          },
+        ),
+
+        InputFormTitleNavigationButton(
           title: '주소',
           content: state.address.isEmpty ? '주소 검색' : state.address,
           onPressed: () async {
@@ -76,7 +94,7 @@ class _StoreInputFormViewState extends ConsumerState<StoreInputFormView> {
           },
         ),
 
-        BodyTextField(
+        InputFormBodyTextField(
           placeholder: '메모',
           controller: _memoController,
           onChanged: notifier.setMemo,

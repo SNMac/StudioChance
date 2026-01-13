@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:studio_chance/presentation/components/title_popup_button.dart';
+import 'package:studio_chance/presentation/components/input_form_title_popup_button.dart';
 
 class ReservationInputForm extends StatelessWidget {
   // final Map<String, Color> colorMap = {

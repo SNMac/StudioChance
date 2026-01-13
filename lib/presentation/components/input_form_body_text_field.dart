@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 
-class BodyTextField extends StatelessWidget {
+class InputFormBodyTextField extends StatelessWidget {
   final String placeholder;
   final TextEditingController? controller;
   final void Function(String)? onChanged;
@@ -13,7 +13,7 @@ class BodyTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
 
-  const BodyTextField({
+  const InputFormBodyTextField({
     super.key,
     required this.placeholder,
     this.controller,

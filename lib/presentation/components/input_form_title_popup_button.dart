@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class TitlePopupButton<T> extends StatefulWidget {
+class InputFormTitlePopupButton<T> extends StatefulWidget {
   final String title;
   final T selectedValue;
   final List<T> items;
@@ -9,7 +9,7 @@ class TitlePopupButton<T> extends StatefulWidget {
   final String Function(T) itemLabelBuilder;
   final Widget Function(T)? itemLeadingBuilder;
 
-  const TitlePopupButton({
+  const InputFormTitlePopupButton({
     super.key,
     required this.title,
     required this.selectedValue,
@@ -20,10 +20,12 @@ class TitlePopupButton<T> extends StatefulWidget {
   });
 
   @override
-  State<TitlePopupButton<T>> createState() => _TitlePopupButtonState<T>();
+  State<InputFormTitlePopupButton<T>> createState() =>
+      _InputFormTitlePopupButtonState<T>();
 }
 
-class _TitlePopupButtonState<T> extends State<TitlePopupButton<T>> {
+class _InputFormTitlePopupButtonState<T>
+    extends State<InputFormTitlePopupButton<T>> {
   final GlobalKey<PopupMenuButtonState<T>> _menuKey = GlobalKey();
 
   @override
@@ -100,10 +102,7 @@ class _TitlePopupButtonState<T> extends State<TitlePopupButton<T>> {
                           SizedBox(
                             width: 16,
                             child: isSelected
-                                ? const Icon(
-                                    CupertinoIcons.check_mark,
-                                    size: 16,
-                                  )
+                                ? const Icon(CupertinoIcons.checkmark, size: 16)
                                 : null,
                           ),
 
