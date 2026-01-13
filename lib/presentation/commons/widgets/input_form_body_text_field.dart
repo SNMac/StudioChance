@@ -12,6 +12,7 @@ class InputFormBodyTextField extends StatelessWidget {
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
+  final TextInputAction? returnButtonType;
 
   const InputFormBodyTextField({
     super.key,
@@ -22,6 +23,7 @@ class InputFormBodyTextField extends StatelessWidget {
     this.autofocus = false,
     this.inputFormatters,
     this.keyboardType,
+    this.returnButtonType,
   });
 
   @override
@@ -40,6 +42,7 @@ class InputFormBodyTextField extends StatelessWidget {
             context,
           ),
         ),
+        textInputAction: returnButtonType,
         cursorHeight: 20,
         controller: controller,
         textAlignVertical: TextAlignVertical.center,

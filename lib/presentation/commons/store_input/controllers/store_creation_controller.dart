@@ -26,6 +26,12 @@ class StoreCreationController extends _$StoreCreationController
   @override
   void setAddress(String address) => state = state.copyWith(address: address);
   @override
+  void setAddressShort(String addressShort) =>
+      state = state.copyWith(addressShort: addressShort);
+  @override
+  void setAddressGuide(String addressGuide) =>
+      state = state.copyWith(address: addressGuide);
+  @override
   void setMemo(String memo) => state = state.copyWith(memo: memo);
   @override
   void setColor(StoreColor color) => state = state.copyWith(color: color);
@@ -38,6 +44,7 @@ class StoreCreationController extends _$StoreCreationController
       id: '',
       name: state.name,
       address: state.address,
+      addressShort: state.addressShort,
       addressGuide: state.addressGuide,
       memo: state.memo,
       priceSettings: state.priceSettings,

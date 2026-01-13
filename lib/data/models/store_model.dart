@@ -19,6 +19,7 @@ abstract class StoreModel with _$StoreModel {
     @JsonKey(includeToJson: false) required String id,
     required String name,
     required String address,
+    required String addressShort,
     required String addressGuide,
     required String memo,
 
@@ -44,6 +45,7 @@ abstract class StoreModel with _$StoreModel {
       id: entity.id,
       name: entity.name,
       address: entity.address,
+      addressShort: entity.addressShort,
       addressGuide: entity.addressGuide,
       memo: entity.memo,
       priceSettingsModel: PriceSettingsModel.fromEntity(entity.priceSettings),
@@ -71,6 +73,7 @@ abstract class StoreModel with _$StoreModel {
       id: id,
       name: name,
       address: address,
+      addressShort: addressShort,
       addressGuide: addressGuide,
       memo: memo,
       priceSettings: priceSettingsModel.toEntity(),

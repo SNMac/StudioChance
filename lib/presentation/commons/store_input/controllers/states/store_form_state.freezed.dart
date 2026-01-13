@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreFormState {
 
- String get name; String get address; String get addressGuide; String get memo; StoreColor get color;// 복잡한 객체는 nullable로 두거나, 기본값을 상수로 정의해서 넣어줌
+ String get name; String get address; String get addressShort; String get addressGuide; String get memo; StoreColor get color;// 복잡한 객체는 nullable로 두거나, 기본값을 상수로 정의해서 넣어줌
  PriceSetting get priceSettings; AsyncValue<void> get status;
 /// Create a copy of StoreFormState
 /// with the given fields replaced by the non-null parameter values.
@@ -26,16 +26,16 @@ $StoreFormStateCopyWith<StoreFormState> get copyWith => _$StoreFormStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressShort, addressShort) || other.addressShort == addressShort)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.status, status) || other.status == status));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,address,addressGuide,memo,color,priceSettings,status);
+int get hashCode => Object.hash(runtimeType,name,address,addressShort,addressGuide,memo,color,priceSettings,status);
 
 @override
 String toString() {
-  return 'StoreFormState(name: $name, address: $address, addressGuide: $addressGuide, memo: $memo, color: $color, priceSettings: $priceSettings, status: $status)';
+  return 'StoreFormState(name: $name, address: $address, addressShort: $addressShort, addressGuide: $addressGuide, memo: $memo, color: $color, priceSettings: $priceSettings, status: $status)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $StoreFormStateCopyWith<$Res>  {
   factory $StoreFormStateCopyWith(StoreFormState value, $Res Function(StoreFormState) _then) = _$StoreFormStateCopyWithImpl;
 @useResult
 $Res call({
- String name, String address, String addressGuide, String memo, StoreColor color, PriceSetting priceSettings, AsyncValue<void> status
+ String name, String address, String addressShort, String addressGuide, String memo, StoreColor color, PriceSetting priceSettings, AsyncValue<void> status
 });
 
 
@@ -63,10 +63,11 @@ class _$StoreFormStateCopyWithImpl<$Res>
 
 /// Create a copy of StoreFormState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? address = null,Object? addressGuide = null,Object? memo = null,Object? color = null,Object? priceSettings = null,Object? status = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? address = null,Object? addressShort = null,Object? addressGuide = null,Object? memo = null,Object? color = null,Object? priceSettings = null,Object? status = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,addressShort: null == addressShort ? _self.addressShort : addressShort // ignore: cast_nullable_to_non_nullable
 as String,addressGuide: null == addressGuide ? _self.addressGuide : addressGuide // ignore: cast_nullable_to_non_nullable
 as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
@@ -166,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String address,  String addressGuide,  String memo,  StoreColor color,  PriceSetting priceSettings,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String address,  String addressShort,  String addressGuide,  String memo,  StoreColor color,  PriceSetting priceSettings,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreFormState() when $default != null:
-return $default(_that.name,_that.address,_that.addressGuide,_that.memo,_that.color,_that.priceSettings,_that.status);case _:
+return $default(_that.name,_that.address,_that.addressShort,_that.addressGuide,_that.memo,_that.color,_that.priceSettings,_that.status);case _:
   return orElse();
 
 }
@@ -187,10 +188,10 @@ return $default(_that.name,_that.address,_that.addressGuide,_that.memo,_that.col
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String address,  String addressGuide,  String memo,  StoreColor color,  PriceSetting priceSettings,  AsyncValue<void> status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String address,  String addressShort,  String addressGuide,  String memo,  StoreColor color,  PriceSetting priceSettings,  AsyncValue<void> status)  $default,) {final _that = this;
 switch (_that) {
 case _StoreFormState():
-return $default(_that.name,_that.address,_that.addressGuide,_that.memo,_that.color,_that.priceSettings,_that.status);case _:
+return $default(_that.name,_that.address,_that.addressShort,_that.addressGuide,_that.memo,_that.color,_that.priceSettings,_that.status);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +208,10 @@ return $default(_that.name,_that.address,_that.addressGuide,_that.memo,_that.col
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String address,  String addressGuide,  String memo,  StoreColor color,  PriceSetting priceSettings,  AsyncValue<void> status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String address,  String addressShort,  String addressGuide,  String memo,  StoreColor color,  PriceSetting priceSettings,  AsyncValue<void> status)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreFormState() when $default != null:
-return $default(_that.name,_that.address,_that.addressGuide,_that.memo,_that.color,_that.priceSettings,_that.status);case _:
+return $default(_that.name,_that.address,_that.addressShort,_that.addressGuide,_that.memo,_that.color,_that.priceSettings,_that.status);case _:
   return null;
 
 }
@@ -222,11 +223,12 @@ return $default(_that.name,_that.address,_that.addressGuide,_that.memo,_that.col
 
 
 class _StoreFormState extends StoreFormState {
-  const _StoreFormState({this.name = '', this.address = '', this.addressGuide = '', this.memo = '', this.color = StoreColor.red, required this.priceSettings, this.status = const AsyncValue.data(null)}): super._();
+  const _StoreFormState({this.name = '', this.address = '', this.addressShort = '', this.addressGuide = '', this.memo = '', this.color = StoreColor.red, required this.priceSettings, this.status = const AsyncValue.data(null)}): super._();
   
 
 @override@JsonKey() final  String name;
 @override@JsonKey() final  String address;
+@override@JsonKey() final  String addressShort;
 @override@JsonKey() final  String addressGuide;
 @override@JsonKey() final  String memo;
 @override@JsonKey() final  StoreColor color;
@@ -244,16 +246,16 @@ _$StoreFormStateCopyWith<_StoreFormState> get copyWith => __$StoreFormStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressShort, addressShort) || other.addressShort == addressShort)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.status, status) || other.status == status));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,address,addressGuide,memo,color,priceSettings,status);
+int get hashCode => Object.hash(runtimeType,name,address,addressShort,addressGuide,memo,color,priceSettings,status);
 
 @override
 String toString() {
-  return 'StoreFormState(name: $name, address: $address, addressGuide: $addressGuide, memo: $memo, color: $color, priceSettings: $priceSettings, status: $status)';
+  return 'StoreFormState(name: $name, address: $address, addressShort: $addressShort, addressGuide: $addressGuide, memo: $memo, color: $color, priceSettings: $priceSettings, status: $status)';
 }
 
 
@@ -264,7 +266,7 @@ abstract mixin class _$StoreFormStateCopyWith<$Res> implements $StoreFormStateCo
   factory _$StoreFormStateCopyWith(_StoreFormState value, $Res Function(_StoreFormState) _then) = __$StoreFormStateCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String address, String addressGuide, String memo, StoreColor color, PriceSetting priceSettings, AsyncValue<void> status
+ String name, String address, String addressShort, String addressGuide, String memo, StoreColor color, PriceSetting priceSettings, AsyncValue<void> status
 });
 
 
@@ -281,10 +283,11 @@ class __$StoreFormStateCopyWithImpl<$Res>
 
 /// Create a copy of StoreFormState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? address = null,Object? addressGuide = null,Object? memo = null,Object? color = null,Object? priceSettings = null,Object? status = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? address = null,Object? addressShort = null,Object? addressGuide = null,Object? memo = null,Object? color = null,Object? priceSettings = null,Object? status = null,}) {
   return _then(_StoreFormState(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,addressShort: null == addressShort ? _self.addressShort : addressShort // ignore: cast_nullable_to_non_nullable
 as String,addressGuide: null == addressGuide ? _self.addressGuide : addressGuide // ignore: cast_nullable_to_non_nullable
 as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable

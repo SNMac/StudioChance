@@ -12,6 +12,7 @@ abstract class Store with _$Store {
     required String id,
     required String name,
     required String address,
+    required String addressShort,
     required String addressGuide,
     required String memo,
     required List<StoreMemberInfo> memberInfos,

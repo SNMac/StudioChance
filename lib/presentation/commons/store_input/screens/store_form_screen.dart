@@ -150,7 +150,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
             ),
             InputFormTitleNavigationButton(
               title: '주소',
-              content: state.address.isEmpty ? '주소 검색' : state.address,
+              content: state.address.isEmpty ? '주소 검색' : state.addressShort,
               onPressed: () {
                 context.push(SCRoute.onboardingStoreAddress.fullPath);
               },
