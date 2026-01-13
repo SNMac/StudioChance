@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:studio_chance/domain/entities/user.dart';
 
 import 'package:studio_chance/domain/use_cases/user_use_case.dart';
 import 'package:studio_chance/presentation/providers/auth_provider.dart';
@@ -13,22 +14,35 @@ part 'app_auth_controller.g.dart';
 enum AppStatus { unauthenticated, onboarding, authenticated, error }
 
 @Riverpod(keepAlive: true)
+Future<User?> currentUser(Ref ref) async {
+  final authInfo = await ref.watch(authStateChangesProvider.future);
+
+  if (authInfo == null) return null;
+
+  final userUseCase = ref.watch(userUseCaseProvider);
+  final result = await userUseCase.fetchOrCreateUser(authInfo);
+
+  return result.fold((error) => throw error, (user) => user);
+}
+
+@Riverpod(keepAlive: true)
 class AppAuthController extends _$AppAuthController {
   @override
   Future<AppStatus> build() async {
-    final userUseCase = ref.watch(userUseCaseProvider);
+    try {
+      final userState = await ref.watch(currentUserProvider.future);
 
-    final authInfo = await ref.watch(authStateChangesProvider.future);
+      if (userState == null) {
+        return AppStatus.unauthenticated;
+      }
 
-    if (authInfo == null) {
-      return AppStatus.unauthenticated;
-    }
+      if (userState.isNewUser) {
+        return AppStatus.onboarding;
+      }
 
-    final result = await userUseCase.fetchOrCreateUser(authInfo);
-
-    return result.fold((error) => AppStatus.error, (user) {
-      if (user.nickname == null) return AppStatus.onboarding;
       return AppStatus.authenticated;
-    });
+    } catch (e) {
+      return AppStatus.error;
+    }
   }
 }

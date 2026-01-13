@@ -1,16 +1,8 @@
+import 'package:studio_chance/common/exceptions/app_exception.dart';
+
 /// 사용자(DB) 관련 최상위 예외
-abstract class UserException implements Exception {
-  /// 개발자/로그용 원본 메시지
-  final String message;
-
-  /// 개발자/로그용 원본 에러 코드
-  final String? code;
-
-  UserException(this.message, {this.code});
-
-  @override
-  String toString() =>
-      '[$runtimeType] $message ${code != null ? '(Code: $code)' : ''}';
+abstract class UserException extends AppException {
+  UserException(super.message, {super.code});
 }
 
 // -----------------------------------------------------------------------------

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
+import 'package:studio_chance/presentation/home/screens/home_screen.dart';
 
-import 'package:studio_chance/presentation/home/views/home_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/onboarding_admin_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/onboarding_invitation_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/onboarding_nickname_view.dart';
-import 'package:studio_chance/presentation/onboarding/views/onboarding_role_view.dart';
-import 'package:studio_chance/presentation/components/store_input/views/store_color_selection_view.dart';
-import 'package:studio_chance/presentation/components/store_input/views/store_creation_view.dart';
+import 'package:studio_chance/presentation/onboarding/screens/onboarding_admin_screen.dart';
+import 'package:studio_chance/presentation/onboarding/screens/onboarding_invitation_screen.dart';
+import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
+import 'package:studio_chance/presentation/onboarding/screens/onboarding_role_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
-import 'package:studio_chance/presentation/sign_in/views/sign_in_view.dart';
-import 'package:studio_chance/presentation/splash/views/splash_view.dart';
+import 'package:studio_chance/presentation/sign_in/screens/sign_in_screen.dart';
+import 'package:studio_chance/presentation/splash/screens/splash_screen.dart';
 import 'package:studio_chance/router/auth_listenable.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -31,7 +31,7 @@ GoRouter goRouter(Ref ref) {
         path: SCRoute.splash.path,
         name: SCRoute.splash.name,
         pageBuilder: (context, state) =>
-            _fadePage(state: state, child: const SplashView()),
+            _fadePage(state: state, child: const SplashScreen()),
       ),
 
       // 로그인
@@ -39,7 +39,7 @@ GoRouter goRouter(Ref ref) {
         path: SCRoute.signIn.path,
         name: SCRoute.signIn.name,
         pageBuilder: (context, state) =>
-            _fadePage(state: state, child: const SignInView()),
+            _fadePage(state: state, child: const SignInScreen()),
       ),
 
       // 홈
@@ -47,7 +47,7 @@ GoRouter goRouter(Ref ref) {
         path: SCRoute.home.path,
         name: SCRoute.home.name,
         pageBuilder: (context, state) =>
-            _fadePage(state: state, child: const HomeView()),
+            _fadePage(state: state, child: const HomeScreen()),
       ),
 
       // 온보딩 섹션
@@ -63,35 +63,37 @@ GoRouter goRouter(Ref ref) {
           GoRoute(
             path: SCRoute.onboardingNickname.path,
             name: SCRoute.onboardingNickname.name,
-            pageBuilder: (context, state) =>
-                _fadePage(state: state, child: const OnboardingNicknameView()),
+            pageBuilder: (context, state) => _fadePage(
+              state: state,
+              child: const OnboardingNicknameScreen(),
+            ),
           ),
           GoRoute(
             path: SCRoute.onboardingRole.path,
             name: SCRoute.onboardingRole.name,
-            builder: (context, state) => const OnboardingRoleView(),
+            builder: (context, state) => const OnboardingRoleScreen(),
           ),
           GoRoute(
             path: SCRoute.onboardingAdmin.path,
             name: SCRoute.onboardingAdmin.name,
-            builder: (context, state) => const OnboardingAdminView(),
+            builder: (context, state) => const OnboardingAdminScreen(),
           ),
           GoRoute(
             path: SCRoute.onboardingStore.path,
             name: SCRoute.onboardingStore.name,
-            builder: (context, state) => const StoreCreationView(),
+            builder: (context, state) => const StoreFormScreen(),
             routes: [
               GoRoute(
                 path: SCRoute.onboardingStoreColor.path,
                 name: SCRoute.onboardingStoreColor.name,
-                builder: (context, state) => const StoreColorSelectionView(),
+                builder: (context, state) => const StoreColorSelectionScreen(),
               ),
             ],
           ),
           GoRoute(
             path: SCRoute.onboardingInvitation.path,
             name: SCRoute.onboardingInvitation.name,
-            builder: (context, state) => const OnboardingInvitationView(),
+            builder: (context, state) => const OnboardingInvitationScreen(),
           ),
         ],
       ),

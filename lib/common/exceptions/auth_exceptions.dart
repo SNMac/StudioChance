@@ -1,16 +1,8 @@
-/// 인증(Auth) 관련 최상위 예외
-abstract class AuthException implements Exception {
-  /// 개발자/로그용 원본 메시지
-  final String message;
+import 'package:studio_chance/common/exceptions/app_exception.dart';
 
-  /// 개발자/로그용 원본 에러 코드
-  final String? code;
-
-  AuthException(this.message, {this.code});
-
-  @override
-  String toString() =>
-      '[$runtimeType] $message ${code != null ? '(Code: $code)' : ''}';
+/// 인증 관련 최상위 예외
+abstract class AuthException extends AppException {
+  AuthException(super.message, {super.code});
 }
 
 // -----------------------------------------------------------------------------

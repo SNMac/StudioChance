@@ -1,16 +1,8 @@
+import 'package:studio_chance/common/exceptions/app_exception.dart';
+
 /// 점포(DB) 관련 최상위 예외
-abstract class StoreException implements Exception {
-  /// 개발자/로그용 원본 메시지
-  final String message;
-
-  /// 개발자/로그용 원본 에러 코드
-  final String? code;
-
-  StoreException(this.message, {this.code});
-
-  @override
-  String toString() =>
-      '[$runtimeType] $message ${code != null ? '(Code: $code)' : ''}';
+abstract class StoreException extends AppException {
+  StoreException(super.message, {super.code});
 }
 
 // -----------------------------------------------------------------------------
