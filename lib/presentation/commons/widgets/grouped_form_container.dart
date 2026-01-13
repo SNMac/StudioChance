@@ -32,6 +32,7 @@ class GroupedFormContainer extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(formBorderRadius),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (int i = 0; i < children.length; i++) ...[
                   children[i],

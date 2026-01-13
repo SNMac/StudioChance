@@ -36,7 +36,7 @@ class InputFormBodyTextField extends StatelessWidget {
         placeholderStyle: textTheme.bodyLarge?.copyWith(
           fontWeight: FontWeight.normal,
           color: CupertinoDynamicColor.resolve(
-            CupertinoColors.secondaryLabel,
+            CupertinoColors.tertiaryLabel,
             context,
           ),
         ),

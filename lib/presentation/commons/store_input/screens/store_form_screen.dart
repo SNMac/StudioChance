@@ -32,7 +32,6 @@ class StoreFormScreen extends ConsumerStatefulWidget {
 
 class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
   late final TextEditingController _nameController;
-  late final TextEditingController _guideController;
   late final TextEditingController _memoController;
 
   ProviderListenable<StoreFormState> get _currentProvider {

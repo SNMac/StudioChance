@@ -105,6 +105,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
             child: Column(
               spacing: 32,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 SelectionButton(
                   title: UserRole.admin.displayName,

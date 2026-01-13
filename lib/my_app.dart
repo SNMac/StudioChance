@@ -75,73 +75,77 @@ class MyApp extends ConsumerWidget {
       ),
     );
 
-    return MaterialApp.router(
-      routerConfig: router,
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: MaterialApp.router(
+        routerConfig: router,
 
-      title: 'StudioChance',
-      themeMode: ThemeMode.system,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Pretendard',
-        brightness: Brightness.light,
-        textTheme: textTheme.apply(
-          displayColor: CupertinoColors.label.color,
-          bodyColor: CupertinoColors.label.color,
-          decorationColor: CupertinoColors.label.color,
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: CupertinoColors.tertiarySystemBackground.color,
-          shape: const Border(
-            bottom: BorderSide(color: Color(0x4D000000), width: 0.33),
+        title: 'StudioChance',
+        themeMode: ThemeMode.system,
+        theme: ThemeData(
+          useMaterial3: true,
+          fontFamily: 'Pretendard',
+          brightness: Brightness.light,
+          textTheme: textTheme.apply(
+            displayColor: CupertinoColors.label.color,
+            bodyColor: CupertinoColors.label.color,
+            decorationColor: CupertinoColors.label.color,
+          ),
+          appBarTheme: AppBarTheme(
+            backgroundColor: CupertinoColors.tertiarySystemBackground.color,
+            shape: const Border(
+              bottom: BorderSide(color: Color(0x4D000000), width: 0.33),
+            ),
+          ),
+          scaffoldBackgroundColor:
+              CupertinoColors.systemGroupedBackground.color,
+          colorScheme: ColorScheme.light(
+            brightness: Brightness.light,
+            primary: CupertinoColors.systemBlue.color,
+            onPrimary: CupertinoColors.white,
+            primaryContainer: const Color(0x26007AFF),
+            onPrimaryContainer: CupertinoColors.systemBlue.color,
+            error: CupertinoColors.destructiveRed.color,
+          ),
+
+          cupertinoOverrideTheme: CupertinoThemeData(
+            brightness: Brightness.light,
+            primaryColor: CupertinoColors.systemBlue.color,
+            primaryContrastingColor: CupertinoColors.white,
           ),
         ),
-        scaffoldBackgroundColor: CupertinoColors.systemGroupedBackground.color,
-        colorScheme: ColorScheme.light(
-          brightness: Brightness.light,
-          primary: CupertinoColors.systemBlue.color,
-          onPrimary: CupertinoColors.white,
-          primaryContainer: const Color(0x26007AFF),
-          onPrimaryContainer: CupertinoColors.systemBlue.color,
-          error: CupertinoColors.destructiveRed.color,
-        ),
 
-        cupertinoOverrideTheme: CupertinoThemeData(
-          brightness: Brightness.light,
-          primaryColor: CupertinoColors.systemBlue.color,
-          primaryContrastingColor: CupertinoColors.white,
-        ),
-      ),
-
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Pretendard',
-        brightness: Brightness.dark,
-        textTheme: textTheme.apply(
-          displayColor: CupertinoColors.label.darkColor,
-          bodyColor: CupertinoColors.label.darkColor,
-          decorationColor: CupertinoColors.label.darkColor,
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: CupertinoColors.tertiarySystemBackground.darkColor,
-          shape: const Border(
-            bottom: BorderSide(color: Color(0x26FFFFFF), width: 0.33),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          fontFamily: 'Pretendard',
+          brightness: Brightness.dark,
+          textTheme: textTheme.apply(
+            displayColor: CupertinoColors.label.darkColor,
+            bodyColor: CupertinoColors.label.darkColor,
+            decorationColor: CupertinoColors.label.darkColor,
           ),
-        ),
-        scaffoldBackgroundColor:
-            CupertinoColors.systemGroupedBackground.darkColor,
-        colorScheme: ColorScheme.dark(
-          brightness: Brightness.dark,
-          primary: CupertinoColors.systemBlue.darkColor,
-          onPrimary: CupertinoColors.white,
-          primaryContainer: const Color(0x260091FF),
-          onPrimaryContainer: CupertinoColors.systemBlue.darkColor,
-          error: CupertinoColors.destructiveRed.darkColor,
-        ),
+          appBarTheme: AppBarTheme(
+            backgroundColor: CupertinoColors.tertiarySystemBackground.darkColor,
+            shape: const Border(
+              bottom: BorderSide(color: Color(0x26FFFFFF), width: 0.33),
+            ),
+          ),
+          scaffoldBackgroundColor:
+              CupertinoColors.systemGroupedBackground.darkColor,
+          colorScheme: ColorScheme.dark(
+            brightness: Brightness.dark,
+            primary: CupertinoColors.systemBlue.darkColor,
+            onPrimary: CupertinoColors.white,
+            primaryContainer: const Color(0x260091FF),
+            onPrimaryContainer: CupertinoColors.systemBlue.darkColor,
+            error: CupertinoColors.destructiveRed.darkColor,
+          ),
 
-        cupertinoOverrideTheme: CupertinoThemeData(
-          brightness: Brightness.dark,
-          primaryColor: CupertinoColors.systemBlue.darkColor,
-          primaryContrastingColor: CupertinoColors.white,
+          cupertinoOverrideTheme: CupertinoThemeData(
+            brightness: Brightness.dark,
+            primaryColor: CupertinoColors.systemBlue.darkColor,
+            primaryContrastingColor: CupertinoColors.white,
+          ),
         ),
       ),
     );
