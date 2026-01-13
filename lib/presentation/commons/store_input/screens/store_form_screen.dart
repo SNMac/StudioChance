@@ -32,6 +32,7 @@ class StoreFormScreen extends ConsumerStatefulWidget {
 
 class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
   late final TextEditingController _nameController;
+  late final TextEditingController _guideController;
   late final TextEditingController _memoController;
 
   ProviderListenable<StoreFormState> get _currentProvider {
@@ -151,9 +152,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
             InputFormTitleNavigationButton(
               title: '주소',
               content: state.address.isEmpty ? '주소 검색' : state.address,
-              onPressed: () async {
-                // 주소 검색 로직...
-                // notifier.setAddress(...);
+              onPressed: () {
+                context.push(SCRoute.onboardingStoreAddress.fullPath);
               },
             ),
             InputFormBodyTextField(

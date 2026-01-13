@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
@@ -87,6 +88,11 @@ GoRouter goRouter(Ref ref) {
                 path: SCRoute.onboardingStoreColor.path,
                 name: SCRoute.onboardingStoreColor.name,
                 builder: (context, state) => const StoreColorSelectionScreen(),
+              ),
+              GoRoute(
+                path: SCRoute.onboardingStoreAddress.path,
+                name: SCRoute.onboardingStoreAddress.name,
+                builder: (context, state) => const StoreAddressInputScreen(),
               ),
             ],
           ),

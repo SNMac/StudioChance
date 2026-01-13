@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Store {
 
- String get id; String get name; String get address; String get memo; List<StoreMemberInfo> get memberInfos; List<StoreMemberInfo> get waitingMemberInfos; PriceSetting get priceSettings; InviteInfo? get inviteInfo; DateTime? get createdAt; DateTime? get updatedAt;
+ String get id; String get name; String get address; String get addressGuide; String get memo; List<StoreMemberInfo> get memberInfos; List<StoreMemberInfo> get waitingMemberInfos; PriceSetting get priceSettings; InviteInfo? get inviteInfo; DateTime? get createdAt; DateTime? get updatedAt;
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $StoreCopyWith<Store> get copyWith => _$StoreCopyWithImpl<Store>(this as Store, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.memo, memo) || other.memo == memo)&&const DeepCollectionEquality().equals(other.memberInfos, memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, waitingMemberInfos)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&const DeepCollectionEquality().equals(other.memberInfos, memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, waitingMemberInfos)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,address,memo,const DeepCollectionEquality().hash(memberInfos),const DeepCollectionEquality().hash(waitingMemberInfos),priceSettings,inviteInfo,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,address,addressGuide,memo,const DeepCollectionEquality().hash(memberInfos),const DeepCollectionEquality().hash(waitingMemberInfos),priceSettings,inviteInfo,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Store(id: $id, name: $name, address: $address, memo: $memo, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, priceSettings: $priceSettings, inviteInfo: $inviteInfo, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'Store(id: $id, name: $name, address: $address, addressGuide: $addressGuide, memo: $memo, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, priceSettings: $priceSettings, inviteInfo: $inviteInfo, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $StoreCopyWith<$Res>  {
   factory $StoreCopyWith(Store value, $Res Function(Store) _then) = _$StoreCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String address, String memo, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, PriceSetting priceSettings, InviteInfo? inviteInfo, DateTime? createdAt, DateTime? updatedAt
+ String id, String name, String address, String addressGuide, String memo, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, PriceSetting priceSettings, InviteInfo? inviteInfo, DateTime? createdAt, DateTime? updatedAt
 });
 
 
@@ -62,11 +62,12 @@ class _$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? memo = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? priceSettings = null,Object? inviteInfo = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressGuide = null,Object? memo = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? priceSettings = null,Object? inviteInfo = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,addressGuide: null == addressGuide ? _self.addressGuide : addressGuide // ignore: cast_nullable_to_non_nullable
 as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,memberInfos: null == memberInfos ? _self.memberInfos : memberInfos // ignore: cast_nullable_to_non_nullable
 as List<StoreMemberInfo>,waitingMemberInfos: null == waitingMemberInfos ? _self.waitingMemberInfos : waitingMemberInfos // ignore: cast_nullable_to_non_nullable
@@ -180,10 +181,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String memo,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo,  DateTime? createdAt,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressGuide,  String memo,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo,  DateTime? createdAt,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.name,_that.address,_that.memo,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressGuide,_that.memo,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -201,10 +202,10 @@ return $default(_that.id,_that.name,_that.address,_that.memo,_that.memberInfos,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String memo,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo,  DateTime? createdAt,  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressGuide,  String memo,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo,  DateTime? createdAt,  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Store():
-return $default(_that.id,_that.name,_that.address,_that.memo,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressGuide,_that.memo,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -221,10 +222,10 @@ return $default(_that.id,_that.name,_that.address,_that.memo,_that.memberInfos,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String address,  String memo,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo,  DateTime? createdAt,  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String address,  String addressGuide,  String memo,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo,  DateTime? createdAt,  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.name,_that.address,_that.memo,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressGuide,_that.memo,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -236,12 +237,13 @@ return $default(_that.id,_that.name,_that.address,_that.memo,_that.memberInfos,_
 
 
 class _Store implements Store {
-  const _Store({required this.id, required this.name, required this.address, required this.memo, required final  List<StoreMemberInfo> memberInfos, required final  List<StoreMemberInfo> waitingMemberInfos, required this.priceSettings, required this.inviteInfo, required this.createdAt, required this.updatedAt}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos;
+  const _Store({required this.id, required this.name, required this.address, required this.addressGuide, required this.memo, required final  List<StoreMemberInfo> memberInfos, required final  List<StoreMemberInfo> waitingMemberInfos, required this.priceSettings, required this.inviteInfo, required this.createdAt, required this.updatedAt}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos;
   
 
 @override final  String id;
 @override final  String name;
 @override final  String address;
+@override final  String addressGuide;
 @override final  String memo;
  final  List<StoreMemberInfo> _memberInfos;
 @override List<StoreMemberInfo> get memberInfos {
@@ -272,16 +274,16 @@ _$StoreCopyWith<_Store> get copyWith => __$StoreCopyWithImpl<_Store>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.memo, memo) || other.memo == memo)&&const DeepCollectionEquality().equals(other._memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other._waitingMemberInfos, _waitingMemberInfos)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&const DeepCollectionEquality().equals(other._memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other._waitingMemberInfos, _waitingMemberInfos)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,address,memo,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),priceSettings,inviteInfo,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,address,addressGuide,memo,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),priceSettings,inviteInfo,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Store(id: $id, name: $name, address: $address, memo: $memo, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, priceSettings: $priceSettings, inviteInfo: $inviteInfo, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'Store(id: $id, name: $name, address: $address, addressGuide: $addressGuide, memo: $memo, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, priceSettings: $priceSettings, inviteInfo: $inviteInfo, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -292,7 +294,7 @@ abstract mixin class _$StoreCopyWith<$Res> implements $StoreCopyWith<$Res> {
   factory _$StoreCopyWith(_Store value, $Res Function(_Store) _then) = __$StoreCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String address, String memo, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, PriceSetting priceSettings, InviteInfo? inviteInfo, DateTime? createdAt, DateTime? updatedAt
+ String id, String name, String address, String addressGuide, String memo, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, PriceSetting priceSettings, InviteInfo? inviteInfo, DateTime? createdAt, DateTime? updatedAt
 });
 
 
@@ -309,11 +311,12 @@ class __$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? memo = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? priceSettings = null,Object? inviteInfo = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressGuide = null,Object? memo = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? priceSettings = null,Object? inviteInfo = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_Store(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,addressGuide: null == addressGuide ? _self.addressGuide : addressGuide // ignore: cast_nullable_to_non_nullable
 as String,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,memberInfos: null == memberInfos ? _self._memberInfos : memberInfos // ignore: cast_nullable_to_non_nullable
 as List<StoreMemberInfo>,waitingMemberInfos: null == waitingMemberInfos ? _self._waitingMemberInfos : waitingMemberInfos // ignore: cast_nullable_to_non_nullable

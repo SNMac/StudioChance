@@ -10,6 +10,7 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   id: json['id'] as String,
   name: json['name'] as String,
   address: json['address'] as String,
+  addressGuide: json['addressGuide'] as String,
   memo: json['memo'] as String,
   priceSettingsModel: PriceSettingsModel.fromJson(
     json['priceSettingsModel'] as Map<String, dynamic>,
@@ -51,6 +52,7 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
     <String, dynamic>{
       'name': instance.name,
       'address': instance.address,
+      'addressGuide': instance.addressGuide,
       'memo': instance.memo,
       'priceSettingsModel': instance.priceSettingsModel.toJson(),
       'memberById': instance.memberById.map((k, e) => MapEntry(k, e.toJson())),

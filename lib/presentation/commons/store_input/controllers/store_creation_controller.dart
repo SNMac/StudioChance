@@ -38,6 +38,7 @@ class StoreCreationController extends _$StoreCreationController
       id: '',
       name: state.name,
       address: state.address,
+      addressGuide: state.addressGuide,
       memo: state.memo,
       priceSettings: state.priceSettings,
       memberInfos: [],
@@ -67,7 +68,7 @@ class StoreCreationController extends _$StoreCreationController
 
       if (result.isLeft()) throw result.getLeft().toNullable()!;
 
-      // 성공 시 목록 갱신을 위해 AuthController 갱신
+      // 성공 시 온보딩 갱신을 위해 AuthController 갱신
       ref.invalidate(appAuthControllerProvider);
     } catch (e, st) {
       state = state.copyWith(status: AsyncValue.error(e, st));
