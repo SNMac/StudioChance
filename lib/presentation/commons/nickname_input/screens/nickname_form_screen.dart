@@ -36,7 +36,7 @@ class NicknameFormScreen extends ConsumerStatefulWidget {
   const NicknameFormScreen({
     super.key,
     this.initialNickname,
-    this.title = '닉네임 설정',
+    this.title = '닉네임 변경',
     this.submitLabel = '완료',
     required this.onComplete,
     this.enableBackGesture = true,
@@ -48,17 +48,17 @@ class NicknameFormScreen extends ConsumerStatefulWidget {
 }
 
 class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
-  late final TextEditingController _textController;
+  late final TextEditingController _nicknameController;
 
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController(text: widget.initialNickname);
+    _nicknameController = TextEditingController(text: widget.initialNickname);
   }
 
   @override
   void dispose() {
-    _textController.dispose();
+    _nicknameController.dispose();
     super.dispose();
   }
 
@@ -86,7 +86,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
         appBar: CustomAppBar(
           title: widget.title,
           // 커스텀 Back 동작 연결
-          leading: AppBarBackButton(onPressed: _handleBack),
+          leading: AppBarNaviBackButton(onPressed: _handleBack),
           actions: [
             AppBarActionButton(
               label: widget.submitLabel,
@@ -114,9 +114,10 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                   GroupedFormContainer(
                     children: [
                       InputFormBodyTextField(
-                        controller: _textController,
+                        controller: _nicknameController,
                         maxLines: 1,
                         autofocus: true,
+                        showClearButton: true,
                         placeholder: '닉네임',
                         onChanged: notifier.onNicknameChanged,
                         inputFormatters: [

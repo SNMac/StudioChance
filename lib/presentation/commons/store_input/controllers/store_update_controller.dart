@@ -19,11 +19,11 @@ class StoreUpdateController extends _$StoreUpdateController
     _targetStore = store;
 
     final currentUser = ref.read(currentUserProvider).value;
-    StoreColor initialColor = StoreColor.red;
+    StoreColor color = StoreColor.red;
 
     if (currentUser != null) {
       try {
-        initialColor = currentUser.storeInfos
+        color = currentUser.storeInfos
             .firstWhere((e) => e.id == store.id)
             .color;
       } catch (_) {}
@@ -32,8 +32,10 @@ class StoreUpdateController extends _$StoreUpdateController
     return StoreFormState(
       name: store.name,
       address: store.address,
+      addressDetail: store.addressDetail,
+      addressGuide: store.addressGuide,
       memo: store.memo,
-      color: initialColor,
+      color: color,
       priceSettings: store.priceSettings,
     );
   }
@@ -43,11 +45,11 @@ class StoreUpdateController extends _$StoreUpdateController
   @override
   void setAddress(String address) => state = state.copyWith(address: address);
   @override
-  void setAddressShort(String addressShort) =>
-      state = state.copyWith(addressShort: addressShort);
+  void setAddressDetail(String addressDetail) =>
+      state = state.copyWith(addressDetail: addressDetail);
   @override
   void setAddressGuide(String addressGuide) =>
-      state = state.copyWith(address: addressGuide);
+      state = state.copyWith(addressGuide: addressGuide);
   @override
   void setMemo(String memo) => state = state.copyWith(memo: memo);
   @override
@@ -60,6 +62,8 @@ class StoreUpdateController extends _$StoreUpdateController
     final updatedStore = _targetStore.copyWith(
       name: state.name,
       address: state.address,
+      addressDetail: state.addressDetail,
+      addressGuide: state.addressGuide,
       memo: state.memo,
       priceSettings: state.priceSettings,
     );

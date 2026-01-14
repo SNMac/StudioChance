@@ -86,6 +86,25 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     final state = ref.watch(_currentProvider);
     final notifier = _currentNotifier;
 
+    String displayAddress() {
+      if (state.address.isEmpty) {
+        if (state.addressDetail.isEmpty) {
+          return '주소 검색';
+        } else {
+          return state.addressDetail;
+        }
+      }
+
+      List<String> trimmed = state.address.trim().split(RegExp(r'\s+'));
+      if (trimmed.isEmpty) {
+        return '';
+      } else if (trimmed.length == 1) {
+        return trimmed[0];
+      } else {
+        return '${trimmed[0]} ${trimmed[1]}';
+      }
+    }
+
     ref.listen(provider.select((value) => value.status), (previous, next) {
       next.when(
         data: (_) {},
@@ -150,9 +169,12 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
             ),
             InputFormTitleNavigationButton(
               title: '주소',
-              content: state.address.isEmpty ? '주소 검색' : state.addressShort,
+              content: displayAddress(),
               onPressed: () {
-                context.push(SCRoute.onboardingStoreAddress.fullPath);
+                context.push(
+                  SCRoute.onboardingStoreAddress.fullPath,
+                  extra: widget.storeToEdit,
+                );
               },
             ),
             InputFormBodyTextField(
@@ -161,6 +183,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
               onChanged: notifier.setMemo,
               maxLines: null,
               inputFormatters: [LengthLimitingTextInputFormatter(150)],
+              autocorrect: true,
             ),
           ],
         ),

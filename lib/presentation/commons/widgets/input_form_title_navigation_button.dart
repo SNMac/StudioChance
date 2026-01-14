@@ -31,38 +31,45 @@ class InputFormTitleNavigationButton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(title, style: textTheme.bodyLarge),
-            Row(
-              children: [
-                if (contentLeading != null) ...[
-                  contentLeading!,
-                  const SizedBox(width: 8),
-                ],
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (contentLeading != null) ...[
+                    contentLeading!,
+                    const SizedBox(width: 8),
+                  ],
 
-                if (content != null)
-                  Text(
-                    content!,
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.normal,
+                  if (content != null)
+                    Flexible(
+                      child: Text(
+                        content!,
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: CupertinoDynamicColor.resolve(
+                            CupertinoColors.secondaryLabel,
+                            context,
+                          ),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                  const SizedBox(width: 12),
+
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 10),
+                    child: Icon(
+                      CupertinoIcons.chevron_forward,
                       color: CupertinoDynamicColor.resolve(
-                        CupertinoColors.secondaryLabel,
+                        CupertinoColors.tertiaryLabel,
                         context,
                       ),
                     ),
                   ),
-
-                const SizedBox(width: 12),
-
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 10),
-                  child: Icon(
-                    CupertinoIcons.chevron_forward,
-                    color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.tertiaryLabel,
-                      context,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

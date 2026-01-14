@@ -12,6 +12,7 @@ class InputFormTitleTextField extends StatelessWidget {
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
+  final bool autocorrect;
 
   const InputFormTitleTextField({
     super.key,
@@ -22,6 +23,7 @@ class InputFormTitleTextField extends StatelessWidget {
     this.autofocus = false,
     this.inputFormatters,
     this.keyboardType,
+    this.autocorrect = false
   });
 
   @override
@@ -57,6 +59,8 @@ class InputFormTitleTextField extends StatelessWidget {
                 onChanged: onChanged,
                 inputFormatters: inputFormatters,
                 keyboardType: keyboardType,
+                autocorrect: autocorrect,
+                enableSuggestions: autocorrect,
                 style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.normal,
                 ),

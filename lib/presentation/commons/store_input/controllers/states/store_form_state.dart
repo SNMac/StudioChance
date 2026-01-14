@@ -13,7 +13,7 @@ abstract class StoreFormState with _$StoreFormState {
   const factory StoreFormState({
     @Default('') String name,
     @Default('') String address,
-    @Default('') String addressShort,
+    @Default('') String addressDetail,
     @Default('') String addressGuide,
     @Default('') String memo,
     @Default(StoreColor.red) StoreColor color,

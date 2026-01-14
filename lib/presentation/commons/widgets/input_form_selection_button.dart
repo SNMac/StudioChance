@@ -36,6 +36,7 @@ class InputFormSelectionButton<T> extends StatelessWidget {
               const Icon(
                 CupertinoIcons.checkmark,
                 color: CupertinoColors.activeBlue,
+                fontWeight: FontWeight.w600,
                 size: 16,
               ),
           ],

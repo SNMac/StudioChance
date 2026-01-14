@@ -5,7 +5,7 @@ import 'package:studio_chance/domain/enums/store_color.dart';
 abstract interface class StoreFormControllerable {
   void setName(String name);
   void setAddress(String address);
-  void setAddressShort(String addressShort);
+  void setAddressDetail(String addressDetail);
   void setAddressGuide(String addressGuide);
   void setMemo(String memo);
   void setColor(StoreColor color);
