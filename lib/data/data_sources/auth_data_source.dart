@@ -1,12 +1,9 @@
-import 'dart:convert';
 import 'dart:math';
 
-import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/models/auth_model.dart';
 
@@ -77,8 +74,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
   @override
   Future<AuthModel> signInWithApple() async {
     try {
-      final credential = await _getAppleCredential();
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential = await _getAppleCredential();
 
       final user = userCredential.user;
       if (user == null) {
@@ -156,11 +152,12 @@ class FirebaseAuthDataSource implements AuthDataSource {
       }
       _logger.d('재인증 시도: Provider = $targetProviderId');
 
-      AuthCredential? credential;
       if (targetProviderId == 'google.com') {
-        credential = await _getGoogleCredential();
+        final credential = await _getGoogleCredential();
+        await user.reauthenticateWithCredential(credential);
       } else if (targetProviderId == 'apple.com') {
-        credential = await _getAppleCredential();
+        AppleAuthProvider appleProvider = AppleAuthProvider();
+        await user.reauthenticateWithProvider(appleProvider);
       } else {
         throw AuthMethodNotSupportedException(
           message:
@@ -168,7 +165,6 @@ class FirebaseAuthDataSource implements AuthDataSource {
         );
       }
 
-      await user.reauthenticateWithCredential(credential);
       _logger.d('재인증 성공');
     } catch (e) {
       throw _handleFirebaseError(e);
@@ -212,28 +208,19 @@ class FirebaseAuthDataSource implements AuthDataSource {
   }
 
   /// Apple 로그인 로직
-  Future<OAuthCredential> _getAppleCredential() async {
+  Future<UserCredential> _getAppleCredential() async {
     _logger.d('Apple 로그인 시작');
 
-    final rawNonce = _generateNonce();
-    final sha256Nonce = sha256.convert(utf8.encode(rawNonce)).toString();
-
-    final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [
-        AppleIDAuthorizationScopes.fullName,
-        AppleIDAuthorizationScopes.email,
-      ],
-      nonce: sha256Nonce,
-    );
-
-    final credential = OAuthProvider('apple.com').credential(
-      idToken: appleCredential.identityToken,
-      accessToken: appleCredential.authorizationCode,
-      rawNonce: rawNonce,
-    );
-    _logger.d('Apple 로그인 성공');
-
-    return credential;
+    AppleAuthProvider appleProvider = AppleAuthProvider();
+    appleProvider = appleProvider.addScope('email');
+    appleProvider = appleProvider.addScope('name');
+    try {
+      final credential = await _auth.signInWithProvider(appleProvider);
+      _logger.d('Apple 로그인 성공');
+      return credential;
+    } catch (e) {
+      throw _handleFirebaseError(e);
+    }
   }
 
   Future<void> _googleSignOut() async {
@@ -247,29 +234,19 @@ class FirebaseAuthDataSource implements AuthDataSource {
   Future<void> _revokeAppleSignIn() async {
     _logger.d('Apple 계정 Revoke 시작');
 
-    final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [],
+    final appleProvider = AppleAuthProvider();
+
+    UserCredential userCredential = await _auth.signInWithProvider(
+      appleProvider,
     );
+    String? authCode = userCredential.additionalUserInfo?.authorizationCode;
 
-    final authorizationCode = appleCredential.authorizationCode;
-
-    if (authorizationCode.isEmpty) {
+    if (authCode == null || authCode.isEmpty) {
       throw AuthUnknownException(message: 'Apple Authorization Code가 없습니다.');
     }
 
-    await _auth.revokeTokenWithAuthorizationCode(authorizationCode);
+    await _auth.revokeTokenWithAuthorizationCode(authCode);
     _logger.d('Apple 계정 Revoke 성공');
-  }
-
-  /// Apple 로그인용 Nonce 생성 메서드
-  String _generateNonce([int length = 32]) {
-    const charset =
-        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
-    final random = Random.secure();
-    return List.generate(
-      length,
-      (_) => charset[random.nextInt(charset.length)],
-    ).join();
   }
 
   // ===========================================================================
@@ -281,22 +258,12 @@ class FirebaseAuthDataSource implements AuthDataSource {
 
     if (e is AuthException) return e;
 
-    if (e is GoogleSignInException) {
-      if (e.code == GoogleSignInExceptionCode.canceled) {
-        return AuthCancelledException(
-          message: e.description ?? '사용자에 의해 취소되었습니다.',
-          code: e.code.toString(),
-        );
-      }
-    }
-
-    if (e is SignInWithAppleAuthorizationException) {
-      if (e.code == AuthorizationErrorCode.canceled) {
-        return AuthCancelledException(
-          message: e.message,
-          code: e.code.toString(),
-        );
-      }
+    if (e is GoogleSignInException &&
+        e.code == GoogleSignInExceptionCode.canceled) {
+      return AuthCancelledException(
+        message: e.description ?? '사용자에 의해 취소되었습니다.',
+        code: e.code.toString(),
+      );
     }
 
     if (e is FirebaseAuthException) {
@@ -317,6 +284,8 @@ class FirebaseAuthDataSource implements AuthDataSource {
           return AuthNetworkException(message: msg, code: code);
         case 'too-many-requests':
           return AuthTooManyRequestsException(message: msg, code: code);
+        case 'canceled':
+          return AuthCancelledException(message: msg, code: code);
 
         // 2. 이메일/비밀번호 입력 오류
         case 'invalid-email':
