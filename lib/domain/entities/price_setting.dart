@@ -6,7 +6,8 @@ part 'price_setting.freezed.dart';
 
 @freezed
 abstract class PriceSetting with _$PriceSetting {
-  const factory PriceSetting({
-    required List<DayGroup> dayGroups,
-  }) = _PriceSetting;
+  const factory PriceSetting({required List<DayGroup> dayGroups}) =
+      _PriceSetting;
+
+  factory PriceSetting.empty() => PriceSetting(dayGroups: [DayGroup.empty()]);
 }

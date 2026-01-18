@@ -14,9 +14,16 @@ Future<void> showCustomAlertDialog({
   bool showCancel = true,
   bool isDestructive = false,
   VoidCallback? onConfirmBeforePop,
+  VoidCallback? onConfirmAfterPop,
 }) {
   final colorScheme = Theme.of(context).colorScheme;
   final textTheme = Theme.of(context).textTheme;
+
+  void onConfirmPressed() {
+    if (onConfirmBeforePop != null) onConfirmBeforePop();
+    context.pop();
+    if (onConfirmAfterPop != null) onConfirmAfterPop();
+  }
 
   return showAdaptiveDialog(
     context: context,
@@ -30,7 +37,7 @@ Future<void> showCustomAlertDialog({
           if (Platform.isIOS)
             CupertinoButton(
               pressedOpacity: 1.0,
-              padding: EdgeInsetsDirectional.all(0),
+              padding: const EdgeInsetsDirectional.all(0),
               onPressed: () => context.pop(),
               child: Text(
                 cancelText,
@@ -56,10 +63,7 @@ Future<void> showCustomAlertDialog({
           CupertinoButton(
             pressedOpacity: 1.0,
             padding: const EdgeInsetsDirectional.all(0),
-            onPressed: () {
-              if (onConfirmBeforePop != null) onConfirmBeforePop();
-              context.pop();
-            },
+            onPressed: onConfirmPressed,
             child: Text(
               confirmText,
               style: textTheme.titleLarge?.copyWith(
@@ -69,7 +73,7 @@ Future<void> showCustomAlertDialog({
           )
         else
           TextButton(
-            onPressed: () => onConfirmBeforePop,
+            onPressed: onConfirmPressed,
             child: Text(
               confirmText,
               style: textTheme.titleLarge?.copyWith(

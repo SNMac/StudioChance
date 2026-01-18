@@ -19,7 +19,7 @@ class StoreCreationController extends _$StoreCreationController
   StoreFormState build() {
     return StoreFormState(
       color: StoreColor.red,
-      priceSettings: PriceSetting(dayGroups: [DayGroup.empty()]),
+      priceSettings: PriceSetting.empty(),
     );
   }
 

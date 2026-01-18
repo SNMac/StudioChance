@@ -11,4 +11,12 @@ abstract class TimeSlot with _$TimeSlot {
     required bool isHourly,
     required bool isPerPerson,
   }) = _TimeSlot;
+
+  factory TimeSlot.empty() => const TimeSlot(
+    startTime: 360,
+    endTime: 1080,
+    price: -1,
+    isHourly: true,
+    isPerPerson: false,
+  );
 }
