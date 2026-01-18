@@ -17,13 +17,11 @@ class OnboardingRoleScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionState = ref.watch(onboardingSessionControllerProvider);
-    final sessionNotifier = ref.read(
-      onboardingSessionControllerProvider.notifier,
-    );
+    final state = ref.watch(onboardingSessionControllerProvider);
+    final notifier = ref.read(onboardingSessionControllerProvider.notifier);
 
-    final selectedRole = sessionState.selectedRole;
-    final isLoading = sessionState.status.isLoading;
+    final selectedRole = state.selectedRole;
+    final isLoading = state.status.isLoading;
 
     void showErrorDialog(String title, String content) {
       showCustomAlertDialog(
@@ -59,7 +57,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
         context: context,
         title: '${selectedRole.displayName}로 진행할까요?',
         onConfirm: () async {
-          await sessionNotifier.saveNicknameToRemote();
+          await notifier.saveNicknameToRemote();
 
           if (ref.read(onboardingSessionControllerProvider).status.hasError) {
             return;
@@ -83,7 +81,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
         content: '점포는 마이페이지에서 설정할 수 있어요.',
         onConfirm: () async {
           if (isLoading) return;
-          await sessionNotifier.submitNicknameOnly();
+          await notifier.submitNicknameOnly();
         },
       );
     }
@@ -94,46 +92,58 @@ class OnboardingRoleScreen extends ConsumerWidget {
         actions: [
           AppBarActionButton(
             label: '다음',
-            onPressed: sessionState.isRoleSelected ? onNextPressed : null,
+            onPressed: (state.isRoleSelected && !isLoading)
+                ? onNextPressed
+                : null,
           ),
         ],
       ),
-      body: SafeAreaWithPadding(
-        child: Center(
-          child: SizedBox(
-            width: 240,
-            child: Column(
-              spacing: 32,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LargeSelectionButton(
-                  title: UserRole.admin.displayName,
-                  description: UserRole.admin.displayDescription,
-                  isSelected: selectedRole == UserRole.admin,
-                  onPressed: () => sessionNotifier.setRole(UserRole.admin),
+      body: Stack(
+        children: [
+          SafeAreaWithPadding(
+            child: Center(
+              child: SizedBox(
+                width: 240,
+                child: Column(
+                  spacing: 32,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LargeSelectionButton(
+                      title: UserRole.admin.displayName,
+                      description: UserRole.admin.displayDescription,
+                      isSelected: selectedRole == UserRole.admin,
+                      onPressed: () => notifier.setRole(UserRole.admin),
+                    ),
+                    LargeSelectionButton(
+                      title: UserRole.staff.displayName,
+                      description: UserRole.staff.displayDescription,
+                      isSelected: selectedRole == UserRole.staff,
+                      onPressed: () => notifier.setRole(UserRole.staff),
+                    ),
+                    LargeSelectionButton(
+                      title: UserRole.viewer.displayName,
+                      description: UserRole.viewer.displayDescription,
+                      isSelected: selectedRole == UserRole.viewer,
+                      onPressed: () => notifier.setRole(UserRole.viewer),
+                    ),
+                    LargeSelectionButton(
+                      title: '나중에 설정',
+                      isNavigation: true,
+                      onPressed: onSkipPressed,
+                    ),
+                  ],
                 ),
-                LargeSelectionButton(
-                  title: UserRole.staff.displayName,
-                  description: UserRole.staff.displayDescription,
-                  isSelected: selectedRole == UserRole.staff,
-                  onPressed: () => sessionNotifier.setRole(UserRole.staff),
-                ),
-                LargeSelectionButton(
-                  title: UserRole.viewer.displayName,
-                  description: UserRole.viewer.displayDescription,
-                  isSelected: selectedRole == UserRole.viewer,
-                  onPressed: () => sessionNotifier.setRole(UserRole.viewer),
-                ),
-                LargeSelectionButton(
-                  title: '나중에 설정',
-                  isNavigation: true,
-                  onPressed: isLoading ? null : onSkipPressed,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+
+          if (isLoading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.3),
+              child: const Center(child: CircularProgressIndicator.adaptive()),
+            ),
+        ],
       ),
     );
   }
