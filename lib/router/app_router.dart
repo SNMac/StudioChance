@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
@@ -93,6 +94,11 @@ GoRouter goRouter(Ref ref) {
                 path: SCRoute.onboardingStoreAddress.path,
                 name: SCRoute.onboardingStoreAddress.name,
                 builder: (context, state) => const StoreAddressInputScreen(),
+              ),
+              GoRoute(
+                path: SCRoute.onboardingPriceDays.path,
+                name: SCRoute.onboardingPriceDays.name,
+                builder: (context, state) => const PriceDaysInputScreen(),
               ),
             ],
           ),

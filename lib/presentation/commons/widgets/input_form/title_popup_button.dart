@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
+
 class TitlePopupButton<T> extends StatefulWidget {
   final String title;
   final T selectedValue;
@@ -33,7 +35,7 @@ class _TitlePopupButtonState<T>
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 48,
+      height: inputFormComponentHeight,
       child: CupertinoButton(
         padding: EdgeInsetsDirectional.zero,
         onPressed: () => _menuKey.currentState?.showButtonMenu(),

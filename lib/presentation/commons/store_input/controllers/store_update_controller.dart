@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
@@ -12,6 +11,7 @@ part 'store_update_controller.g.dart';
 
 @riverpod
 class StoreUpdateController extends _$StoreUpdateController
+    with StoreFormMixin
     implements StoreFormControllerable {
   late final Store _targetStore;
 
@@ -38,43 +38,6 @@ class StoreUpdateController extends _$StoreUpdateController
       memo: store.memo,
       color: color,
       priceSettings: store.priceSettings,
-    );
-  }
-
-  @override
-  void setName(String name) => state = state.copyWith(name: name);
-  @override
-  void setAddress(String address) => state = state.copyWith(address: address);
-  @override
-  void setAddressDetail(String addressDetail) =>
-      state = state.copyWith(addressDetail: addressDetail);
-  @override
-  void setAddressGuide(String addressGuide) =>
-      state = state.copyWith(addressGuide: addressGuide);
-  @override
-  void setMemo(String memo) => state = state.copyWith(memo: memo);
-  @override
-  void setColor(StoreColor color) => state = state.copyWith(color: color);
-
-  @override
-  void addDayGroup() {
-    final newGroups = [...state.priceSettings.dayGroups, DayGroup.empty()];
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: newGroups),
-    );
-  }
-
-  @override
-  void removeDayGroup(int index) {
-    final currentGroups = [...state.priceSettings.dayGroups];
-
-    if (currentGroups.length <= 1) return;
-
-    currentGroups.removeAt(index);
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
     );
   }
 

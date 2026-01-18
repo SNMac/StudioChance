@@ -68,12 +68,13 @@ class _BodyTextFieldState extends State<BodyTextField> {
         widget.controller.text.isNotEmpty;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48),
+      constraints: const BoxConstraints(minHeight: inputFormComponentHeight),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: CupertinoTextField.borderless(
-              padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+              padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
               placeholder: widget.placeholder,
               placeholderStyle: textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.normal,

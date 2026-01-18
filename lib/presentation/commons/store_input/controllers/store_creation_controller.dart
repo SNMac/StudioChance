@@ -13,49 +13,13 @@ part 'store_creation_controller.g.dart';
 
 @riverpod
 class StoreCreationController extends _$StoreCreationController
+    with StoreFormMixin
     implements StoreFormControllerable {
   @override
   StoreFormState build() {
     return StoreFormState(
       color: StoreColor.red,
       priceSettings: PriceSetting(dayGroups: [DayGroup.empty()]),
-    );
-  }
-
-  @override
-  void setName(String name) => state = state.copyWith(name: name);
-  @override
-  void setAddress(String address) => state = state.copyWith(address: address);
-  @override
-  void setAddressDetail(String addressDetail) =>
-      state = state.copyWith(addressDetail: addressDetail);
-  @override
-  void setAddressGuide(String addressGuide) =>
-      state = state.copyWith(addressGuide: addressGuide);
-  @override
-  void setMemo(String memo) => state = state.copyWith(memo: memo);
-  @override
-  void setColor(StoreColor color) => state = state.copyWith(color: color);
-
-  @override
-  void addDayGroup() {
-    final newGroups = [...state.priceSettings.dayGroups, DayGroup.empty()];
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: newGroups),
-    );
-  }
-
-  @override
-  void removeDayGroup(int index) {
-    final currentGroups = [...state.priceSettings.dayGroups];
-
-    if (currentGroups.length <= 1) return;
-
-    currentGroups.removeAt(index);
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
     );
   }
 

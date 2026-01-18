@@ -16,25 +16,25 @@ class OnboardingNicknameScreen extends ConsumerWidget {
         .watch(onboardingSessionControllerProvider)
         .nickname;
 
+    void showLogoutDialog() => showCustomAlertDialog(
+      context: context,
+      title: '로그인 화면으로 돌아갈까요?',
+      onConfirmBeforePop: () async {
+        await ref
+            .read(onboardingSessionControllerProvider.notifier)
+            .cancelOnboarding();
+        if (context.mounted && context.canPop()) {
+          context.pop();
+        }
+      },
+    );
+
     return NicknameFormScreen(
       initialNickname: sessionNickname,
       title: '닉네임 설정',
       submitLabel: '다음',
       enableBackGesture: false,
-      onBackPress: () {
-        showCustomAlertDialog(
-          context: context,
-          title: '로그인 화면으로 돌아갈까요?',
-          onConfirm: () async {
-            await ref
-                .read(onboardingSessionControllerProvider.notifier)
-                .cancelOnboarding();
-            if (context.mounted && context.canPop()) {
-              context.pop();
-            }
-          },
-        );
-      },
+      onBackPress: () => showLogoutDialog(),
 
       onComplete: (nickname) async {
         ref

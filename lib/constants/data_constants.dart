@@ -1,0 +1,1 @@
+const int holidayValue = 8;

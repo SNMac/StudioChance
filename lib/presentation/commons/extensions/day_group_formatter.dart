@@ -6,9 +6,9 @@ extension DayGroupFormatter on DayGroup {
   String get formattedDays {
     final bool hasHoliday = days.contains(8);
 
-    final realDays = days.where((d) => d != 8).toList()..sort();
+    final logicDays = days.where((d) => d != 8).toList()..sort();
 
-    if (realDays.isEmpty) {
+    if (logicDays.isEmpty) {
       return hasHoliday ? '공휴일' : '요일 선택';
     }
 
@@ -18,26 +18,40 @@ extension DayGroupFormatter on DayGroup {
 
     String mainText = '';
 
-    if (listEquals(realDays, allDays)) {
+    if (listEquals(logicDays, allDays)) {
       mainText = '매일';
-    } else if (listEquals(realDays, weekdays)) {
+    } else if (listEquals(logicDays, weekdays)) {
       mainText = '평일';
-    } else if (listEquals(realDays, weekends)) {
+    } else if (listEquals(logicDays, weekends)) {
       mainText = '주말';
     } else {
-      final dayNames = {1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일'};
+      final displayOrder = [7, 1, 2, 3, 4, 5, 6];
 
-      if (realDays.length == 1) {
+      final sortedForDisplay = displayOrder
+          .where((d) => logicDays.contains(d))
+          .toList();
+
+      final dayNames = {
+        7: '일',
+        1: '월',
+        2: '화',
+        3: '수',
+        4: '목',
+        5: '금',
+        6: '토'
+      };
+
+      if (sortedForDisplay.length == 1) {
         // 하나만 선택된 경우: "월요일"
-        mainText = '${dayNames[realDays.first]}요일';
+        mainText = '${dayNames[sortedForDisplay.first]}요일';
       } else {
         // 여러 개 섞인 경우: "월, 수, 금"
-        mainText = realDays.map((d) => dayNames[d]).join(', ');
+        mainText = sortedForDisplay.map((d) => dayNames[d]).join(', ');
       }
     }
 
     if (hasHoliday) {
-      return '$mainText + 공휴일';
+      return mainText.isEmpty ? '공휴일' : '$mainText, 공휴일';
     }
 
     return mainText;

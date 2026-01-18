@@ -22,9 +22,9 @@ class TitleNavigationButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 48,
+      height: inputFormComponentHeight,
       child: CupertinoButton(
-        padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
         onPressed: onPressed,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

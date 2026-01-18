@@ -19,7 +19,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
-import 'package:studio_chance/presentation/commons/widgets/price_setting_item.dart';
+import 'package:studio_chance/presentation/commons/store_input/widgets/price_setting_input_form.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -34,6 +34,7 @@ class StoreFormScreen extends ConsumerStatefulWidget {
 }
 
 class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
+  late final ScrollController _scrollController;
   late final TextEditingController _nameController;
   late final TextEditingController _memoController;
 
@@ -55,27 +56,26 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     }
   }
 
-  void _showErrorDialog(String title, String content) {
-    showCustomAlertDialog(
-      context: context,
-      title: title,
-      content: content,
-      showCancel: false,
-      onConfirm: () => context.pop(),
-    );
-  }
+  void _showErrorDialog(String title, String content) => showCustomAlertDialog(
+    context: context,
+    title: title,
+    content: content,
+    showCancel: false,
+  );
 
   @override
   void initState() {
     super.initState();
     final initialState = ref.read(_currentProvider);
 
+    _scrollController = ScrollController();
     _nameController = TextEditingController(text: initialState.name);
     _memoController = TextEditingController(text: initialState.memo);
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _nameController.dispose();
     _memoController.dispose();
     super.dispose();
@@ -124,84 +124,94 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
           ),
         ],
       ),
-      body: SafeAreaWithPadding(
+      body: Scrollbar(
+        controller: _scrollController,
         child: SingleChildScrollView(
-          child: Column(
-            spacing: 20,
-            children: [
-              GroupedFormContainer(
-                children: [
-                  TitleTextField(
-                    title: '점포명',
-                    controller: _nameController,
-                    onChanged: notifier.setName,
-                    inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                  ),
-                  TitleNavigationButton(
-                    title: '색상',
-                    content: state.color.displayName,
-                    contentLeading: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: Color(state.color.foregroundColorValue),
-                        shape: BoxShape.circle,
-                      ),
+          controller: _scrollController,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: SafeAreaWithPadding(
+            child: Column(
+              spacing: 20,
+              children: [
+                GroupedFormContainer(
+                  children: [
+                    TitleTextField(
+                      title: '점포명',
+                      controller: _nameController,
+                      onChanged: notifier.setName,
+                      inputFormatters: [LengthLimitingTextInputFormatter(15)],
                     ),
-                    onPressed: () {
+                    TitleNavigationButton(
+                      title: '색상',
+                      content: state.color.displayName,
+                      contentLeading: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Color(state.color.foregroundColorValue),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      onPressed: () {
+                        context.push(
+                          SCRoute.onboardingStoreColor.fullPath,
+                          extra: widget.storeToEdit,
+                        );
+                      },
+                    ),
+                    TitleNavigationButton(
+                      title: '주소',
+                      content: state.formattedAddress,
+                      onPressed: () {
+                        context.push(
+                          SCRoute.onboardingStoreAddress.fullPath,
+                          extra: widget.storeToEdit,
+                        );
+                      },
+                    ),
+                    BodyTextField(
+                      placeholder: '메모',
+                      controller: _memoController,
+                      onChanged: notifier.setMemo,
+                      maxLines: null,
+                      inputFormatters: [LengthLimitingTextInputFormatter(150)],
+                      autocorrect: true,
+                    ),
+                  ],
+                ),
+
+                ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
+                  final int index = entry.key;
+                  final DayGroup dayGroup = entry.value;
+                  final bool showAdd =
+                      state.priceSettings.dayGroups.length == 1 ||
+                      (state.priceSettings.dayGroups.length <= 7 &&
+                          index == state.priceSettings.dayGroups.length - 1);
+
+                  return PriceSettingInputForm(
+                    index: index,
+                    dayGroup: dayGroup,
+                    showAdd: showAdd,
+                    showDelete: true,
+                    onDelete: () {
+                      notifier.removeDayGroup(index);
+                    },
+                    onAdd: () {
+                      notifier.addDayGroup();
+                    },
+                    onPressedDaySetting: () {
                       context.push(
-                        SCRoute.onboardingStoreColor.fullPath,
-                        extra: widget.storeToEdit,
+                        SCRoute.onboardingPriceDays.fullPath,
+                        extra: {'store': widget.storeToEdit, 'index': index},
                       );
                     },
-                  ),
-                  TitleNavigationButton(
-                    title: '주소',
-                    content: state.formattedAddress,
-                    onPressed: () {
-                      context.push(
-                        SCRoute.onboardingStoreAddress.fullPath,
-                        extra: widget.storeToEdit,
-                      );
+                    onPressedTimeSetting: () {
+                      // context.push(..., extra: index);
                     },
-                  ),
-                  BodyTextField(
-                    placeholder: '메모',
-                    controller: _memoController,
-                    onChanged: notifier.setMemo,
-                    maxLines: null,
-                    inputFormatters: [LengthLimitingTextInputFormatter(150)],
-                    autocorrect: true,
-                  ),
-                ],
-              ),
-
-              ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
-                final int index = entry.key;
-                final DayGroup dayGroup = entry.value;
-                final bool showAdd =
-                    state.priceSettings.dayGroups.length == 1 ||
-                    index == state.priceSettings.dayGroups.length - 1;
-
-                return PriceSettingItem(
-                  index: index,
-                  dayGroup: dayGroup,
-                  showAdd: showAdd,
-                  onDelete: () {
-                    notifier.removeDayGroup(index);
-                  },
-                  onAdd: () {
-                    notifier.addDayGroup();
-                  },
-                  onPressedDaySetting: () {
-                    // context.push(..., extra: index); // 몇 번째 그룹인지 전달
-                  },
-                  onPressedTimeSetting: () {
-                    // context.push(..., extra: index);
-                  },
-                );
-              }),
-            ],
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),

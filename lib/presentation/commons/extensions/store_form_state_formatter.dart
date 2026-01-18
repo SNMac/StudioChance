@@ -12,8 +12,10 @@ extension StoreFormAddressFormatter on StoreFormState {
       return '';
     } else if (trimmed.length == 1) {
       return trimmed[0];
-    } else {
+    } else if (trimmed.length == 2) {
       return '${trimmed[0]} ${trimmed[1]}';
+    } else {
+      return '${trimmed[1]} ${trimmed[2]}';
     }
   }
 }

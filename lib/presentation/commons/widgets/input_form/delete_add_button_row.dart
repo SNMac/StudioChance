@@ -1,14 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
+
 class DeleteAddButtonRow extends StatelessWidget {
   final bool showAdd;
+  final bool showDelete;
   final VoidCallback? onPressedDelete;
   final VoidCallback? onPressedAdd;
 
   const DeleteAddButtonRow({
     super.key,
     this.showAdd = true,
+    this.showDelete = true,
     this.onPressedAdd,
     this.onPressedDelete,
   });
@@ -18,25 +22,26 @@ class DeleteAddButtonRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 48,
+      height: inputFormComponentHeight,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: onPressedDelete,
-              child: Text(
-                '삭제',
-                style: textTheme.titleMedium?.copyWith(
-                  color: CupertinoDynamicColor.resolve(
-                    CupertinoColors.destructiveRed,
-                    context,
+          if (showDelete)
+            Expanded(
+              child: CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: onPressedDelete,
+                child: Text(
+                  '삭제',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: CupertinoDynamicColor.resolve(
+                      CupertinoColors.destructiveRed,
+                      context,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
           if (showAdd)
             Expanded(
               child: CupertinoButton(

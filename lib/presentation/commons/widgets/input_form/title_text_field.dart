@@ -33,7 +33,7 @@ class TitleTextField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
       child: SizedBox(
-        height: 48,
+        height: inputFormComponentHeight,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,

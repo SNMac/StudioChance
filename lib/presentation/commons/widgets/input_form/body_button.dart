@@ -20,9 +20,9 @@ class BodyButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48),
+      constraints: const BoxConstraints(minHeight: inputFormComponentHeight),
       child: CupertinoButton(
-        padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
         alignment: Alignment.centerLeft,
         onPressed: onPressed,
         child: content != null

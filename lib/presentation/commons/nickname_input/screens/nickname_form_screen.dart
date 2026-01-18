@@ -54,6 +54,9 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
   void initState() {
     super.initState();
     _nicknameController = TextEditingController(text: widget.initialNickname);
+    _nicknameController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -76,6 +79,16 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
 
+    Color descriptionColor() {
+      if (_nicknameController.text.isEmpty) {
+        return CupertinoColors.secondaryLabel;
+      } else if (state.isValid) {
+        return CupertinoColors.systemGreen;
+      } else {
+        return CupertinoColors.systemRed;
+      }
+    }
+
     return PopScope(
       canPop: widget.enableBackGesture,
       onPopInvokedWithResult: (didPop, result) {
@@ -85,7 +98,6 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
       child: Scaffold(
         appBar: CustomAppBar(
           title: widget.title,
-          // 커스텀 Back 동작 연결
           leading: AppBarNaviBackButton(onPressed: _handleBack),
           actions: [
             AppBarActionButton(
@@ -122,7 +134,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                         '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: CupertinoDynamicColor.resolve(
-                            CupertinoColors.secondaryLabel,
+                            descriptionColor(),
                             context,
                           ),
                         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,15 +24,12 @@ class OnboardingRoleScreen extends ConsumerWidget {
     final selectedRole = state.selectedRole;
     final isLoading = state.status.isLoading;
 
-    void showErrorDialog(String title, String content) {
-      showCustomAlertDialog(
-        context: context,
-        title: title,
-        content: content,
-        showCancel: false,
-        onConfirm: () => context.pop(),
-      );
-    }
+    void showErrorDialog(String title, String content) => showCustomAlertDialog(
+      context: context,
+      title: title,
+      content: content,
+      showCancel: false,
+    );
 
     ref.listen(onboardingSessionControllerProvider.select((s) => s.status), (
       previous,
@@ -56,7 +54,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
       showCustomAlertDialog(
         context: context,
         title: '${selectedRole.displayName}로 진행할까요?',
-        onConfirm: () async {
+        onConfirmBeforePop: () async {
           await notifier.saveNicknameToRemote();
 
           if (ref.read(onboardingSessionControllerProvider).status.hasError) {
@@ -74,17 +72,15 @@ class OnboardingRoleScreen extends ConsumerWidget {
       );
     }
 
-    Future<void> onSkipPressed() async {
-      showCustomAlertDialog(
-        context: context,
-        title: '홈으로 이동할까요?',
-        content: '점포는 마이페이지에서 설정할 수 있어요.',
-        onConfirm: () async {
-          if (isLoading) return;
-          await notifier.submitNicknameOnly();
-        },
-      );
-    }
+    Future<void> onSkipPressed() async => showCustomAlertDialog(
+      context: context,
+      title: '홈으로 이동할까요?',
+      content: '점포는 마이페이지에서 설정할 수 있어요.',
+      onConfirmBeforePop: () async {
+        if (isLoading) return;
+        await notifier.submitNicknameOnly();
+      },
+    );
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -138,11 +134,18 @@ class OnboardingRoleScreen extends ConsumerWidget {
             ),
           ),
 
-          if (isLoading)
-            Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(child: CircularProgressIndicator.adaptive()),
-            ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: isLoading
+                ? Container(
+                    key: const ValueKey('loading_overlay'),
+                    color: CupertinoColors.black.withValues(alpha: 0.3),
+                    child: const Center(
+                      child: CircularProgressIndicator.adaptive(),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

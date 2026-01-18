@@ -19,15 +19,12 @@ class SignInScreen extends ConsumerWidget {
     final isDarkMode =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
 
-    void showErrorDialog(String title, String content) {
-      showCustomAlertDialog(
-        context: context,
-        title: title,
-        content: content,
-        showCancel: false,
-        onConfirm: () => context.pop(),
-      );
-    }
+    void showErrorDialog(String title, String content) => showCustomAlertDialog(
+      context: context,
+      title: title,
+      content: content,
+      showCancel: false,
+    );
 
     void onGoogleButtonTapped() {
       ref.read(signInControllerProvider.notifier).signInWithGoogle();
