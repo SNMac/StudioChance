@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+
 class AppBarNaviBackButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
@@ -22,7 +24,7 @@ class AppBarModalBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(CupertinoIcons.xmark),
-      color: CupertinoDynamicColor.resolve(CupertinoColors.label, context),
+      color: context.label,
       onPressed: onPressed,
     );
   }

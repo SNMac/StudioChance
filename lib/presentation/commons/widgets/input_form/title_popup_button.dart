@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class TitlePopupButton<T> extends StatefulWidget {
   final String title;
@@ -22,12 +23,10 @@ class TitlePopupButton<T> extends StatefulWidget {
   });
 
   @override
-  State<TitlePopupButton<T>> createState() =>
-      _TitlePopupButtonState<T>();
+  State<TitlePopupButton<T>> createState() => _TitlePopupButtonState<T>();
 }
 
-class _TitlePopupButtonState<T>
-    extends State<TitlePopupButton<T>> {
+class _TitlePopupButtonState<T> extends State<TitlePopupButton<T>> {
   final GlobalKey<PopupMenuButtonState<T>> _menuKey = GlobalKey();
 
   @override
@@ -48,10 +47,7 @@ class _TitlePopupButtonState<T>
             PopupMenuButton<T>(
               key: _menuKey,
               onSelected: widget.onSelected,
-              color: CupertinoDynamicColor.resolve(
-                CupertinoColors.tertiarySystemGroupedBackground,
-                context,
-              ),
+              color: context.tertiarySystemGroupedBackground,
               surfaceTintColor: Colors.transparent,
               elevation: 1,
               offset: const Offset(0, 8),
@@ -70,10 +66,7 @@ class _TitlePopupButtonState<T>
                     widget.itemLabelBuilder(widget.selectedValue),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.normal,
-                      color: CupertinoDynamicColor.resolve(
-                        CupertinoColors.secondaryLabel,
-                        context,
-                      ),
+                      color: context.secondaryLabel,
                     ),
                   ),
 
@@ -82,10 +75,7 @@ class _TitlePopupButtonState<T>
                   Icon(
                     CupertinoIcons.chevron_up_chevron_down,
                     size: 16,
-                    color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.secondaryLabel,
-                      context,
-                    ),
+                    color: context.secondaryLabel,
                   ),
                 ],
               ),

@@ -40,7 +40,6 @@ class TitleSelectionButton<T> extends StatelessWidget {
               if (isSelected)
                 const Icon(
                   CupertinoIcons.checkmark,
-                  color: CupertinoColors.activeBlue,
                   fontWeight: FontWeight.w600,
                   size: 16,
                 ),

@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class AppBarActionButton extends StatelessWidget {
   final String label;
@@ -22,7 +23,7 @@ class AppBarActionButton extends StatelessWidget {
 
     final color = onPressed != null
         ? colorScheme.primary
-        : CupertinoDynamicColor.resolve(CupertinoColors.quaternaryLabel, context);
+        : context.quaternaryLabel;
 
     final effectiveStyle = baseStyle?.copyWith(color: color);
 

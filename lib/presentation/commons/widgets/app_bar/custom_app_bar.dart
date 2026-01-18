@@ -19,7 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      surfaceTintColor: Platform.isIOS ? Colors.transparent : null,
+      surfaceTintColor: Platform.isIOS ? CupertinoColors.transparent : null,
       shadowColor: Platform.isIOS ? CupertinoColors.darkBackgroundGray : null,
       scrolledUnderElevation: Platform.isIOS ? .1 : null,
       toolbarHeight: Platform.isIOS ? 44 : null,

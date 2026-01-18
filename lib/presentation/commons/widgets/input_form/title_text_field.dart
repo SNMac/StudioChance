@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class TitleTextField extends StatelessWidget {
   final String title;
@@ -23,7 +24,7 @@ class TitleTextField extends StatelessWidget {
     this.autofocus = false,
     this.inputFormatters,
     this.keyboardType,
-    this.autocorrect = false
+    this.autocorrect = false,
   });
 
   @override
@@ -31,7 +32,9 @@ class TitleTextField extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+      padding: const EdgeInsetsDirectional.symmetric(
+        horizontal: horizontalPadding,
+      ),
       child: SizedBox(
         height: inputFormComponentHeight,
         child: Row(
@@ -46,10 +49,7 @@ class TitleTextField extends StatelessWidget {
                 placeholder: placeholder ?? title,
                 placeholderStyle: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.normal,
-                  color: CupertinoDynamicColor.resolve(
-                    CupertinoColors.tertiaryLabel,
-                    context,
-                  ),
+                  color: context.tertiaryLabel,
                 ),
                 cursorHeight: 20,
                 controller: controller,

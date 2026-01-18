@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class BodyTextField extends StatefulWidget {
   final String placeholder;
@@ -74,14 +75,13 @@ class _BodyTextFieldState extends State<BodyTextField> {
         children: [
           Expanded(
             child: CupertinoTextField.borderless(
-              padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+              padding: const EdgeInsetsDirectional.symmetric(
+                horizontal: horizontalPadding,
+              ),
               placeholder: widget.placeholder,
               placeholderStyle: textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.normal,
-                color: CupertinoDynamicColor.resolve(
-                  CupertinoColors.tertiaryLabel,
-                  context,
-                ),
+                color: context.tertiaryLabel,
               ),
               textInputAction: widget.returnButtonType,
               cursorHeight: 20,
@@ -115,10 +115,7 @@ class _BodyTextFieldState extends State<BodyTextField> {
                   },
                   child: Icon(
                     CupertinoIcons.xmark_circle_fill,
-                    color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.tertiaryLabel,
-                      context,
-                    ),
+                    color: context.tertiaryLabel,
                     size: 18,
                   ),
                 ),

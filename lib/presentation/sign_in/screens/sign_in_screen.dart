@@ -1,10 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/sign_in/controllers/sign_in_controller.dart';
 import 'package:studio_chance/presentation/sign_in/widgets/social_sign_in_button.dart';
@@ -49,10 +48,7 @@ class SignInScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: CupertinoDynamicColor.resolve(
-        CupertinoColors.systemBackground,
-        context,
-      ),
+      backgroundColor: context.systemBackground,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

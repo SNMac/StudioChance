@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -68,18 +68,12 @@ class PriceSettingInputForm extends StatelessWidget {
                         Icon(
                           CupertinoIcons.info,
                           size: 12,
-                          color: CupertinoDynamicColor.resolve(
-                            CupertinoColors.secondaryLabel,
-                            context,
-                          ),
+                          color: context.secondaryLabel,
                         ),
                         Text(
                           '요일별 요금 설정',
                           style: textTheme.labelMedium?.copyWith(
-                            color: CupertinoDynamicColor.resolve(
-                              CupertinoColors.secondaryLabel,
-                              context,
-                            ),
+                            color: context.secondaryLabel,
                           ),
                         ),
                       ],

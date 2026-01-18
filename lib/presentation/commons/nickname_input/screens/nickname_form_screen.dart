@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/nickname_input/controllers/nickname_form_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
@@ -81,11 +82,11 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
 
     Color descriptionColor() {
       if (_nicknameController.text.isEmpty) {
-        return CupertinoColors.secondaryLabel;
+        return context.secondaryLabel;
       } else if (state.isValid) {
-        return CupertinoColors.systemGreen;
+        return context.systemGreen;
       } else {
-        return CupertinoColors.systemRed;
+        return context.systemRed;
       }
     }
 
@@ -133,10 +134,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                       Text(
                         '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: CupertinoDynamicColor.resolve(
-                            descriptionColor(),
-                            context,
-                          ),
+                          color: descriptionColor(),
                         ),
                       ),
                     ],

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class GroupedFormContainer extends StatelessWidget {
   final Widget? header;
@@ -23,10 +24,7 @@ class GroupedFormContainer extends StatelessWidget {
         if (header != null) header!,
         Container(
           decoration: BoxDecoration(
-            color: CupertinoDynamicColor.resolve(
-              CupertinoColors.secondarySystemGroupedBackground,
-              context,
-            ),
+            color: context.secondarySystemGroupedBackground,
             borderRadius: BorderRadius.circular(formBorderRadius),
           ),
           child: ClipRRect(
@@ -44,10 +42,7 @@ class GroupedFormContainer extends StatelessWidget {
                       child: Divider(
                         height: 1,
                         thickness: 0.5,
-                        color: CupertinoDynamicColor.resolve(
-                          CupertinoColors.separator,
-                          context,
-                        ),
+                        color: context.separator,
                       ),
                     ),
                 ],

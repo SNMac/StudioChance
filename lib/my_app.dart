@@ -105,7 +105,7 @@ class MyApp extends ConsumerWidget {
             onPrimary: CupertinoColors.white,
             primaryContainer: const Color(0x26007AFF),
             onPrimaryContainer: CupertinoColors.systemBlue.color,
-            error: CupertinoColors.destructiveRed.color,
+            error: CupertinoColors.systemRed.color,
           ),
 
           cupertinoOverrideTheme: CupertinoThemeData(
@@ -138,7 +138,7 @@ class MyApp extends ConsumerWidget {
             onPrimary: CupertinoColors.white,
             primaryContainer: const Color(0x260091FF),
             onPrimaryContainer: CupertinoColors.systemBlue.darkColor,
-            error: CupertinoColors.destructiveRed.darkColor,
+            error: CupertinoColors.systemRed.darkColor,
           ),
 
           cupertinoOverrideTheme: CupertinoThemeData(

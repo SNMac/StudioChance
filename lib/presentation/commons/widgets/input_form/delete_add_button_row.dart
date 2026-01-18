@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class DeleteAddButtonRow extends StatelessWidget {
   final bool showAdd;
@@ -34,10 +35,7 @@ class DeleteAddButtonRow extends StatelessWidget {
                 child: Text(
                   '삭제',
                   style: textTheme.titleMedium?.copyWith(
-                    color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.destructiveRed,
-                      context,
-                    ),
+                    color: context.systemRed,
                   ),
                 ),
               ),
@@ -50,10 +48,7 @@ class DeleteAddButtonRow extends StatelessWidget {
                 child: Text(
                   '추가',
                   style: textTheme.titleMedium?.copyWith(
-                    color: CupertinoDynamicColor.resolve(
-                      CupertinoColors.systemBlue,
-                      context,
-                    ),
+                    color: context.systemBlue,
                   ),
                 ),
               ),

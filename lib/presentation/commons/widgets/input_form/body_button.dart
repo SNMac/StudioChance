@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class BodyButton extends StatelessWidget {
   final String placeholder;
@@ -22,7 +23,9 @@ class BodyButton extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: inputFormComponentHeight),
       child: CupertinoButton(
-        padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: horizontalPadding,
+        ),
         alignment: Alignment.centerLeft,
         onPressed: onPressed,
         child: content != null
@@ -30,10 +33,7 @@ class BodyButton extends StatelessWidget {
             : Text(
                 placeholder,
                 style: textTheme.bodyLarge?.copyWith(
-                  color: CupertinoDynamicColor.resolve(
-                    CupertinoColors.tertiaryLabel,
-                    context,
-                  ),
+                  color: context.tertiaryLabel,
                 ),
               ),
       ),

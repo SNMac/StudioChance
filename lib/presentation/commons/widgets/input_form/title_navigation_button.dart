@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class TitleNavigationButton extends StatelessWidget {
   final String title;
@@ -24,7 +25,9 @@ class TitleNavigationButton extends StatelessWidget {
     return SizedBox(
       height: inputFormComponentHeight,
       child: CupertinoButton(
-        padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: horizontalPadding,
+        ),
         onPressed: onPressed,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -46,10 +49,7 @@ class TitleNavigationButton extends StatelessWidget {
                         content!,
                         style: textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.normal,
-                          color: CupertinoDynamicColor.resolve(
-                            CupertinoColors.secondaryLabel,
-                            context,
-                          ),
+                          color: context.secondaryLabel,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -62,10 +62,7 @@ class TitleNavigationButton extends StatelessWidget {
                     constraints: BoxConstraints(maxWidth: 10),
                     child: Icon(
                       CupertinoIcons.chevron_forward,
-                      color: CupertinoDynamicColor.resolve(
-                        CupertinoColors.tertiaryLabel,
-                        context,
-                      ),
+                      color: context.tertiaryLabel,
                     ),
                   ),
                 ],
