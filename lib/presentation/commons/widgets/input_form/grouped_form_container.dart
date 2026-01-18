@@ -19,7 +19,6 @@ class GroupedFormContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
       children: [
         if (header != null) header!,
         Container(

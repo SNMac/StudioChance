@@ -12,4 +12,15 @@ abstract class DayGroup with _$DayGroup {
     required HeadcountRule headcountRule,
     required List<TimeSlot> timeSlots,
   }) = _DayGroup;
+
+  factory DayGroup.empty() => const DayGroup(
+    days: [], // 요일 선택 안 됨
+    headcountRule: HeadcountRule(
+      headcountBase: 0,
+      headcountExtraPrice: 0,
+      isHeadcountHourly: true,
+      isHeadcountPerPerson: true,
+    ),
+    timeSlots: [], // 시간 설정 안 됨
+  );
 }

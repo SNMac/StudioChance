@@ -10,6 +10,9 @@ abstract interface class StoreFormControllerable {
   void setMemo(String memo);
   void setColor(StoreColor color);
 
+  void addDayGroup();
+  void removeDayGroup(int index);
+
   /// 현재 폼 데이터를 반환 (유효하지 않으면 null)
   ({Store store, StoreColor color})? getFormData();
 

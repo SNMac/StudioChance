@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
 
+import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
@@ -15,9 +16,9 @@ class StoreCreationController extends _$StoreCreationController
     implements StoreFormControllerable {
   @override
   StoreFormState build() {
-    return const StoreFormState(
+    return StoreFormState(
       color: StoreColor.red,
-      priceSettings: PriceSetting(dayGroups: []),
+      priceSettings: PriceSetting(dayGroups: [DayGroup.empty()]),
     );
   }
 
@@ -35,6 +36,28 @@ class StoreCreationController extends _$StoreCreationController
   void setMemo(String memo) => state = state.copyWith(memo: memo);
   @override
   void setColor(StoreColor color) => state = state.copyWith(color: color);
+
+  @override
+  void addDayGroup() {
+    final newGroups = [...state.priceSettings.dayGroups, DayGroup.empty()];
+
+    state = state.copyWith(
+      priceSettings: state.priceSettings.copyWith(dayGroups: newGroups),
+    );
+  }
+
+  @override
+  void removeDayGroup(int index) {
+    final currentGroups = [...state.priceSettings.dayGroups];
+
+    if (currentGroups.length <= 1) return;
+
+    currentGroups.removeAt(index);
+
+    state = state.copyWith(
+      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    );
+  }
 
   @override
   ({Store store, StoreColor color})? getFormData() {

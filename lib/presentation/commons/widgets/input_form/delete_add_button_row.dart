@@ -2,13 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DeleteAddButtonRow extends StatelessWidget {
-  final bool isLast;
+  final bool showAdd;
   final VoidCallback? onPressedDelete;
   final VoidCallback? onPressedAdd;
 
   const DeleteAddButtonRow({
     super.key,
-    this.isLast = true,
+    this.showAdd = true,
     this.onPressedAdd,
     this.onPressedDelete,
   });
@@ -37,7 +37,7 @@ class DeleteAddButtonRow extends StatelessWidget {
               ),
             ),
           ),
-          if (isLast)
+          if (showAdd)
             Expanded(
               child: CupertinoButton(
                 padding: EdgeInsets.zero,

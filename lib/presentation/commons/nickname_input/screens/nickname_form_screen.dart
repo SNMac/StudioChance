@@ -98,53 +98,52 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
         ),
         body: SafeAreaWithPadding(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                '사용하실 닉네임을 입력해주세요',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-
-              const SizedBox(height: 12),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GroupedFormContainer(
+              GroupedFormContainer(
+                header: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '사용하실 닉네임을 입력해주세요',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+                footer: Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(
+                    horizontal: horizontalPadding,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      BodyTextField(
-                        controller: _nicknameController,
-                        maxLines: 1,
-                        autofocus: true,
-                        showClearButton: true,
-                        placeholder: '닉네임',
-                        onChanged: notifier.onNicknameChanged,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(10),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]'),
+                      const SizedBox(height: 4),
+                      Text(
+                        '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: CupertinoDynamicColor.resolve(
+                            CupertinoColors.secondaryLabel,
+                            context,
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 4),
-
-                  Padding(
-                    padding: const EdgeInsetsDirectional.symmetric(
-                      horizontal: horizontalPadding,
-                    ),
-                    child: Text(
-                      '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: CupertinoDynamicColor.resolve(
-                          CupertinoColors.secondaryLabel,
-                          context,
-                        ),
+                ),
+                children: [
+                  BodyTextField(
+                    controller: _nicknameController,
+                    maxLines: 1,
+                    autofocus: true,
+                    showClearButton: true,
+                    placeholder: '닉네임',
+                    onChanged: notifier.onNicknameChanged,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(10),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ]'),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

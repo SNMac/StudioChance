@@ -179,18 +179,19 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
               ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
                 final int index = entry.key;
                 final DayGroup dayGroup = entry.value;
-                final bool isLast =
+                final bool showAdd =
+                    state.priceSettings.dayGroups.length == 1 ||
                     index == state.priceSettings.dayGroups.length - 1;
 
                 return PriceSettingItem(
                   index: index,
                   dayGroup: dayGroup,
-                  isLast: isLast,
+                  showAdd: showAdd,
                   onDelete: () {
-                    // notifier.removeDayGroup(index);
+                    notifier.removeDayGroup(index);
                   },
                   onAdd: () {
-                    // notifier.addDayGroup();
+                    notifier.addDayGroup();
                   },
                   onPressedDaySetting: () {
                     // context.push(..., extra: index); // 몇 번째 그룹인지 전달
