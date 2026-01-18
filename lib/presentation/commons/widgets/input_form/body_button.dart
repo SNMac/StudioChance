@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 
-class InputFormBodyButton extends StatelessWidget {
+class BodyButton extends StatelessWidget {
   final String placeholder;
   final String? content;
   final VoidCallback onPressed;
 
-  const InputFormBodyButton({
+  const BodyButton({
     super.key,
     required this.placeholder,
     this.content,

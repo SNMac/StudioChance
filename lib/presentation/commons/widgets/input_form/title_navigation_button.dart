@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 
-class InputFormTitleNavigationButton extends StatelessWidget {
+class TitleNavigationButton extends StatelessWidget {
   final String title;
   final String? content;
   final Widget? contentLeading;
   final VoidCallback onPressed;
 
-  const InputFormTitleNavigationButton({
+  const TitleNavigationButton({
     super.key,
     required this.title,
     this.content,

@@ -7,18 +7,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/presentation/commons/extensions/store_form_state_formatter.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
-import 'package:studio_chance/presentation/commons/widgets/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_body_text_field.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_title_navigation_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_title_text_field.dart';
-import 'package:studio_chance/presentation/commons/widgets/price_setting_group_item.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/price_setting_item.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -88,25 +89,6 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     final state = ref.watch(_currentProvider);
     final notifier = _currentNotifier;
 
-    String displayAddress() {
-      if (state.address.isEmpty) {
-        if (state.addressDetail.isEmpty) {
-          return '주소 검색';
-        } else {
-          return state.addressDetail;
-        }
-      }
-
-      List<String> trimmed = state.address.trim().split(RegExp(r'\s+'));
-      if (trimmed.isEmpty) {
-        return '';
-      } else if (trimmed.length == 1) {
-        return trimmed[0];
-      } else {
-        return '${trimmed[0]} ${trimmed[1]}';
-      }
-    }
-
     ref.listen(provider.select((value) => value.status), (previous, next) {
       next.when(
         data: (_) {},
@@ -149,13 +131,13 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
             children: [
               GroupedFormContainer(
                 children: [
-                  InputFormTitleTextField(
+                  TitleTextField(
                     title: '점포명',
                     controller: _nameController,
                     onChanged: notifier.setName,
                     inputFormatters: [LengthLimitingTextInputFormatter(15)],
                   ),
-                  InputFormTitleNavigationButton(
+                  TitleNavigationButton(
                     title: '색상',
                     content: state.color.displayName,
                     contentLeading: Container(
@@ -173,9 +155,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                       );
                     },
                   ),
-                  InputFormTitleNavigationButton(
+                  TitleNavigationButton(
                     title: '주소',
-                    content: displayAddress(),
+                    content: state.formattedAddress,
                     onPressed: () {
                       context.push(
                         SCRoute.onboardingStoreAddress.fullPath,
@@ -183,7 +165,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                       );
                     },
                   ),
-                  InputFormBodyTextField(
+                  BodyTextField(
                     placeholder: '메모',
                     controller: _memoController,
                     onChanged: notifier.setMemo,
@@ -200,11 +182,10 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                 final bool isLast =
                     index == state.priceSettings.dayGroups.length - 1;
 
-                return PriceSettingGroupItem(
+                return PriceSettingItem(
                   index: index,
                   dayGroup: dayGroup,
                   isLast: isLast,
-                  // 각 버튼을 눌렀을 때 실행할 동작 정의
                   onDelete: () {
                     // notifier.removeDayGroup(index);
                   },

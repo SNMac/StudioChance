@@ -8,9 +8,9 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/store
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
-import 'package:studio_chance/presentation/commons/widgets/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_selection_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/selection_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
 class StoreColorSelectionScreen extends ConsumerWidget {
@@ -36,7 +36,7 @@ class StoreColorSelectionScreen extends ConsumerWidget {
       body: SafeAreaWithPadding(
         child: GroupedFormContainer(
           children: StoreColor.values.map((color) {
-            return InputFormSelectionButton<StoreColor>(
+            return SelectionButton<StoreColor>(
               value: color,
               label: color.displayName,
               isSelected: state.color == color,

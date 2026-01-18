@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class InputFormTitlePopupButton<T> extends StatefulWidget {
+class TitlePopupButton<T> extends StatefulWidget {
   final String title;
   final T selectedValue;
   final List<T> items;
@@ -9,7 +9,7 @@ class InputFormTitlePopupButton<T> extends StatefulWidget {
   final String Function(T) itemLabelBuilder;
   final Widget Function(T)? itemLeadingBuilder;
 
-  const InputFormTitlePopupButton({
+  const TitlePopupButton({
     super.key,
     required this.title,
     required this.selectedValue,
@@ -20,12 +20,12 @@ class InputFormTitlePopupButton<T> extends StatefulWidget {
   });
 
   @override
-  State<InputFormTitlePopupButton<T>> createState() =>
-      _InputFormTitlePopupButtonState<T>();
+  State<TitlePopupButton<T>> createState() =>
+      _TitlePopupButtonState<T>();
 }
 
-class _InputFormTitlePopupButtonState<T>
-    extends State<InputFormTitlePopupButton<T>> {
+class _TitlePopupButtonState<T>
+    extends State<TitlePopupButton<T>> {
   final GlobalKey<PopupMenuButtonState<T>> _menuKey = GlobalKey();
 
   @override

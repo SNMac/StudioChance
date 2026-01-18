@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
-import 'package:studio_chance/presentation/commons/widgets/delete_add_button_row.dart';
-import 'package:studio_chance/presentation/commons/widgets/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_title_navigation_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/delete_add_button_row.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 
-class PriceSettingGroupItem extends StatelessWidget {
+class PriceSettingItem extends StatelessWidget {
   final int index;
   final DayGroup dayGroup;
   final bool isLast;
@@ -17,7 +17,7 @@ class PriceSettingGroupItem extends StatelessWidget {
   final VoidCallback onPressedDaySetting;
   final VoidCallback onPressedTimeSetting;
 
-  const PriceSettingGroupItem({
+  const PriceSettingItem({
     super.key,
     required this.index,
     required this.dayGroup,
@@ -55,12 +55,12 @@ class PriceSettingGroupItem extends StatelessWidget {
       ),
 
       children: [
-        InputFormTitleNavigationButton(
+        TitleNavigationButton(
           title: '기준 요일',
           content: dayGroup.formattedDays,
           onPressed: onPressedDaySetting,
         ),
-        InputFormTitleNavigationButton(
+        TitleNavigationButton(
           title: '기준 시간',
           onPressed: onPressedTimeSetting,
         ),

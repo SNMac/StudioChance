@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
-import 'package:studio_chance/presentation/commons/widgets/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/onboarding/controllers/onboarding_session_controller.dart';
-import 'package:studio_chance/presentation/onboarding/widgets/selection_button.dart';
+import 'package:studio_chance/presentation/onboarding/widgets/large_selection_button.dart';
 import 'package:studio_chance/router/router_path.dart';
 
 class OnboardingRoleScreen extends ConsumerWidget {
@@ -107,25 +107,25 @@ class OnboardingRoleScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SelectionButton(
+                LargeSelectionButton(
                   title: UserRole.admin.displayName,
                   description: UserRole.admin.displayDescription,
                   isSelected: selectedRole == UserRole.admin,
                   onPressed: () => sessionNotifier.setRole(UserRole.admin),
                 ),
-                SelectionButton(
+                LargeSelectionButton(
                   title: UserRole.staff.displayName,
                   description: UserRole.staff.displayDescription,
                   isSelected: selectedRole == UserRole.staff,
                   onPressed: () => sessionNotifier.setRole(UserRole.staff),
                 ),
-                SelectionButton(
+                LargeSelectionButton(
                   title: UserRole.viewer.displayName,
                   description: UserRole.viewer.displayDescription,
                   isSelected: selectedRole == UserRole.viewer,
                   onPressed: () => sessionNotifier.setRole(UserRole.viewer),
                 ),
-                SelectionButton(
+                LargeSelectionButton(
                   title: '나중에 설정',
                   isNavigation: true,
                   onPressed: isLoading ? null : onSkipPressed,

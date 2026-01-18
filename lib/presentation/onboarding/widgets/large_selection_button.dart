@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class SelectionButton extends StatelessWidget {
+class LargeSelectionButton extends StatelessWidget {
   final String title;
   final String? description;
   final bool isSelected;
   final bool isNavigation;
   final VoidCallback? onPressed;
 
-  const SelectionButton({
+  const LargeSelectionButton({
     super.key,
     required this.title,
     this.description,

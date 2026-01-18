@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 
-class InputFormBodyTextField extends StatefulWidget {
+class BodyTextField extends StatefulWidget {
   final String placeholder;
   final TextEditingController controller;
   final void Function(String)? onChanged;
@@ -16,7 +16,7 @@ class InputFormBodyTextField extends StatefulWidget {
   final TextInputAction? returnButtonType;
   final bool autocorrect;
 
-  const InputFormBodyTextField({
+  const BodyTextField({
     super.key,
     required this.placeholder,
     required this.controller,
@@ -31,10 +31,10 @@ class InputFormBodyTextField extends StatefulWidget {
   });
 
   @override
-  State<InputFormBodyTextField> createState() => _InputFormBodyTextFieldState();
+  State<BodyTextField> createState() => _BodyTextFieldState();
 }
 
-class _InputFormBodyTextFieldState extends State<InputFormBodyTextField> {
+class _BodyTextFieldState extends State<BodyTextField> {
   late final FocusNode _focusNode;
 
   @override

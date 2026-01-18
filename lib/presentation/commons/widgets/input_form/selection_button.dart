@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 
-class InputFormSelectionButton<T> extends StatelessWidget {
+class SelectionButton<T> extends StatelessWidget {
   final T value;
   final String label;
   final bool isSelected;
   final VoidCallback onPressed;
   final Widget? leading;
 
-  const InputFormSelectionButton({
+  const SelectionButton({
     super.key,
     required this.value,
     required this.label,

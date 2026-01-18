@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/nickname_input/controllers/nickname_form_controller.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar_action_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar_back_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
 class NicknameFormScreen extends ConsumerStatefulWidget {
@@ -113,7 +113,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                 children: [
                   GroupedFormContainer(
                     children: [
-                      InputFormBodyTextField(
+                      BodyTextField(
                         controller: _nicknameController,
                         maxLines: 1,
                         autofocus: true,

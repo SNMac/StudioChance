@@ -11,12 +11,12 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/state
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar_action_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar_back_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_body_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form_body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/body_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
 class StoreAddressInputScreen extends ConsumerStatefulWidget {
@@ -106,7 +106,7 @@ class _StoreAddressInputScreenState
       body: SafeAreaWithPadding(
         child: GroupedFormContainer(
           children: [
-            InputFormBodyButton(
+            BodyButton(
               placeholder: '주소 검색',
               content: _address.isEmpty ? null : _address,
               onPressed: () async {
@@ -153,14 +153,14 @@ class _StoreAddressInputScreenState
                 }
               },
             ),
-            InputFormBodyTextField(
+            BodyTextField(
               controller: _addressDetaillController,
               placeholder: '상세 주소 혹은 주소 직접 입력',
               maxLines: 1,
               showClearButton: true,
               returnButtonType: TextInputAction.next,
             ),
-            InputFormBodyTextField(
+            BodyTextField(
               controller: _addressGuideController,
               placeholder: '찾아오는 길 안내',
               maxLines: null,
