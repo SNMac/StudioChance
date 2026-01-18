@@ -31,7 +31,7 @@ class InputFormTitleTextField extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
       child: SizedBox(
         height: 48,
         child: Row(
@@ -42,7 +42,7 @@ class InputFormTitleTextField extends StatelessWidget {
             Text(title, style: textTheme.bodyLarge),
             Expanded(
               child: CupertinoTextField.borderless(
-                padding: EdgeInsets.zero,
+                padding: EdgeInsetsDirectional.zero,
                 placeholder: placeholder ?? title,
                 placeholderStyle: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.normal,

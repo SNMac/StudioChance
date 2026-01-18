@@ -14,7 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DayGroup {
 
- List<int> get days; HeadcountRule get headcountRule; List<TimeSlot> get timeSlots;
+ List<int> get days;// 1~7: 요일, 8: 공휴일
+ HeadcountRule get headcountRule; List<TimeSlot> get timeSlots;
 /// Create a copy of DayGroup
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -227,6 +228,7 @@ class _DayGroup implements DayGroup {
   return EqualUnmodifiableListView(_days);
 }
 
+// 1~7: 요일, 8: 공휴일
 @override final  HeadcountRule headcountRule;
  final  List<TimeSlot> _timeSlots;
 @override List<TimeSlot> get timeSlots {

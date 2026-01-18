@@ -18,6 +18,7 @@ class GroupedFormContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,
       children: [
         if (header != null) header!,
@@ -38,7 +39,7 @@ class GroupedFormContainer extends StatelessWidget {
                   children[i],
                   if (i != children.length - 1)
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: const EdgeInsetsDirectional.symmetric(
                         horizontal: horizontalPadding,
                       ),
                       child: Divider(

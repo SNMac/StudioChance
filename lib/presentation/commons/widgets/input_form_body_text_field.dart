@@ -73,7 +73,7 @@ class _InputFormBodyTextFieldState extends State<InputFormBodyTextField> {
         children: [
           Expanded(
             child: CupertinoTextField.borderless(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
               placeholder: widget.placeholder,
               placeholderStyle: textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.normal,
@@ -103,11 +103,11 @@ class _InputFormBodyTextFieldState extends State<InputFormBodyTextField> {
 
           if (isVisible)
             Padding(
-              padding: const EdgeInsets.only(right: horizontalPadding),
+              padding: const EdgeInsetsDirectional.only(end: horizontalPadding),
               child: SizedBox(
                 width: 20,
                 child: CupertinoButton(
-                  padding: EdgeInsets.zero,
+                  padding: EdgeInsetsDirectional.zero,
                   onPressed: () {
                     widget.controller.clear();
                     widget.onChanged?.call('');

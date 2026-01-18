@@ -35,7 +35,7 @@ class _InputFormTitlePopupButtonState<T>
     return SizedBox(
       height: 48,
       child: CupertinoButton(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsetsDirectional.zero,
         onPressed: () => _menuKey.currentState?.showButtonMenu(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

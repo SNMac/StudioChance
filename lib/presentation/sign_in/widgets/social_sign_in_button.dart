@@ -26,7 +26,7 @@ class SocialSignInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
-      padding: EdgeInsets.zero,
+      padding: EdgeInsetsDirectional.zero,
       minimumSize: Size.zero,
       onPressed: onPressed,
       child: Container(

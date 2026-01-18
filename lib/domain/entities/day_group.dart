@@ -8,7 +8,7 @@ part 'day_group.freezed.dart';
 @freezed
 abstract class DayGroup with _$DayGroup {
   const factory DayGroup({
-    required List<int> days,
+    required List<int> days, // 1~7: 요일, 8: 공휴일
     required HeadcountRule headcountRule,
     required List<TimeSlot> timeSlots,
   }) = _DayGroup;

@@ -24,7 +24,7 @@ class InputFormTitleNavigationButton extends StatelessWidget {
     return SizedBox(
       height: 48,
       child: CupertinoButton(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
         onPressed: onPressed,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

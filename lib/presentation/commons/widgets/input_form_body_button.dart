@@ -22,7 +22,7 @@ class InputFormBodyButton extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
       child: CupertinoButton(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
         alignment: Alignment.centerLeft,
         onPressed: onPressed,
         child: content != null

@@ -24,10 +24,10 @@ class InputFormSelectionButton<T> extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return CupertinoButton(
-      padding: EdgeInsets.zero,
+      padding: EdgeInsetsDirectional.zero,
       onPressed: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
         child: Row(
           children: [
             if (leading != null) ...[leading!, const SizedBox(width: 8)],

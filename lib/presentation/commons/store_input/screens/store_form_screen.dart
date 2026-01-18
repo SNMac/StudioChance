@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
@@ -17,6 +18,7 @@ import 'package:studio_chance/presentation/commons/widgets/grouped_form_containe
 import 'package:studio_chance/presentation/commons/widgets/input_form_body_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form_title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form_title_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/price_setting_group_item.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -141,51 +143,84 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
         ],
       ),
       body: SafeAreaWithPadding(
-        child: GroupedFormContainer(
-          children: [
-            InputFormTitleTextField(
-              title: '점포명',
-              controller: _nameController,
-              onChanged: notifier.setName,
-              inputFormatters: [LengthLimitingTextInputFormatter(15)],
-            ),
-            InputFormTitleNavigationButton(
-              title: '색상',
-              content: state.color.displayName,
-              contentLeading: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Color(state.color.foregroundColorValue),
-                  shape: BoxShape.circle,
-                ),
+        child: SingleChildScrollView(
+          child: Column(
+            spacing: 20,
+            children: [
+              GroupedFormContainer(
+                children: [
+                  InputFormTitleTextField(
+                    title: '점포명',
+                    controller: _nameController,
+                    onChanged: notifier.setName,
+                    inputFormatters: [LengthLimitingTextInputFormatter(15)],
+                  ),
+                  InputFormTitleNavigationButton(
+                    title: '색상',
+                    content: state.color.displayName,
+                    contentLeading: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Color(state.color.foregroundColorValue),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    onPressed: () {
+                      context.push(
+                        SCRoute.onboardingStoreColor.fullPath,
+                        extra: widget.storeToEdit,
+                      );
+                    },
+                  ),
+                  InputFormTitleNavigationButton(
+                    title: '주소',
+                    content: displayAddress(),
+                    onPressed: () {
+                      context.push(
+                        SCRoute.onboardingStoreAddress.fullPath,
+                        extra: widget.storeToEdit,
+                      );
+                    },
+                  ),
+                  InputFormBodyTextField(
+                    placeholder: '메모',
+                    controller: _memoController,
+                    onChanged: notifier.setMemo,
+                    maxLines: null,
+                    inputFormatters: [LengthLimitingTextInputFormatter(150)],
+                    autocorrect: true,
+                  ),
+                ],
               ),
-              onPressed: () {
-                context.push(
-                  SCRoute.onboardingStoreColor.fullPath,
-                  extra: widget.storeToEdit,
+
+              ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
+                final int index = entry.key;
+                final DayGroup dayGroup = entry.value;
+                final bool isLast =
+                    index == state.priceSettings.dayGroups.length - 1;
+
+                return PriceSettingGroupItem(
+                  index: index,
+                  dayGroup: dayGroup,
+                  isLast: isLast,
+                  // 각 버튼을 눌렀을 때 실행할 동작 정의
+                  onDelete: () {
+                    // notifier.removeDayGroup(index);
+                  },
+                  onAdd: () {
+                    // notifier.addDayGroup();
+                  },
+                  onPressedDaySetting: () {
+                    // context.push(..., extra: index); // 몇 번째 그룹인지 전달
+                  },
+                  onPressedTimeSetting: () {
+                    // context.push(..., extra: index);
+                  },
                 );
-              },
-            ),
-            InputFormTitleNavigationButton(
-              title: '주소',
-              content: displayAddress(),
-              onPressed: () {
-                context.push(
-                  SCRoute.onboardingStoreAddress.fullPath,
-                  extra: widget.storeToEdit,
-                );
-              },
-            ),
-            InputFormBodyTextField(
-              placeholder: '메모',
-              controller: _memoController,
-              onChanged: notifier.setMemo,
-              maxLines: null,
-              inputFormatters: [LengthLimitingTextInputFormatter(150)],
-              autocorrect: true,
-            ),
-          ],
+              }),
+            ],
+          ),
         ),
       ),
     );

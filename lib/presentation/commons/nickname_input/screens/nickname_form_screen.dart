@@ -133,7 +133,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                   const SizedBox(height: 4),
 
                   Padding(
-                    padding: const EdgeInsets.symmetric(
+                    padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: horizontalPadding,
                     ),
                     child: Text(
