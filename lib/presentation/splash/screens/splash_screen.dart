@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
