@@ -8,6 +8,7 @@ import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/onboarding/controllers/onboarding_session_controller.dart';
 import 'package:studio_chance/presentation/onboarding/widgets/large_selection_button.dart';
@@ -134,18 +135,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
             ),
           ),
 
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: isLoading
-                ? Container(
-                    key: const ValueKey('loading_overlay'),
-                    color: CupertinoColors.black.withValues(alpha: 0.3),
-                    child: const Center(
-                      child: CircularProgressIndicator.adaptive(),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
+          LoadingOverlay(isLoading: isLoading),
         ],
       ),
     );
