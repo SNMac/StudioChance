@@ -4,17 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
-class DeleteAddButtonRow extends StatelessWidget {
-  final bool showAdd;
+class DeleteCopyAddButtonRow extends StatelessWidget {
   final bool showDelete;
+  final bool showCopy;
+  final bool showAdd;
   final VoidCallback? onPressedDelete;
+  final VoidCallback? onPressedCopy;
   final VoidCallback? onPressedAdd;
 
-  const DeleteAddButtonRow({
+  const DeleteCopyAddButtonRow({
     super.key,
-    this.showAdd = true,
     this.showDelete = true,
+    this.showCopy = true,
+    this.showAdd = true,
     this.onPressedAdd,
+    this.onPressedCopy,
     this.onPressedDelete,
   });
 
@@ -36,6 +40,19 @@ class DeleteAddButtonRow extends StatelessWidget {
                   '삭제',
                   style: textTheme.titleMedium?.copyWith(
                     color: context.systemRed,
+                  ),
+                ),
+              ),
+            ),
+          if (showCopy)
+            Expanded(
+              child: CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: onPressedCopy,
+                child: Text(
+                  '복사',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: context.systemBlue,
                   ),
                 ),
               ),

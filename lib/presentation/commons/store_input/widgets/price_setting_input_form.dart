@@ -6,7 +6,7 @@ import 'package:studio_chance/presentation/commons/extensions/context_colors.dar
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/delete_add_button_row.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/delete_copy_add_button_row.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 
 class PriceSettingInputForm extends StatelessWidget {
@@ -85,8 +85,9 @@ class PriceSettingInputForm extends StatelessWidget {
             )
           : null,
 
-      footer: DeleteAddButtonRow(
+      footer: DeleteCopyAddButtonRow(
         showAdd: showAdd,
+        showCopy: showAdd,
         showDelete: showDelete,
         onPressedDelete: showInfoDialog,
         onPressedAdd: onAdd,

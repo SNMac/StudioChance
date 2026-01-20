@@ -30,7 +30,7 @@ Future<void> showCustomAlertDialog({
     builder: (context) => AlertDialog.adaptive(
       title: Text(title, style: textTheme.titleLarge),
       content: content != null
-          ? Text(content, style: textTheme.bodyMedium)
+          ? Text(content, style: textTheme.labelLarge)
           : null,
       actions: [
         if (showCancel)

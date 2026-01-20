@@ -25,8 +25,17 @@ extension ContextColors on BuildContext {
   Color get quaternaryLabel =>
       CupertinoDynamicColor.resolve(CupertinoColors.quaternaryLabel, this);
 
+  Color get tertiarySystemFill =>
+      CupertinoDynamicColor.resolve(CupertinoColors.tertiarySystemFill, this);
+
+  Color get quaternarySystemFill =>
+      CupertinoDynamicColor.resolve(CupertinoColors.quaternarySystemFill, this);
+
   Color get separator =>
       CupertinoDynamicColor.resolve(CupertinoColors.separator, this);
+
+  Color get placeholderText =>
+      CupertinoDynamicColor.resolve(CupertinoColors.placeholderText, this);
 
   Color get systemBackground =>
       CupertinoDynamicColor.resolve(CupertinoColors.systemBackground, this);

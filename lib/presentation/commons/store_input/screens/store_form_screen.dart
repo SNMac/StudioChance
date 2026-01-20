@@ -100,117 +100,154 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
           if (error is AppException) {
             _showErrorDialog(error.title, error.content);
           } else {
-            _showErrorDialog('오류 발생', '개발자에게 문의해주세요.\n(${error.toString()})');
+            _showErrorDialog(
+              '오류가 발생했습니다',
+              '개발자에게 문의해주세요.\n(${error.toString()})',
+            );
           }
         },
       );
     });
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: isEditMode ? '점포 수정' : '점포 생성',
-        actions: [
-          AppBarActionButton(
-            label: '완료',
-            onPressed: state.isValid
-                ? () async {
-                    await notifier.submit();
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        showCustomAlertDialog(
+          context: context,
+          title: '점포 등록 화면으로 돌아갈까요?',
+          onConfirmBeforePop: () {
+            if (context.mounted && context.canPop()) {
+              context.pop();
+            }
+          },
+        );
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(
+          title: isEditMode ? '점포 수정' : '점포 생성',
+          actions: [
+            AppBarActionButton(
+              label: '완료',
+              onPressed: state.isValid
+                  ? () async {
+                      await notifier.submit();
 
-                    if (context.mounted) {
-                      // 필요한 경우 Pop
+                      if (context.mounted) {
+                        // 필요한 경우 Pop
+                      }
                     }
-                  }
-                : null,
-          ),
-        ],
-      ),
-      body: Scrollbar(
-        controller: _scrollController,
-        child: SingleChildScrollView(
+                  : null,
+            ),
+          ],
+        ),
+        body: Scrollbar(
           controller: _scrollController,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          child: SafeAreaWithPadding(
-            child: Column(
-              spacing: 20,
-              children: [
-                GroupedFormContainer(
-                  children: [
-                    TitleTextField(
-                      title: '점포명',
-                      controller: _nameController,
-                      onChanged: notifier.setName,
-                      inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                    ),
-                    TitleNavigationButton(
-                      title: '색상',
-                      content: state.color.displayName,
-                      contentLeading: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Color(state.color.foregroundColorValue),
-                          shape: BoxShape.circle,
-                        ),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: SafeAreaWithPadding(
+              child: Column(
+                spacing: 20,
+                children: [
+                  GroupedFormContainer(
+                    children: [
+                      TitleTextField(
+                        title: '점포명',
+                        controller: _nameController,
+                        onChanged: notifier.setName,
+                        inputFormatters: [LengthLimitingTextInputFormatter(15)],
                       ),
-                      onPressed: () {
+                      TitleNavigationButton(
+                        title: '색상',
+                        content: state.color.displayName,
+                        contentLeading: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Color(state.color.foregroundColorValue),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        onPressed: () {
+                          context.push(
+                            SCRoute.onboardingStoreColor.fullPath,
+                            extra: widget.storeToEdit,
+                          );
+                        },
+                      ),
+                      TitleNavigationButton(
+                        title: '주소',
+                        content: state.formattedAddress,
+                        onPressed: () {
+                          context.push(
+                            SCRoute.onboardingStoreAddress.fullPath,
+                            extra: widget.storeToEdit,
+                          );
+                        },
+                      ),
+                      BodyTextField(
+                        placeholder: '메모',
+                        controller: _memoController,
+                        onChanged: notifier.setMemo,
+                        maxLines: null,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(150),
+                        ],
+                        autocorrect: true,
+                      ),
+                    ],
+                  ),
+
+                  ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
+                    final int index = entry.key;
+                    final DayGroup dayGroup = entry.value;
+                    final bool showAdd =
+                        state.priceSettings.dayGroups.length <= 7;
+
+                    final bool isOnlyOne =
+                        state.priceSettings.dayGroups.length == 1;
+                    final bool isEmptyGroup = dayGroup == DayGroup.empty();
+
+                    final bool showDelete = !(isOnlyOne && isEmptyGroup);
+
+                    return PriceSettingInputForm(
+                      index: index,
+                      dayGroup: dayGroup,
+                      showAdd: showAdd,
+                      showDelete: showDelete,
+                      onDelete: () {
+                        notifier.removeDayGroup(index);
+                      },
+                      onAdd: () {
+                        notifier.addDayGroup();
+                      },
+                      onPressedDaySetting: () {
                         context.push(
-                          SCRoute.onboardingStoreColor.fullPath,
-                          extra: widget.storeToEdit,
+                          SCRoute.onboardingPriceDays.fullPath,
+                          extra: {'store': widget.storeToEdit, 'index': index},
                         );
                       },
-                    ),
-                    TitleNavigationButton(
-                      title: '주소',
-                      content: state.formattedAddress,
-                      onPressed: () {
+                      onPressedTimeSetting: () {
+                        if (dayGroup.days.isEmpty) {
+                          showCustomAlertDialog(
+                            context: context,
+                            title: '기준 요일이 없습니다',
+                            content: '기준 요일을 먼저 선택해 주세요.',
+                            showCancel: false,
+                          );
+                          return;
+                        }
+
                         context.push(
-                          SCRoute.onboardingStoreAddress.fullPath,
-                          extra: widget.storeToEdit,
+                          SCRoute.onboardingPriceTime.fullPath,
+                          extra: {'store': widget.storeToEdit, 'index': index},
                         );
                       },
-                    ),
-                    BodyTextField(
-                      placeholder: '메모',
-                      controller: _memoController,
-                      onChanged: notifier.setMemo,
-                      maxLines: null,
-                      inputFormatters: [LengthLimitingTextInputFormatter(150)],
-                      autocorrect: true,
-                    ),
-                  ],
-                ),
-
-                ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
-                  final int index = entry.key;
-                  final DayGroup dayGroup = entry.value;
-                  final bool showAdd =
-                      state.priceSettings.dayGroups.length == 1 ||
-                      (state.priceSettings.dayGroups.length <= 7 &&
-                          index == state.priceSettings.dayGroups.length - 1);
-
-                  return PriceSettingInputForm(
-                    index: index,
-                    dayGroup: dayGroup,
-                    showAdd: showAdd,
-                    showDelete: true,
-                    onDelete: () {
-                      notifier.removeDayGroup(index);
-                    },
-                    onAdd: () {
-                      notifier.addDayGroup();
-                    },
-                    onPressedDaySetting: () {
-                      context.push(
-                        SCRoute.onboardingPriceDays.fullPath,
-                        extra: {'store': widget.storeToEdit, 'index': index},
-                      );
-                    },
-                    onPressedTimeSetting: () {
-                      // context.push(..., extra: index);
-                    },
-                  );
-                }),
-              ],
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         ),

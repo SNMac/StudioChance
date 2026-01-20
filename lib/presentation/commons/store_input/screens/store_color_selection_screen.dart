@@ -32,7 +32,7 @@ class StoreColorSelectionScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: CustomAppBar(title: '색상 선택'),
+      appBar: const CustomAppBar(title: '색상 선택'),
       body: SafeAreaWithPadding(
         child: GroupedFormContainer(
           children: StoreColor.values.map((color) {

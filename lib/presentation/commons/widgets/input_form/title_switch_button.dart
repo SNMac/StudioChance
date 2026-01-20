@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 class TitleSwitchButton extends StatelessWidget {
   final String title;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   const TitleSwitchButton({
     super.key,
     required this.title,
     required this.value,
-    required this.onChanged,
+    this.onChanged,
   });
 
   @override
@@ -25,7 +26,16 @@ class TitleSwitchButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(child: Text(title, style: textTheme.bodyLarge)),
+            Expanded(
+              child: Text(
+                title,
+                style: textTheme.bodyLarge?.copyWith(
+                  color: onChanged != null
+                      ? context.label
+                      : context.tertiaryLabel,
+                ),
+              ),
+            ),
             Switch.adaptive(
               value: value,
               onChanged: onChanged,

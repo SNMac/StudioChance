@@ -9,6 +9,7 @@ enum SCRoute {
   onboardingStoreColor,
   onboardingStoreAddress,
   onboardingPriceDays,
+  onboardingPriceTime,
   onboardingInvitation;
 
   /// [정의용] GoRoute path (상대 경로)
@@ -35,6 +36,8 @@ enum SCRoute {
         return 'address';
       case SCRoute.onboardingPriceDays:
         return 'price-days';
+      case SCRoute.onboardingPriceTime:
+        return 'price-time';
       case SCRoute.onboardingInvitation:
         return 'invitation';
     }
@@ -64,6 +67,8 @@ enum SCRoute {
         return '/onboarding/store/address';
       case SCRoute.onboardingPriceDays:
         return '/onboarding/store/price-days';
+      case SCRoute.onboardingPriceTime:
+        return '/onboarding/store/price-time';
       case SCRoute.onboardingInvitation:
         return '/onboarding/invitation';
     }

@@ -9,6 +9,7 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/store
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_selection_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
@@ -35,10 +36,29 @@ class PriceDaysInputScreen extends ConsumerWidget {
     }
 
     if (groupIndex >= state.priceSettings.dayGroups.length) {
-      return const SizedBox(); // 에러 처리 또는 빈 화면
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showCustomAlertDialog(
+          context: context,
+          title: '에러 발생가 발생했습니다',
+          content: '데이터를 찾을 수 없습니다. (Index Error)',
+          showCancel: false,
+          onConfirmAfterPop: () => context.pop(),
+        );
+      });
+
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator.adaptive()),
+      );
     }
+
     final currentDayGroup = state.priceSettings.dayGroups[groupIndex];
     final selectedDays = currentDayGroup.days;
+
+    final Set<int> unavailableDays = {};
+    for (int i = 0; i < state.priceSettings.dayGroups.length; i++) {
+      if (i == groupIndex) continue;
+      unavailableDays.addAll(state.priceSettings.dayGroups[i].days);
+    }
 
     final List<({int value, String title})> weekDays = [
       (value: 7, title: '일요일'),
@@ -59,25 +79,40 @@ class PriceDaysInputScreen extends ConsumerWidget {
             GroupedFormContainer(
               children: weekDays.map((day) {
                 final isSelected = selectedDays.contains(day.value);
+                final isDisabled = unavailableDays.contains(day.value);
 
                 return TitleSelectionButton<int>(
                   value: day.value,
                   title: day.title,
                   isSelected: isSelected,
-                  onPressed: () {
-                    notifier.toggleDayGroupDay(groupIndex, day.value);
-                  },
+                  onPressed: isDisabled
+                      ? null
+                      : () {
+                          notifier.toggleDayGroupDay(groupIndex, day.value);
+                        },
                 );
               }).toList(),
             ),
 
             GroupedFormContainer(
               children: [
-                TitleSwitchButton(
-                  title: '공휴일',
-                  value: selectedDays.contains(holidayValue),
-                  onChanged: (_) {
-                    notifier.toggleDayGroupDay(groupIndex, holidayValue);
+                Builder(
+                  builder: (context) {
+                    final isHolidayDisabled = unavailableDays.contains(
+                      holidayValue,
+                    );
+                    return TitleSwitchButton(
+                      title: '공휴일',
+                      value: selectedDays.contains(holidayValue),
+                      onChanged: isHolidayDisabled
+                          ? null
+                          : (_) {
+                              notifier.toggleDayGroupDay(
+                                groupIndex,
+                                holidayValue,
+                              );
+                            },
+                    );
                   },
                 ),
               ],
