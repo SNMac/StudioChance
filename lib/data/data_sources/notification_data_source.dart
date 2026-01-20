@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import 'package:studio_chance/common/exceptions/notification_exceptions.dart';
 
 part 'notification_data_source.g.dart';
@@ -45,9 +46,7 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
     try {
       final token = await _messaging.getToken();
       if (token == null) {
-        throw NotificationPlatformException(
-          message: 'FCM Token이 null입니다.',
-        );
+        throw NotificationPlatformException(message: 'FCM Token이 null입니다.');
       }
       return token;
     } catch (e) {

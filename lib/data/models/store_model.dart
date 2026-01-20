@@ -1,11 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/price_settings_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 
 part 'store_model.freezed.dart';
@@ -28,19 +26,12 @@ abstract class StoreModel with _$StoreModel {
     @Default({}) Map<String, StoreMemberInfoModel> waitingMemberById,
 
     InviteInfoModel? inviteInfoModel,
-
-    @TimestampConverter() required DateTime createdAt,
-    @TimestampConverter() required DateTime updatedAt,
-
-    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? deletedAt,
-    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? expiresAt,
   }) = _StoreModel;
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
       _$StoreModelFromJson(json);
 
   factory StoreModel.fromEntity(Store entity) {
-    final now = DateTime.now();
     return StoreModel(
       id: entity.id,
       name: entity.name,
@@ -60,8 +51,6 @@ abstract class StoreModel with _$StoreModel {
       inviteInfoModel: entity.inviteInfo != null
           ? InviteInfoModel.fromEntity(entity.inviteInfo!)
           : null,
-      createdAt: entity.createdAt ?? now,
-      updatedAt: entity.updatedAt ?? now,
     );
   }
 
@@ -80,8 +69,6 @@ abstract class StoreModel with _$StoreModel {
       memberInfos: memberInfos,
       waitingMemberInfos: waitingMemberInfos,
       inviteInfo: inviteInfoModel?.toEntity(),
-      createdAt: createdAt,
-      updatedAt: updatedAt,
     );
   }
 }

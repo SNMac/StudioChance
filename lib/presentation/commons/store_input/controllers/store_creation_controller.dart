@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
@@ -38,8 +37,6 @@ class StoreCreationController extends _$StoreCreationController
       memberInfos: [],
       waitingMemberInfos: [],
       inviteInfo: null,
-      createdAt: null,
-      updatedAt: null,
     );
 
     return (store: store, color: state.color);

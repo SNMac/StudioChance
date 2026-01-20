@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
 
@@ -11,6 +12,10 @@ part 'user_data_source.g.dart';
 abstract interface class UserDataSource {
   /// `uid`에 해당하는 사용자 조회
   Future<UserModel?> getUser(String uid);
+
+  /// 사용자 조회 및 복구 통합 메서드
+  /// - 탈퇴 상태(`deletedAt` 존재)라면 `restoreUser`를 호출하여 복구 후 반환
+  Future<UserModel?> fetchUserWithRestoration(String uid);
 
   /// 사용자 생성
   Future<void> createUser(UserModel userModel);
@@ -71,6 +76,32 @@ class UserFirestoreDataSource implements UserDataSource {
 
         if (data['deletedAt'] != null) {
           return null;
+        }
+
+        return UserModel.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<UserModel?> fetchUserWithRestoration(String uid) async {
+    try {
+      final docSnapshot = await _firestore.collection('users').doc(uid).get();
+
+      if (docSnapshot.exists && docSnapshot.data() != null) {
+        final data = docSnapshot.data()!;
+        data['id'] = docSnapshot.id;
+
+        if (data['deletedAt'] != null) {
+          _logger.i('탈퇴 계정 감지: $uid');
+
+          await restoreUser(uid);
+
+          data.remove('deletedAt');
+          data.remove('expiresAt');
         }
 
         return UserModel.fromJson(data);
@@ -211,7 +242,7 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<void> softDeleteUser(String uid) async {
     try {
-      final hardDeleteDate = DateTime.now().add(const Duration(days: 7));
+      final hardDeleteDate = DateTime.now().add(const Duration(days: userSoftDeleteDays));
       await _firestore.collection('users').doc(uid).update({
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
@@ -231,6 +262,7 @@ class UserFirestoreDataSource implements UserDataSource {
         'expiresAt': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      _logger.i('계정 복구 완료: $uid');
     } catch (e) {
       throw _handleFirestoreError(e);
     }

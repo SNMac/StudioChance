@@ -25,23 +25,6 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
             MapEntry(k, UserStoreInfoModel.fromJson(e as Map<String, dynamic>)),
       ) ??
       const {},
-  createdAt: const TimestampConverter().fromJson(
-    json['createdAt'] as Timestamp,
-  ),
-  updatedAt: const TimestampConverter().fromJson(
-    json['updatedAt'] as Timestamp,
-  ),
-  lastLoginAt: const TimestampConverter().fromJson(
-    json['lastLoginAt'] as Timestamp,
-  ),
-  deletedAt: _$JsonConverterFromJson<Timestamp, DateTime>(
-    json['deletedAt'],
-    const TimestampConverter().fromJson,
-  ),
-  expiresAt: _$JsonConverterFromJson<Timestamp, DateTime>(
-    json['expiresAt'],
-    const TimestampConverter().fromJson,
-  ),
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -52,25 +35,4 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'authProviders': instance.authProviders,
       'fcmTokens': instance.fcmTokens,
       'storeById': instance.storeById.map((k, e) => MapEntry(k, e.toJson())),
-      'createdAt': const TimestampConverter().toJson(instance.createdAt),
-      'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
-      'lastLoginAt': const TimestampConverter().toJson(instance.lastLoginAt),
-      'deletedAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
-        instance.deletedAt,
-        const TimestampConverter().toJson,
-      ),
-      'expiresAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
-        instance.expiresAt,
-        const TimestampConverter().toJson,
-      ),
     };
-
-Value? _$JsonConverterFromJson<Json, Value>(
-  Object? json,
-  Value? Function(Json json) fromJson,
-) => json == null ? null : fromJson(json as Json);
-
-Json? _$JsonConverterToJson<Json, Value>(
-  Value? value,
-  Json? Function(Value value) toJson,
-) => value == null ? null : toJson(value);

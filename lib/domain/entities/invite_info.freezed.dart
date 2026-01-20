@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteInfo {
 
- String get inviteCode; DateTime get createdAt;
+ String get inviteCode;
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $InviteInfoCopyWith<InviteInfo> get copyWith => _$InviteInfoCopyWithImpl<InviteI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
+int get hashCode => Object.hash(runtimeType,inviteCode);
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
+  return 'InviteInfo(inviteCode: $inviteCode)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $InviteInfoCopyWith<$Res>  {
   factory $InviteInfoCopyWith(InviteInfo value, $Res Function(InviteInfo) _then) = _$InviteInfoCopyWithImpl;
 @useResult
 $Res call({
- String inviteCode, DateTime createdAt
+ String inviteCode
 });
 
 
@@ -62,11 +62,10 @@ class _$InviteInfoCopyWithImpl<$Res>
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,}) {
   return _then(_self.copyWith(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,
   ));
 }
 
@@ -151,10 +150,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InviteInfo() when $default != null:
-return $default(_that.inviteCode,_that.createdAt);case _:
+return $default(_that.inviteCode);case _:
   return orElse();
 
 }
@@ -172,10 +171,10 @@ return $default(_that.inviteCode,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode)  $default,) {final _that = this;
 switch (_that) {
 case _InviteInfo():
-return $default(_that.inviteCode,_that.createdAt);case _:
+return $default(_that.inviteCode);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +191,10 @@ return $default(_that.inviteCode,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode)?  $default,) {final _that = this;
 switch (_that) {
 case _InviteInfo() when $default != null:
-return $default(_that.inviteCode,_that.createdAt);case _:
+return $default(_that.inviteCode);case _:
   return null;
 
 }
@@ -207,11 +206,10 @@ return $default(_that.inviteCode,_that.createdAt);case _:
 
 
 class _InviteInfo extends InviteInfo {
-  const _InviteInfo({required this.inviteCode, required this.createdAt}): super._();
+  const _InviteInfo({required this.inviteCode}): super._();
   
 
 @override final  String inviteCode;
-@override final  DateTime createdAt;
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -223,16 +221,16 @@ _$InviteInfoCopyWith<_InviteInfo> get copyWith => __$InviteInfoCopyWithImpl<_Inv
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
+int get hashCode => Object.hash(runtimeType,inviteCode);
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
+  return 'InviteInfo(inviteCode: $inviteCode)';
 }
 
 
@@ -243,7 +241,7 @@ abstract mixin class _$InviteInfoCopyWith<$Res> implements $InviteInfoCopyWith<$
   factory _$InviteInfoCopyWith(_InviteInfo value, $Res Function(_InviteInfo) _then) = __$InviteInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String inviteCode, DateTime createdAt
+ String inviteCode
 });
 
 
@@ -260,11 +258,10 @@ class __$InviteInfoCopyWithImpl<$Res>
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,}) {
   return _then(_InviteInfo(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,
   ));
 }
 

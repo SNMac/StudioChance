@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$User {
 
- String get id; String get name; String get email; String? get nickname; List<String> get authProviders; List<UserStoreInfo> get storeInfos; DateTime get createdAt; DateTime get updatedAt; DateTime get lastLoginAt;
+ String get id; String get name; String get email; String? get nickname; List<String> get authProviders; List<UserStoreInfo> get storeInfos;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.storeInfos, storeInfos)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.storeInfos, storeInfos));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(storeInfos),createdAt,updatedAt,lastLoginAt);
+int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(storeInfos));
 
 @override
 String toString() {
-  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, storeInfos: $storeInfos, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt)';
+  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, storeInfos: $storeInfos)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $UserCopyWith<$Res>  {
   factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos, DateTime createdAt, DateTime updatedAt, DateTime lastLoginAt
+ String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos
 });
 
 
@@ -62,7 +62,7 @@ class _$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -70,10 +70,7 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,storeInfos: null == storeInfos ? _self.storeInfos : storeInfos // ignore: cast_nullable_to_non_nullable
-as List<UserStoreInfo>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,lastLoginAt: null == lastLoginAt ? _self.lastLoginAt : lastLoginAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as List<UserStoreInfo>,
   ));
 }
 
@@ -158,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos,  DateTime createdAt,  DateTime updatedAt,  DateTime lastLoginAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos,_that.createdAt,_that.updatedAt,_that.lastLoginAt);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos);case _:
   return orElse();
 
 }
@@ -179,10 +176,10 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos,  DateTime createdAt,  DateTime updatedAt,  DateTime lastLoginAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos)  $default,) {final _that = this;
 switch (_that) {
 case _User():
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos,_that.createdAt,_that.updatedAt,_that.lastLoginAt);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +196,10 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos,  DateTime createdAt,  DateTime updatedAt,  DateTime lastLoginAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos)?  $default,) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos,_that.createdAt,_that.updatedAt,_that.lastLoginAt);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos);case _:
   return null;
 
 }
@@ -214,7 +211,7 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 
 
 class _User extends User {
-  const _User({required this.id, required this.name, required this.email, required this.nickname, required final  List<String> authProviders, required final  List<UserStoreInfo> storeInfos, required this.createdAt, required this.updatedAt, required this.lastLoginAt}): _authProviders = authProviders,_storeInfos = storeInfos,super._();
+  const _User({required this.id, required this.name, required this.email, required this.nickname, required final  List<String> authProviders, required final  List<UserStoreInfo> storeInfos}): _authProviders = authProviders,_storeInfos = storeInfos,super._();
   
 
 @override final  String id;
@@ -235,9 +232,6 @@ class _User extends User {
   return EqualUnmodifiableListView(_storeInfos);
 }
 
-@override final  DateTime createdAt;
-@override final  DateTime updatedAt;
-@override final  DateTime lastLoginAt;
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
@@ -249,16 +243,16 @@ _$UserCopyWith<_User> get copyWith => __$UserCopyWithImpl<_User>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._storeInfos, _storeInfos)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._storeInfos, _storeInfos));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeInfos),createdAt,updatedAt,lastLoginAt);
+int get hashCode => Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeInfos));
 
 @override
 String toString() {
-  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, storeInfos: $storeInfos, createdAt: $createdAt, updatedAt: $updatedAt, lastLoginAt: $lastLoginAt)';
+  return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, storeInfos: $storeInfos)';
 }
 
 
@@ -269,7 +263,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
   factory _$UserCopyWith(_User value, $Res Function(_User) _then) = __$UserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos, DateTime createdAt, DateTime updatedAt, DateTime lastLoginAt
+ String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos
 });
 
 
@@ -286,7 +280,7 @@ class __$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,Object? createdAt = null,Object? updatedAt = null,Object? lastLoginAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,}) {
   return _then(_User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -294,10 +288,7 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,storeInfos: null == storeInfos ? _self._storeInfos : storeInfos // ignore: cast_nullable_to_non_nullable
-as List<UserStoreInfo>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,lastLoginAt: null == lastLoginAt ? _self.lastLoginAt : lastLoginAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as List<UserStoreInfo>,
   ));
 }
 

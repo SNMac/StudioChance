@@ -41,26 +41,15 @@ class UserRepositoryImpl implements UserRepository {
       var userModel = await _userDataSource.getUser(authInfo.uid);
       if (userModel != null) {
         // 기존 유저
-        // 탈퇴 복구
-        if (userModel.deletedAt != null) {
-          await _userDataSource.restoreUser(userModel.id);
-          _logger.i('탈퇴 계정 복구 완료: ${userModel.id}');
-        }
-
         if (fcmToken != null) {
           await _userDataSource.addFcmToken(userModel.id, fcmToken);
         }
 
-        final now = DateTime.now();
         await _userDataSource.updateUser(userModel.id, {
           'authProviders': authInfo.authProviders,
-          'lastLoginAt': now,
-          'updatedAt': now,
         });
       } else {
         // 신규 유저
-        // DB 생성
-        final now = DateTime.now();
         final newUserModel = UserModel(
           id: authInfo.uid,
           name: authInfo.displayName ?? '이름 없음',
@@ -69,9 +58,6 @@ class UserRepositoryImpl implements UserRepository {
           authProviders: authInfo.authProviders,
           fcmTokens: fcmToken != null ? [fcmToken] : [],
           storeById: {},
-          createdAt: now,
-          updatedAt: now,
-          lastLoginAt: now,
         );
 
         await _userDataSource.createUser(newUserModel);

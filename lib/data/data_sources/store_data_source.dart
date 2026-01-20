@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
@@ -76,25 +77,23 @@ class StoreFirestoreDataSource implements StoreDataSource {
   ) async {
     try {
       final batch = _firestore.batch();
-      final serverTimestamp = FieldValue.serverTimestamp();
       final docRef = _firestore.collection('stores').doc();
 
       final json = store.toJson();
-      json['createdAt'] = serverTimestamp;
-      json['updatedAt'] = serverTimestamp;
+      json['createdAt'] = FieldValue.serverTimestamp();
+      json['updatedAt'] = FieldValue.serverTimestamp();
 
       batch.set(docRef, json);
 
       final userRef = _firestore.collection('users').doc(uid);
       batch.update(userRef, {
         'storeById.${docRef.id}': creatorInfo.toJson(),
-        'updatedAt': serverTimestamp,
+        'updatedAt': FieldValue.serverTimestamp(),
       });
 
       await batch.commit();
 
-      final now = DateTime.now();
-      return store.copyWith(id: docRef.id, createdAt: now, updatedAt: now);
+      return store.copyWith(id: docRef.id);
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -229,12 +228,14 @@ class StoreFirestoreDataSource implements StoreDataSource {
   @override
   Future<void> softDeleteStore(String storeId) async {
     try {
-      final hardDeleteDate = DateTime.now().add(const Duration(days: 7));
+      final hardDeleteDate = DateTime.now().add(
+        const Duration(days: storeSoftDeleteDays),
+      );
       await _firestore.collection('stores').doc(storeId).update({
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
-        'inviteInfoModel': null,
+        'inviteInfo': null,
       });
     } catch (e) {
       throw _handleFirestoreError(e);
@@ -248,33 +249,42 @@ class StoreFirestoreDataSource implements StoreDataSource {
   }) async {
     try {
       if (!forceRegenerate) {
-        final currentStore = await getStore(storeId);
-        if (currentStore == null) {
+        final docSnapshot = await _firestore
+            .collection('stores')
+            .doc(storeId)
+            .get();
+
+        if (!docSnapshot.exists) {
           throw StoreNotFoundException(message: '점포를 찾을 수 없습니다.');
         }
 
-        final currentInvite = currentStore.inviteInfoModel;
-        if (currentInvite != null &&
-            currentInvite.expiresAt.isAfter(DateTime.now())) {
-          return currentInvite;
+        final data = docSnapshot.data() ?? {};
+        final inviteData = data['inviteInfo'] as Map<String, dynamic>?;
+
+        if (inviteData != null && inviteData['createdAt'] != null) {
+          final createdAt = (inviteData['createdAt'] as Timestamp).toDate();
+          final expiresAt = createdAt.add(
+            const Duration(minutes: storeInviteCodeAvailableMin),
+          );
+
+          if (DateTime.now().isBefore(expiresAt)) {
+            return InviteInfoModel.fromJson(inviteData);
+          }
         }
       }
 
       final newCode = _generateRandomCode(6);
+      final inviteInfoModel = InviteInfoModel(inviteCode: newCode);
 
-      final tempModel = InviteInfoModel(
-        inviteCode: newCode,
-        createdAt: DateTime.now(),
-      );
-      final json = tempModel.toJson();
+      final json = inviteInfoModel.toJson();
       json['createdAt'] = FieldValue.serverTimestamp();
 
       await _firestore.collection('stores').doc(storeId).update({
-        'inviteInfoModel': json,
+        'inviteInfo': json,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      return InviteInfoModel(inviteCode: newCode, createdAt: DateTime.now());
+      return inviteInfoModel;
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -283,15 +293,10 @@ class StoreFirestoreDataSource implements StoreDataSource {
   @override
   Future<StoreModel?> getStoreByInviteCode(String inviteCode) async {
     try {
-      final validThreshold = DateTime.now().subtract(
-        const Duration(minutes: 15),
-      );
-
       final querySnapshot = await _firestore
           .collection('stores')
-          .where('inviteInfoModel.inviteCode', isEqualTo: inviteCode)
-          .where('deletedAt', isNull: true)
-          .where('inviteInfoModel.createdAt', isGreaterThan: validThreshold)
+          .where('inviteInfo.inviteCode', isEqualTo: inviteCode)
+          .where('deletedAt', isNull: true) // 삭제된 점포 제외
           .limit(1)
           .get();
 
@@ -301,8 +306,22 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       final docSnapshot = querySnapshot.docs.first;
       final data = docSnapshot.data();
-      data['id'] = docSnapshot.id;
+      final inviteData = data['inviteInfo'] as Map<String, dynamic>?;
 
+      if (inviteData != null && inviteData['createdAt'] != null) {
+        final createdAt = (inviteData['createdAt'] as Timestamp).toDate();
+        final expiresAt = createdAt.add(
+          const Duration(minutes: storeInviteCodeAvailableMin),
+        );
+
+        if (DateTime.now().isAfter(expiresAt)) {
+          throw StoreNotFoundException(message: '유효하지 않은 초대 코드입니다.');
+        }
+      } else {
+        throw StoreNotFoundException(message: '유효하지 않은 초대 코드입니다.');
+      }
+
+      data['id'] = docSnapshot.id;
       return StoreModel.fromJson(data);
     } catch (e) {
       throw _handleFirestoreError(e);

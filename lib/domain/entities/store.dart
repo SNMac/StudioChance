@@ -19,8 +19,5 @@ abstract class Store with _$Store {
     required List<StoreMemberInfo> waitingMemberInfos,
     required PriceSetting priceSettings,
     required InviteInfo? inviteInfo,
-
-    required DateTime? createdAt,
-    required DateTime? updatedAt,
   }) = _Store;
 }

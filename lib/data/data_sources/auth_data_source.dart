@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/models/auth_model.dart';
 

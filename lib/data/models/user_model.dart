@@ -1,7 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 
@@ -20,14 +18,6 @@ abstract class UserModel with _$UserModel {
     @Default([]) List<String> authProviders,
     @Default([]) List<String> fcmTokens,
     @Default({}) Map<String, UserStoreInfoModel> storeById,
-
-    // DataSource에서 serverTimestamp로 저장되지만, 우선 Datetime 입력
-    @TimestampConverter() required DateTime createdAt,
-    @TimestampConverter() required DateTime updatedAt,
-    @TimestampConverter() required DateTime lastLoginAt,
-
-    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? deletedAt,
-    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? expiresAt,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -44,9 +34,6 @@ abstract class UserModel with _$UserModel {
         for (var info in entity.storeInfos)
           info.id: UserStoreInfoModel.fromEntity(info),
       },
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-      lastLoginAt: entity.lastLoginAt,
     );
   }
 
@@ -60,9 +47,6 @@ abstract class UserModel with _$UserModel {
       storeInfos: storeById.entries
           .map((entry) => entry.value.toEntity(storeId: entry.key))
           .toList(),
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      lastLoginAt: lastLoginAt,
     );
   }
 }

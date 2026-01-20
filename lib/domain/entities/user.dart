@@ -15,9 +15,6 @@ abstract class User with _$User {
     required String? nickname,
     required List<String> authProviders,
     required List<UserStoreInfo> storeInfos,
-    required DateTime createdAt,
-    required DateTime updatedAt,
-    required DateTime lastLoginAt,
   }) = _User;
 
   bool get isNewUser => nickname == null;
