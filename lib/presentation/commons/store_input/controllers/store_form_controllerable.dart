@@ -1,5 +1,6 @@
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 
@@ -18,6 +19,16 @@ abstract interface class StoreFormControllerable {
 
   /// 특정 그룹(groupIndex)의 특정 요일(dayValue)을 토글(추가/삭제)
   void toggleDayGroupDay(int groupIndex, int dayValue);
+  void setDayGroup(int index, DayGroup dayGroup);
+
+  /// 특정 DayGroup(groupIndex)에 새로운 TimeSlot 추가
+  void addTimeSlot(int groupIndex);
+
+  /// 특정 TimeSlot 복사
+  void copyTimeSlot(int groupIndex, int slotIndex);
+
+  /// 특정 TimeSlot 삭제
+  void removeTimeSlot(int groupIndex, int slotIndex);
 
   /// 현재 폼 데이터를 반환 (유효하지 않으면 null)
   ({Store store, StoreColor color})? getFormData();
@@ -50,11 +61,8 @@ mixin StoreFormMixin {
     if (index < 0 || index >= state.priceSettings.dayGroups.length) return;
 
     final currentGroups = [...state.priceSettings.dayGroups];
-
     final targetGroup = currentGroups[index];
-
     final copiedGroup = targetGroup.copyWith(days: []);
-
     currentGroups.insert(index + 1, copiedGroup);
 
     state = state.copyWith(
@@ -94,6 +102,69 @@ mixin StoreFormMixin {
 
     currentGroups[groupIndex] = targetGroup.copyWith(days: currentDays);
 
+    state = state.copyWith(
+      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    );
+  }
+
+  void setDayGroup(int index, DayGroup dayGroup) {
+    if (index < 0 || index >= state.priceSettings.dayGroups.length) return;
+
+    final currentGroups = [...state.priceSettings.dayGroups];
+    currentGroups[index] = dayGroup;
+
+    state = state.copyWith(
+      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    );
+  }
+
+  void addTimeSlot(int groupIndex) {
+    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+
+    final currentGroups = [...state.priceSettings.dayGroups];
+    final targetGroup = currentGroups[groupIndex];
+
+    final newSlots = [...targetGroup.timeSlots, TimeSlot.empty()];
+
+    currentGroups[groupIndex] = targetGroup.copyWith(timeSlots: newSlots);
+
+    state = state.copyWith(
+      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    );
+  }
+
+  void copyTimeSlot(int groupIndex, int slotIndex) {
+    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+
+    final currentGroups = [...state.priceSettings.dayGroups];
+    final targetGroup = currentGroups[groupIndex];
+    if (slotIndex >= targetGroup.timeSlots.length) return;
+
+    final currentSlots = [...targetGroup.timeSlots];
+    final targetSlot = currentSlots[slotIndex];
+
+    currentSlots.insert(slotIndex + 1, targetSlot.copyWith());
+
+    currentGroups[groupIndex] = targetGroup.copyWith(timeSlots: currentSlots);
+    state = state.copyWith(
+      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    );
+  }
+
+  void removeTimeSlot(int groupIndex, int slotIndex) {
+    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+
+    final currentGroups = [...state.priceSettings.dayGroups];
+    final targetGroup = currentGroups[groupIndex];
+
+    final currentSlots = [...targetGroup.timeSlots];
+    if (currentSlots.length <= 1) {
+      currentSlots[slotIndex] = TimeSlot.empty();
+    } else {
+      currentSlots.removeAt(slotIndex);
+    }
+
+    currentGroups[groupIndex] = targetGroup.copyWith(timeSlots: currentSlots);
     state = state.copyWith(
       priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
     );

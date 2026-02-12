@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
@@ -50,7 +51,9 @@ class PriceSettingInputForm extends StatelessWidget {
     return GroupedFormContainer(
       header: index == 0
           ? Padding(
-              padding: const EdgeInsetsDirectional.only(start: 16),
+              padding: const EdgeInsetsDirectional.only(
+                start: horizontalPadding,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
