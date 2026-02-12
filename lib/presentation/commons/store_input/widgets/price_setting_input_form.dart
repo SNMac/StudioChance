@@ -16,6 +16,7 @@ class PriceSettingInputForm extends StatelessWidget {
   final bool showDelete;
 
   final VoidCallback onDelete;
+  final VoidCallback onCopy;
   final VoidCallback onAdd;
   final VoidCallback onPressedDaySetting;
   final VoidCallback onPressedTimeSetting;
@@ -27,6 +28,7 @@ class PriceSettingInputForm extends StatelessWidget {
     required this.showAdd,
     required this.showDelete,
     required this.onDelete,
+    required this.onCopy,
     required this.onAdd,
     required this.onPressedDaySetting,
     required this.onPressedTimeSetting,
@@ -90,6 +92,7 @@ class PriceSettingInputForm extends StatelessWidget {
         showCopy: showAdd,
         showDelete: showDelete,
         onPressedDelete: showInfoDialog,
+        onPressedCopy: onCopy,
         onPressedAdd: onAdd,
       ),
 

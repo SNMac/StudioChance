@@ -219,6 +219,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                       onDelete: () {
                         notifier.removeDayGroup(index);
                       },
+                      onCopy: () {
+                        notifier.copyDayGroup(index);
+                      },
                       onAdd: () {
                         notifier.addDayGroup();
                       },

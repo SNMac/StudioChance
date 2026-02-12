@@ -38,9 +38,17 @@ class TitleSelectionButton<T> extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (leading != null) ...[leading!, const SizedBox(width: 8)],
-              Expanded(child: Text(title, style: textTheme.bodyLarge?.copyWith(
-                color: onPressed != null ? context.label : context.tertiaryLabel
-              ))),
+              Expanded(
+                child: Text(
+                  title,
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.normal,
+                    color: onPressed != null
+                        ? context.label
+                        : context.tertiaryLabel,
+                  ),
+                ),
+              ),
               if (isSelected)
                 const Icon(
                   CupertinoIcons.checkmark,
