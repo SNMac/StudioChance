@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/presentation/commons/extensions/string_extension.dart';
+
 /// 취소/확인 버튼이 있는 공용 다이얼로그 함수
 Future<void> showCustomAlertDialog({
   required BuildContext context,
@@ -30,7 +32,7 @@ Future<void> showCustomAlertDialog({
     builder: (context) => AlertDialog.adaptive(
       title: Text(title, style: textTheme.titleLarge),
       content: content != null
-          ? Text(content, style: textTheme.labelLarge)
+          ? Text(content.insertZwj(), style: textTheme.labelLarge)
           : null,
       actions: [
         if (showCancel)
