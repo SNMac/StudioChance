@@ -59,8 +59,7 @@ class StoreCreationController extends _$StoreCreationController
 
       if (result.isLeft()) throw result.getLeft().toNullable()!;
 
-      // 성공 시 온보딩 갱신을 위해 AuthController 갱신
-      ref.invalidate(appAuthControllerProvider);
+      ref.invalidate(currentUserProvider);
     } catch (e, st) {
       state = state.copyWith(status: AsyncValue.error(e, st));
     }

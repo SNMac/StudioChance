@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
@@ -42,7 +43,10 @@ class OnboardingRoleScreen extends ConsumerWidget {
           if (error is AppException) {
             showErrorDialog(error.title, error.content);
           } else {
-            showErrorDialog('오류가 발생했습니다', '개발자에게 문의해주세요.\n(${error.toString()})');
+            showErrorDialog(
+              '오류가 발생했습니다',
+              '개발자에게 문의해주세요.\n(${error.toString()})',
+            );
           }
         },
       );
@@ -85,6 +89,12 @@ class OnboardingRoleScreen extends ConsumerWidget {
     return Scaffold(
       appBar: CustomAppBar(
         title: '역할 선택',
+        leading: AppBarNaviBackButton(
+          isEnabled: !isLoading,
+          onPressed: () {
+            context.pop();
+          },
+        ),
         actions: [
           AppBarActionButton(
             label: '다음',
