@@ -14,8 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreFormState {
 
- String get name; String get address; String get addressDetail; String get addressGuide; String get memo; StoreColor get color;// 복잡한 객체는 nullable로 두거나, 기본값을 상수로 정의해서 넣어줌
- PriceSetting get priceSettings; AsyncValue<void> get status;
+ String get name; String get address; String get addressDetail; String get addressGuide; String get memo; StoreColor get color; PriceSetting get priceSettings; AsyncValue<void> get status;
 /// Create a copy of StoreFormState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -232,7 +231,6 @@ class _StoreFormState extends StoreFormState {
 @override@JsonKey() final  String addressGuide;
 @override@JsonKey() final  String memo;
 @override@JsonKey() final  StoreColor color;
-// 복잡한 객체는 nullable로 두거나, 기본값을 상수로 정의해서 넣어줌
 @override final  PriceSetting priceSettings;
 @override@JsonKey() final  AsyncValue<void> status;
 

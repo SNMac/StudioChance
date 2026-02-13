@@ -41,7 +41,7 @@ class PriceSettingInputForm extends StatelessWidget {
 
     void showInfoDialog() => showCustomAlertDialog(
       context: context,
-      title: '요금 설정 삭제',
+      title: '요일별 요금 설정 삭제',
       content: '${dayGroup.formattedDays}에 해당하는 요금 설정을 삭제할까요?',
       isDestructive: true,
       confirmText: '삭제',
@@ -64,7 +64,7 @@ class PriceSettingInputForm extends StatelessWidget {
                     onPressed: () => showCustomAlertDialog(
                       context: context,
                       title: '요일별 요금 설정',
-                      content: '모든 영업시간에 대해 설정해 주세요\n(최대 8개)',
+                      content: '모든 영업 요일에 대해 설정해 주세요\n(최대 8개)',
                       showCancel: false,
                     ),
                     child: Row(

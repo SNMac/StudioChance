@@ -17,7 +17,6 @@ abstract class StoreFormState with _$StoreFormState {
     @Default('') String addressGuide,
     @Default('') String memo,
     @Default(StoreColor.red) StoreColor color,
-    // 복잡한 객체는 nullable로 두거나, 기본값을 상수로 정의해서 넣어줌
     required PriceSetting priceSettings,
 
     @Default(AsyncValue.data(null)) AsyncValue<void> status,

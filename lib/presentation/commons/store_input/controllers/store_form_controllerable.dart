@@ -72,16 +72,12 @@ mixin StoreFormMixin {
 
   void removeDayGroup(int index) {
     final currentGroups = [...state.priceSettings.dayGroups];
-
-    if (currentGroups.length <= 1) {
+    if (currentGroups.length > 1) {
+      currentGroups.removeAt(index);
+    } else {
       currentGroups[index] = DayGroup.empty();
-      state = state.copyWith(
-        priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
-      );
-      return;
     }
 
-    currentGroups.removeAt(index);
     state = state.copyWith(
       priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
     );

@@ -202,20 +202,15 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                   ...state.priceSettings.dayGroups.asMap().entries.map((entry) {
                     final int index = entry.key;
                     final DayGroup dayGroup = entry.value;
+
                     final bool showAdd =
-                        state.priceSettings.dayGroups.length <= 7;
-
-                    final bool isOnlyOne =
-                        state.priceSettings.dayGroups.length == 1;
-                    final bool isEmptyGroup = dayGroup == DayGroup.empty();
-
-                    final bool showDelete = !(isOnlyOne && isEmptyGroup);
+                        state.priceSettings.dayGroups.length < 8;
 
                     return PriceSettingInputForm(
                       index: index,
                       dayGroup: dayGroup,
                       showAdd: showAdd,
-                      showDelete: showDelete,
+                      showDelete: true,
                       onDelete: () {
                         notifier.removeDayGroup(index);
                       },
