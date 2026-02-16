@@ -109,6 +109,7 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
           ],
         ),
       ),
+
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(start: horizontalPadding),
         child: Column(
@@ -124,6 +125,7 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
           ],
         ),
       ),
+
       children: [
         TitleTextField(
           title: '기준 인원',

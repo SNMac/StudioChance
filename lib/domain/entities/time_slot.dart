@@ -5,6 +5,7 @@ part 'time_slot.freezed.dart';
 @freezed
 abstract class TimeSlot with _$TimeSlot {
   const factory TimeSlot({
+    required bool isAllDay,
     required int startTime,
     required int endTime,
     required int price,
@@ -13,6 +14,7 @@ abstract class TimeSlot with _$TimeSlot {
   }) = _TimeSlot;
 
   factory TimeSlot.empty() => const TimeSlot(
+    isAllDay: false,
     startTime: 360,
     endTime: 1080,
     price: -1,

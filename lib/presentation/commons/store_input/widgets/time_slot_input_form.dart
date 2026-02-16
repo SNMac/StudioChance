@@ -158,6 +158,13 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
       ),
 
       children: [
+        TitleSwitchButton(
+          title: '하루종일',
+          value: widget.timeSlot.isAllDay,
+          onChanged: (val) {
+            widget.onChanged(widget.timeSlot.copyWith(isAllDay: val));
+          },
+        ),
         TitleDateTimeButton(
           title: '기준 시작 시간',
           content: widget.timeSlot.startTime.formattedTime,

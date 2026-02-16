@@ -10,6 +10,7 @@ abstract class TimeSlotModel with _$TimeSlotModel {
   const TimeSlotModel._();
 
   const factory TimeSlotModel({
+    required bool isAllDay,
     required int startTime, // 분 단위
     required int endTime, // 분 단위
     required int price,
@@ -22,6 +23,7 @@ abstract class TimeSlotModel with _$TimeSlotModel {
 
   factory TimeSlotModel.fromEntity(TimeSlot entity) {
     return TimeSlotModel(
+      isAllDay: entity.isAllDay,
       startTime: entity.startTime,
       endTime: entity.endTime,
       price: entity.price,
@@ -32,6 +34,7 @@ abstract class TimeSlotModel with _$TimeSlotModel {
 
   TimeSlot toEntity() {
     return TimeSlot(
+      isAllDay: isAllDay,
       startTime: startTime,
       endTime: endTime,
       price: price,
