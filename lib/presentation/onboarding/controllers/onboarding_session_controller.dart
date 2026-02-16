@@ -32,7 +32,7 @@ class OnboardingSessionController extends _$OnboardingSessionController {
   /// 닉네임을 원격 DB에 저장만 수행 (리다이렉트 X)
   /// - '다음' 버튼을 눌렀을 때 사용
   Future<void> saveNicknameToRemote() async {
-    state = state.copyWith(status: const AsyncValue.loading());
+    state = state.copyWith(status: const AsyncLoading());
 
     try {
       if (!state.isNicknameExists) {
@@ -56,9 +56,9 @@ class OnboardingSessionController extends _$OnboardingSessionController {
 
       if (updateResult.isLeft()) throw updateResult.getLeft().toNullable()!;
 
-      state = state.copyWith(status: const AsyncValue.data(null));
+      state = state.copyWith(status: const AsyncData(null));
     } catch (e, st) {
-      state = state.copyWith(status: AsyncValue.error(e, st));
+      state = state.copyWith(status: AsyncError(e, st));
     }
   }
 
@@ -71,9 +71,9 @@ class OnboardingSessionController extends _$OnboardingSessionController {
 
     try {
       ref.invalidate(appAuthControllerProvider);
-      state = state.copyWith(status: const AsyncValue.data(null));
+      state = state.copyWith(status: const AsyncData(null));
     } catch (e, st) {
-      state = state.copyWith(status: AsyncValue.error(e, st));
+      state = state.copyWith(status: AsyncError(e, st));
     }
   }
 }

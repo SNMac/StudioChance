@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'package:studio_chance/presentation/commons/invite_code/screens/invite_code_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_time_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
-
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_admin_screen.dart';
-import 'package:studio_chance/presentation/onboarding/screens/onboarding_invitation_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_role_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
@@ -111,7 +111,7 @@ GoRouter goRouter(Ref ref) {
           GoRoute(
             path: SCRoute.onboardingInvitation.path,
             name: SCRoute.onboardingInvitation.name,
-            builder: (context, state) => const OnboardingInvitationScreen(),
+            builder: (context, state) => const InviteCodeInputScreen(),
           ),
         ],
       ),
