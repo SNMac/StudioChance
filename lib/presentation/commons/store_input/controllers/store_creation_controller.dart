@@ -47,7 +47,7 @@ class StoreCreationController extends _$StoreCreationController
     final data = getFormData();
     if (data == null) return;
 
-    state = state.copyWith(status: const AsyncValue.loading());
+    state = state.copyWith(status: const AsyncLoading());
 
     try {
       final storeUseCase = ref.read(storeUseCaseProvider);
@@ -61,7 +61,7 @@ class StoreCreationController extends _$StoreCreationController
 
       ref.invalidate(currentUserProvider);
     } catch (e, st) {
-      state = state.copyWith(status: AsyncValue.error(e, st));
+      state = state.copyWith(status: AsyncError(e, st));
     }
   }
 }

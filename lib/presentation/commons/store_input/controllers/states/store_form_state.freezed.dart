@@ -222,7 +222,7 @@ return $default(_that.name,_that.address,_that.addressDetail,_that.addressGuide,
 
 
 class _StoreFormState extends StoreFormState {
-  const _StoreFormState({this.name = '', this.address = '', this.addressDetail = '', this.addressGuide = '', this.memo = '', this.color = StoreColor.red, required this.priceSettings, this.status = const AsyncValue.data(null)}): super._();
+  const _StoreFormState({this.name = '', this.address = '', this.addressDetail = '', this.addressGuide = '', this.memo = '', this.color = StoreColor.red, required this.priceSettings, this.status = const AsyncData(null)}): super._();
   
 
 @override@JsonKey() final  String name;

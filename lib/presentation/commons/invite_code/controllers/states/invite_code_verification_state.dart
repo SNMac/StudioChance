@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'invite_code_form_state.freezed.dart';
+part 'invite_code_verification_state.freezed.dart';
 
 @freezed
-abstract class InviteCodeFormState with _$InviteCodeFormState {
-  const InviteCodeFormState._();
+abstract class InviteCodeVerificationState with _$InviteCodeVerificationState {
+  const InviteCodeVerificationState._();
 
-  const factory InviteCodeFormState({
+  const factory InviteCodeVerificationState({
     @Default('') String inviteCode,
-    @Default(AsyncValue.data(null)) AsyncValue<void> status,
-  }) = _InviteCodeFormState;
+    @Default(AsyncData(null)) AsyncValue<void> status,
+  }) = _InviteCodeVerificationState;
 
   bool get isValid {
     final text = inviteCode.trim();

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_form_controller.dart';
+import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
@@ -42,7 +42,7 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = inviteCodeFormControllerProvider;
+    final provider = inviteCodeVerificationControllerProvider;
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
 
@@ -56,7 +56,7 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
           AppBarActionButton(
             label: '다음',
             onPressed: state.isValid && !isLoading
-                ? () => notifier.submit()
+                ? () => notifier.verifyInviteCode()
                 : null,
           ),
         ],

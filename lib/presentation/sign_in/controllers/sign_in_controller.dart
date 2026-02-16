@@ -12,11 +12,11 @@ part 'sign_in_controller.g.dart';
 class SignInController extends _$SignInController {
   @override
   AsyncValue<User?> build() {
-    return const AsyncValue.data(null);
+    return const AsyncData(null);
   }
 
   Future<void> signInWithGoogle() async {
-    state = const AsyncValue.loading();
+    state = const AsyncLoading();
 
     final useCase = ref.read(authUseCaseProvider);
     final result = await useCase.signInWithGoogle();
@@ -25,7 +25,7 @@ class SignInController extends _$SignInController {
   }
 
   Future<void> signInWithApple() async {
-    state = const AsyncValue.loading();
+    state = const AsyncLoading();
 
     final useCase = ref.read(authUseCaseProvider);
     final result = await useCase.signInWithApple();
@@ -37,13 +37,13 @@ class SignInController extends _$SignInController {
     result.fold(
       (exception) {
         if (exception is AuthException && exception.isSilentable) {
-          state = const AsyncValue.data(null);
+          state = const AsyncData(null);
         } else {
-          state = AsyncValue.error(exception, StackTrace.current);
+          state = AsyncError(exception, StackTrace.current);
         }
       },
       (user) {
-        state = AsyncValue.data(user);
+        state = AsyncData(user);
       },
     );
   }

@@ -12,7 +12,7 @@ abstract class OnboardingSessionState with _$OnboardingSessionState {
   const factory OnboardingSessionState({
     @Default('') String nickname,
     @Default(UserRole.none) UserRole selectedRole,
-    @Default(AsyncValue.data(null)) AsyncValue<void> status,
+    @Default(AsyncData(null)) AsyncValue<void> status,
   }) = _OnboardingSessionState;
 
   // ---------------------------------------------------------------------------

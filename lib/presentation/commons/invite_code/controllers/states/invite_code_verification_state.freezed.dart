@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'invite_code_form_state.dart';
+part of 'invite_code_verification_state.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -12,20 +12,20 @@ part of 'invite_code_form_state.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$InviteCodeFormState {
+mixin _$InviteCodeVerificationState {
 
  String get inviteCode; AsyncValue<void> get status;
-/// Create a copy of InviteCodeFormState
+/// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$InviteCodeFormStateCopyWith<InviteCodeFormState> get copyWith => _$InviteCodeFormStateCopyWithImpl<InviteCodeFormState>(this as InviteCodeFormState, _$identity);
+$InviteCodeVerificationStateCopyWith<InviteCodeVerificationState> get copyWith => _$InviteCodeVerificationStateCopyWithImpl<InviteCodeVerificationState>(this as InviteCodeVerificationState, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteCodeFormState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteCodeVerificationState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status));
 }
 
 
@@ -34,15 +34,15 @@ int get hashCode => Object.hash(runtimeType,inviteCode,status);
 
 @override
 String toString() {
-  return 'InviteCodeFormState(inviteCode: $inviteCode, status: $status)';
+  return 'InviteCodeVerificationState(inviteCode: $inviteCode, status: $status)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $InviteCodeFormStateCopyWith<$Res>  {
-  factory $InviteCodeFormStateCopyWith(InviteCodeFormState value, $Res Function(InviteCodeFormState) _then) = _$InviteCodeFormStateCopyWithImpl;
+abstract mixin class $InviteCodeVerificationStateCopyWith<$Res>  {
+  factory $InviteCodeVerificationStateCopyWith(InviteCodeVerificationState value, $Res Function(InviteCodeVerificationState) _then) = _$InviteCodeVerificationStateCopyWithImpl;
 @useResult
 $Res call({
  String inviteCode, AsyncValue<void> status
@@ -53,14 +53,14 @@ $Res call({
 
 }
 /// @nodoc
-class _$InviteCodeFormStateCopyWithImpl<$Res>
-    implements $InviteCodeFormStateCopyWith<$Res> {
-  _$InviteCodeFormStateCopyWithImpl(this._self, this._then);
+class _$InviteCodeVerificationStateCopyWithImpl<$Res>
+    implements $InviteCodeVerificationStateCopyWith<$Res> {
+  _$InviteCodeVerificationStateCopyWithImpl(this._self, this._then);
 
-  final InviteCodeFormState _self;
-  final $Res Function(InviteCodeFormState) _then;
+  final InviteCodeVerificationState _self;
+  final $Res Function(InviteCodeVerificationState) _then;
 
-/// Create a copy of InviteCodeFormState
+/// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,Object? status = null,}) {
   return _then(_self.copyWith(
@@ -73,8 +73,8 @@ as AsyncValue<void>,
 }
 
 
-/// Adds pattern-matching-related methods to [InviteCodeFormState].
-extension InviteCodeFormStatePatterns on InviteCodeFormState {
+/// Adds pattern-matching-related methods to [InviteCodeVerificationState].
+extension InviteCodeVerificationStatePatterns on InviteCodeVerificationState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -87,10 +87,10 @@ extension InviteCodeFormStatePatterns on InviteCodeFormState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _InviteCodeFormState value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _InviteCodeVerificationState value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _InviteCodeFormState() when $default != null:
+case _InviteCodeVerificationState() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -109,10 +109,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _InviteCodeFormState value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _InviteCodeVerificationState value)  $default,){
 final _that = this;
 switch (_that) {
-case _InviteCodeFormState():
+case _InviteCodeVerificationState():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -130,10 +130,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _InviteCodeFormState value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _InviteCodeVerificationState value)?  $default,){
 final _that = this;
 switch (_that) {
-case _InviteCodeFormState() when $default != null:
+case _InviteCodeVerificationState() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _InviteCodeFormState() when $default != null:
+case _InviteCodeVerificationState() when $default != null:
 return $default(_that.inviteCode,_that.status);case _:
   return orElse();
 
@@ -174,7 +174,7 @@ return $default(_that.inviteCode,_that.status);case _:
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<void> status)  $default,) {final _that = this;
 switch (_that) {
-case _InviteCodeFormState():
+case _InviteCodeVerificationState():
 return $default(_that.inviteCode,_that.status);case _:
   throw StateError('Unexpected subclass');
 
@@ -194,7 +194,7 @@ return $default(_that.inviteCode,_that.status);case _:
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  AsyncValue<void> status)?  $default,) {final _that = this;
 switch (_that) {
-case _InviteCodeFormState() when $default != null:
+case _InviteCodeVerificationState() when $default != null:
 return $default(_that.inviteCode,_that.status);case _:
   return null;
 
@@ -206,24 +206,24 @@ return $default(_that.inviteCode,_that.status);case _:
 /// @nodoc
 
 
-class _InviteCodeFormState extends InviteCodeFormState {
-  const _InviteCodeFormState({this.inviteCode = '', this.status = const AsyncValue.data(null)}): super._();
+class _InviteCodeVerificationState extends InviteCodeVerificationState {
+  const _InviteCodeVerificationState({this.inviteCode = '', this.status = const AsyncData(null)}): super._();
   
 
 @override@JsonKey() final  String inviteCode;
 @override@JsonKey() final  AsyncValue<void> status;
 
-/// Create a copy of InviteCodeFormState
+/// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$InviteCodeFormStateCopyWith<_InviteCodeFormState> get copyWith => __$InviteCodeFormStateCopyWithImpl<_InviteCodeFormState>(this, _$identity);
+_$InviteCodeVerificationStateCopyWith<_InviteCodeVerificationState> get copyWith => __$InviteCodeVerificationStateCopyWithImpl<_InviteCodeVerificationState>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteCodeFormState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteCodeVerificationState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status));
 }
 
 
@@ -232,15 +232,15 @@ int get hashCode => Object.hash(runtimeType,inviteCode,status);
 
 @override
 String toString() {
-  return 'InviteCodeFormState(inviteCode: $inviteCode, status: $status)';
+  return 'InviteCodeVerificationState(inviteCode: $inviteCode, status: $status)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$InviteCodeFormStateCopyWith<$Res> implements $InviteCodeFormStateCopyWith<$Res> {
-  factory _$InviteCodeFormStateCopyWith(_InviteCodeFormState value, $Res Function(_InviteCodeFormState) _then) = __$InviteCodeFormStateCopyWithImpl;
+abstract mixin class _$InviteCodeVerificationStateCopyWith<$Res> implements $InviteCodeVerificationStateCopyWith<$Res> {
+  factory _$InviteCodeVerificationStateCopyWith(_InviteCodeVerificationState value, $Res Function(_InviteCodeVerificationState) _then) = __$InviteCodeVerificationStateCopyWithImpl;
 @override @useResult
 $Res call({
  String inviteCode, AsyncValue<void> status
@@ -251,17 +251,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$InviteCodeFormStateCopyWithImpl<$Res>
-    implements _$InviteCodeFormStateCopyWith<$Res> {
-  __$InviteCodeFormStateCopyWithImpl(this._self, this._then);
+class __$InviteCodeVerificationStateCopyWithImpl<$Res>
+    implements _$InviteCodeVerificationStateCopyWith<$Res> {
+  __$InviteCodeVerificationStateCopyWithImpl(this._self, this._then);
 
-  final _InviteCodeFormState _self;
-  final $Res Function(_InviteCodeFormState) _then;
+  final _InviteCodeVerificationState _self;
+  final $Res Function(_InviteCodeVerificationState) _then;
 
-/// Create a copy of InviteCodeFormState
+/// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,Object? status = null,}) {
-  return _then(_InviteCodeFormState(
+  return _then(_InviteCodeVerificationState(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,

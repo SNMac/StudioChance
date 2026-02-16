@@ -208,7 +208,7 @@ return $default(_that.nickname,_that.selectedRole,_that.status);case _:
 
 
 class _OnboardingSessionState extends OnboardingSessionState {
-  const _OnboardingSessionState({this.nickname = '', this.selectedRole = UserRole.none, this.status = const AsyncValue.data(null)}): super._();
+  const _OnboardingSessionState({this.nickname = '', this.selectedRole = UserRole.none, this.status = const AsyncData(null)}): super._();
   
 
 @override@JsonKey() final  String nickname;

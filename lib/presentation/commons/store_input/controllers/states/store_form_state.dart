@@ -19,7 +19,7 @@ abstract class StoreFormState with _$StoreFormState {
     @Default(StoreColor.red) StoreColor color,
     required PriceSetting priceSettings,
 
-    @Default(AsyncValue.data(null)) AsyncValue<void> status,
+    @Default(AsyncData(null)) AsyncValue<void> status,
   }) = _StoreFormState;
 
   // TODO: 유효성 검사 확인 필요
