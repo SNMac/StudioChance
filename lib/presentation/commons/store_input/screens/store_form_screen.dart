@@ -103,7 +103,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
           } else {
             _showErrorDialog(
               '오류가 발생했습니다',
-              '개발자에게 문의해주세요.\n(${error.toString()})',
+              '개발자에게 문의해 주세요.\n(${error.toString()})',
             );
           }
         },

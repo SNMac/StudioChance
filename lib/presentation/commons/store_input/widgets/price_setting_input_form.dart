@@ -64,7 +64,7 @@ class PriceSettingInputForm extends StatelessWidget {
                     onPressed: () => showCustomAlertDialog(
                       context: context,
                       title: '요일별 요금 설정',
-                      content: '모든 영업 요일에 대해 설정해 주세요\n(최대 8개)',
+                      content: '모든 영업 요일에 대해 설정해 주세요.\n(최대 8개)',
                       showCancel: false,
                     ),
                     child: Row(

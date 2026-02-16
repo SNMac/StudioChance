@@ -45,7 +45,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
           } else {
             showErrorDialog(
               '오류가 발생했습니다',
-              '개발자에게 문의해주세요.\n(${error.toString()})',
+              '개발자에게 문의해 주세요.\n(${error.toString()})',
             );
           }
         },
@@ -58,6 +58,7 @@ class OnboardingRoleScreen extends ConsumerWidget {
       showCustomAlertDialog(
         context: context,
         title: '${selectedRole.displayName}로 진행할까요?',
+        content: '역할은 점포마다 다르게 설정할 수 있습니다',
         onConfirmBeforePop: () async {
           await notifier.saveNicknameToRemote();
 
