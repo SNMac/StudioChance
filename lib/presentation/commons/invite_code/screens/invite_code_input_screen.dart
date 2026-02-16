@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
@@ -10,6 +11,7 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
 class InviteCodeInputScreen extends ConsumerStatefulWidget {
@@ -44,77 +46,94 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
 
+    final isLoading = state.status.isLoading;
+
     return Scaffold(
       appBar: CustomAppBar(
         title: '초대 코드 입력',
-        leading: AppBarNaviBackButton(),
+        leading: AppBarNaviBackButton(isEnabled: !isLoading),
         actions: [
           AppBarActionButton(
             label: '다음',
-            onPressed: state.isValid && !state.status.isLoading
+            onPressed: state.isValid && !isLoading
                 ? () => notifier.submit()
                 : null,
           ),
         ],
       ),
-      body: SafeAreaWithPadding(
-        child: Column(
+      body: PopScope(
+        canPop: !isLoading,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop || isLoading) return;
+          if (context.mounted && context.canPop()) context.pop();
+        },
+
+        child: Stack(
           children: [
-            GroupedFormContainer(
-              header: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            SafeAreaWithPadding(
+              child: Column(
                 children: [
-                  Text(
-                    '점포의 초대 코드를 입력해 주세요',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
-              footer: Padding(
-                padding: const EdgeInsetsDirectional.symmetric(
-                  horizontal: horizontalPadding,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(
-                      '영문·숫자 6자',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: context.secondaryLabel,
+                  GroupedFormContainer(
+                    header: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '점포의 초대 코드를 입력해 주세요',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                    footer: Padding(
+                      padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            '영문·숫자 6자',
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(color: context.secondaryLabel),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                    children: [
+                      BodyTextField(
+                        controller: _inviteCodeController,
+                        maxLines: 1,
+                        autofocus: true,
+                        showClearButton: true,
+                        placeholder: '초대 코드',
+                        onChanged: (value) {
+                          final upper = value.toUpperCase();
+                          if (value != upper) {
+                            _inviteCodeController.value = TextEditingValue(
+                              text: upper,
+                              selection: TextSelection.collapsed(
+                                offset: upper.length,
+                              ),
+                            );
+                          }
+                          notifier.onCodeChanged(upper);
+                        },
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(6),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[a-zA-Z0-9]'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                ],
               ),
-              children: [
-                BodyTextField(
-                  controller: _inviteCodeController,
-                  maxLines: 1,
-                  autofocus: true,
-                  showClearButton: true,
-                  placeholder: '초대 코드',
-                  onChanged: (value) {
-                    final upper = value.toUpperCase();
-                    if (value != upper) {
-                      _inviteCodeController.value = TextEditingValue(
-                        text: upper,
-                        selection: TextSelection.collapsed(
-                          offset: upper.length,
-                        ),
-                      );
-                    }
-                    notifier.onCodeChanged(upper);
-                  },
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(6),
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-                  ],
-                ),
-              ],
             ),
-            const Spacer(),
+
+            LoadingOverlay(isLoading: isLoading),
           ],
         ),
       ),

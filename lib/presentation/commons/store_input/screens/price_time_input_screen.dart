@@ -172,6 +172,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
           context.pop();
         }
       },
+
       child: Scaffold(
         appBar: CustomAppBar(
           title: currentDayGroup.formattedDays,

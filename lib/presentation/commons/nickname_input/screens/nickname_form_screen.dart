@@ -95,6 +95,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
         if (didPop) return;
         _handleBack();
       },
+
       child: Scaffold(
         appBar: CustomAppBar(
           title: widget.title,

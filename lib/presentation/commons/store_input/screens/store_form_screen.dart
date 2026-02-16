@@ -125,6 +125,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
           },
         );
       },
+
       child: Scaffold(
         appBar: CustomAppBar(
           title: isEditMode ? '점포 수정' : '점포 생성',

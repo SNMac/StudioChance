@@ -87,66 +87,69 @@ class OnboardingRoleScreen extends ConsumerWidget {
       },
     );
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: '역할 선택',
-        leading: AppBarNaviBackButton(
-          isEnabled: !isLoading,
-          onPressed: () {
-            context.pop();
-          },
+    return PopScope(
+      canPop: !isLoading,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || isLoading) return;
+        if (context.mounted && context.canPop()) context.pop();
+      },
+
+      child: Scaffold(
+        appBar: CustomAppBar(
+          title: '역할 선택',
+          leading: AppBarNaviBackButton(isEnabled: !isLoading),
+          actions: [
+            AppBarActionButton(
+              label: '다음',
+              onPressed: (state.isRoleSelected && !isLoading)
+                  ? onNextPressed
+                  : null,
+            ),
+          ],
         ),
-        actions: [
-          AppBarActionButton(
-            label: '다음',
-            onPressed: (state.isRoleSelected && !isLoading)
-                ? onNextPressed
-                : null,
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          SafeAreaWithPadding(
-            child: Center(
-              child: SizedBox(
-                width: 240,
-                child: Column(
-                  spacing: 32,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    LargeSelectionButton(
-                      title: UserRole.admin.displayName,
-                      description: UserRole.admin.displayDescription,
-                      isSelected: selectedRole == UserRole.admin,
-                      onPressed: () => notifier.setRole(UserRole.admin),
-                    ),
-                    LargeSelectionButton(
-                      title: UserRole.staff.displayName,
-                      description: UserRole.staff.displayDescription,
-                      isSelected: selectedRole == UserRole.staff,
-                      onPressed: () => notifier.setRole(UserRole.staff),
-                    ),
-                    LargeSelectionButton(
-                      title: UserRole.viewer.displayName,
-                      description: UserRole.viewer.displayDescription,
-                      isSelected: selectedRole == UserRole.viewer,
-                      onPressed: () => notifier.setRole(UserRole.viewer),
-                    ),
-                    LargeSelectionButton(
-                      title: '나중에 설정',
-                      isNavigation: true,
-                      onPressed: onSkipPressed,
-                    ),
-                  ],
+        body: Stack(
+          children: [
+            SafeAreaWithPadding(
+              child: Center(
+                child: SizedBox(
+                  width: 240,
+                  child: Column(
+                    spacing: 32,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      LargeSelectionButton(
+                        title: UserRole.admin.displayName,
+                        description: UserRole.admin.displayDescription,
+                        isSelected: selectedRole == UserRole.admin,
+                        onPressed: () => notifier.setRole(UserRole.admin),
+                      ),
+                      LargeSelectionButton(
+                        title: UserRole.staff.displayName,
+                        description: UserRole.staff.displayDescription,
+                        isSelected: selectedRole == UserRole.staff,
+                        onPressed: () => notifier.setRole(UserRole.staff),
+                      ),
+                      LargeSelectionButton(
+                        title: UserRole.viewer.displayName,
+                        description: UserRole.viewer.displayDescription,
+                        isSelected: selectedRole == UserRole.viewer,
+                        onPressed: () => notifier.setRole(UserRole.viewer),
+                      ),
+                      LargeSelectionButton(
+                        title: '나중에 설정',
+                        isNavigation: true,
+                        onPressed: onSkipPressed,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          LoadingOverlay(isLoading: isLoading),
-        ],
+            LoadingOverlay(isLoading: isLoading),
+          ],
+        ),
       ),
     );
   }
