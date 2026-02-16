@@ -165,33 +165,35 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
             widget.onChanged(widget.timeSlot.copyWith(isAllDay: val));
           },
         ),
-        TitleDateTimeButton(
-          title: '기준 시작 시간',
-          content: widget.timeSlot.startTime.formattedTime,
-          isOpen: _activePicker == _ActivePicker.start,
-          onPressed: () => _togglePicker(_ActivePicker.start),
+        if (!widget.timeSlot.isAllDay) ...[
+          TitleDateTimeButton(
+            title: '기준 시작 시간',
+            content: widget.timeSlot.startTime.formattedTime,
+            isOpen: _activePicker == _ActivePicker.start,
+            onPressed: () => _togglePicker(_ActivePicker.start),
 
-          mode: CupertinoDatePickerMode.time,
-          initialDateTime: _getInitialDate(widget.timeSlot.startTime),
-          onDateTimeChanged: (newDate) {
-            final int newMinutes = newDate.hour * 60 + newDate.minute;
-            widget.onChanged(widget.timeSlot.copyWith(startTime: newMinutes));
-          },
-        ),
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: _getInitialDate(widget.timeSlot.startTime),
+            onDateTimeChanged: (newDate) {
+              final int newMinutes = newDate.hour * 60 + newDate.minute;
+              widget.onChanged(widget.timeSlot.copyWith(startTime: newMinutes));
+            },
+          ),
 
-        TitleDateTimeButton(
-          title: '기준 끝 시간',
-          content: widget.timeSlot.endTime.formattedTime,
-          isOpen: _activePicker == _ActivePicker.end,
-          onPressed: () => _togglePicker(_ActivePicker.end),
+          TitleDateTimeButton(
+            title: '기준 끝 시간',
+            content: widget.timeSlot.endTime.formattedTime,
+            isOpen: _activePicker == _ActivePicker.end,
+            onPressed: () => _togglePicker(_ActivePicker.end),
 
-          mode: CupertinoDatePickerMode.time,
-          initialDateTime: _getInitialDate(widget.timeSlot.endTime),
-          onDateTimeChanged: (newDate) {
-            final int newMinutes = newDate.hour * 60 + newDate.minute;
-            widget.onChanged(widget.timeSlot.copyWith(endTime: newMinutes));
-          },
-        ),
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: _getInitialDate(widget.timeSlot.endTime),
+            onDateTimeChanged: (newDate) {
+              final int newMinutes = newDate.hour * 60 + newDate.minute;
+              widget.onChanged(widget.timeSlot.copyWith(endTime: newMinutes));
+            },
+          ),
+        ],
 
         TitleTextField(
           title: '요금',
