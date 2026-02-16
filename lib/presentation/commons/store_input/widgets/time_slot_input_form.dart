@@ -176,7 +176,19 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
             initialDateTime: _getInitialDate(widget.timeSlot.startTime),
             onDateTimeChanged: (newDate) {
               final int newMinutes = newDate.hour * 60 + newDate.minute;
-              widget.onChanged(widget.timeSlot.copyWith(startTime: newMinutes));
+              if (newMinutes >= widget.timeSlot.endTime) {
+                final newEnd = (newMinutes + 60) % 1440;
+                widget.onChanged(
+                  widget.timeSlot.copyWith(
+                    startTime: newMinutes,
+                    endTime: newEnd,
+                  ),
+                );
+              } else {
+                widget.onChanged(
+                  widget.timeSlot.copyWith(startTime: newMinutes),
+                );
+              }
             },
           ),
 
@@ -190,7 +202,17 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
             initialDateTime: _getInitialDate(widget.timeSlot.endTime),
             onDateTimeChanged: (newDate) {
               final int newMinutes = newDate.hour * 60 + newDate.minute;
-              widget.onChanged(widget.timeSlot.copyWith(endTime: newMinutes));
+              if (newMinutes <= widget.timeSlot.startTime) {
+                final newStart = (newMinutes - 60).clamp(0, 1440);
+                widget.onChanged(
+                  widget.timeSlot.copyWith(
+                    startTime: newStart,
+                    endTime: newMinutes,
+                  ),
+                );
+              } else {
+                widget.onChanged(widget.timeSlot.copyWith(endTime: newMinutes));
+              }
             },
           ),
         ],

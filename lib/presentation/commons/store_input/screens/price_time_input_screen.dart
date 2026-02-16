@@ -7,6 +7,7 @@ import 'package:studio_chance/domain/entities/headcount_rule.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
@@ -126,6 +127,34 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
     _initializeData(currentDayGroup);
 
     void onSave() {
+      // 시간 중복 검증
+      for (int i = 0; i < _currentTimeSlots.length; i++) {
+        for (int j = i + 1; j < _currentTimeSlots.length; j++) {
+          final a = _currentTimeSlots[i];
+          final b = _currentTimeSlots[j];
+
+          // isAllDay == true인 슬롯은 다른 모든 슬롯과 중복
+          final aStart = a.isAllDay ? 0 : a.startTime;
+          final aEnd = a.isAllDay ? 1440 : a.endTime;
+          final bStart = b.isAllDay ? 0 : b.startTime;
+          final bEnd = b.isAllDay ? 1440 : b.endTime;
+
+          final overlapStart = aStart > bStart ? aStart : bStart;
+          final overlapEnd = aEnd < bEnd ? aEnd : bEnd;
+
+          if (overlapStart < overlapEnd) {
+            showCustomAlertDialog(
+              context: context,
+              title: '기준 시간 중복',
+              content:
+                  '${overlapStart.formattedTime} ~ ${overlapEnd.formattedTime}까지의 기준 시간이 중복됩니다',
+              showCancel: false,
+            );
+            return;
+          }
+        }
+      }
+
       final finalDayGroup = currentDayGroup.copyWith(
         headcountRule: _currentHeadcountRule,
         timeSlots: _currentTimeSlots,
@@ -176,8 +205,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
                     final int slotIndex = entry.key;
                     final timeSlot = entry.value;
 
-                    final bool showAdd =
-                        currentDayGroup.timeSlots.length < 23;
+                    final bool showAdd = currentDayGroup.timeSlots.length < 23;
 
                     return TimeSlotInputForm(
                       index: slotIndex,

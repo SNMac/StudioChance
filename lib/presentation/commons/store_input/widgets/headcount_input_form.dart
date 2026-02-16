@@ -79,13 +79,13 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
 
   String _getFooterDescription() {
     if (_isHourly && _isPerPerson) {
-      return '초과 인원 수만큼 1시간마다 부과됩니다';
+      return '초과 인원수만큼 추가 요금이 1시간마다 부과됩니다';
     } else if (_isHourly) {
-      return '추가 인원 요금이 1시간마다 부과됩니다';
+      return '추가 요금이 1시간마다 부과됩니다';
     } else if (_isPerPerson) {
-      return '초과 인원 수만큼 한 번만 부과됩니다';
+      return '초과 인원수만큼 추가 요금이 한 번만 부과됩니다';
     } else {
-      return '추가 인원 요금이 한 번만 부과됩니다';
+      return '초과 인원수와 관계없이 추가 요금이 한 번만 부과됩니다';
     }
   }
 
