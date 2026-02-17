@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/presentation/commons/admin_store_registration/screens/admin_store_registration_screen.dart';
 import 'package:studio_chance/presentation/commons/invite_code/screens/invite_code_input_screen.dart';
+import 'package:studio_chance/presentation/commons/invite_code/screens/invite_code_verified_screen.dart';
 import 'package:studio_chance/presentation/commons/role_selection/screens/role_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_time_input_screen.dart';
@@ -51,15 +52,27 @@ List<GoRoute> _roleSubRoutes() => [
       ),
       // 초대 코드 입력 (admin)
       GoRoute(
-        path: SCRoute.invitation.path,
+        path: SCRoute.inviteCodeForm.path,
         builder: (context, state) => const InviteCodeInputScreen(),
+        routes: [
+          GoRoute(
+            path: SCRoute.inviteCodeVerified.path,
+            builder: (context, state) => const InviteCodeVerifiedScreen(),
+          ),
+        ],
       ),
     ],
   ),
   // 초대 코드 입력 (staff, viewer)
   GoRoute(
-    path: SCRoute.invitation.path,
+    path: SCRoute.inviteCodeForm.path,
     builder: (context, state) => const InviteCodeInputScreen(),
+    routes: [
+      GoRoute(
+        path: SCRoute.inviteCodeVerified.path,
+        builder: (context, state) => const InviteCodeVerifiedScreen(),
+      ),
+    ],
   ),
 ];
 

@@ -28,7 +28,8 @@ enum SCRoute {
   storeAddress,
   storePriceDays,
   storePriceTime,
-  invitation;
+  inviteCodeForm,
+  inviteCodeVerified;
 
   /// [정의용] GoRoute path (상대 경로)
   String get path {
@@ -64,13 +65,15 @@ enum SCRoute {
         return 'price-days';
       case SCRoute.storePriceTime:
         return 'price-time';
-      case SCRoute.invitation:
-        return 'invitation';
+      case SCRoute.inviteCodeForm:
+        return 'invite-code-form';
+      case SCRoute.inviteCodeVerified:
+        return 'invite-code-verified';
     }
   }
 
   /// [이동용] 절대 경로 — 최상위 및 온보딩 전용 라우트만 사용
-  /// 공유 라우트는 [pushChild] 를 사용할 것
+  /// 공유 라우트는 `pushChild` 를 사용할 것
   String get fullPath {
     switch (this) {
       case SCRoute.splash:

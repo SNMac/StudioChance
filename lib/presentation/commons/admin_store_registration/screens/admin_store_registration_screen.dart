@@ -31,7 +31,7 @@ class AdminStoreRegistrationScreen extends StatelessWidget {
                   title: '초대 코드 입력',
                   description: '관리자 역할로 점포 입장',
                   isNavigation: true,
-                  onPressed: () => SCRoute.invitation.pushChild(context),
+                  onPressed: () => SCRoute.inviteCodeForm.pushChild(context),
                 ),
               ],
             ),

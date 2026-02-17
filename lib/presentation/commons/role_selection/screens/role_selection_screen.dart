@@ -30,7 +30,7 @@ class RoleSelectionScreen extends ConsumerWidget {
           if (selectedRole == UserRole.admin) {
             SCRoute.adminStoreRegistration.pushChild(context);
           } else {
-            SCRoute.invitation.pushChild(context);
+            SCRoute.inviteCodeForm.pushChild(context);
           }
         },
       );

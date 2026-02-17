@@ -141,10 +141,10 @@ class StoreRepositoryImpl implements StoreRepository {
         storeId,
         forceRegenerate: forceRegenerate,
       );
-      _logger.i('초대코드 생성 완료\nstoreId: $storeId');
+      _logger.i('초대 코드 생성 완료\nstoreId: $storeId');
       return right(inviteModel.toEntity());
     } catch (e) {
-      _logger.e('초대코드 생성 실패');
+      _logger.e('초대 코드 생성 실패');
       return left(e is Exception ? e : Exception(e.toString()));
     }
   }
@@ -174,7 +174,7 @@ class StoreRepositoryImpl implements StoreRepository {
         ),
       );
     } catch (e) {
-      _logger.e('초대코드로 점포 조회 실패');
+      _logger.e('초대 코드로 점포 조회 실패');
       return left(e is Exception ? e : Exception(e.toString()));
     }
   }
