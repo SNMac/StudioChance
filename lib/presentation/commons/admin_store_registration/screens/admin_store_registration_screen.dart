@@ -11,6 +11,7 @@ class AdminStoreRegistrationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: CustomAppBar(title: '점포 등록'),
       body: SafeAreaWithPadding(
         child: Center(
@@ -24,15 +25,13 @@ class AdminStoreRegistrationScreen extends StatelessWidget {
                   title: '점포 생성',
                   description: '관리자 역할로 점포 생성',
                   isNavigation: true,
-                  onPressed: () =>
-                      SCRoute.storeCreation.pushChild(context),
+                  onPressed: () => SCRoute.storeCreation.pushChild(context),
                 ),
                 LargeSelectionButton(
                   title: '초대 코드 입력',
                   description: '관리자 역할로 점포 입장',
                   isNavigation: true,
-                  onPressed: () =>
-                      SCRoute.invitation.pushChild(context),
+                  onPressed: () => SCRoute.invitation.pushChild(context),
                 ),
               ],
             ),

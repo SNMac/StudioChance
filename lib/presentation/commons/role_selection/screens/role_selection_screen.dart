@@ -46,6 +46,7 @@ class RoleSelectionScreen extends ConsumerWidget {
     );
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: CustomAppBar(
         title: '역할 선택',
         leading: const AppBarNaviBackButton(),
