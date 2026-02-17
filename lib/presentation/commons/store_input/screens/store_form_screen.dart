@@ -180,8 +180,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               ),
                             ),
                             onPressed: () {
-                              context.push(
-                                SCRoute.onboardingStoreColor.fullPath,
+                              SCRoute.storeColor.pushChild(
+                                context,
                                 extra: widget.storeToEdit,
                               );
                             },
@@ -190,8 +190,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             title: '주소',
                             content: state.formattedAddress,
                             onPressed: () {
-                              context.push(
-                                SCRoute.onboardingStoreAddress.fullPath,
+                              SCRoute.storeAddress.pushChild(
+                                context,
                                 extra: widget.storeToEdit,
                               );
                             },
@@ -233,8 +233,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             notifier.addDayGroup();
                           },
                           onPressedDaySetting: () {
-                            context.push(
-                              SCRoute.onboardingPriceDays.fullPath,
+                            SCRoute.storePriceDays.pushChild(
+                              context,
                               extra: {
                                 'store': widget.storeToEdit,
                                 'index': index,
@@ -242,8 +242,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             );
                           },
                           onPressedTimeSetting: () {
-                            context.push(
-                              SCRoute.onboardingPriceTime.fullPath,
+                            SCRoute.storePriceTime.pushChild(
+                              context,
                               extra: {
                                 'store': widget.storeToEdit,
                                 'index': index,

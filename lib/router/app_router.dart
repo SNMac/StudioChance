@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:studio_chance/presentation/commons/admin_store_registration/screens/admin_store_registration_screen.dart';
 import 'package:studio_chance/presentation/commons/invite_code/screens/invite_code_input_screen.dart';
+import 'package:studio_chance/presentation/commons/role_selection/screens/role_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_time_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
-import 'package:studio_chance/presentation/onboarding/screens/onboarding_admin_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
-import 'package:studio_chance/presentation/onboarding/screens/onboarding_role_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/sign_in/screens/sign_in_screen.dart';
 import 'package:studio_chance/presentation/splash/screens/splash_screen.dart';
@@ -19,6 +19,49 @@ import 'package:studio_chance/router/auth_listenable.dart';
 import 'package:studio_chance/router/router_path.dart';
 
 part 'app_router.g.dart';
+
+/// 역할 선택 → 점포 등록/초대 코드 하위 라우트 (onboarding, myPage 공유)
+List<GoRoute> _roleSubRoutes() => [
+  GoRoute(
+    path: SCRoute.adminStoreRegistration.path,
+    builder: (context, state) => const AdminStoreRegistrationScreen(),
+    routes: [
+      // 점포 생성
+      GoRoute(
+        path: SCRoute.storeCreation.path,
+        builder: (context, state) => const StoreFormScreen(),
+        routes: [
+          GoRoute(
+            path: SCRoute.storeColor.path,
+            builder: (context, state) => const StoreColorSelectionScreen(),
+          ),
+          GoRoute(
+            path: SCRoute.storeAddress.path,
+            builder: (context, state) => const StoreAddressInputScreen(),
+          ),
+          GoRoute(
+            path: SCRoute.storePriceDays.path,
+            builder: (context, state) => const PriceDaysInputScreen(),
+          ),
+          GoRoute(
+            path: SCRoute.storePriceTime.path,
+            builder: (context, state) => const PriceTimeInputScreen(),
+          ),
+        ],
+      ),
+      // 초대 코드 입력 (admin)
+      GoRoute(
+        path: SCRoute.invitation.path,
+        builder: (context, state) => const InviteCodeInputScreen(),
+      ),
+    ],
+  ),
+  // 초대 코드 입력 (staff, viewer)
+  GoRoute(
+    path: SCRoute.invitation.path,
+    builder: (context, state) => const InviteCodeInputScreen(),
+  ),
+];
 
 @riverpod
 GoRouter goRouter(Ref ref) {
@@ -63,6 +106,7 @@ GoRouter goRouter(Ref ref) {
           return null;
         },
         routes: [
+          // 닉네임 설정
           GoRoute(
             path: SCRoute.onboardingNickname.path,
             name: SCRoute.onboardingNickname.name,
@@ -71,54 +115,18 @@ GoRouter goRouter(Ref ref) {
               child: const OnboardingNicknameScreen(),
             ),
           ),
+          // 역할 선택 → 하위 라우트
           GoRoute(
-            path: SCRoute.onboardingRole.path,
-            name: SCRoute.onboardingRole.name,
-            builder: (context, state) => const OnboardingRoleScreen(),
-          ),
-          GoRoute(
-            path: SCRoute.onboardingAdmin.path,
-            name: SCRoute.onboardingAdmin.name,
-            builder: (context, state) => const OnboardingAdminScreen(),
-          ),
-          GoRoute(
-            path: SCRoute.onboardingStore.path,
-            name: SCRoute.onboardingStore.name,
-            builder: (context, state) => const StoreFormScreen(),
-            routes: [
-              GoRoute(
-                path: SCRoute.onboardingStoreColor.path,
-                name: SCRoute.onboardingStoreColor.name,
-                builder: (context, state) => const StoreColorSelectionScreen(),
-              ),
-              GoRoute(
-                path: SCRoute.onboardingStoreAddress.path,
-                name: SCRoute.onboardingStoreAddress.name,
-                builder: (context, state) => const StoreAddressInputScreen(),
-              ),
-              GoRoute(
-                path: SCRoute.onboardingPriceDays.path,
-                name: SCRoute.onboardingPriceDays.name,
-                builder: (context, state) => const PriceDaysInputScreen(),
-              ),
-              GoRoute(
-                path: SCRoute.onboardingPriceTime.path,
-                name: SCRoute.onboardingPriceTime.name,
-                builder: (context, state) => const PriceTimeInputScreen(),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: SCRoute.onboardingInvitation.path,
-            name: SCRoute.onboardingInvitation.name,
-            builder: (context, state) => const InviteCodeInputScreen(),
+            path: SCRoute.role.path,
+            builder: (context, state) => const RoleSelectionScreen(),
+            routes: _roleSubRoutes(),
           ),
         ],
       ),
     ],
 
     redirect: (BuildContext context, GoRouterState state) {
-      // 1. AuthController의 전체 상태(AsyncValue)를 기져옴
+      // 1. AuthController의 전체 상태(AsyncValue)를 가져옴
       final authState = ref.read(appAuthControllerProvider);
 
       // 2. [Case 1] 로딩 중이거나 에러가 났을 때
@@ -137,7 +145,6 @@ GoRouter goRouter(Ref ref) {
       final isSplash = state.matchedLocation == SCRoute.splash.path;
       final isLoggingIn = state.matchedLocation == SCRoute.signIn.path;
       final isOnboarding = state.matchedLocation.startsWith('/onboarding');
-      final isHome = state.matchedLocation == SCRoute.home.path;
 
       // [Case 2] 로그인 필요
       if (status == AppStatus.unauthenticated) {

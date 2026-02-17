@@ -1,16 +1,34 @@
+import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
+
 enum SCRoute {
+  // ---------------------------------------------------------------------------
+  // 최상위 라우트
+  // ---------------------------------------------------------------------------
   splash,
   signIn,
   home,
+  stats,
+  myPage,
+
+  // ---------------------------------------------------------------------------
+  // 온보딩 전용
+  // ---------------------------------------------------------------------------
   onboardingNickname,
-  onboardingRole,
-  onboardingAdmin,
-  onboardingStore,
-  onboardingStoreColor,
-  onboardingStoreAddress,
-  onboardingPriceDays,
-  onboardingPriceTime,
-  onboardingInvitation;
+
+  // ---------------------------------------------------------------------------
+  // 공유 라우트 (onboarding, myPage 등 여러 컨텍스트에서 재사용)
+  // - 이동 시 fullPath 대신 pushChild(context) 사용
+  // ---------------------------------------------------------------------------
+  nickname,
+  role,
+  adminStoreRegistration,
+  storeCreation,
+  storeColor,
+  storeAddress,
+  storePriceDays,
+  storePriceTime,
+  invitation;
 
   /// [정의용] GoRoute path (상대 경로)
   String get path {
@@ -19,58 +37,67 @@ enum SCRoute {
         return '/splash';
       case SCRoute.signIn:
         return '/sign-in';
+
       case SCRoute.home:
         return '/home';
+      case SCRoute.stats:
+        return '/stats';
+      case SCRoute.myPage:
+        return '/my-page';
 
       case SCRoute.onboardingNickname:
         return 'nickname';
-      case SCRoute.onboardingRole:
+
+      case SCRoute.nickname:
+        return 'nickname';
+      case SCRoute.role:
         return 'role';
-      case SCRoute.onboardingAdmin:
-        return 'admin';
-      case SCRoute.onboardingStore:
-        return 'store';
-      case SCRoute.onboardingStoreColor:
+      case SCRoute.adminStoreRegistration:
+        return 'admin-store-registration';
+      case SCRoute.storeCreation:
+        return 'store-creation';
+      case SCRoute.storeColor:
         return 'color';
-      case SCRoute.onboardingStoreAddress:
+      case SCRoute.storeAddress:
         return 'address';
-      case SCRoute.onboardingPriceDays:
+      case SCRoute.storePriceDays:
         return 'price-days';
-      case SCRoute.onboardingPriceTime:
+      case SCRoute.storePriceTime:
         return 'price-time';
-      case SCRoute.onboardingInvitation:
+      case SCRoute.invitation:
         return 'invitation';
     }
   }
 
-  /// [이동용] Redirect / Context.push (절대 경로)
+  /// [이동용] 절대 경로 — 최상위 및 온보딩 전용 라우트만 사용
+  /// 공유 라우트는 [pushChild] 를 사용할 것
   String get fullPath {
     switch (this) {
       case SCRoute.splash:
         return '/splash';
       case SCRoute.signIn:
         return '/sign-in';
+
       case SCRoute.home:
         return '/home';
+      case SCRoute.stats:
+        return '/stats';
+      case SCRoute.myPage:
+        return '/my-page';
 
       case SCRoute.onboardingNickname:
         return '/onboarding/nickname';
-      case SCRoute.onboardingRole:
-        return '/onboarding/role';
-      case SCRoute.onboardingAdmin:
-        return '/onboarding/admin';
-      case SCRoute.onboardingStore:
-        return '/onboarding/store';
-      case SCRoute.onboardingStoreColor:
-        return '/onboarding/store/color';
-      case SCRoute.onboardingStoreAddress:
-        return '/onboarding/store/address';
-      case SCRoute.onboardingPriceDays:
-        return '/onboarding/store/price-days';
-      case SCRoute.onboardingPriceTime:
-        return '/onboarding/store/price-time';
-      case SCRoute.onboardingInvitation:
-        return '/onboarding/invitation';
+
+      default:
+        throw UnsupportedError(
+          '$name 은 공유 라우트입니다. fullPath 대신 pushChild(context) 를 사용하세요.',
+        );
     }
+  }
+
+  /// 현재 위치의 하위 경로로 push
+  void pushChild(BuildContext context, {Object? extra}) {
+    final currentPath = GoRouterState.of(context).uri.path;
+    context.push('$currentPath/$path', extra: extra);
   }
 }
