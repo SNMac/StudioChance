@@ -54,7 +54,7 @@ Future<void> _checkFirstLaunchAndClearData() async {
 
       logger.i('앱 최초 실행 감지 - 기존 인증 데이터 삭제');
     } catch (e) {
-      logger.e('기존 인증 데이터 삭제 중 오류 발생', error: e);
+      logger.e('기존 인증 데이터 삭제 중 에러 발생', error: e);
     } finally {
       container.dispose();
     }

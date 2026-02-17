@@ -70,9 +70,9 @@ class AuthTooManyRequestsException extends AuthException {
     : super(message, code: code);
 }
 
-/// 알 수 없는 오류가 발생했을 때 사용하는 예외
+/// 알 수 없는 에러가 발생했을 때 사용하는 예외
 ///
-/// 정의되지 않은 에러 코드나 시스템 내부 오류 등을 포괄합니다.
+/// 정의되지 않은 에러 코드나 시스템 내부 에러 등을 포괄합니다.
 class AuthUnknownException extends AuthException {
   AuthUnknownException({required String message, String? code})
     : super(message, code: code);

@@ -26,7 +26,7 @@ class OnboardingNicknameScreen extends ConsumerWidget {
           } else {
             showCustomAlertDialog(
               context: context,
-              title: '오류가 발생했습니다',
+              title: '에러가 발생했습니다',
               content: '개발자에게 문의해 주세요.\n(${error.toString()})',
               showCancel: false,
             );

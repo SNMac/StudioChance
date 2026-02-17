@@ -51,13 +51,13 @@ class NotificationNetworkException extends NotificationException {
     : super(message, code: code);
 }
 
-/// 알 수 없는 알림 오류
+/// 알 수 없는 알림 에러
 class NotificationUnknownException extends NotificationException {
   NotificationUnknownException({required String message, String? code})
     : super(message, code: code);
 }
 
-/// 앱 설정(Configuration) 오류로 인해 발생하는 예외
+/// 앱 설정(Configuration) 에러로 인해 발생하는 예외
 ///
 /// `google-services.json` 파일이 누락되었거나 프로젝트 설정이 잘못된 경우 발생합니다.
 /// Firebase Code: `no-app`, `invalid-options`

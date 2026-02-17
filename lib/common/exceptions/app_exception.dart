@@ -8,7 +8,7 @@ abstract class AppException implements Exception {
 
   AppException(this.message, {this.code});
 
-  String get title => '오류가 발생했습니다';
+  String get title => '에러가 발생했습니다';
 
   // UI에 표시할 내용
   String get content => message;

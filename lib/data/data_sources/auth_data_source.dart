@@ -286,7 +286,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
         case 'canceled':
           return AuthCancelledException(message: msg, code: code);
 
-        // 2. 이메일/비밀번호 입력 오류
+        // 2. 이메일/비밀번호 입력 에러
         case 'invalid-email':
           return AuthInvalidEmailException(message: msg, code: code);
         case 'wrong-password':
@@ -294,7 +294,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
         case 'email-already-in-use':
           return AuthEmailAlreadyInUseException(message: msg, code: code);
 
-        // 3. 계정 연동 및 충돌 오류
+        // 3. 계정 연동 및 충돌 에러
         case 'credential-already-in-use':
         case 'account-exists-with-different-credential':
           return AuthCredentialAlreadyInUseException(message: msg, code: code);
@@ -302,7 +302,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
         case 'provider-already-linked':
           return AuthProviderAlreadyLinkedException(message: msg, code: code);
 
-        // 4. 기타 자격 증명 오류
+        // 4. 기타 자격 증명 에러
         case 'invalid-credential':
         case 'user-mismatch':
         case 'no-such-provider': // unlink 실패 등

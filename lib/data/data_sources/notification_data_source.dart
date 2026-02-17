@@ -91,7 +91,7 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
         case 'operation-not-allowed':
           return NotificationPlatformException(message: msg, code: code);
 
-        // 3. 설정 오류
+        // 3. 설정 에러
         case 'no-app':
         case 'invalid-options':
           return NotificationConfigException(message: msg, code: code);

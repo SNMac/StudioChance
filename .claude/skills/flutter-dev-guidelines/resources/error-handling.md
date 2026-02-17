@@ -50,7 +50,7 @@ abstract class AppException implements Exception {
 
   AppException(this.message, {this.code});
 
-  String get title => '오류가 발생했습니다';
+  String get title => '에러가 발생했습니다';
   String get content => message;
 
   @override
@@ -92,7 +92,7 @@ extension AuthExceptionExtension on AuthException {
   String get title {
     return switch (this) {
       AuthCancelledException() => '로그인이 취소되었습니다',
-      AuthNetworkException() => '네트워크 오류',
+      AuthNetworkException() => '네트워크 에러',
       AuthUserNotFoundException() => '계정을 찾을 수 없습니다',
       _ => '로그인에 실패했습니다',
     };
@@ -103,7 +103,7 @@ extension AuthExceptionExtension on AuthException {
     return switch (this) {
       AuthNetworkException() => '인터넷 연결 상태를 확인해주세요.',
       AuthCancelledException() => '로그인 과정이 중단되었습니다.',
-      _ => '일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.',
+      _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
     };
   }
 
@@ -199,7 +199,7 @@ ref.listen(controllerProvider, (previous, next) {
       } else {
         showCustomAlertDialog(
           context: context,
-          title: '오류가 발생했습니다',
+          title: '에러가 발생했습니다',
           content: '개발자에게 문의해 주세요.\n(${error.toString()})',
         );
       }

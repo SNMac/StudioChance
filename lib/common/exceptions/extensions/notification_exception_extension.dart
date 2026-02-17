@@ -7,10 +7,10 @@ extension NotificationExceptionExtension on NotificationException {
       // 1. 권한/환경
       NotificationPermissionDeniedException() => '알림 권한이 없습니다',
       NotificationPlatformException() => '알림을 지원하지 않는 기기입니다',
-      NotificationConfigException() => '앱 설정 오류가 발생했습니다',
+      NotificationConfigException() => '앱 설정 에러가 발생했습니다',
 
       // 2. 네트워크/요청
-      NotificationNetworkException() => '네트워크 오류가 발생했습니다',
+      NotificationNetworkException() => '네트워크 에러가 발생했습니다',
       NotificationTooManyRequestsException() => '요청 횟수가 초과되었습니다',
 
       // 3. 토큰 처리
@@ -18,11 +18,11 @@ extension NotificationExceptionExtension on NotificationException {
       NotificationTokenDeleteException() => '알림 설정에 실패했습니다',
 
       // 4. 기타
-      _ => '알림 오류가 발생했습니다',
+      _ => '알림 에러가 발생했습니다',
     };
   }
 
-  /// 사용자에게 보여줄 오류 내용
+  /// 사용자에게 보여줄 에러 내용
   String get content {
     return switch (this) {
       // 1. 사용자가 해결 가능한 것
@@ -37,8 +37,8 @@ extension NotificationExceptionExtension on NotificationException {
       // 3. 내부/설정 문제
       NotificationConfigException() => '앱 설정에 문제가 발생했습니다.\n개발자에게 문의해주세요.',
       NotificationTokenFetchException() => '토큰을 가져오는데 실패했습니다.\n잠시 후 다시 시도해 주세요.',
-      NotificationTokenDeleteException() => '알림 설정을 초기화하는 중 오류가 발생했습니다.',
-      _ => '일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+      NotificationTokenDeleteException() => '알림 설정을 초기화하는 중 에러가 발생했습니다.',
+      _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
     };
   }
 

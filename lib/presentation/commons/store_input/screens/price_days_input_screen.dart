@@ -39,7 +39,7 @@ class PriceDaysInputScreen extends ConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
-          title: '에러 발생가 발생했습니다',
+          title: '에러가 발생했습니다',
           content: '데이터를 찾을 수 없습니다. (Index Error)',
           showCancel: false,
           onConfirmAfterPop: () => context.pop(),

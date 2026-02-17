@@ -1,7 +1,7 @@
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
 
 extension UserExceptionExtension on UserException {
-  /// 사용자에게 보여줄 오류 제목 (문장형 종결, 마침표 없음)
+  /// 사용자에게 보여줄 에러 제목 (문장형 종결, 마침표 없음)
   String get title {
     return switch (this) {
       // 1. 권한/보안
@@ -12,7 +12,7 @@ extension UserExceptionExtension on UserException {
       UserAlreadyExistsException() => '이미 등록된 사용자입니다',
 
       // 3. 네트워크/환경/리소스
-      UserNetworkException() => '네트워크 오류가 발생했습니다',
+      UserNetworkException() => '네트워크 에러가 발생했습니다',
       UserResourceExhaustedException() => '요청 한도가 초과되었습니다',
 
       // 4. 데이터 충돌/처리 실패/취소
@@ -23,12 +23,12 @@ extension UserExceptionExtension on UserException {
       UserDataParsingException() => '데이터 형식이 일치하지 않습니다',
 
       // 6. 기타
-      UserUnknownException() => '오류가 발생했습니다',
-      _ => '오류가 발생했습니다',
+      UserUnknownException() => '에러가 발생했습니다',
+      _ => '에러가 발생했습니다',
     };
   }
 
-  /// 사용자에게 보여줄 오류 내용
+  /// 사용자에게 보여줄 에러 내용
   String get content {
     return switch (this) {
       // 1. 권한 부족
@@ -52,9 +52,9 @@ extension UserExceptionExtension on UserException {
       UserDataParsingException() =>
         '스토어에서 최신 버전으로 업데이트해주세요.\n문제가 지속되면 개발자에게 문의해주세요.',
 
-      // 6. 알 수 없는 오류
-      UserUnknownException() => '알 수 없는 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.',
-      _ => '일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.',
+      // 6. 알 수 없는 에러
+      UserUnknownException() => '알 수 없는 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
+      _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
     };
   }
 

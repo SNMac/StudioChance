@@ -1,7 +1,7 @@
 import 'package:studio_chance/common/exceptions/store_exceptions.dart'; // 실제 경로에 맞게 수정
 
 extension StoreExceptionExtension on StoreException {
-  /// 사용자에게 보여줄 오류 제목
+  /// 사용자에게 보여줄 에러 제목
   String get title {
     return switch (this) {
       // 1. 권한/보안
@@ -12,7 +12,7 @@ extension StoreExceptionExtension on StoreException {
       StoreAlreadyExistsException() => '이미 등록된 점포입니다',
 
       // 3. 네트워크/환경/리소스
-      StoreNetworkException() => '네트워크 오류가 발생했습니다',
+      StoreNetworkException() => '네트워크 에러가 발생했습니다',
       StoreResourceExhaustedException() => '요청 한도가 초과되었습니다',
 
       // 4. 데이터 충돌/처리 실패/취소
@@ -23,12 +23,12 @@ extension StoreExceptionExtension on StoreException {
       StoreDataParsingException() => '데이터 형식이 일치하지 않습니다',
 
       // 6. 기타
-      StoreUnknownException() => '오류가 발생했습니다',
-      _ => '오류가 발생했습니다',
+      StoreUnknownException() => '에러가 발생했습니다',
+      _ => '에러가 발생했습니다',
     };
   }
 
-  /// 사용자에게 보여줄 오류 내용
+  /// 사용자에게 보여줄 에러 내용
   String get content {
     return switch (this) {
       // 1. 권한 부족
@@ -52,9 +52,9 @@ extension StoreExceptionExtension on StoreException {
       StoreDataParsingException() =>
         '스토어에서 최신 버전으로 업데이트해주세요.\n문제가 지속되면 개발자에게 문의해 주세요.',
 
-      // 6. 알 수 없는 오류
-      StoreUnknownException() => '알 수 없는 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
-      _ => '일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+      // 6. 알 수 없는 에러
+      StoreUnknownException() => '알 수 없는 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+      _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
     };
   }
 

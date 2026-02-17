@@ -40,7 +40,7 @@ class SignInScreen extends ConsumerWidget {
           if (error is AppException) {
             showErrorDialog(error.title, error.content);
           } else {
-            showErrorDialog('오류가 발생했습니다', '개발자에게 문의해 주세요.\n(${error.toString()})');
+            showErrorDialog('에러가 발생했습니다', '개발자에게 문의해 주세요.\n(${error.toString()})');
           }
         },
         loading: () {},

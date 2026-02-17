@@ -52,7 +52,7 @@ class StoreDataParsingException extends StoreException {
     : super(message, code: code);
 }
 
-/// 알 수 없는 오류가 발생했을 때 사용하는 예외
+/// 알 수 없는 에러가 발생했을 때 사용하는 예외
 class StoreUnknownException extends StoreException {
   StoreUnknownException({required String message, String? code})
     : super(message, code: code);
