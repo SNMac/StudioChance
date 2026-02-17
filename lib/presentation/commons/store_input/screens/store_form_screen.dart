@@ -58,6 +58,23 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     }
   }
 
+  void _scrollAfterBuild({bool toBottom = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final target = toBottom
+          ? _scrollController.position.maxScrollExtent
+          : (_scrollController.offset + 300).clamp(
+              0.0,
+              _scrollController.position.maxScrollExtent,
+            );
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   void _showErrorDialog(String title, String content) => showCustomAlertDialog(
     context: context,
     title: title,
@@ -228,9 +245,11 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                           },
                           onCopy: () {
                             notifier.copyDayGroup(index);
+                            _scrollAfterBuild(toBottom: false);
                           },
                           onAdd: () {
                             notifier.addDayGroup();
+                            _scrollAfterBuild();
                           },
                           onPressedDaySetting: () {
                             SCRoute.storePriceDays.pushChild(

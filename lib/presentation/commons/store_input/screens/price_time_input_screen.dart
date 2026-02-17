@@ -50,10 +50,28 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
     _isInitialized = true;
   }
 
+  void _scrollAfterBuild({bool toBottom = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final target = toBottom
+          ? _scrollController.position.maxScrollExtent
+          : (_scrollController.offset + 300).clamp(
+              0.0,
+              _scrollController.position.maxScrollExtent,
+            );
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   void _addLocalTimeSlot() {
     setState(() {
       _currentTimeSlots.add(TimeSlot.empty());
     });
+    _scrollAfterBuild();
   }
 
   void _copyLocalTimeSlot(int index) {
@@ -61,6 +79,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
       final copiedSlot = _currentTimeSlots[index].copyWith();
       _currentTimeSlots.insert(index + 1, copiedSlot);
     });
+    _scrollAfterBuild(toBottom: false);
   }
 
   void _removeLocalTimeSlot(int index) {
