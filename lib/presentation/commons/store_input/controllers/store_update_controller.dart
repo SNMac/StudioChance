@@ -21,12 +21,14 @@ class StoreUpdateController extends _$StoreUpdateController
 
     final currentUser = ref.read(currentUserProvider).value;
     StoreColor color = StoreColor.red;
+    String memo = '';
 
     if (currentUser != null) {
       try {
         color = currentUser.storeInfos
             .firstWhere((e) => e.id == store.id)
             .color;
+        memo = currentUser.storeInfos.firstWhere((e) => e.id == store.id).memo;
       } catch (_) {}
     }
 
@@ -35,14 +37,14 @@ class StoreUpdateController extends _$StoreUpdateController
       address: store.address,
       addressDetail: store.addressDetail,
       addressGuide: store.addressGuide,
-      memo: store.memo,
+      memo: memo,
       color: color,
       priceSettings: store.priceSettings,
     );
   }
 
   @override
-  ({Store store, StoreColor color})? getFormData() {
+  ({Store store, StoreColor color, String memo})? getFormData() {
     if (!state.isValid) return null;
 
     final updatedStore = _targetStore.copyWith(
@@ -50,11 +52,10 @@ class StoreUpdateController extends _$StoreUpdateController
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
-      memo: state.memo,
       priceSettings: state.priceSettings,
     );
 
-    return (store: updatedStore, color: state.color);
+    return (store: updatedStore, color: state.color, memo: state.memo);
   }
 
   @override
@@ -71,6 +72,7 @@ class StoreUpdateController extends _$StoreUpdateController
       // final result = await storeUseCase.updateStore(
       //   store: data.store,
       //   color: data.color,
+      //   memo: data.memo,
       // );
       // if (result.isLeft()) throw result.getLeft().toNullable()!;
     } catch (e, st) {

@@ -13,6 +13,8 @@ class SignInScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+
     final state = ref.watch(signInControllerProvider);
 
     final isDarkMode =
@@ -40,7 +42,10 @@ class SignInScreen extends ConsumerWidget {
           if (error is AppException) {
             showErrorDialog(error.title, error.content);
           } else {
-            showErrorDialog('에러가 발생했습니다', '개발자에게 문의해 주세요.\n(${error.toString()})');
+            showErrorDialog(
+              '에러가 발생했습니다',
+              '개발자에게 문의해 주세요.\n(${error.toString()})',
+            );
           }
         },
         loading: () {},
@@ -63,7 +68,7 @@ class SignInScreen extends ConsumerWidget {
                 Text(
                   'Studio Chance',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineLarge,
+                  style: textTheme.headlineLarge,
                 ),
               ],
             ),

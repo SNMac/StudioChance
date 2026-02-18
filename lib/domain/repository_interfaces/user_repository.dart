@@ -23,6 +23,7 @@ abstract interface class UserRepository {
     String? nickname,
   });
 
+  /// 사용자의 점포 정보 수정
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,

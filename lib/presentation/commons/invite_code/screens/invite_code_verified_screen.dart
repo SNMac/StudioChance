@@ -1,38 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
-class InviteCodeVerifiedScreen extends StatelessWidget {
+class InviteCodeVerifiedScreen extends ConsumerStatefulWidget {
   const InviteCodeVerifiedScreen({super.key});
 
   @override
+  ConsumerState<InviteCodeVerifiedScreen> createState() =>
+      _InviteCodeVerifiedScreenState();
+}
+
+class _InviteCodeVerifiedScreenState
+    extends ConsumerState<InviteCodeVerifiedScreen> {
+  late final TextEditingController _memoController;
+
+  @override
+  void initState() {
+    super.initState();
+    _memoController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _memoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final provider = inviteCodeVerificationControllerProvider; // 임시
+    final state = ref.watch(provider);
+    final notifier = ref.read(provider.notifier);
+
+    final isLoading = state.status.isLoading;
+
     return Scaffold(
       appBar: CustomAppBar(
         title: '점포 확인',
         actions: [AppBarActionButton(label: '확인')],
       ),
-      body: SafeAreaWithPadding(
-        child: Column(
-          children: [
-            GroupedFormContainer(
-              header: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    '초대받은 점포가 맞는지 확인해주세요',
-                    style: Theme.of(context).textTheme.titleLarge,
+      body: Stack(
+        children: [
+          SafeAreaWithPadding(
+            child: Column(
+              spacing: 20,
+              children: [
+                GroupedFormContainer(
+                  header: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('초대받은 점포가 맞는지 확인해주세요', style: textTheme.titleLarge),
+                      const SizedBox(height: 12),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                ],
-              ),
-              children: [],
+                  children: [
+                    TitleTextLabel(title: '점포명', content: ''),
+                    TitleTextLabel(title: '대표 관리자', content: ''),
+                    TitleNavigationButton(
+                      title: '주소',
+                      content: '',
+                      isChangeable: false,
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+
+                GroupedFormContainer(
+                  header: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        '사용자 설정',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: context.secondaryLabel,
+                        ),
+                      ),
+                    ],
+                  ),
+                  children: [
+                    TitleTextField(title: '점포 별명', placeholder: '',),  // TODO: placeholder로 점포명 표시
+                    TitleNavigationButton(title: '색상', onPressed: () {}),
+                    BodyTextField(
+                      placeholder: '메모',
+                      controller: _memoController,
+                      maxLines: null,
+                      inputFormatters: [LengthLimitingTextInputFormatter(150)],
+                      autocorrect: true,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          LoadingOverlay(isLoading: isLoading),
+        ],
       ),
     );
   }

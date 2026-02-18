@@ -33,6 +33,7 @@ class StoreRepositoryImpl implements StoreRepository {
   Future<Either<Exception, Store>> createStore({
     required Store store,
     required StoreColor color,
+    required String memo,
   }) async {
     try {
       if (store.memberInfos.isEmpty) {
@@ -48,6 +49,7 @@ class StoreRepositoryImpl implements StoreRepository {
         name: store.name,
         color: color,
         role: creator.role,
+        memo: memo,
       );
 
       final createdModel = await _storeDataSource.createStore(
@@ -184,11 +186,26 @@ class StoreRepositoryImpl implements StoreRepository {
     required String storeId,
     required String uid,
     required UserRole role,
+    required StoreColor color,
+    required String storeAlias,
+    required String memo,
   }) async {
     try {
       final memberInfo = StoreMemberInfoModel(role: role);
 
-      await _storeDataSource.addWaitingMember(storeId, uid, memberInfo);
+      final userStoreInfo = UserStoreInfoModel(
+        name: storeAlias,
+        color: color,
+        role: role,
+        memo: memo,
+      );
+
+      await _storeDataSource.requestJoinWithBatch(
+        storeId,
+        uid,
+        memberInfo,
+        userStoreInfo,
+      );
 
       _logger.i('점포 가입 신청 완료 (대기열 추가)\nstoreId: $storeId, uid: $uid');
       // TODO: FCM 알림
@@ -207,27 +224,11 @@ class StoreRepositoryImpl implements StoreRepository {
     required UserRole role,
   }) async {
     try {
-      final storeModel = await _storeDataSource.getStore(storeId);
-      if (storeModel == null) {
-        return left(StoreNotFoundException(message: '점포를 찾을 수 없습니다.'));
-      }
-
       final memberInfo = StoreMemberInfoModel(role: role);
 
-      final userStoreInfo = UserStoreInfoModel(
-        name: storeModel.name,
-        color: StoreColor.red,
-        role: role,
-      );
+      await _storeDataSource.approveMember(storeId, uid, memberInfo);
 
-      await _storeDataSource.approveMemberWithBatch(
-        storeId,
-        uid,
-        memberInfo,
-        userStoreInfo,
-      );
-
-      _logger.i('멤버 승인 및 데이터 동기화 완료\nstoreId: $storeId, uid: $uid');
+      _logger.i('멤버 승인 완료\nstoreId: $storeId, uid: $uid');
       return right(null);
     } catch (e) {
       _logger.e('멤버 승인 실패');

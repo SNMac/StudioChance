@@ -29,7 +29,7 @@ class AdminStoreRegistrationScreen extends StatelessWidget {
                 ),
                 LargeSelectionButton(
                   title: '초대 코드 입력',
-                  description: '관리자 역할로 점포 입장',
+                  description: '관리자 역할로 점포 참여',
                   isNavigation: true,
                   onPressed: () => SCRoute.inviteCodeForm.pushChild(context),
                 ),

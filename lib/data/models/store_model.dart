@@ -19,7 +19,6 @@ abstract class StoreModel with _$StoreModel {
     required String address,
     required String addressDetail,
     required String addressGuide,
-    required String memo,
 
     required PriceSettingsModel priceSettingsModel,
     required Map<String, StoreMemberInfoModel> memberById,
@@ -38,7 +37,6 @@ abstract class StoreModel with _$StoreModel {
       address: entity.address,
       addressDetail: entity.addressDetail,
       addressGuide: entity.addressGuide,
-      memo: entity.memo,
       priceSettingsModel: PriceSettingsModel.fromEntity(entity.priceSettings),
       memberById: {
         for (var member in entity.memberInfos)
@@ -64,7 +62,6 @@ abstract class StoreModel with _$StoreModel {
       address: address,
       addressDetail: addressDetail,
       addressGuide: addressGuide,
-      memo: memo,
       priceSettings: priceSettingsModel.toEntity(),
       memberInfos: memberInfos,
       waitingMemberInfos: waitingMemberInfos,

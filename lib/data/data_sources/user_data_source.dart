@@ -5,7 +5,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/models/user_model.dart';
-import 'package:studio_chance/data/models/user_store_info_model.dart';
 
 part 'user_data_source.g.dart';
 
@@ -24,13 +23,6 @@ abstract interface class UserDataSource {
   /// - `storeIds` 수정 시: `addStoreId`, `removeStoreId` 메서드 사용
   /// - `fcmTokens` 수정 시: `addFcmToken`, `replaceFcmToken`, `removeFcmToken` 메서드 사용
   Future<void> updateUser(String uid, Map<String, dynamic> data);
-
-  /// 점포 정보 추가
-  Future<void> addStoreInfo(
-    String uid,
-    String storeId,
-    UserStoreInfoModel info,
-  );
 
   /// 점포 정보 업데이트
   Future<void> updateStoreInfo(
@@ -137,22 +129,6 @@ class UserFirestoreDataSource implements UserDataSource {
       }
 
       await _firestore.collection('users').doc(uid).update(updates);
-    } catch (e) {
-      throw _handleFirestoreError(e);
-    }
-  }
-
-  @override
-  Future<void> addStoreInfo(
-    String uid,
-    String storeId,
-    UserStoreInfoModel info,
-  ) async {
-    try {
-      await _firestore.collection('users').doc(uid).update({
-        'storeById.$storeId': info.toJson(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
     } catch (e) {
       throw _handleFirestoreError(e);
     }

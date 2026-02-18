@@ -13,8 +13,9 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
 
   const factory UserStoreInfoModel({
     required String name,
-    required StoreColor color,
     required UserRole role,
+    required StoreColor color,
+    required String memo,
   }) = _UserStoreInfoModel;
 
   factory UserStoreInfoModel.fromJson(Map<String, dynamic> json) =>
@@ -23,12 +24,13 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
   factory UserStoreInfoModel.fromEntity(UserStoreInfo entity) {
     return UserStoreInfoModel(
       name: entity.name,
-      color: entity.color,
       role: entity.role,
+      color: entity.color,
+      memo: entity.memo,
     );
   }
 
   UserStoreInfo toEntity({required String storeId}) {
-    return UserStoreInfo(id: storeId, name: name, color: color, role: role);
+    return UserStoreInfo(id: storeId, name: name, role: role, color: color, memo: memo);
   }
 }

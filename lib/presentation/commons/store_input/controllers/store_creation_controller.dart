@@ -23,7 +23,7 @@ class StoreCreationController extends _$StoreCreationController
   }
 
   @override
-  ({Store store, StoreColor color})? getFormData() {
+  ({Store store, StoreColor color, String memo})? getFormData() {
     if (!state.isValid) return null;
 
     final store = Store(
@@ -32,14 +32,13 @@ class StoreCreationController extends _$StoreCreationController
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
-      memo: state.memo,
       priceSettings: state.priceSettings,
       memberInfos: [],
       waitingMemberInfos: [],
       inviteInfo: null,
     );
 
-    return (store: store, color: state.color);
+    return (store: store, color: state.color, memo: state.memo);
   }
 
   @override
@@ -55,6 +54,7 @@ class StoreCreationController extends _$StoreCreationController
       final result = await storeUseCase.createStore(
         store: data.store,
         color: data.color,
+        memo: data.memo,
       );
 
       if (result.isLeft()) throw result.getLeft().toNullable()!;

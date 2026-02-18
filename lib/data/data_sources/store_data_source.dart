@@ -36,19 +36,19 @@ abstract interface class StoreDataSource {
   /// 멤버 삭제 (추방/탈퇴)
   Future<void> removeMember(String storeId, String uid);
 
-  /// 가입 신청
-  Future<void> addWaitingMember(
-    String storeId,
-    String uid,
-    StoreMemberInfoModel memberInfo,
-  );
-
-  /// 가입 승인
-  Future<void> approveMemberWithBatch(
+  /// 가입 신청 (대기열 추가 + 사용자 점포 정보 저장)
+  Future<void> requestJoinWithBatch(
     String storeId,
     String uid,
     StoreMemberInfoModel memberInfo,
     UserStoreInfoModel userStoreInfo,
+  );
+
+  /// 가입 승인 (waitingMemberById → memberById 이동)
+  Future<void> approveMember(
+    String storeId,
+    String uid,
+    StoreMemberInfoModel memberInfo,
   );
 
   /// 초대 코드 발급
@@ -181,23 +181,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
   }
 
   @override
-  Future<void> addWaitingMember(
-    String storeId,
-    String uid,
-    StoreMemberInfoModel memberInfo,
-  ) async {
-    try {
-      await _firestore.collection('stores').doc(storeId).update({
-        'waitingMemberById.$uid': memberInfo.toJson(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw _handleFirestoreError(e);
-    }
-  }
-
-  @override
-  Future<void> approveMemberWithBatch(
+  Future<void> requestJoinWithBatch(
     String storeId,
     String uid,
     StoreMemberInfoModel memberInfo,
@@ -209,8 +193,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final userRef = _firestore.collection('users').doc(uid);
 
       batch.update(storeRef, {
-        'waitingMemberById.$uid': FieldValue.delete(),
-        'memberById.$uid': memberInfo.toJson(),
+        'waitingMemberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
@@ -220,6 +203,23 @@ class StoreFirestoreDataSource implements StoreDataSource {
       });
 
       await batch.commit();
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<void> approveMember(
+    String storeId,
+    String uid,
+    StoreMemberInfoModel memberInfo,
+  ) async {
+    try {
+      await _firestore.collection('stores').doc(storeId).update({
+        'waitingMemberById.$uid': FieldValue.delete(),
+        'memberById.$uid': memberInfo.toJson(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     } catch (e) {
       throw _handleFirestoreError(e);
     }

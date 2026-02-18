@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserStoreInfoModel {
 
- String get name; StoreColor get color; UserRole get role;
+ String get name; UserRole get role; StoreColor get color; String get memo;
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserStoreInfoModelCopyWith<UserStoreInfoModel> get copyWith => _$UserStoreInfoM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfoModel&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.role, role) || other.role == role));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfoModel&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,color,role);
+int get hashCode => Object.hash(runtimeType,name,role,color,memo);
 
 @override
 String toString() {
-  return 'UserStoreInfoModel(name: $name, color: $color, role: $role)';
+  return 'UserStoreInfoModel(name: $name, role: $role, color: $color, memo: $memo)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserStoreInfoModelCopyWith<$Res>  {
   factory $UserStoreInfoModelCopyWith(UserStoreInfoModel value, $Res Function(UserStoreInfoModel) _then) = _$UserStoreInfoModelCopyWithImpl;
 @useResult
 $Res call({
- String name, StoreColor color, UserRole role
+ String name, UserRole role, StoreColor color, String memo
 });
 
 
@@ -65,12 +65,13 @@ class _$UserStoreInfoModelCopyWithImpl<$Res>
 
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? color = null,Object? role = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? role = null,Object? color = null,Object? memo = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
-as StoreColor,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as UserRole,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  StoreColor color,  UserRole role)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  UserRole role,  StoreColor color,  String memo)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserStoreInfoModel() when $default != null:
-return $default(_that.name,_that.color,_that.role);case _:
+return $default(_that.name,_that.role,_that.color,_that.memo);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.name,_that.color,_that.role);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  StoreColor color,  UserRole role)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  UserRole role,  StoreColor color,  String memo)  $default,) {final _that = this;
 switch (_that) {
 case _UserStoreInfoModel():
-return $default(_that.name,_that.color,_that.role);case _:
+return $default(_that.name,_that.role,_that.color,_that.memo);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.name,_that.color,_that.role);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  StoreColor color,  UserRole role)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  UserRole role,  StoreColor color,  String memo)?  $default,) {final _that = this;
 switch (_that) {
 case _UserStoreInfoModel() when $default != null:
-return $default(_that.name,_that.color,_that.role);case _:
+return $default(_that.name,_that.role,_that.color,_that.memo);case _:
   return null;
 
 }
@@ -211,12 +212,13 @@ return $default(_that.name,_that.color,_that.role);case _:
 @JsonSerializable()
 
 class _UserStoreInfoModel extends UserStoreInfoModel {
-  const _UserStoreInfoModel({required this.name, required this.color, required this.role}): super._();
+  const _UserStoreInfoModel({required this.name, required this.role, required this.color, required this.memo}): super._();
   factory _UserStoreInfoModel.fromJson(Map<String, dynamic> json) => _$UserStoreInfoModelFromJson(json);
 
 @override final  String name;
-@override final  StoreColor color;
 @override final  UserRole role;
+@override final  StoreColor color;
+@override final  String memo;
 
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfoModel&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&(identical(other.role, role) || other.role == role));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfoModel&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,color,role);
+int get hashCode => Object.hash(runtimeType,name,role,color,memo);
 
 @override
 String toString() {
-  return 'UserStoreInfoModel(name: $name, color: $color, role: $role)';
+  return 'UserStoreInfoModel(name: $name, role: $role, color: $color, memo: $memo)';
 }
 
 
@@ -251,7 +253,7 @@ abstract mixin class _$UserStoreInfoModelCopyWith<$Res> implements $UserStoreInf
   factory _$UserStoreInfoModelCopyWith(_UserStoreInfoModel value, $Res Function(_UserStoreInfoModel) _then) = __$UserStoreInfoModelCopyWithImpl;
 @override @useResult
 $Res call({
- String name, StoreColor color, UserRole role
+ String name, UserRole role, StoreColor color, String memo
 });
 
 
@@ -268,12 +270,13 @@ class __$UserStoreInfoModelCopyWithImpl<$Res>
 
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? color = null,Object? role = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? role = null,Object? color = null,Object? memo = null,}) {
   return _then(_UserStoreInfoModel(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
-as StoreColor,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as UserRole,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

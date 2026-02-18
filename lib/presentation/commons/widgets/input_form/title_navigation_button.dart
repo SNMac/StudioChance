@@ -8,6 +8,7 @@ class TitleNavigationButton extends StatelessWidget {
   final String title;
   final String? content;
   final Widget? contentLeading;
+  final bool isChangeable;
   final VoidCallback onPressed;
 
   const TitleNavigationButton({
@@ -15,6 +16,7 @@ class TitleNavigationButton extends StatelessWidget {
     required this.title,
     this.content,
     this.contentLeading,
+    this.isChangeable = false,
     required this.onPressed,
   });
 
@@ -49,7 +51,7 @@ class TitleNavigationButton extends StatelessWidget {
                         content!,
                         style: textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.normal,
-                          color: context.secondaryLabel,
+                          color: isChangeable ? context.secondaryLabel : context.label,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

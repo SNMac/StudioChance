@@ -75,6 +75,8 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     final provider = nicknameFormControllerProvider(widget.initialNickname);
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
@@ -118,11 +120,12 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                   children: [
                     Text(
                       '사용하실 닉네임을 입력해 주세요',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
                   ],
                 ),
+
                 footer: Padding(
                   padding: const EdgeInsetsDirectional.symmetric(
                     horizontal: horizontalPadding,
@@ -133,13 +136,14 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        style: textTheme.labelLarge?.copyWith(
                           color: descriptionColor(),
                         ),
                       ),
                     ],
                   ),
                 ),
+
                 children: [
                   BodyTextField(
                     controller: _nicknameController,

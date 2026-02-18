@@ -42,6 +42,8 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     final provider = inviteCodeVerificationControllerProvider;
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
@@ -77,10 +79,7 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
                     header: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          '점포의 초대 코드를 입력해 주세요',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
+                        Text('점포의 초대 코드를 입력해 주세요', style: textTheme.titleLarge),
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -94,8 +93,9 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
                           const SizedBox(height: 4),
                           Text(
                             '영문·숫자 6자',
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(color: context.secondaryLabel),
+                            style: textTheme.labelLarge?.copyWith(
+                              color: context.secondaryLabel,
+                            ),
                           ),
                         ],
                       ),

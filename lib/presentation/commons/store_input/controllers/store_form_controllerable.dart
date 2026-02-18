@@ -31,7 +31,7 @@ abstract interface class StoreFormControllerable {
   void removeTimeSlot(int groupIndex, int slotIndex);
 
   /// 현재 폼 데이터를 반환 (유효하지 않으면 null)
-  ({Store store, StoreColor color})? getFormData();
+  ({Store store, StoreColor color, String memo})? getFormData();
 
   /// API 요청 실행
   Future<void> submit();

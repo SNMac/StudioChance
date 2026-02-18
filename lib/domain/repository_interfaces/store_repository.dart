@@ -10,6 +10,7 @@ abstract interface class StoreRepository {
   Future<Either<Exception, Store>> createStore({
     required Store store,
     required StoreColor color,
+    required String memo,
   });
 
   /// 점포 조회
@@ -38,11 +39,14 @@ abstract interface class StoreRepository {
   /// - 유효성 검증된 점포 반환
   Future<Either<Exception, Store?>> getStoreByInviteCode(String inviteCode);
 
-  /// 가입 신청 (대기 명단에 추가)
+  /// 가입 신청 (대기 명단 추가 + 사용자 점포 정보 저장)
   Future<Either<Exception, void>> requestJoinStore({
     required String storeId,
     required String uid,
     required UserRole role,
+    required StoreColor color,
+    required String storeAlias,
+    required String memo,
   });
 
   /// 멤버 승인

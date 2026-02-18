@@ -21,18 +21,22 @@ abstract interface class StoreUseCase {
   Future<Either<Exception, Store>> createStore({
     required Store store,
     required StoreColor color,
+    required String memo,
   });
 
   /// 점포 조회
   Future<Either<Exception, Store?>> getStore(String storeId);
 
-  /// 초대 코드로 점포 조회 (입장 전 확인용)
+  /// 초대 코드로 점포 조회 (참여 요청 전 확인용)
   Future<Either<Exception, Store?>> getStoreByInviteCode(String inviteCode);
 
-  /// 점포 입장 신청 (대기열 등록)
+  /// 점포 참여 요청 (대기열 등록)
   Future<Either<Exception, void>> joinStore({
     required String storeId,
+    required String storeAlias,
     required UserRole role,
+    required StoreColor color,
+    required String memo,
   });
 
   /// 멤버 가입 승인 (관리자용)
@@ -70,6 +74,7 @@ class StoreUseCaseImpl implements StoreUseCase {
   Future<Either<Exception, Store>> createStore({
     required Store store,
     required StoreColor color,
+    required String memo,
   }) {
     return _getCurrentUser().flatMap((currentUser) {
       final adminMemberInfo = StoreMemberInfo(
@@ -83,7 +88,11 @@ class StoreUseCaseImpl implements StoreUseCase {
       );
 
       return TaskEither(
-        () => _storeRepository.createStore(store: storeWithAdmin, color: color),
+        () => _storeRepository.createStore(
+          store: storeWithAdmin,
+          color: color,
+          memo: memo,
+        ),
       );
     }).run();
   }
@@ -101,7 +110,10 @@ class StoreUseCaseImpl implements StoreUseCase {
   @override
   Future<Either<Exception, void>> joinStore({
     required String storeId,
+    required String storeAlias,
     required UserRole role,
+    required StoreColor color,
+    required String memo,
   }) {
     return _getCurrentUser().flatMap((currentUser) {
       return TaskEither(
@@ -109,6 +121,9 @@ class StoreUseCaseImpl implements StoreUseCase {
           storeId: storeId,
           uid: currentUser.id,
           role: role,
+          color: color,
+          storeAlias: storeAlias,
+          memo: memo,
         ),
       );
     }).run();
@@ -122,7 +137,7 @@ class StoreUseCaseImpl implements StoreUseCase {
   }) {
     // 실제로는 여기서 '현재 유저가 관리자 권한이 있는지' 체크하는 로직이 들어갈 수 있습니다.
     return TaskEither(
-          () => _storeRepository.approveMember(
+      () => _storeRepository.approveMember(
         storeId: storeId,
         uid: targetUid,
         role: role,
