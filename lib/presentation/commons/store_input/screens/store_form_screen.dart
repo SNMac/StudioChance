@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_form_state_formatter.dart';
@@ -219,7 +220,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             onChanged: notifier.setMemo,
                             maxLines: null,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(150),
+                              LengthLimitingTextInputFormatter(
+                                maxMemoCharCount,
+                              ),
                             ],
                             autocorrect: true,
                           ),

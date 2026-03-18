@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
@@ -50,7 +51,8 @@ class _InviteCodeVerifiedScreenState
     final store = state.status.value;
     final isLoading = state.status.isLoading;
 
-    final adminName = store?.memberInfos
+    final adminName =
+        store?.memberInfos
             .where((m) => m.role == UserRole.admin)
             .firstOrNull
             ?.user
@@ -115,7 +117,9 @@ class _InviteCodeVerifiedScreenState
                       placeholder: '메모',
                       controller: _memoController,
                       maxLines: null,
-                      inputFormatters: [LengthLimitingTextInputFormatter(150)],
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(maxMemoCharCount),
+                      ],
                       autocorrect: true,
                     ),
                   ],
