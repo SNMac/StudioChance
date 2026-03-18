@@ -67,14 +67,16 @@ class StoreUpdateController extends _$StoreUpdateController
 
     try {
       final storeUseCase = ref.read(storeUseCaseProvider);
-
-      // TODO: Update 메서드 호출 (UseCase에 updateStore가 있다고 가정)
-      // final result = await storeUseCase.updateStore(
-      //   store: data.store,
-      //   color: data.color,
-      //   memo: data.memo,
-      // );
-      // if (result.isLeft()) throw result.getLeft().toNullable()!;
+      final result = await storeUseCase.updateStore(
+        store: data.store,
+        color: data.color,
+        memo: data.memo,
+      );
+      result.fold(
+        (exception) =>
+            state = state.copyWith(status: AsyncError(exception, StackTrace.current)),
+        (_) => state = state.copyWith(status: const AsyncData(null)),
+      );
     } catch (e, st) {
       state = state.copyWith(status: AsyncError(e, st));
     }

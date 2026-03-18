@@ -18,12 +18,11 @@ abstract interface class StoreRepository {
   Future<Either<Exception, Store?>> getStore(String storeId);
 
   /// 점포 정보 수정
-  /// - 부분 수정을 위해 Map 사용
   Future<Either<Exception, void>> updateStore({
-    required String storeId,
+    required Store store,
     required String uid,
-    required Map<String, dynamic> storeData,
-    StoreColor? newColor,
+    required StoreColor color,
+    required String memo,
   });
 
   /// 점포 삭제 (Soft Delete)

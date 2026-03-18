@@ -98,21 +98,27 @@ class StoreRepositoryImpl implements StoreRepository {
 
   @override
   Future<Either<Exception, void>> updateStore({
-    required String storeId,
+    required Store store,
     required String uid,
-    required Map<String, dynamic> storeData,
-    StoreColor? newColor,
+    required StoreColor color,
+    required String memo,
   }) async {
     try {
-      if (storeData.isNotEmpty) {
-        await _storeDataSource.updateStore(storeId, storeData);
-      }
+      final storeModel = StoreModel.fromEntity(store);
+      final storeJson = storeModel.toJson();
 
-      if (newColor != null) {
-        await _userDataSource.updateStoreInfo(uid, storeId, {
-          'color': newColor.name,
-        });
-      }
+      await _storeDataSource.updateStore(store.id, {
+        'name': storeJson['name'],
+        'address': storeJson['address'],
+        'addressDetail': storeJson['addressDetail'],
+        'addressGuide': storeJson['addressGuide'],
+        'priceSettingsModel': storeJson['priceSettingsModel'],
+      });
+
+      await _userDataSource.updateStoreInfo(uid, store.id, {
+        'color': color.name,
+        'memo': memo,
+      });
 
       return right(null);
     } catch (e) {

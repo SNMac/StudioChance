@@ -53,6 +53,13 @@ abstract interface class StoreUseCase {
     required UserRole newRole,
   });
 
+  /// 점포 정보 수정
+  Future<Either<Exception, void>> updateStore({
+    required Store store,
+    required StoreColor color,
+    required String memo,
+  });
+
   /// 초대 코드 생성/재생성
   Future<Either<Exception, InviteInfo>> createInviteCode(
     String storeId, {
@@ -169,6 +176,24 @@ class StoreUseCaseImpl implements StoreUseCase {
 
     // 우선 구현되지 않은 상태라면 예외 처리 혹은 TODO
     return TaskEither.left(Exception('기능 구현 예정')).run();
+  }
+
+  @override
+  Future<Either<Exception, void>> updateStore({
+    required Store store,
+    required StoreColor color,
+    required String memo,
+  }) {
+    return _getCurrentUser().flatMap((currentUser) {
+      return TaskEither(
+        () => _storeRepository.updateStore(
+          store: store,
+          uid: currentUser.id,
+          color: color,
+          memo: memo,
+        ),
+      );
+    }).run();
   }
 
   @override
