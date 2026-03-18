@@ -165,16 +165,20 @@ result.fold(
 ### Exception 계층
 
 ```
-AppException (abstract) → title, content getter
-├── AuthException → AuthCancelledException, AuthNetworkException, ...
-├── UserException → UserNotFoundException, UserPermissionDeniedException, ...
-└── StoreException → StoreNotFoundException, StoreValidationException, ...
+AppException (abstract) → title/content 추상 getter, isSilentable 기본값 false
+├── AuthException (sealed) → title/content/isSilentable switch 오버라이드
+│   ├── AuthCancelledException, AuthNetworkException, ...
+├── UserException (sealed) → 동일
+│   ├── UserNotFoundException, UserPermissionDeniedException, ...
+├── StoreException (sealed) → 동일
+│   ├── StoreNotFoundException, StoreValidationException, ...
+└── NotificationException (sealed) → 동일 (isSilentable 항상 true)
 ```
 
 - DataSource: Firebase 에러 → 타입된 Exception으로 변환 (switch)
 - Repository: try-catch → `left(exception)` 반환, 절대 예외 전파 금지
 - Use Case: Either 체이닝 (fold, flatMap, TaskEither)
-- Controller: `fold`로 상태 갱신 + `isSilentable` 체크
+- Controller: `fold`로 상태 갱신 + `isSilentable` 체크 (`AppException` 타입 체크만으로 충분)
 
 자세한 내용: [error-handling.md](resources/error-handling.md)
 

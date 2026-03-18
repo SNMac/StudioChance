@@ -3,7 +3,6 @@
 ## 목차
 - [Exception 계층 구조](#exception-계층-구조)
 - [Exception 정의 방법](#exception-정의-방법)
-- [UI 메시지 매핑 (Extension)](#ui-메시지-매핑-extension)
 - [레이어별 에러 처리 흐름](#레이어별-에러-처리-흐름)
 - [Either 소비 패턴](#either-소비-패턴)
 - [무음 에러 (isSilentable)](#무음-에러-isilentable)
@@ -14,27 +13,34 @@
 
 ```
 AppException (abstract)
-├── AuthException (abstract)
+│   title/content: 추상 getter (하위 클래스 구현 강제)
+│   isSilentable: false (기본값)
+│
+├── AuthException (sealed)
 │   ├── AuthCancelledException
 │   ├── AuthRequiresRecentLoginException
 │   ├── AuthUserNotFoundException
 │   ├── AuthNetworkException
 │   ├── AuthUnknownException
 │   └── ...
-├── UserException (abstract)
+├── UserException (sealed)
 │   ├── UserPermissionDeniedException
 │   ├── UserNotFoundException
 │   ├── UserDataParsingException
 │   ├── UserUnknownException
 │   └── ...
-├── StoreException (abstract)
+├── StoreException (sealed)
 │   ├── StoreNotFoundException
 │   ├── StoreValidationException
 │   ├── StoreAlreadyExistsException
 │   └── ...
-└── NotificationException (abstract)
+└── NotificationException (sealed)
+    │   isSilentable: 항상 true
     └── ...
 ```
+
+**sealed class 규칙**: 각 중간 클래스의 직접 하위 타입은 반드시 같은 파일 안에 정의해야 함.
+새 Exception 추가 시 `title`/`content`/`isSilentable` switch에 case를 추가하지 않으면 컴파일 에러 발생.
 
 ---
 
@@ -45,13 +51,14 @@ AppException (abstract)
 ```dart
 // lib/common/exceptions/app_exception.dart
 abstract class AppException implements Exception {
-  final String message;
-  final String? code;
+  final String message; // 개발자/로그용 원본 메시지
+  final String? code;   // 개발자/로그용 원본 에러 코드
 
   AppException(this.message, {this.code});
 
-  String get title => '에러가 발생했습니다';
-  String get content => message;
+  String get title;   // 추상 getter - 하위 클래스 구현 필수
+  String get content; // 추상 getter - 하위 클래스 구현 필수
+  bool get isSilentable => false; // 기본값
 
   @override
   String toString() =>
@@ -59,62 +66,47 @@ abstract class AppException implements Exception {
 }
 ```
 
-### 도메인별 Exception 그룹
+### 도메인별 Exception 그룹 (sealed class 패턴)
 
 ```dart
 // lib/common/exceptions/auth_exceptions.dart
-abstract class AuthException extends AppException {
+sealed class AuthException extends AppException {
   AuthException(super.message, {super.code});
+
+  @override
+  String get title => switch (this) {
+    AuthCancelledException() => '로그인이 취소되었습니다',
+    AuthNetworkException() => '네트워크 에러가 발생했습니다',
+    AuthUserNotFoundException() => '계정을 찾을 수 없습니다',
+    // ... 모든 케이스 명시 (_ 사용 불가 → exhaustive 강제)
+    AuthUnknownException() => '로그인에 실패했습니다',
+  };
+
+  @override
+  String get content => switch (this) { ... };
+
+  @override
+  bool get isSilentable => switch (this) {
+    AuthCancelledException() => true,
+    AuthNetworkException() || AuthUserNotFoundException() || ... => false,
+  };
 }
 
+// 구체 클래스들은 반드시 같은 파일 안에 정의
 class AuthCancelledException extends AuthException {
-  AuthCancelledException({required String message, String? code})
+  AuthCancelledException({String message = 'Auth cancelled', String? code})
     : super(message, code: code);
 }
-
-class AuthNetworkException extends AuthException {
-  AuthNetworkException({required String message, String? code})
-    : super(message, code: code);
-}
-// ... 도메인별로 필요한 만큼 정의
+// ...
 ```
 
----
+### 새 Exception 추가 절차
 
-## UI 메시지 매핑 (Extension)
-
-사용자에게 보여줄 메시지는 Extension으로 분리:
-
-```dart
-// lib/common/exceptions/extensions/auth_exception_extension.dart
-extension AuthExceptionExtension on AuthException {
-  @override
-  String get title {
-    return switch (this) {
-      AuthCancelledException() => '로그인이 취소되었습니다',
-      AuthNetworkException() => '네트워크 에러',
-      AuthUserNotFoundException() => '계정을 찾을 수 없습니다',
-      _ => '로그인에 실패했습니다',
-    };
-  }
-
-  @override
-  String get content {
-    return switch (this) {
-      AuthNetworkException() => '인터넷 연결 상태를 확인해주세요.',
-      AuthCancelledException() => '로그인 과정이 중단되었습니다.',
-      _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
-    };
-  }
-
-  bool get isSilentable {
-    return switch (this) {
-      AuthCancelledException() => true,
-      _ => false,
-    };
-  }
-}
-```
+1. 같은 파일(예: `auth_exceptions.dart`)에 구체 클래스 추가
+2. `AuthException.title` switch에 케이스 추가
+3. `AuthException.content` switch에 케이스 추가
+4. `AuthException.isSilentable` switch에 케이스 추가
+5. → 누락 시 컴파일 에러 발생
 
 ---
 
@@ -172,8 +164,9 @@ Future<Either<Exception, User>> signInWithGoogle() async {
 void _handleAuthResult(Either<Exception, User> result) {
   result.fold(
     (exception) {
-      if (exception is AuthException && exception.isSilentable) {
-        state = const AsyncData(null); // 무시
+      // AppException 타입 체크만으로 isSilentable 접근 가능
+      if (exception is AppException && exception.isSilentable) {
+        state = const AsyncData(null);
       } else {
         state = AsyncError(exception, StackTrace.current);
       }
@@ -190,6 +183,7 @@ ref.listen(controllerProvider, (previous, next) {
   next.whenOrNull(
     error: (error, _) {
       if (error is AppException) {
+        // AppException 타입만으로 구체적 메시지 접근 가능 (sealed class 덕분)
         showCustomAlertDialog(
           context: context,
           title: error.title,
@@ -236,19 +230,19 @@ return _getUser().flatMap((user) {
 
 ## 무음 에러 (isSilentable)
 
-사용자 취소 등 다이얼로그를 보여주지 않아야 하는 에러:
+사용자 취소 등 다이얼로그를 보여주지 않아야 하는 에러.
+`AppException` 기본값은 `false`, 각 sealed class에서 switch로 케이스별 정의.
 
 ```dart
-// Extension에서 정의
-bool get isSilentable {
-  return switch (this) {
-    AuthCancelledException() => true,
-    _ => false,
-  };
-}
+// sealed class 내 정의 (예: AuthException)
+@override
+bool get isSilentable => switch (this) {
+  AuthCancelledException() => true,      // 사용자가 직접 취소 → silent
+  AuthNetworkException() || ... => false,
+};
 
-// Controller에서 사용
-if (exception is AuthException && exception.isSilentable) {
+// Controller에서 사용 - AppException 타입으로 충분
+if (exception is AppException && exception.isSilentable) {
   state = const AsyncData(null); // 에러 상태가 아닌 기본 상태로 복원
   return;
 }
