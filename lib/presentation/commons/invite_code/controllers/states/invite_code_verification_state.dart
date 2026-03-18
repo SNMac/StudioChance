@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/domain/entities/store.dart';
+
 part 'invite_code_verification_state.freezed.dart';
 
 @freezed
@@ -9,7 +11,7 @@ abstract class InviteCodeVerificationState with _$InviteCodeVerificationState {
 
   const factory InviteCodeVerificationState({
     @Default('') String inviteCode,
-    @Default(AsyncData(null)) AsyncValue<void> status,
+    @Default(AsyncData(null)) AsyncValue<Store?> status,
   }) = _InviteCodeVerificationState;
 
   bool get isValid {

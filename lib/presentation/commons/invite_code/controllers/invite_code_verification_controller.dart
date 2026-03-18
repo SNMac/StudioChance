@@ -20,14 +20,14 @@ class InviteCodeVerificationController
   Future<void> verifyInviteCode() async {
     state = state.copyWith(status: const AsyncLoading());
 
-    try {
-      final storeUseCase = ref.read(storeUseCaseProvider);
+    final storeUseCase = ref.read(storeUseCaseProvider);
+    final result = await storeUseCase.getStoreByInviteCode(state.inviteCode);
 
-      final result = await storeUseCase.getStoreByInviteCode(state.inviteCode);
-
-      if (result.isLeft()) throw result.getLeft().toNullable()!;
-    } catch (e, st) {
-      state = state.copyWith(status: AsyncError(e, st));
-    }
+    result.fold(
+      (exception) => state = state.copyWith(
+        status: AsyncError(exception, StackTrace.current),
+      ),
+      (store) => state = state.copyWith(status: AsyncData(store)),
+    );
   }
 }

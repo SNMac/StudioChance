@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteCodeVerificationState {
 
- String get inviteCode; AsyncValue<void> get status;
+ String get inviteCode; AsyncValue<Store?> get status;
 /// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $InviteCodeVerificationStateCopyWith<$Res>  {
   factory $InviteCodeVerificationStateCopyWith(InviteCodeVerificationState value, $Res Function(InviteCodeVerificationState) _then) = _$InviteCodeVerificationStateCopyWithImpl;
 @useResult
 $Res call({
- String inviteCode, AsyncValue<void> status
+ String inviteCode, AsyncValue<Store?> status
 });
 
 
@@ -66,7 +66,7 @@ class _$InviteCodeVerificationStateCopyWithImpl<$Res>
   return _then(_self.copyWith(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as AsyncValue<void>,
+as AsyncValue<Store?>,
   ));
 }
 
@@ -151,7 +151,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<Store?> status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InviteCodeVerificationState() when $default != null:
 return $default(_that.inviteCode,_that.status);case _:
@@ -172,7 +172,7 @@ return $default(_that.inviteCode,_that.status);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<void> status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<Store?> status)  $default,) {final _that = this;
 switch (_that) {
 case _InviteCodeVerificationState():
 return $default(_that.inviteCode,_that.status);case _:
@@ -192,7 +192,7 @@ return $default(_that.inviteCode,_that.status);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  AsyncValue<void> status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  AsyncValue<Store?> status)?  $default,) {final _that = this;
 switch (_that) {
 case _InviteCodeVerificationState() when $default != null:
 return $default(_that.inviteCode,_that.status);case _:
@@ -211,7 +211,7 @@ class _InviteCodeVerificationState extends InviteCodeVerificationState {
   
 
 @override@JsonKey() final  String inviteCode;
-@override@JsonKey() final  AsyncValue<void> status;
+@override@JsonKey() final  AsyncValue<Store?> status;
 
 /// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
@@ -243,7 +243,7 @@ abstract mixin class _$InviteCodeVerificationStateCopyWith<$Res> implements $Inv
   factory _$InviteCodeVerificationStateCopyWith(_InviteCodeVerificationState value, $Res Function(_InviteCodeVerificationState) _then) = __$InviteCodeVerificationStateCopyWithImpl;
 @override @useResult
 $Res call({
- String inviteCode, AsyncValue<void> status
+ String inviteCode, AsyncValue<Store?> status
 });
 
 
@@ -264,7 +264,7 @@ class __$InviteCodeVerificationStateCopyWithImpl<$Res>
   return _then(_InviteCodeVerificationState(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as AsyncValue<void>,
+as AsyncValue<Store?>,
   ));
 }
 

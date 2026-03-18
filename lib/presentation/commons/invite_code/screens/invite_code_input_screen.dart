@@ -3,16 +3,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/router/router_path.dart';
 
 class InviteCodeInputScreen extends ConsumerStatefulWidget {
   const InviteCodeInputScreen({super.key});
@@ -49,6 +52,48 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
     final notifier = ref.read(provider.notifier);
 
     final isLoading = state.status.isLoading;
+
+    ref.listen(provider, (previous, next) {
+      // 로딩 중이었을 때만 data 처리 (초기 null과 "없음" null 구별)
+      if (previous?.status.isLoading == true) {
+        next.status.whenOrNull(
+          data: (store) {
+            if (store != null) {
+              SCRoute.inviteCodeVerified.pushChild(context);
+            } else {
+              showCustomAlertDialog(
+                context: context,
+                title: '점포를 찾을 수 없습니다',
+                content: '초대 코드에 해당하는 점포가 없어요.\n코드를 다시 확인해 주세요.',
+                showCancel: false,
+                confirmText: '확인',
+              );
+            }
+          },
+        );
+      }
+      next.status.whenOrNull(
+        error: (error, _) {
+          if (error is AppException) {
+            showCustomAlertDialog(
+              context: context,
+              title: error.title,
+              content: error.content,
+              showCancel: false,
+              confirmText: '확인',
+            );
+          } else {
+            showCustomAlertDialog(
+              context: context,
+              title: '에러가 발생했습니다',
+              content: '개발자에게 문의해 주세요.\n(${error.toString()})',
+              showCancel: false,
+              confirmText: '확인',
+            );
+          }
+        },
+      );
+    });
 
     return Scaffold(
       appBar: CustomAppBar(

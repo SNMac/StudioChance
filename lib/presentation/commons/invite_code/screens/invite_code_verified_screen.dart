@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
@@ -42,11 +43,23 @@ class _InviteCodeVerifiedScreenState
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    final provider = inviteCodeVerificationControllerProvider; // 임시
+    final provider = inviteCodeVerificationControllerProvider;
     final state = ref.watch(provider);
-    final notifier = ref.read(provider.notifier);
 
+    // 이 화면 도달 시 store는 non-null 보장
+    final store = state.status.value;
     final isLoading = state.status.isLoading;
+
+    final adminName = store?.memberInfos
+            .where((m) => m.role == UserRole.admin)
+            .firstOrNull
+            ?.user
+            .name ??
+        '';
+
+    final address = store != null
+        ? '${store.address} ${store.addressDetail}'.trim()
+        : '';
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -68,11 +81,11 @@ class _InviteCodeVerifiedScreenState
                     ],
                   ),
                   children: [
-                    TitleTextLabel(title: '점포명', content: ''),
-                    TitleTextLabel(title: '대표 관리자', content: ''),
+                    TitleTextLabel(title: '점포명', content: store?.name ?? ''),
+                    TitleTextLabel(title: '대표 관리자', content: adminName),
                     TitleNavigationButton(
                       title: '주소',
-                      content: '',
+                      content: address,
                       isChangeable: false,
                       onPressed: () {},
                     ),
@@ -93,7 +106,10 @@ class _InviteCodeVerifiedScreenState
                     ],
                   ),
                   children: [
-                    TitleTextField(title: '점포 별명', placeholder: '',),  // TODO: placeholder로 점포명 표시
+                    TitleTextField(
+                      title: '점포 별명',
+                      placeholder: store?.name ?? '',
+                    ),
                     TitleNavigationButton(title: '색상', onPressed: () {}),
                     BodyTextField(
                       placeholder: '메모',
