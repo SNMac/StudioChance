@@ -8,6 +8,7 @@
 - [LoadingOverlay](#loadingoverlay)
 - [GroupedFormContainer](#groupedformcontainer)
 - [BodyTextField](#bodytextfield)
+- [MemoTextField](#memotextfield)
 - [showCustomAlertDialog](#showcustomalertdialog)
 - [상수 값](#상수-값)
 - [테마 / 폰트](#테마--폰트)
@@ -179,6 +180,41 @@ BodyTextField(
 )
 // 내장: FocusNode 관리, clear 버튼, 포커스 시 스타일 변경
 ```
+
+---
+
+## MemoTextField
+
+메모 입력 전용 멀티라인 텍스트 필드. 초기 높이 3줄, 이후 내용에 따라 동적 확장:
+
+```dart
+MemoTextField(
+  placeholder: '메모',
+  controller: _memoController,
+  onChanged: notifier.setMemo,
+  maxLength: maxMemoCharCount,          // null이면 카운터 미표시
+  inputFormatters: [
+    LengthLimitingTextInputFormatter(maxMemoCharCount),
+  ],
+)
+// 내장: FocusNode 관리, 내부 우측 하단 글자수 카운터 (maxLength 지정 시)
+```
+
+**파라미터**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `placeholder` | `String` | 빈 상태 힌트 텍스트 |
+| `controller` | `TextEditingController` | 텍스트 컨트롤러 |
+| `onChanged` | `void Function(String)?` | 텍스트 변경 콜백 |
+| `inputFormatters` | `List<TextInputFormatter>?` | 입력 포매터 |
+| `autofocus` | `bool` | 자동 포커스 (기본값: false) |
+| `maxLength` | `int?` | 최대 글자수; null이면 카운터 미표시 |
+
+**동작**
+- `minLines: 3`, `maxLines: null` → 내용 초과 시 자동 확장
+- `maxLength` 지정 시: 필드 내부 우측 하단에 `현재/최대` 카운터 오버레이 표시
+- 카운터 공간 확보를 위해 하단 패딩 자동 조정 (`32px` ↔ `12px`)
 
 ---
 
