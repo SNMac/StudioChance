@@ -18,7 +18,7 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_actio
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -214,17 +214,14 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               );
                             },
                           ),
-                          BodyTextField(
+                          MemoTextField(
                             placeholder: '메모',
                             controller: _memoController,
                             onChanged: notifier.setMemo,
-                            maxLines: null,
+                            maxLength: maxMemoCharCount,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(
-                                maxMemoCharCount,
-                              ),
+                              LengthLimitingTextInputFormatter(maxMemoCharCount),
                             ],
-                            autocorrect: true,
                           ),
                         ],
                       ),

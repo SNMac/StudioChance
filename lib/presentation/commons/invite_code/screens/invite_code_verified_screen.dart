@@ -8,7 +8,7 @@ import 'package:studio_chance/presentation/commons/extensions/context_colors.dar
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/body_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -113,14 +113,13 @@ class _InviteCodeVerifiedScreenState
                       placeholder: store?.name ?? '',
                     ),
                     TitleNavigationButton(title: '색상', onPressed: () {}),
-                    BodyTextField(
+                    MemoTextField(
                       placeholder: '메모',
                       controller: _memoController,
-                      maxLines: null,
+                      maxLength: maxMemoCharCount,
                       inputFormatters: [
                         LengthLimitingTextInputFormatter(maxMemoCharCount),
                       ],
-                      autocorrect: true,
                     ),
                   ],
                 ),
