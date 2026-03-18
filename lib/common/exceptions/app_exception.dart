@@ -8,10 +8,14 @@ abstract class AppException implements Exception {
 
   AppException(this.message, {this.code});
 
-  String get title => '에러가 발생했습니다';
+  /// 사용자에게 보여줄 에러 제목
+  String get title;
 
-  // UI에 표시할 내용
-  String get content => message;
+  /// 사용자에게 보여줄 에러 내용
+  String get content;
+
+  /// true: 사용자에게 알리지 않고 넘어감, false: 다이얼로그나 스낵바로 알려야 함
+  bool get isSilentable => false;
 
   @override
   String toString() =>
