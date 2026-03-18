@@ -1,7 +1,7 @@
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 
 /// 사용자(DB) 관련 최상위 예외
-abstract class UserException extends AppException {
+sealed class UserException extends AppException {
   UserException(super.message, {super.code});
 
   @override
@@ -24,8 +24,9 @@ abstract class UserException extends AppException {
     // 5. 앱 버전/파싱 문제
     UserDataParsingException() => '데이터 형식이 일치하지 않습니다',
 
-    // 6. 기타
-    _ => '에러가 발생했습니다',
+    // 6. 유효성 검사 / 알 수 없는 에러
+    UserValidationException() ||
+    UserUnknownException() => '에러가 발생했습니다',
   };
 
   @override
@@ -51,15 +52,24 @@ abstract class UserException extends AppException {
     UserDataParsingException() =>
       '스토어에서 최신 버전으로 업데이트해주세요.\n문제가 지속되면 개발자에게 문의해주세요.',
 
-    // 6. 알 수 없는 에러
-    _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
+    // 6. 유효성 검사 / 알 수 없는 에러
+    UserValidationException() ||
+    UserUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
   };
 
   @override
   bool get isSilentable => switch (this) {
     // Firestore 작업 취소(cancelled)는 에러 메시지를 띄우지 않음
     UserCancelledException() => true,
-    _ => false,
+    UserPermissionDeniedException() ||
+    UserNotFoundException() ||
+    UserAlreadyExistsException() ||
+    UserNetworkException() ||
+    UserResourceExhaustedException() ||
+    UserTransactionException() ||
+    UserDataParsingException() ||
+    UserValidationException() ||
+    UserUnknownException() => false,
   };
 }
 

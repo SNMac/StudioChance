@@ -1,7 +1,7 @@
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 
 /// 알림 관련 최상위 예외
-abstract class NotificationException extends AppException {
+sealed class NotificationException extends AppException {
   NotificationException(super.message, {super.code});
 
   @override
@@ -19,8 +19,8 @@ abstract class NotificationException extends AppException {
     NotificationTokenFetchException() ||
     NotificationTokenDeleteException() => '알림 설정에 실패했습니다',
 
-    // 4. 기타
-    _ => '알림 에러가 발생했습니다',
+    // 4. 알 수 없는 에러
+    NotificationUnknownException() => '알림 에러가 발생했습니다',
   };
 
   @override
@@ -39,7 +39,8 @@ abstract class NotificationException extends AppException {
     NotificationTokenFetchException() => '토큰을 가져오는데 실패했습니다.\n잠시 후 다시 시도해 주세요.',
     NotificationTokenDeleteException() => '알림 설정을 초기화하는 중 에러가 발생했습니다.',
 
-    _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+    // 4. 알 수 없는 에러
+    NotificationUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
   };
 
   @override

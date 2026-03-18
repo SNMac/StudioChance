@@ -1,7 +1,7 @@
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 
 /// 인증 관련 최상위 예외
-abstract class AuthException extends AppException {
+sealed class AuthException extends AppException {
   AuthException(super.message, {super.code});
 
   @override
@@ -28,8 +28,8 @@ abstract class AuthException extends AppException {
     AuthMethodNotSupportedException() => '지원하지 않는 기능입니다',
     AuthOperationNotAllowedException() => '서버 에러가 발생했습니다',
 
-    // 5. 기본
-    _ => '로그인에 실패했습니다',
+    // 5. 알 수 없는 에러
+    AuthUnknownException() => '로그인에 실패했습니다',
   };
 
   @override
@@ -58,14 +58,28 @@ abstract class AuthException extends AppException {
     AuthCancelledException() => '로그인 과정이 중단되었습니다.',
     AuthMethodNotSupportedException() => '현재 기기에서는 지원하지 않는 기능입니다.',
 
-    _ => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
+    // 6. 알 수 없는 에러
+    AuthUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
   };
 
   @override
   bool get isSilentable => switch (this) {
     // 사용자가 스스로 취소한 경우는 에러 메시지를 띄우지 않음
     AuthCancelledException() => true,
-    _ => false,
+    AuthInvalidEmailException() ||
+    AuthWrongPasswordException() ||
+    AuthInvalidCredentialException() ||
+    AuthUserNotFoundException() ||
+    AuthUserDisabledException() ||
+    AuthEmailAlreadyInUseException() ||
+    AuthRequiresRecentLoginException() ||
+    AuthCredentialAlreadyInUseException() ||
+    AuthProviderAlreadyLinkedException() ||
+    AuthNetworkException() ||
+    AuthTooManyRequestsException() ||
+    AuthMethodNotSupportedException() ||
+    AuthOperationNotAllowedException() ||
+    AuthUnknownException() => false,
   };
 }
 
