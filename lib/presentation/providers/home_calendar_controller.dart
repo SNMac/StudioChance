@@ -138,6 +138,13 @@ class HomeCalendarController extends _$HomeCalendarController {
     );
   }
 
+  /// 월간 캘린더 날짜 탭 시 이동 (monthly_calendar_grid.dart에서 호출)
+  /// 3일 캘린더 animateToPage, 월간 캘린더는 이미 해당 페이지이므로 jump 유지
+  void selectDateFromMonthly(DateTime date) {
+    _threeDayTransition = CalendarTransitionKind.animate;
+    selectDate(date);
+  }
+
   /// 피커에서 날짜 확정 시 이동 (home_nav_bar.dart에서 호출)
   /// 3일 캘린더 + 월간 캘린더 모두 animateToPage
   void selectDateFromPicker(DateTime date) {

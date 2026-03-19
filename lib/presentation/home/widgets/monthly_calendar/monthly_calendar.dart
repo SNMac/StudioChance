@@ -99,32 +99,35 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
 
     return ColoredBox(
       color: context.systemBackground,
-      child: Column(
-        children: [
-          // 요일 헤더: 전체 높이에서 날짜 그리드 높이를 뺀 만큼 사용
-          SizedBox(
-            height: monthlyCalendarHeight - monthlyCalendarDayRowHeight * 5,
-            child: const MonthlyCalendarHeader(),
-          ),
-          SizedBox(
-            height: monthlyCalendarDayRowHeight * 5,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                final newMonth = _monthForPage(index);
-                ref
-                    .read(homeCalendarControllerProvider.notifier)
-                    .setDisplayedMonth(newMonth);
-              },
-              itemBuilder: (context, index) {
-                return MonthlyCalendarGrid(
-                  displayedMonth: _monthForPage(index),
-                  selectedStartDate: selectedStartDate,
-                );
-              },
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            // 요일 헤더
+            SizedBox(
+              height: monthlyCalendarWeekdayRowHeight,
+              child: const MonthlyCalendarHeader(),
             ),
-          ),
-        ],
+            // 날짜 그리드: 남은 공간 모두 사용
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  final newMonth = _monthForPage(index);
+                  ref
+                      .read(homeCalendarControllerProvider.notifier)
+                      .setDisplayedMonth(newMonth);
+                },
+                itemBuilder: (context, index) {
+                  return MonthlyCalendarGrid(
+                    displayedMonth: _monthForPage(index),
+                    selectedStartDate: selectedStartDate,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

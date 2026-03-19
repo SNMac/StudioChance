@@ -75,6 +75,11 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         if (_isSyncing || !ctrl.hasClients) return;
         final offset = ctrl.offset;
         if (offset == _currentVerticalOffset) return;
+        // bouncing 범위(0 미만 또는 maxScrollExtent 초과)에서는 동기화 건너뜀
+        // → bouncing 중 다른 열이 bounce 위치로 jumpTo되어 입력이 차단되는 현상 방지
+        if (ctrl.position.hasContentDimensions) {
+          if (offset < 0 || offset > ctrl.position.maxScrollExtent) return;
+        }
         _currentVerticalOffset = offset;
         _syncAllScrollControllers(offset, except: ctrl);
       });
@@ -191,7 +196,39 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         final dateAreaWidth = constraints.maxWidth - timeColumnWidth - calendarDividerThickness;
         final pageWidth = dateAreaWidth / 3;
 
-        return Row(
+        // GestureDetector를 최상위로 배치 → 시간 열 포함 전체 영역에서 핀치 줌 인식
+        return GestureDetector(
+          onScaleStart: (_) {
+            _baseHourHeight =
+                ref.read(homeCalendarControllerProvider).hourHeight;
+          },
+          onScaleUpdate: (details) {
+            if (details.pointerCount < 2) return;
+            final oldHeight =
+                ref.read(homeCalendarControllerProvider).hourHeight;
+            final newHeight = (_baseHourHeight * details.scale)
+                .clamp(minHourHeight, maxHourHeight);
+            if (oldHeight > 0 && newHeight != oldHeight) {
+              double viewportH = 600;
+              if (_timeColumnScrollController.hasClients) {
+                viewportH =
+                    _timeColumnScrollController.position.viewportDimension;
+              }
+              final rawOffset =
+                  _currentVerticalOffset * (newHeight / oldHeight);
+              final maxOffset =
+                  (newHeight * 24 - viewportH).clamp(0.0, double.infinity);
+              final newOffset = rawOffset.clamp(0.0, maxOffset);
+              _currentVerticalOffset = newOffset;
+              _syncAllScrollControllers(newOffset);
+            }
+            unawaited(
+              ref
+                  .read(homeCalendarControllerProvider.notifier)
+                  .updateHourHeight(newHeight),
+            );
+          },
+          child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── 고정 시간 열 ──────────────────────────────
@@ -239,7 +276,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                                 left: 0,
                                 right: 0,
                                 child: Transform.translate(
-                                  offset: const Offset(0, -12),
+                                  offset: const Offset(0, -6),
                                   child: Align(
                                     alignment: Alignment.topRight,
                                     child: Padding(
@@ -279,6 +316,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                   PageView.builder(
                     controller: _pageController,
                     physics: const PageScrollPhysics(),
+                    // padEnds: false → 현재 페이지가 왼쪽 첫 번째 열에 표시됨 (오늘이 맨 왼쪽)
+                    padEnds: false,
                     onPageChanged: (index) {
                       final newStart = _dateForPage(index);
                       _evictDistantControllers(index);
@@ -304,53 +343,11 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                               height: calendarDividerThickness,
                               color: context.separator),
                           // 이벤트 그리드 (수직 스크롤)
-                          // 핀치 줌: GestureDetector → ScaleGestureRecognizer(2손가락)와
-                          //          PageScrollPhysics(1손가락)가 Flutter 제스처 아레나에서 자동 구분됨
+                          // 핀치 줌은 ThreeDayCalendar 최상위 GestureDetector에서 처리
                           Expanded(
-                            child: GestureDetector(
-                              onScaleStart: (_) {
-                                _baseHourHeight = ref
-                                    .read(homeCalendarControllerProvider)
-                                    .hourHeight;
-                              },
-                              onScaleUpdate: (details) {
-                                if (details.pointerCount < 2) return;
-                                final oldHeight = ref
-                                    .read(homeCalendarControllerProvider)
-                                    .hourHeight;
-                                final newHeight =
-                                    (_baseHourHeight * details.scale)
-                                        .clamp(minHourHeight, maxHourHeight);
-                                // 스크롤 비율 보정: 확대/축소 후 뷰포트 중앙 위치 유지
-                                if (oldHeight > 0 && newHeight != oldHeight) {
-                                  // 뷰포트 높이 파악 (maxScrollExtent 계산에 사용)
-                                  double viewportH = 600;
-                                  if (_timeColumnScrollController.hasClients) {
-                                    viewportH = _timeColumnScrollController
-                                        .position.viewportDimension;
-                                  }
-                                  final rawOffset = _currentVerticalOffset *
-                                      (newHeight / oldHeight);
-                                  final maxOffset =
-                                      (newHeight * 24 - viewportH)
-                                          .clamp(0.0, double.infinity);
-                                  final newOffset =
-                                      rawOffset.clamp(0.0, maxOffset);
-                                  _currentVerticalOffset = newOffset;
-                                  _syncAllScrollControllers(newOffset);
-                                }
-                                // updateHourHeight는 Future<void> — unawaited로 fire-and-forget
-                                unawaited(
-                                  ref
-                                      .read(homeCalendarControllerProvider
-                                          .notifier)
-                                      .updateHourHeight(newHeight),
-                                );
-                              },
-                              child: TimeGrid(
-                                scrollController: _controllerForPage(index),
-                                isToday: _isToday(date),
-                              ),
+                            child: TimeGrid(
+                              scrollController: _controllerForPage(index),
+                              isToday: _isToday(date),
                             ),
                           ),
                         ],
@@ -379,6 +376,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
               ),
             ),
           ],
+        ),
         );
       },
     );

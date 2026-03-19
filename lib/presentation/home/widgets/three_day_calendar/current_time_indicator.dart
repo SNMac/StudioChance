@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
-/// 현재 시간의 캡슐 top 위치 계산 (시간 레이블 중앙과 y축 정렬)
-/// 시간 레이블: Transform.translate(0, -12) → 레이블 중앙 ≈ hourHeight*hour - 6
-/// 보정값 6px을 빼서 캡슐 중앙을 레이블 중앙에 일치시킴
+/// 현재 시간의 캡슐 top 위치 계산
+/// 캡슐 중앙 = hourHeight * (hour + minute/60) = 정확한 현재 시간 위치
+/// 시간 레이블도 동일 기준으로 중앙 정렬되므로 y축 일치
 double currentTimeTopPosition(double hourHeight) {
   final now = DateTime.now();
   return hourHeight * (now.hour + now.minute / 60) -
-      currentTimeCapsuleHeight / 2 -
-      6;
+      currentTimeCapsuleHeight / 2;
 }
 
 /// 현재 시간 캡슐 위젯 (고정 시간 열 Stack의 직접 자식으로 배치)

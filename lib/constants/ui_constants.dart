@@ -19,7 +19,7 @@ const double currentTimeCapsuleHeight = 13.0;
 
 // 홈 화면 - 월간 캘린더
 const double monthlyCalendarDayRowHeight = 40.0; // 날짜 셀 행 높이
-const double monthlyCalendarWeekdayRowHeight = 36.0; // 요일 헤더 행 높이
+const double monthlyCalendarWeekdayRowHeight = 20.0; // 요일 헤더 행 높이
 const double monthlyCalendarHeight = 260.0; // 월간 캘린더 총 높이
 
 // 홈 화면 - 3일 캘린더 헤더

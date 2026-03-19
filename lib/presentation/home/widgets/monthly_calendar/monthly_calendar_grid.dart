@@ -48,7 +48,8 @@ class MonthlyCalendarGrid extends ConsumerWidget {
 
     return Column( // 5행 × 7열 = 35 셀
       children: List.generate(5, (row) {
-        return Row(
+        return Expanded(
+          child: Row(
           children: List.generate(7, (col) {
             final cellIndex = row * 7 + col;
 
@@ -176,10 +177,12 @@ class MonthlyCalendarGrid extends ConsumerWidget {
                 onTap: () {
                   ref
                       .read(homeCalendarControllerProvider.notifier)
-                      .selectDate(cellDate);
+                      .selectDateFromMonthly(cellDate);
                 },
                 child: Center(
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
                     width: 40,
                     height: 40,
                     decoration: decoration ?? const BoxDecoration(),
@@ -199,6 +202,7 @@ class MonthlyCalendarGrid extends ConsumerWidget {
               ),
             );
           }),
+          ),
         );
       }),
     );
