@@ -1,57 +1,50 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
-/// 현재 시간 인디케이터 위젯
-/// 1분마다 자동으로 갱신되며, 좌측 캡슐(시간 표시)과 우측 수평선으로 구성됨
-class CurrentTimeIndicator extends ConsumerStatefulWidget {
-  const CurrentTimeIndicator({super.key, required this.hourHeight});
+/// 현재 시간의 캡슐 top 위치 계산 (시간 레이블 중앙과 y축 정렬)
+/// 시간 레이블: Transform.translate(0, -12) → 레이블 중앙 ≈ hourHeight*hour - 6
+/// 보정값 6px을 빼서 캡슐 중앙을 레이블 중앙에 일치시킴
+double currentTimeTopPosition(double hourHeight) {
+  final now = DateTime.now();
+  return hourHeight * (now.hour + now.minute / 60) -
+      currentTimeCapsuleHeight / 2 -
+      6;
+}
+
+/// 현재 시간 캡슐 위젯 (고정 시간 열 Stack의 직접 자식으로 배치)
+/// Positioned를 직접 반환하므로 타이머 rebuild 시 top 위치가 자동 갱신됨
+class CurrentTimeCapsule extends StatefulWidget {
+  const CurrentTimeCapsule({super.key, required this.hourHeight});
 
   final double hourHeight;
 
-  /// 현재 시간 기준 top 위치를 계산하여 반환
-  /// 캡슐이 시간 레이블과 수직으로 정렬되도록 캡슐 높이의 절반만큼 위로 이동
-  /// 상위 위젯(TimeGrid)에서 Positioned 배치 시 사용
-  static double topPosition(double hourHeight) {
-    final now = DateTime.now();
-    return hourHeight * (now.hour + now.minute / 60) -
-        currentTimeCapsuleHeight / 2;
-  }
-
   @override
-  ConsumerState<CurrentTimeIndicator> createState() =>
-      _CurrentTimeIndicatorState();
+  State<CurrentTimeCapsule> createState() => _CurrentTimeCapsuleState();
 }
 
-class _CurrentTimeIndicatorState extends ConsumerState<CurrentTimeIndicator> {
+class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
   late Timer _timer;
-  late DateTime _now;
 
   @override
   void initState() {
     super.initState();
-    _now = DateTime.now();
     _scheduleNextUpdate();
   }
 
-  /// 다음 분 정각에 맞춰 타이머 설정 후 1분 간격으로 반복
   void _scheduleNextUpdate() {
     final now = DateTime.now();
-    // 다음 분 정각까지 남은 시간 계산
-    final nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute)
-        .add(const Duration(minutes: 1));
-    final delay = nextMinute.difference(now);
-
-    _timer = Timer(delay, () {
+    final nextMinute =
+        DateTime(now.year, now.month, now.day, now.hour, now.minute)
+            .add(const Duration(minutes: 1));
+    _timer = Timer(nextMinute.difference(now), () {
       if (!mounted) return;
-      setState(() => _now = DateTime.now());
-      // 이후 1분 간격으로 반복
+      setState(() {});
       _timer = Timer.periodic(const Duration(minutes: 1), (_) {
         if (!mounted) return;
-        setState(() => _now = DateTime.now());
+        setState(() {});
       });
     });
   }
@@ -62,47 +55,95 @@ class _CurrentTimeIndicatorState extends ConsumerState<CurrentTimeIndicator> {
     super.dispose();
   }
 
-  /// 현재 시간을 "HH:MM" 형식으로 반환
-  String get _timeText {
-    final hour = _now.hour.toString().padLeft(2, '0');
-    final minute = _now.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final timeText =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    return Positioned(
+      top: currentTimeTopPosition(widget.hourHeight),
+      right: 0,
+      child: Container(
+        width: currentTimeCapsuleWidth,
+        height: currentTimeCapsuleHeight,
+        decoration: BoxDecoration(
+          color: context.systemRed,
+          borderRadius: BorderRadius.circular(100),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          timeText,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                height: 1.0,
+                color: context.white,
+              ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 현재 시간 수평선 위젯 (날짜 열 event grid Stack의 직접 자식으로 배치)
+/// Positioned를 직접 반환하므로 타이머 rebuild 시 top 위치가 자동 갱신됨
+/// isToday: true → systemRed, false → systemRed 30% opacity
+class CurrentTimeLine extends StatefulWidget {
+  const CurrentTimeLine({
+    super.key,
+    required this.hourHeight,
+    required this.isToday,
+  });
+
+  final double hourHeight;
+  final bool isToday;
+
+  @override
+  State<CurrentTimeLine> createState() => _CurrentTimeLineState();
+}
+
+class _CurrentTimeLineState extends State<CurrentTimeLine> {
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleNextUpdate();
+  }
+
+  void _scheduleNextUpdate() {
+    final now = DateTime.now();
+    final nextMinute =
+        DateTime(now.year, now.month, now.day, now.hour, now.minute)
+            .add(const Duration(minutes: 1));
+    _timer = Timer(nextMinute.difference(now), () {
+      if (!mounted) return;
+      setState(() {});
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (!mounted) return;
+        setState(() {});
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // 캡슐 좌측 여백: 시간 레이블 위에 오도록 위치 조정
-        // 캡슐 우측이 timeColumnWidth + 0.5(구분선)에 맞닿도록
-        SizedBox(width: timeColumnWidth + 0.5 - currentTimeCapsuleWidth),
-        // 캡슐: 현재 시간 표시
-        Container(
-          width: currentTimeCapsuleWidth,
-          height: currentTimeCapsuleHeight,
-          decoration: BoxDecoration(
-            color: context.systemRed,
-            borderRadius: BorderRadius.circular(100),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            _timeText,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  height: 1.0,
-                  color: context.white,
-                ),
-          ),
-        ),
-        // 우측 수평선
-        Expanded(
-          child: Container(
-            height: currentTimeLineThickness,
-            color: context.systemRed,
-          ),
-        ),
-      ],
+    // 선의 top = 캡슐 top + capsuleHeight/2 (캡슐 중앙 = 선 y좌표)
+    final top = currentTimeTopPosition(widget.hourHeight) +
+        currentTimeCapsuleHeight / 2;
+    final color = widget.isToday
+        ? context.systemRed
+        : context.systemRed.withValues(alpha: 0.3);
+    return Positioned(
+      top: top,
+      left: 0,
+      right: 0,
+      child: Container(height: currentTimeLineThickness, color: color),
     );
   }
 }
