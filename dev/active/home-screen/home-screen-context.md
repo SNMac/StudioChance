@@ -1,15 +1,99 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20
+Last Updated: 2026-03-20 (2차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~12 완료. `dart analyze lib/` → No issues found.
+Phase 1~13 완료 (일부 미세조정 필요). `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
 
 ---
 
-## Phase 13 피드백 (다음 세션 구현 예정)
+## Phase 13 구현 내용 (이번 세션 완료)
+
+### 핵심 변경 사항
+
+**13-3: padEnds:false** (`three_day_calendar.dart`)
+- `PageView.builder(padEnds: false)` → 현재 페이지가 뷰포트 왼쪽 첫 번째 열에 배치
+- 오늘 날짜가 항상 왼쪽 첫 번째 열에 표시됨
+- `PageController`가 아닌 `PageView.builder` 위젯에 속성 있음 (주의)
+
+**13-4/5: currentTimeTopPosition 수정** (`current_time_indicator.dart`)
+- 기존: `hourHeight * (h+m/60) - capsuleHeight/2 - 6` (6px 추가 보정)
+- 변경: `hourHeight * (h+m/60) - capsuleHeight/2` (순수 중앙 정렬)
+- 캡슐 중앙 = 정확한 현재 시간 위치, 구분선과 일치
+
+**13-6: GestureDetector 이동** (`three_day_calendar.dart`)
+- PageView 내 각 페이지 GestureDetector → LayoutBuilder 결과(Row 전체) 래핑
+- 시간 열 포함 전체 영역에서 핀치 줌 인식
+
+**13-7/8: 월간 캘린더 레이아웃** (`monthly_calendar.dart`, `ui_constants.dart`)
+- `monthlyCalendarWeekdayRowHeight: 36 → 20`
+- `Padding(all: 8)` + `Expanded` 구조로 변경 (날짜 그리드가 남은 공간 채움)
+- `MonthlyCalendarGrid`의 5행 Column 각 Row를 `Expanded`로 감쌈 (균등 분배)
+
+**13-9: selectDateFromMonthly** (`home_calendar_controller.dart`, `monthly_calendar_grid.dart`)
+- 새 메서드: `_threeDayTransition = animate`만 설정 (월간 캘린더는 jump 유지)
+- 월간 캘린더 탭 → 3일 캘린더 animateToPage
+
+**13-10: 시간 레이블 translate** (`three_day_calendar.dart`)
+- `Offset(0, -12)` → `Offset(0, -6)` (레이블 중앙이 구분선에 더 근접)
+- 아직 완전한 정렬 미달 → Phase 14-3에서 추가 조정 필요
+
+**13-2: bouncing sync** (`three_day_calendar.dart`)
+- bouncing 범위(offset < 0 또는 > maxScrollExtent)에서 sync 건너뜀
+- 결과: bouncing 후 입력 차단 해소, 그러나 하나의 날짜만 bounce 효과
+- Phase 14-2에서 전체 bounce 동기화로 재수정 필요
+
+**13-1: AnimatedContainer** (`monthly_calendar_grid.dart`)
+- `Container` → `AnimatedContainer(duration: 200ms, curve: easeInOut)`
+- 비선택 셀 `BoxDecoration()` → 선택 셀 `BoxDecoration(radius:8)` 보간 시 radius 중간값 = 0으로 보임
+- Phase 14-4에서 기본 BoxDecoration에 radius 추가 필요
+
+---
+
+## Phase 14 피드백 (다음 세션 구현 예정)
+
+### 14-1. 네비바 버튼 기능 변경 (피처)
+- 현재 "피커 버튼" → **점포 필터 버튼** (애플 캘린더의 "캘린더 선택"과 유사)
+- 탭 시 사용자가 멤버로 있는 점포 목록 표시 → 어떤 점포 일정을 볼지 필터링
+- 이 기능은 별도 데이터 연동이 필요한 피처 (점포/멤버 도메인)
+- **시각적 크기 동일 확인**: 점포 필터 버튼 아이콘 크기 = 오늘 날짜 버튼 크기 (24×24, 터치 영역 제외 순수 시각 크기 기준)
+  - `home_nav_bar.dart`에서 두 버튼 나란히 비교 확인
+
+### 14-2. bouncing 전체 날짜 동기화
+- 모든 날짜 열이 함께 bounce해야 함
+- `_syncAllScrollControllers`에서 bouncing offset도 허용 (`try-catch` 방어)
+- 관련 파일: `three_day_calendar.dart` `_controllerForPage` 내 listener + `_syncAllScrollControllers`
+
+### 14-3. 시간 라벨 Y축 정렬 추가 조정
+- `-6` 후에도 아직 라벨이 살짝 위에 있음
+- `TextPainter`로 실제 렌더 높이 측정, 또는 `-5`, `-4` 값으로 시도
+
+### 14-4. AnimatedContainer 선택 UI 수정
+- **문제 1**: 새 선택 셀이 이전 셀보다 먼저 rebuild 발생 → 순서가 이상하게 보임
+- **문제 2**: 비선택 셀 `BoxDecoration()` (radius=0)이 기본값이라 애니메이션 중 코너 없음
+- **해결**: 모든 셀의 기본 `BoxDecoration(borderRadius: BorderRadius.circular(8))`로 통일
+
+### 14-5. 네비바 연/월 animateToPage 중 중간값 표시 버그
+- `monthly_calendar.dart`의 `onPageChanged`가 animateToPage 중 중간 페이지마다 호출됨
+- `_isAnimating` 플래그로 중간 pageChanged 이벤트 무시
+- animateToPage `.then((_) => _isAnimating = false)` + mounted 체크
+
+### 14-6. 날짜 열 사이 구분선 구조 변경
+- Stack Positioned → 각 날짜 Column의 오른쪽 Border로 이동
+- `DecoratedBox(Border(right: BorderSide(0.5px, separator)))`로 Column 래핑
+- Stack의 기존 2개 Positioned 구분선 제거
+
+### 14-7. 현재 시간 캡슐 X축 위치 조정
+- `Positioned(right: 0)` → `Positioned(right: 4)` (레이블 우측 패딩과 정렬)
+- 파일: `three_day_calendar.dart` `CurrentTimeCapsule(hourHeight: hourHeight)` 아래 부분
+  - 현재 직접 위젯 배치, `Positioned`는 `CurrentTimeCapsule` 내부에 있음 (`current_time_indicator.dart`)
+  - `CurrentTimeCapsule.build()` 내 `Positioned(right: 0)` → `Positioned(right: 4)`
+
+---
+
+## Phase 13 피드백 (구현 완료)
 
 2026-03-20 세션에서 수집된 피드백. 아직 구현 시작 전.
 
