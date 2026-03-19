@@ -188,7 +188,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final pageWidth = constraints.maxWidth / 3;
+        final dateAreaWidth = constraints.maxWidth - timeColumnWidth - calendarDividerThickness;
+        final pageWidth = dateAreaWidth / 3;
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
