@@ -1,24 +1,19 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_displaymode/flutter_displaymode.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:studio_chance/domain/usecases/auth_use_case.dart';
 
+import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
 import 'package:studio_chance/my_app.dart';
 
 import 'firebase_options.dart';
 
 void main() async {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -37,10 +32,6 @@ void main() async {
 
   await _setPreferredOrientations();
   await _checkFirstLaunchAndClearData();
-
-  if (Platform.isAndroid) {
-    await FlutterDisplayMode.setHighRefreshRate();
-  }
 
   runApp(ProviderScope(child: const MyApp()));
 }
@@ -63,7 +54,7 @@ Future<void> _checkFirstLaunchAndClearData() async {
 
       logger.i('앱 최초 실행 감지 - 기존 인증 데이터 삭제');
     } catch (e) {
-      logger.e('기존 인증 데이터 삭제 중 오류 발생', error: e);
+      logger.e('기존 인증 데이터 삭제 중 에러 발생', error: e);
     } finally {
       container.dispose();
     }

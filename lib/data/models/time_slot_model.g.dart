@@ -8,6 +8,7 @@ part of 'time_slot_model.dart';
 
 _TimeSlotModel _$TimeSlotModelFromJson(Map<String, dynamic> json) =>
     _TimeSlotModel(
+      isAllDay: json['isAllDay'] as bool,
       startTime: (json['startTime'] as num).toInt(),
       endTime: (json['endTime'] as num).toInt(),
       price: (json['price'] as num).toInt(),
@@ -17,6 +18,7 @@ _TimeSlotModel _$TimeSlotModelFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$TimeSlotModelToJson(_TimeSlotModel instance) =>
     <String, dynamic>{
+      'isAllDay': instance.isAllDay,
       'startTime': instance.startTime,
       'endTime': instance.endTime,
       'price': instance.price,

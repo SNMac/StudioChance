@@ -1,16 +1,76 @@
+import 'package:studio_chance/common/exceptions/app_exception.dart';
+
 /// 사용자(DB) 관련 최상위 예외
-abstract class UserException implements Exception {
-  /// 개발자/로그용 원본 메시지
-  final String message;
-
-  /// 개발자/로그용 원본 에러 코드
-  final String? code;
-
-  UserException(this.message, {this.code});
+sealed class UserException extends AppException {
+  UserException(super.message, {super.code});
 
   @override
-  String toString() =>
-      '[$runtimeType] $message ${code != null ? '(Code: $code)' : ''}';
+  String get title => switch (this) {
+    // 1. 권한/보안
+    UserPermissionDeniedException() => '권한이 없습니다',
+
+    // 2. 데이터 존재 여부
+    UserNotFoundException() => '사용자를 찾을 수 없습니다',
+    UserAlreadyExistsException() => '이미 등록된 사용자입니다',
+
+    // 3. 네트워크/환경/리소스
+    UserNetworkException() => '네트워크 에러가 발생했습니다',
+    UserResourceExhaustedException() => '요청 한도가 초과되었습니다',
+
+    // 4. 데이터 충돌/처리 실패/취소
+    UserTransactionException() => '처리에 실패했습니다',
+    UserCancelledException() => '작업이 취소되었습니다',
+
+    // 5. 앱 버전/파싱 문제
+    UserDataParsingException() => '데이터 형식이 일치하지 않습니다',
+
+    // 6. 유효성 검사 / 알 수 없는 에러
+    UserValidationException() ||
+    UserUnknownException() => '에러가 발생했습니다',
+  };
+
+  @override
+  String get content => switch (this) {
+    // 1. 권한 부족
+    UserPermissionDeniedException() =>
+      '이 작업을 수행할 권한이 없습니다.\n문제가 지속되면 개발자에게 문의해주세요.',
+
+    // 2. 데이터 상태 (없음 / 이미 있음)
+    UserNotFoundException() => '이미 삭제되었거나 존재하지 않는 사용자입니다.',
+    UserAlreadyExistsException() => '이미 서버에 등록된 사용자입니다.',
+
+    // 3. 네트워크 및 리소스 이슈
+    UserNetworkException() => '인터넷 연결 상태를 확인해주세요.',
+    UserResourceExhaustedException() =>
+      '잠시 후 다시 시도해주세요.\n문제가 지속되면 개발자에게 문의해주세요.',
+
+    // 4. 처리 과정 (충돌 / 취소)
+    UserTransactionException() => '일시적인 충돌이 발생했습니다.\n잠시 후 다시 시도해주세요.',
+    UserCancelledException() => '작업이 중단되었습니다.',
+
+    // 5. 파싱 에러 (업데이트 유도)
+    UserDataParsingException() =>
+      '스토어에서 최신 버전으로 업데이트해주세요.\n문제가 지속되면 개발자에게 문의해주세요.',
+
+    // 6. 유효성 검사 / 알 수 없는 에러
+    UserValidationException() ||
+    UserUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해주세요.',
+  };
+
+  @override
+  bool get isSilentable => switch (this) {
+    // Firestore 작업 취소(cancelled)는 에러 메시지를 띄우지 않음
+    UserCancelledException() => true,
+    UserPermissionDeniedException() ||
+    UserNotFoundException() ||
+    UserAlreadyExistsException() ||
+    UserNetworkException() ||
+    UserResourceExhaustedException() ||
+    UserTransactionException() ||
+    UserDataParsingException() ||
+    UserValidationException() ||
+    UserUnknownException() => false,
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -64,9 +124,9 @@ class UserDataParsingException extends UserException {
     : super(message, code: code);
 }
 
-/// 알 수 없는 오류가 발생했을 때 사용하는 예외
+/// 알 수 없는 에러가 발생했을 때 사용하는 예외
 ///
-/// 정의되지 않은 에러 코드나 시스템 내부 오류(`internal`) 등을 포괄합니다.
+/// 정의되지 않은 에러 코드나 시스템 내부 에러(`internal`) 등을 포괄합니다.
 class UserUnknownException extends UserException {
   UserUnknownException({required String message, String? code})
     : super(message, code: code);
@@ -96,5 +156,11 @@ class UserResourceExhaustedException extends UserException {
 /// Firebase Code: `cancelled`
 class UserCancelledException extends UserException {
   UserCancelledException({String message = 'Operation cancelled', String? code})
+    : super(message, code: code);
+}
+
+/// 사용자 정보 등록, 수정 시 형식에 맞지 않는 데이터가 있을 때 발생하는 예외
+class UserValidationException extends UserException {
+  UserValidationException({required String message, String? code})
     : super(message, code: code);
 }

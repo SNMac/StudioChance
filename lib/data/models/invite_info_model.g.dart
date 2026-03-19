@@ -7,15 +7,7 @@ part of 'invite_info_model.dart';
 // **************************************************************************
 
 _InviteInfoModel _$InviteInfoModelFromJson(Map<String, dynamic> json) =>
-    _InviteInfoModel(
-      inviteCode: json['inviteCode'] as String,
-      expiresAt: const TimestampConverter().fromJson(
-        json['expiresAt'] as Timestamp,
-      ),
-    );
+    _InviteInfoModel(inviteCode: json['inviteCode'] as String);
 
 Map<String, dynamic> _$InviteInfoModelToJson(_InviteInfoModel instance) =>
-    <String, dynamic>{
-      'inviteCode': instance.inviteCode,
-      'expiresAt': const TimestampConverter().toJson(instance.expiresAt),
-    };
+    <String, dynamic>{'inviteCode': instance.inviteCode};

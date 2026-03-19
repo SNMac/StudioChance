@@ -1,0 +1,101 @@
+{
+    "version": "1.0",
+    "description": "Skill activation triggers for Claude Code. Controls when skills automatically suggest or block actions.",
+    "skills": {
+        "skill-developer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Meta-skill for creating and managing Claude Code skills",
+            "promptTriggers": {
+                "keywords": [
+                    "skill system",
+                    "create skill",
+                    "add skill",
+                    "skill triggers",
+                    "skill rules",
+                    "hook system",
+                    "skill development",
+                    "skill-rules.json",
+                    "스킬 생성",
+                    "스킬 추가",
+                    "스킬 만들기"
+                ],
+                "intentPatterns": [
+                    "(how do|how does|explain).*?skill",
+                    "(create|add|modify|build).*?skill",
+                    "skill.*?(work|trigger|activate|system)",
+                    "(스킬|skill).*(만들|생성|추가|수정)"
+                ]
+            }
+        },
+        "flutter-dev-guidelines": {
+            "type": "guardrail",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Flutter/Dart 개발 가이드라인. Clean Architecture, Riverpod, GoRouter, Firebase, Freezed 패턴",
+            "promptTriggers": {
+                "keywords": [
+                    "widget",
+                    "화면",
+                    "screen",
+                    "provider",
+                    "riverpod",
+                    "controller",
+                    "repository",
+                    "use case",
+                    "usecase",
+                    "data source",
+                    "datasource",
+                    "entity",
+                    "model",
+                    "route",
+                    "라우트",
+                    "gorouter",
+                    "freezed",
+                    "firestore",
+                    "firebase",
+                    "에러 처리",
+                    "error handling",
+                    "either",
+                    "상태관리",
+                    "state management",
+                    "네비게이션",
+                    "navigation"
+                ],
+                "intentPatterns": [
+                    "(만들|생성|추가|구현|수정).*(화면|위젯|스크린|컨트롤러|프로바이더|레포지토리)",
+                    "(create|add|implement|build|update).*(screen|widget|controller|provider|repository|use.?case|data.?source)",
+                    "(화면|위젯|스크린).*(만들|추가|구현)",
+                    "(how to|best practice).*(flutter|widget|provider|route)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "lib/presentation/**/*.dart",
+                    "lib/domain/**/*.dart",
+                    "lib/data/**/*.dart",
+                    "lib/router/**/*.dart",
+                    "lib/common/**/*.dart"
+                ],
+                "pathExclusions": [
+                    "**/*.g.dart",
+                    "**/*.freezed.dart"
+                ]
+            }
+        }
+    },
+    "notes": {
+        "enforcement_types": {
+            "suggest": "Skill suggestion appears but doesn't block execution",
+            "block": "Requires skill to be used before proceeding (guardrail)",
+            "warn": "Shows warning but allows proceeding"
+        },
+        "priority_levels": {
+            "critical": "Highest - Always trigger when matched",
+            "high": "Important - Trigger for most matches",
+            "medium": "Moderate - Trigger for clear matches",
+            "low": "Optional - Trigger only for explicit matches"
+        }
+    }
+}

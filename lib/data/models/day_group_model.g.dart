@@ -13,8 +13,8 @@ _DayGroupModel _$DayGroupModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => (e as num).toInt())
               .toList() ??
           const [],
-      headcountRule: HeadcountRuleModel.fromJson(
-        json['headcountRule'] as Map<String, dynamic>,
+      headcountRuleModel: HeadcountRuleModel.fromJson(
+        json['headcountRuleModel'] as Map<String, dynamic>,
       ),
       timeSlots:
           (json['timeSlots'] as List<dynamic>?)
@@ -26,6 +26,6 @@ _DayGroupModel _$DayGroupModelFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$DayGroupModelToJson(_DayGroupModel instance) =>
     <String, dynamic>{
       'days': instance.days,
-      'headcountRule': instance.headcountRule.toJson(),
+      'headcountRuleModel': instance.headcountRuleModel.toJson(),
       'timeSlots': instance.timeSlots.map((e) => e.toJson()).toList(),
     };

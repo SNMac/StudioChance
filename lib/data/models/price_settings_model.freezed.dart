@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PriceSettingsModel {
 
- List<DayGroupModel> get dayGroups;
+ List<DayGroupModel> get dayGroupModels;
 /// Create a copy of PriceSettingsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $PriceSettingsModelCopyWith<PriceSettingsModel> get copyWith => _$PriceSettingsM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceSettingsModel&&const DeepCollectionEquality().equals(other.dayGroups, dayGroups));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceSettingsModel&&const DeepCollectionEquality().equals(other.dayGroupModels, dayGroupModels));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(dayGroups));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(dayGroupModels));
 
 @override
 String toString() {
-  return 'PriceSettingsModel(dayGroups: $dayGroups)';
+  return 'PriceSettingsModel(dayGroupModels: $dayGroupModels)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $PriceSettingsModelCopyWith<$Res>  {
   factory $PriceSettingsModelCopyWith(PriceSettingsModel value, $Res Function(PriceSettingsModel) _then) = _$PriceSettingsModelCopyWithImpl;
 @useResult
 $Res call({
- List<DayGroupModel> dayGroups
+ List<DayGroupModel> dayGroupModels
 });
 
 
@@ -65,9 +65,9 @@ class _$PriceSettingsModelCopyWithImpl<$Res>
 
 /// Create a copy of PriceSettingsModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? dayGroups = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? dayGroupModels = null,}) {
   return _then(_self.copyWith(
-dayGroups: null == dayGroups ? _self.dayGroups : dayGroups // ignore: cast_nullable_to_non_nullable
+dayGroupModels: null == dayGroupModels ? _self.dayGroupModels : dayGroupModels // ignore: cast_nullable_to_non_nullable
 as List<DayGroupModel>,
   ));
 }
@@ -153,10 +153,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DayGroupModel> dayGroups)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DayGroupModel> dayGroupModels)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PriceSettingsModel() when $default != null:
-return $default(_that.dayGroups);case _:
+return $default(_that.dayGroupModels);case _:
   return orElse();
 
 }
@@ -174,10 +174,10 @@ return $default(_that.dayGroups);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DayGroupModel> dayGroups)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DayGroupModel> dayGroupModels)  $default,) {final _that = this;
 switch (_that) {
 case _PriceSettingsModel():
-return $default(_that.dayGroups);case _:
+return $default(_that.dayGroupModels);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +194,10 @@ return $default(_that.dayGroups);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DayGroupModel> dayGroups)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DayGroupModel> dayGroupModels)?  $default,) {final _that = this;
 switch (_that) {
 case _PriceSettingsModel() when $default != null:
-return $default(_that.dayGroups);case _:
+return $default(_that.dayGroupModels);case _:
   return null;
 
 }
@@ -208,15 +208,15 @@ return $default(_that.dayGroups);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _PriceSettingsModel implements PriceSettingsModel {
-  const _PriceSettingsModel({final  List<DayGroupModel> dayGroups = const []}): _dayGroups = dayGroups;
+class _PriceSettingsModel extends PriceSettingsModel {
+  const _PriceSettingsModel({final  List<DayGroupModel> dayGroupModels = const []}): _dayGroupModels = dayGroupModels,super._();
   factory _PriceSettingsModel.fromJson(Map<String, dynamic> json) => _$PriceSettingsModelFromJson(json);
 
- final  List<DayGroupModel> _dayGroups;
-@override@JsonKey() List<DayGroupModel> get dayGroups {
-  if (_dayGroups is EqualUnmodifiableListView) return _dayGroups;
+ final  List<DayGroupModel> _dayGroupModels;
+@override@JsonKey() List<DayGroupModel> get dayGroupModels {
+  if (_dayGroupModels is EqualUnmodifiableListView) return _dayGroupModels;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_dayGroups);
+  return EqualUnmodifiableListView(_dayGroupModels);
 }
 
 
@@ -233,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceSettingsModel&&const DeepCollectionEquality().equals(other._dayGroups, _dayGroups));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceSettingsModel&&const DeepCollectionEquality().equals(other._dayGroupModels, _dayGroupModels));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_dayGroups));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_dayGroupModels));
 
 @override
 String toString() {
-  return 'PriceSettingsModel(dayGroups: $dayGroups)';
+  return 'PriceSettingsModel(dayGroupModels: $dayGroupModels)';
 }
 
 
@@ -253,7 +253,7 @@ abstract mixin class _$PriceSettingsModelCopyWith<$Res> implements $PriceSetting
   factory _$PriceSettingsModelCopyWith(_PriceSettingsModel value, $Res Function(_PriceSettingsModel) _then) = __$PriceSettingsModelCopyWithImpl;
 @override @useResult
 $Res call({
- List<DayGroupModel> dayGroups
+ List<DayGroupModel> dayGroupModels
 });
 
 
@@ -270,9 +270,9 @@ class __$PriceSettingsModelCopyWithImpl<$Res>
 
 /// Create a copy of PriceSettingsModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? dayGroups = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? dayGroupModels = null,}) {
   return _then(_PriceSettingsModel(
-dayGroups: null == dayGroups ? _self._dayGroups : dayGroups // ignore: cast_nullable_to_non_nullable
+dayGroupModels: null == dayGroupModels ? _self._dayGroupModels : dayGroupModels // ignore: cast_nullable_to_non_nullable
 as List<DayGroupModel>,
   ));
 }

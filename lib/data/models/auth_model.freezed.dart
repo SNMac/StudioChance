@@ -208,8 +208,8 @@ return $default(_that.uid,_that.email,_that.displayName,_that.authProviders);cas
 /// @nodoc
 
 
-class _AuthModel implements AuthModel {
-  const _AuthModel({required this.uid, this.email, this.displayName, final  List<String> authProviders = const []}): _authProviders = authProviders;
+class _AuthModel extends AuthModel {
+  const _AuthModel({required this.uid, this.email, this.displayName, final  List<String> authProviders = const []}): _authProviders = authProviders,super._();
   
 
 @override final  String uid;

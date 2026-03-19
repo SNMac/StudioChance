@@ -3,30 +3,52 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 
 part 'user_data_source.g.dart';
 
 abstract interface class UserDataSource {
+  /// `uid`에 해당하는 사용자 조회
   Future<UserModel?> getUser(String uid);
+
+  /// 사용자 조회 및 복구 통합 메서드
+  /// - 탈퇴 상태(`deletedAt` 존재)라면 `restoreUser`를 호출하여 복구 후 반환
+  Future<UserModel?> fetchUserWithRestoration(String uid);
+
+  /// 사용자 생성
   Future<void> createUser(UserModel userModel);
 
   /// `storeIds`, `fcmTokens를` 수정할 경우 사용 X
   /// - `storeIds` 수정 시: `addStoreId`, `removeStoreId` 메서드 사용
   /// - `fcmTokens` 수정 시: `addFcmToken`, `replaceFcmToken`, `removeFcmToken` 메서드 사용
   Future<void> updateUser(String uid, Map<String, dynamic> data);
-  Future<void> addStoreId(String uid, String storeId);
-  Future<void> removeStoreId(String uid, String storeId);
+
+  /// 점포 정보 업데이트
+  Future<void> updateStoreInfo(
+    String uid,
+    String storeId,
+    Map<String, dynamic> data,
+  );
+
+  /// 점포 정보 삭제
+  Future<void> removeStoreInfo(String uid, String storeId);
+
+  /// FCM 토큰 추가
   Future<void> addFcmToken(String uid, String token);
+
+  /// FCM 토큰 교체
   Future<void> replaceFcmToken(String uid, String oldToken, String newToken);
+
+  /// FCM 토큰 삭제
   Future<void> removeFcmToken(String uid, String token);
 
-  /// `deletedAt` 필드에 현재 시간 추가
-  /// - 실제 삭제 X
+  /// 사용자 soft delete (`deletedAt`)
+  /// - hard delete는 7일 뒤 (`expiresAt` = `deletedAt` + 7일)
   Future<void> softDeleteUser(String uid);
 
   /// 계정 복구 (탈퇴 취소)
-  /// - `deletedAt` 필드를 삭제하여 계정을 활성화 상태로 되돌립니다.
+  /// - `deletedAt`, `expiresAt` 필드를 삭제하여 계정을 활성화 상태로 되돌립니다.
   Future<void> restoreUser(String uid);
 }
 
@@ -43,6 +65,37 @@ class UserFirestoreDataSource implements UserDataSource {
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
         data['id'] = docSnapshot.id;
+
+        if (data['deletedAt'] != null) {
+          return null;
+        }
+
+        return UserModel.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<UserModel?> fetchUserWithRestoration(String uid) async {
+    try {
+      final docSnapshot = await _firestore.collection('users').doc(uid).get();
+
+      if (docSnapshot.exists && docSnapshot.data() != null) {
+        final data = docSnapshot.data()!;
+        data['id'] = docSnapshot.id;
+
+        if (data['deletedAt'] != null) {
+          _logger.i('탈퇴 계정 감지: $uid');
+
+          await restoreUser(uid);
+
+          data.remove('deletedAt');
+          data.remove('expiresAt');
+        }
+
         return UserModel.fromJson(data);
       }
       return null;
@@ -69,9 +122,8 @@ class UserFirestoreDataSource implements UserDataSource {
   Future<void> updateUser(String uid, Map<String, dynamic> data) async {
     try {
       final updates = Map<String, dynamic>.from(data);
-      if (updates.containsKey('updatedAt')) {
-        updates['updatedAt'] = FieldValue.serverTimestamp();
-      }
+      updates['updatedAt'] = FieldValue.serverTimestamp();
+
       if (updates.containsKey('lastLoginAt')) {
         updates['lastLoginAt'] = FieldValue.serverTimestamp();
       }
@@ -83,10 +135,30 @@ class UserFirestoreDataSource implements UserDataSource {
   }
 
   @override
-  Future<void> addStoreId(String uid, String storeId) async {
+  Future<void> updateStoreInfo(
+    String uid,
+    String storeId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final Map<String, dynamic> updates = {};
+      data.forEach((key, value) {
+        updates['storeById.$storeId.$key'] = value;
+      });
+
+      updates['updatedAt'] = FieldValue.serverTimestamp();
+
+      await _firestore.collection('users').doc(uid).update(updates);
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<void> removeStoreInfo(String uid, String storeId) async {
     try {
       await _firestore.collection('users').doc(uid).update({
-        'storeIds': FieldValue.arrayUnion([storeId]),
+        'storeById.$storeId': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -112,31 +184,20 @@ class UserFirestoreDataSource implements UserDataSource {
     String oldToken,
     String newToken,
   ) async {
-    final docRef = _firestore.collection('users').doc(uid);
-
     try {
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(docRef);
+      final batch = _firestore.batch();
+      final docRef = _firestore.collection('users').doc(uid);
 
-        if (!snapshot.exists) {
-          throw UserNotFoundException(
-            message: '사용자 document가 transaction 중 발견되지 않았습니다.',
-          );
-        }
-
-        List<dynamic> tokens = List.from(snapshot.data()?['fcmTokens'] ?? []);
-
-        tokens.remove(oldToken);
-
-        if (!tokens.contains(newToken)) {
-          tokens.add(newToken);
-        }
-
-        transaction.update(docRef, {
-          'fcmTokens': tokens,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+      batch.update(docRef, {
+        'fcmTokens': FieldValue.arrayRemove([oldToken]),
       });
+
+      batch.update(docRef, {
+        'fcmTokens': FieldValue.arrayUnion([newToken]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -155,22 +216,12 @@ class UserFirestoreDataSource implements UserDataSource {
   }
 
   @override
-  Future<void> removeStoreId(String uid, String storeId) async {
-    try {
-      await _firestore.collection('users').doc(uid).update({
-        'storeIds': FieldValue.arrayRemove([storeId]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw _handleFirestoreError(e);
-    }
-  }
-
-  @override
   Future<void> softDeleteUser(String uid) async {
     try {
+      final hardDeleteDate = DateTime.now().add(const Duration(days: userSoftDeleteDays));
       await _firestore.collection('users').doc(uid).update({
         'deletedAt': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'fcmTokens': [], // FCM 토큰 초기화
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -184,8 +235,10 @@ class UserFirestoreDataSource implements UserDataSource {
     try {
       await _firestore.collection('users').doc(uid).update({
         'deletedAt': FieldValue.delete(),
+        'expiresAt': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      _logger.i('계정 복구 완료: $uid');
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -196,7 +249,7 @@ class UserFirestoreDataSource implements UserDataSource {
   // ===========================================================================
 
   Exception _handleFirestoreError(Object e) {
-    _logger.e('Firestore Error', error: e);
+    _logger.e('User Firestore Error', error: e);
 
     if (e is UserException) return e;
 
@@ -220,7 +273,7 @@ class UserFirestoreDataSource implements UserDataSource {
         case 'not-found':
           return UserNotFoundException(message: msg, code: code);
 
-        // 3. 이미 존재함 (생성 충돌)
+        // 3. 이미 존재함
         case 'already-exists':
           return UserAlreadyExistsException(message: msg, code: code);
 
@@ -233,7 +286,7 @@ class UserFirestoreDataSource implements UserDataSource {
         case 'deadline-exceeded':
           return UserNetworkException(message: msg, code: code);
 
-        // 6. 트랜잭션 충돌 (순수 경합)
+        // 6. 트랜잭션 충돌
         case 'aborted':
         case 'failed-precondition':
           return UserTransactionException(message: msg, code: code);

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TimeSlotModel {
 
- int get startTime;// 분 단위
+ bool get isAllDay; int get startTime;// 분 단위
  int get endTime;// 분 단위
  int get price; bool get isHourly; bool get isPerPerson;
 /// Create a copy of TimeSlotModel
@@ -30,16 +30,16 @@ $TimeSlotModelCopyWith<TimeSlotModel> get copyWith => _$TimeSlotModelCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlotModel&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlotModel&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startTime,endTime,price,isHourly,isPerPerson);
+int get hashCode => Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
 
 @override
 String toString() {
-  return 'TimeSlotModel(startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
+  return 'TimeSlotModel(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
 }
 
 
@@ -50,7 +50,7 @@ abstract mixin class $TimeSlotModelCopyWith<$Res>  {
   factory $TimeSlotModelCopyWith(TimeSlotModel value, $Res Function(TimeSlotModel) _then) = _$TimeSlotModelCopyWithImpl;
 @useResult
 $Res call({
- int startTime, int endTime, int price, bool isHourly, bool isPerPerson
+ bool isAllDay, int startTime, int endTime, int price, bool isHourly, bool isPerPerson
 });
 
 
@@ -67,9 +67,10 @@ class _$TimeSlotModelCopyWithImpl<$Res>
 
 /// Create a copy of TimeSlotModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
   return _then(_self.copyWith(
-startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
+as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as int,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as int,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as int,isHourly: null == isHourly ? _self.isHourly : isHourly // ignore: cast_nullable_to_non_nullable
@@ -159,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isAllDay,  int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimeSlotModel() when $default != null:
-return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
+return $default(_that.isAllDay,_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
   return orElse();
 
 }
@@ -180,10 +181,10 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isAllDay,  int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)  $default,) {final _that = this;
 switch (_that) {
 case _TimeSlotModel():
-return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
+return $default(_that.isAllDay,_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +201,10 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isAllDay,  int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,) {final _that = this;
 switch (_that) {
 case _TimeSlotModel() when $default != null:
-return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
+return $default(_that.isAllDay,_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
   return null;
 
 }
@@ -214,10 +215,11 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 /// @nodoc
 @JsonSerializable()
 
-class _TimeSlotModel implements TimeSlotModel {
-  const _TimeSlotModel({required this.startTime, required this.endTime, required this.price, required this.isHourly, required this.isPerPerson});
+class _TimeSlotModel extends TimeSlotModel {
+  const _TimeSlotModel({required this.isAllDay, required this.startTime, required this.endTime, required this.price, required this.isHourly, required this.isPerPerson}): super._();
   factory _TimeSlotModel.fromJson(Map<String, dynamic> json) => _$TimeSlotModelFromJson(json);
 
+@override final  bool isAllDay;
 @override final  int startTime;
 // 분 단위
 @override final  int endTime;
@@ -239,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlotModel&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlotModel&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startTime,endTime,price,isHourly,isPerPerson);
+int get hashCode => Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
 
 @override
 String toString() {
-  return 'TimeSlotModel(startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
+  return 'TimeSlotModel(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$TimeSlotModelCopyWith<$Res> implements $TimeSlotModelCopy
   factory _$TimeSlotModelCopyWith(_TimeSlotModel value, $Res Function(_TimeSlotModel) _then) = __$TimeSlotModelCopyWithImpl;
 @override @useResult
 $Res call({
- int startTime, int endTime, int price, bool isHourly, bool isPerPerson
+ bool isAllDay, int startTime, int endTime, int price, bool isHourly, bool isPerPerson
 });
 
 
@@ -276,9 +278,10 @@ class __$TimeSlotModelCopyWithImpl<$Res>
 
 /// Create a copy of TimeSlotModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
   return _then(_TimeSlotModel(
-startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
+as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as int,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as int,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as int,isHourly: null == isHourly ? _self.isHourly : isHourly // ignore: cast_nullable_to_non_nullable

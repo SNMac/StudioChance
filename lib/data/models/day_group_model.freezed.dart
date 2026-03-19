@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$DayGroupModel {
 
  List<int> get days;// 1~7
- HeadcountRuleModel get headcountRule; List<TimeSlotModel> get timeSlots;
+ HeadcountRuleModel get headcountRuleModel; List<TimeSlotModel> get timeSlots;
 /// Create a copy of DayGroupModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $DayGroupModelCopyWith<DayGroupModel> get copyWith => _$DayGroupModelCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroupModel&&const DeepCollectionEquality().equals(other.days, days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other.timeSlots, timeSlots));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroupModel&&const DeepCollectionEquality().equals(other.days, days)&&(identical(other.headcountRuleModel, headcountRuleModel) || other.headcountRuleModel == headcountRuleModel)&&const DeepCollectionEquality().equals(other.timeSlots, timeSlots));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days),headcountRule,const DeepCollectionEquality().hash(timeSlots));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days),headcountRuleModel,const DeepCollectionEquality().hash(timeSlots));
 
 @override
 String toString() {
-  return 'DayGroupModel(days: $days, headcountRule: $headcountRule, timeSlots: $timeSlots)';
+  return 'DayGroupModel(days: $days, headcountRuleModel: $headcountRuleModel, timeSlots: $timeSlots)';
 }
 
 
@@ -49,11 +49,11 @@ abstract mixin class $DayGroupModelCopyWith<$Res>  {
   factory $DayGroupModelCopyWith(DayGroupModel value, $Res Function(DayGroupModel) _then) = _$DayGroupModelCopyWithImpl;
 @useResult
 $Res call({
- List<int> days, HeadcountRuleModel headcountRule, List<TimeSlotModel> timeSlots
+ List<int> days, HeadcountRuleModel headcountRuleModel, List<TimeSlotModel> timeSlots
 });
 
 
-$HeadcountRuleModelCopyWith<$Res> get headcountRule;
+$HeadcountRuleModelCopyWith<$Res> get headcountRuleModel;
 
 }
 /// @nodoc
@@ -66,10 +66,10 @@ class _$DayGroupModelCopyWithImpl<$Res>
 
 /// Create a copy of DayGroupModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? days = null,Object? headcountRule = null,Object? timeSlots = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? days = null,Object? headcountRuleModel = null,Object? timeSlots = null,}) {
   return _then(_self.copyWith(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
-as List<int>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
+as List<int>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
 as HeadcountRuleModel,timeSlots: null == timeSlots ? _self.timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
 as List<TimeSlotModel>,
   ));
@@ -78,10 +78,10 @@ as List<TimeSlotModel>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$HeadcountRuleModelCopyWith<$Res> get headcountRule {
+$HeadcountRuleModelCopyWith<$Res> get headcountRuleModel {
   
-  return $HeadcountRuleModelCopyWith<$Res>(_self.headcountRule, (value) {
-    return _then(_self.copyWith(headcountRule: value));
+  return $HeadcountRuleModelCopyWith<$Res>(_self.headcountRuleModel, (value) {
+    return _then(_self.copyWith(headcountRuleModel: value));
   });
 }
 }
@@ -165,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRuleModel headcountRule,  List<TimeSlotModel> timeSlots)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DayGroupModel() when $default != null:
-return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
+return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
   return orElse();
 
 }
@@ -186,10 +186,10 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRuleModel headcountRule,  List<TimeSlotModel> timeSlots)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)  $default,) {final _that = this;
 switch (_that) {
 case _DayGroupModel():
-return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
+return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +206,10 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<int> days,  HeadcountRuleModel headcountRule,  List<TimeSlotModel> timeSlots)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<int> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)?  $default,) {final _that = this;
 switch (_that) {
 case _DayGroupModel() when $default != null:
-return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
+return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
   return null;
 
 }
@@ -220,8 +220,8 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _DayGroupModel implements DayGroupModel {
-  const _DayGroupModel({final  List<int> days = const [], required this.headcountRule, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots;
+class _DayGroupModel extends DayGroupModel {
+  const _DayGroupModel({final  List<int> days = const [], required this.headcountRuleModel, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots,super._();
   factory _DayGroupModel.fromJson(Map<String, dynamic> json) => _$DayGroupModelFromJson(json);
 
  final  List<int> _days;
@@ -232,7 +232,7 @@ class _DayGroupModel implements DayGroupModel {
 }
 
 // 1~7
-@override final  HeadcountRuleModel headcountRule;
+@override final  HeadcountRuleModel headcountRuleModel;
  final  List<TimeSlotModel> _timeSlots;
 @override@JsonKey() List<TimeSlotModel> get timeSlots {
   if (_timeSlots is EqualUnmodifiableListView) return _timeSlots;
@@ -254,16 +254,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroupModel&&const DeepCollectionEquality().equals(other._days, _days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other._timeSlots, _timeSlots));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroupModel&&const DeepCollectionEquality().equals(other._days, _days)&&(identical(other.headcountRuleModel, headcountRuleModel) || other.headcountRuleModel == headcountRuleModel)&&const DeepCollectionEquality().equals(other._timeSlots, _timeSlots));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRule,const DeepCollectionEquality().hash(_timeSlots));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRuleModel,const DeepCollectionEquality().hash(_timeSlots));
 
 @override
 String toString() {
-  return 'DayGroupModel(days: $days, headcountRule: $headcountRule, timeSlots: $timeSlots)';
+  return 'DayGroupModel(days: $days, headcountRuleModel: $headcountRuleModel, timeSlots: $timeSlots)';
 }
 
 
@@ -274,11 +274,11 @@ abstract mixin class _$DayGroupModelCopyWith<$Res> implements $DayGroupModelCopy
   factory _$DayGroupModelCopyWith(_DayGroupModel value, $Res Function(_DayGroupModel) _then) = __$DayGroupModelCopyWithImpl;
 @override @useResult
 $Res call({
- List<int> days, HeadcountRuleModel headcountRule, List<TimeSlotModel> timeSlots
+ List<int> days, HeadcountRuleModel headcountRuleModel, List<TimeSlotModel> timeSlots
 });
 
 
-@override $HeadcountRuleModelCopyWith<$Res> get headcountRule;
+@override $HeadcountRuleModelCopyWith<$Res> get headcountRuleModel;
 
 }
 /// @nodoc
@@ -291,10 +291,10 @@ class __$DayGroupModelCopyWithImpl<$Res>
 
 /// Create a copy of DayGroupModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? days = null,Object? headcountRule = null,Object? timeSlots = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? days = null,Object? headcountRuleModel = null,Object? timeSlots = null,}) {
   return _then(_DayGroupModel(
 days: null == days ? _self._days : days // ignore: cast_nullable_to_non_nullable
-as List<int>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
+as List<int>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
 as HeadcountRuleModel,timeSlots: null == timeSlots ? _self._timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
 as List<TimeSlotModel>,
   ));
@@ -304,10 +304,10 @@ as List<TimeSlotModel>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$HeadcountRuleModelCopyWith<$Res> get headcountRule {
+$HeadcountRuleModelCopyWith<$Res> get headcountRuleModel {
   
-  return $HeadcountRuleModelCopyWith<$Res>(_self.headcountRule, (value) {
-    return _then(_self.copyWith(headcountRule: value));
+  return $HeadcountRuleModelCopyWith<$Res>(_self.headcountRuleModel, (value) {
+    return _then(_self.copyWith(headcountRuleModel: value));
   });
 }
 }

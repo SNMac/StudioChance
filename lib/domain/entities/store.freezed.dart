@@ -11,33 +11,30 @@ part of 'store.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$Store {
 
- String get id; String get ownerId; String get name; String get color; List<User> get members; List<DayGroup> get priceSettings;
+ String get id; String get name; String get address; String get addressDetail; String get addressGuide; List<StoreMemberInfo> get memberInfos; List<StoreMemberInfo> get waitingMemberInfos; PriceSetting get priceSettings; InviteInfo? get inviteInfo;
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $StoreCopyWith<Store> get copyWith => _$StoreCopyWithImpl<Store>(this as Store, _$identity);
 
-  /// Serializes this Store to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.members, members)&&const DeepCollectionEquality().equals(other.priceSettings, priceSettings));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, waitingMemberInfos)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,ownerId,name,color,const DeepCollectionEquality().hash(members),const DeepCollectionEquality().hash(priceSettings));
+int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(memberInfos),const DeepCollectionEquality().hash(waitingMemberInfos),priceSettings,inviteInfo);
 
 @override
 String toString() {
-  return 'Store(id: $id, ownerId: $ownerId, name: $name, color: $color, members: $members, priceSettings: $priceSettings)';
+  return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, priceSettings: $priceSettings, inviteInfo: $inviteInfo)';
 }
 
 
@@ -48,11 +45,11 @@ abstract mixin class $StoreCopyWith<$Res>  {
   factory $StoreCopyWith(Store value, $Res Function(Store) _then) = _$StoreCopyWithImpl;
 @useResult
 $Res call({
- String id, String ownerId, String name, String color, List<User> members, List<DayGroup> priceSettings
+ String id, String name, String address, String addressDetail, String addressGuide, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, PriceSetting priceSettings, InviteInfo? inviteInfo
 });
 
 
-
+$PriceSettingCopyWith<$Res> get priceSettings;$InviteInfoCopyWith<$Res>? get inviteInfo;
 
 }
 /// @nodoc
@@ -65,18 +62,42 @@ class _$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? ownerId = null,Object? name = null,Object? color = null,Object? members = null,Object? priceSettings = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? priceSettings = null,Object? inviteInfo = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
-as String,members: null == members ? _self.members : members // ignore: cast_nullable_to_non_nullable
-as List<User>,priceSettings: null == priceSettings ? _self.priceSettings : priceSettings // ignore: cast_nullable_to_non_nullable
-as List<DayGroup>,
+as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,addressDetail: null == addressDetail ? _self.addressDetail : addressDetail // ignore: cast_nullable_to_non_nullable
+as String,addressGuide: null == addressGuide ? _self.addressGuide : addressGuide // ignore: cast_nullable_to_non_nullable
+as String,memberInfos: null == memberInfos ? _self.memberInfos : memberInfos // ignore: cast_nullable_to_non_nullable
+as List<StoreMemberInfo>,waitingMemberInfos: null == waitingMemberInfos ? _self.waitingMemberInfos : waitingMemberInfos // ignore: cast_nullable_to_non_nullable
+as List<StoreMemberInfo>,priceSettings: null == priceSettings ? _self.priceSettings : priceSettings // ignore: cast_nullable_to_non_nullable
+as PriceSetting,inviteInfo: freezed == inviteInfo ? _self.inviteInfo : inviteInfo // ignore: cast_nullable_to_non_nullable
+as InviteInfo?,
   ));
 }
+/// Create a copy of Store
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PriceSettingCopyWith<$Res> get priceSettings {
+  
+  return $PriceSettingCopyWith<$Res>(_self.priceSettings, (value) {
+    return _then(_self.copyWith(priceSettings: value));
+  });
+}/// Create a copy of Store
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InviteInfoCopyWith<$Res>? get inviteInfo {
+    if (_self.inviteInfo == null) {
+    return null;
+  }
 
+  return $InviteInfoCopyWith<$Res>(_self.inviteInfo!, (value) {
+    return _then(_self.copyWith(inviteInfo: value));
+  });
+}
 }
 
 
@@ -158,10 +179,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String ownerId,  String name,  String color,  List<User> members,  List<DayGroup> priceSettings)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.ownerId,_that.name,_that.color,_that.members,_that.priceSettings);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo);case _:
   return orElse();
 
 }
@@ -179,10 +200,10 @@ return $default(_that.id,_that.ownerId,_that.name,_that.color,_that.members,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String ownerId,  String name,  String color,  List<User> members,  List<DayGroup> priceSettings)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo)  $default,) {final _that = this;
 switch (_that) {
 case _Store():
-return $default(_that.id,_that.ownerId,_that.name,_that.color,_that.members,_that.priceSettings);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +220,10 @@ return $default(_that.id,_that.ownerId,_that.name,_that.color,_that.members,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String ownerId,  String name,  String color,  List<User> members,  List<DayGroup> priceSettings)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  PriceSetting priceSettings,  InviteInfo? inviteInfo)?  $default,) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.ownerId,_that.name,_that.color,_that.members,_that.priceSettings);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.priceSettings,_that.inviteInfo);case _:
   return null;
 
 }
@@ -211,30 +232,33 @@ return $default(_that.id,_that.ownerId,_that.name,_that.color,_that.members,_tha
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _Store implements Store {
-  const _Store({required this.id, required this.ownerId, required this.name, required this.color, required final  List<User> members, required final  List<DayGroup> priceSettings}): _members = members,_priceSettings = priceSettings;
-  factory _Store.fromJson(Map<String, dynamic> json) => _$StoreFromJson(json);
+  const _Store({required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required final  List<StoreMemberInfo> memberInfos, required final  List<StoreMemberInfo> waitingMemberInfos, required this.priceSettings, required this.inviteInfo}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos;
+  
 
 @override final  String id;
-@override final  String ownerId;
 @override final  String name;
-@override final  String color;
- final  List<User> _members;
-@override List<User> get members {
-  if (_members is EqualUnmodifiableListView) return _members;
+@override final  String address;
+@override final  String addressDetail;
+@override final  String addressGuide;
+ final  List<StoreMemberInfo> _memberInfos;
+@override List<StoreMemberInfo> get memberInfos {
+  if (_memberInfos is EqualUnmodifiableListView) return _memberInfos;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_members);
+  return EqualUnmodifiableListView(_memberInfos);
 }
 
- final  List<DayGroup> _priceSettings;
-@override List<DayGroup> get priceSettings {
-  if (_priceSettings is EqualUnmodifiableListView) return _priceSettings;
+ final  List<StoreMemberInfo> _waitingMemberInfos;
+@override List<StoreMemberInfo> get waitingMemberInfos {
+  if (_waitingMemberInfos is EqualUnmodifiableListView) return _waitingMemberInfos;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_priceSettings);
+  return EqualUnmodifiableListView(_waitingMemberInfos);
 }
 
+@override final  PriceSetting priceSettings;
+@override final  InviteInfo? inviteInfo;
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
@@ -242,23 +266,20 @@ class _Store implements Store {
 @pragma('vm:prefer-inline')
 _$StoreCopyWith<_Store> get copyWith => __$StoreCopyWithImpl<_Store>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$StoreToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other._members, _members)&&const DeepCollectionEquality().equals(other._priceSettings, _priceSettings));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other._memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other._waitingMemberInfos, _waitingMemberInfos)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,ownerId,name,color,const DeepCollectionEquality().hash(_members),const DeepCollectionEquality().hash(_priceSettings));
+int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),priceSettings,inviteInfo);
 
 @override
 String toString() {
-  return 'Store(id: $id, ownerId: $ownerId, name: $name, color: $color, members: $members, priceSettings: $priceSettings)';
+  return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, priceSettings: $priceSettings, inviteInfo: $inviteInfo)';
 }
 
 
@@ -269,11 +290,11 @@ abstract mixin class _$StoreCopyWith<$Res> implements $StoreCopyWith<$Res> {
   factory _$StoreCopyWith(_Store value, $Res Function(_Store) _then) = __$StoreCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String ownerId, String name, String color, List<User> members, List<DayGroup> priceSettings
+ String id, String name, String address, String addressDetail, String addressGuide, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, PriceSetting priceSettings, InviteInfo? inviteInfo
 });
 
 
-
+@override $PriceSettingCopyWith<$Res> get priceSettings;@override $InviteInfoCopyWith<$Res>? get inviteInfo;
 
 }
 /// @nodoc
@@ -286,19 +307,43 @@ class __$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? ownerId = null,Object? name = null,Object? color = null,Object? members = null,Object? priceSettings = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? priceSettings = null,Object? inviteInfo = freezed,}) {
   return _then(_Store(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
-as String,members: null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
-as List<User>,priceSettings: null == priceSettings ? _self._priceSettings : priceSettings // ignore: cast_nullable_to_non_nullable
-as List<DayGroup>,
+as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String,addressDetail: null == addressDetail ? _self.addressDetail : addressDetail // ignore: cast_nullable_to_non_nullable
+as String,addressGuide: null == addressGuide ? _self.addressGuide : addressGuide // ignore: cast_nullable_to_non_nullable
+as String,memberInfos: null == memberInfos ? _self._memberInfos : memberInfos // ignore: cast_nullable_to_non_nullable
+as List<StoreMemberInfo>,waitingMemberInfos: null == waitingMemberInfos ? _self._waitingMemberInfos : waitingMemberInfos // ignore: cast_nullable_to_non_nullable
+as List<StoreMemberInfo>,priceSettings: null == priceSettings ? _self.priceSettings : priceSettings // ignore: cast_nullable_to_non_nullable
+as PriceSetting,inviteInfo: freezed == inviteInfo ? _self.inviteInfo : inviteInfo // ignore: cast_nullable_to_non_nullable
+as InviteInfo?,
   ));
 }
 
+/// Create a copy of Store
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PriceSettingCopyWith<$Res> get priceSettings {
+  
+  return $PriceSettingCopyWith<$Res>(_self.priceSettings, (value) {
+    return _then(_self.copyWith(priceSettings: value));
+  });
+}/// Create a copy of Store
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$InviteInfoCopyWith<$Res>? get inviteInfo {
+    if (_self.inviteInfo == null) {
+    return null;
+  }
 
+  return $InviteInfoCopyWith<$Res>(_self.inviteInfo!, (value) {
+    return _then(_self.copyWith(inviteInfo: value));
+  });
+}
 }
 
 // dart format on

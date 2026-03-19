@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/domain/entities/auth_info.dart';
+
 part 'auth_model.freezed.dart';
 
 @freezed
 abstract class AuthModel with _$AuthModel {
+  const AuthModel._();
+
   const factory AuthModel({
     required String uid,
     String? email,
@@ -21,6 +25,15 @@ abstract class AuthModel with _$AuthModel {
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
+      authProviders: authProviders,
+    );
+  }
+
+  AuthInfo toEntity() {
+    return AuthInfo(
+      uid: uid,
+      email: email,
+      displayName: displayName,
       authProviders: authProviders,
     );
   }

@@ -11,33 +11,30 @@ part of 'time_slot.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$TimeSlot {
 
- int get startTime; int get endTime; int get price; bool get isHourly; bool get isPerPerson;
+ bool get isAllDay; int get startTime; int get endTime; int get price; bool get isHourly; bool get isPerPerson;
 /// Create a copy of TimeSlot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $TimeSlotCopyWith<TimeSlot> get copyWith => _$TimeSlotCopyWithImpl<TimeSlot>(this as TimeSlot, _$identity);
 
-  /// Serializes this TimeSlot to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlot&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlot&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,startTime,endTime,price,isHourly,isPerPerson);
+int get hashCode => Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
 
 @override
 String toString() {
-  return 'TimeSlot(startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
+  return 'TimeSlot(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
 }
 
 
@@ -48,7 +45,7 @@ abstract mixin class $TimeSlotCopyWith<$Res>  {
   factory $TimeSlotCopyWith(TimeSlot value, $Res Function(TimeSlot) _then) = _$TimeSlotCopyWithImpl;
 @useResult
 $Res call({
- int startTime, int endTime, int price, bool isHourly, bool isPerPerson
+ bool isAllDay, int startTime, int endTime, int price, bool isHourly, bool isPerPerson
 });
 
 
@@ -65,9 +62,10 @@ class _$TimeSlotCopyWithImpl<$Res>
 
 /// Create a copy of TimeSlot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
   return _then(_self.copyWith(
-startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
+as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as int,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as int,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as int,isHourly: null == isHourly ? _self.isHourly : isHourly // ignore: cast_nullable_to_non_nullable
@@ -157,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isAllDay,  int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimeSlot() when $default != null:
-return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
+return $default(_that.isAllDay,_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
   return orElse();
 
 }
@@ -178,10 +176,10 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isAllDay,  int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)  $default,) {final _that = this;
 switch (_that) {
 case _TimeSlot():
-return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
+return $default(_that.isAllDay,_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +196,10 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isAllDay,  int startTime,  int endTime,  int price,  bool isHourly,  bool isPerPerson)?  $default,) {final _that = this;
 switch (_that) {
 case _TimeSlot() when $default != null:
-return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
+return $default(_that.isAllDay,_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.isPerPerson);case _:
   return null;
 
 }
@@ -210,12 +208,13 @@ return $default(_that.startTime,_that.endTime,_that.price,_that.isHourly,_that.i
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _TimeSlot implements TimeSlot {
-  const _TimeSlot({required this.startTime, required this.endTime, required this.price, required this.isHourly, required this.isPerPerson});
-  factory _TimeSlot.fromJson(Map<String, dynamic> json) => _$TimeSlotFromJson(json);
+  const _TimeSlot({required this.isAllDay, required this.startTime, required this.endTime, required this.price, required this.isHourly, required this.isPerPerson});
+  
 
+@override final  bool isAllDay;
 @override final  int startTime;
 @override final  int endTime;
 @override final  int price;
@@ -228,23 +227,20 @@ class _TimeSlot implements TimeSlot {
 @pragma('vm:prefer-inline')
 _$TimeSlotCopyWith<_TimeSlot> get copyWith => __$TimeSlotCopyWithImpl<_TimeSlot>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$TimeSlotToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlot&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlot&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,startTime,endTime,price,isHourly,isPerPerson);
+int get hashCode => Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
 
 @override
 String toString() {
-  return 'TimeSlot(startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
+  return 'TimeSlot(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
 }
 
 
@@ -255,7 +251,7 @@ abstract mixin class _$TimeSlotCopyWith<$Res> implements $TimeSlotCopyWith<$Res>
   factory _$TimeSlotCopyWith(_TimeSlot value, $Res Function(_TimeSlot) _then) = __$TimeSlotCopyWithImpl;
 @override @useResult
 $Res call({
- int startTime, int endTime, int price, bool isHourly, bool isPerPerson
+ bool isAllDay, int startTime, int endTime, int price, bool isHourly, bool isPerPerson
 });
 
 
@@ -272,9 +268,10 @@ class __$TimeSlotCopyWithImpl<$Res>
 
 /// Create a copy of TimeSlot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
   return _then(_TimeSlot(
-startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
+as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as int,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as int,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as int,isHourly: null == isHourly ? _self.isHourly : isHourly // ignore: cast_nullable_to_non_nullable

@@ -11,7 +11,6 @@ part of 'price_setting.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$PriceSetting {
 
@@ -22,8 +21,6 @@ mixin _$PriceSetting {
 @pragma('vm:prefer-inline')
 $PriceSettingCopyWith<PriceSetting> get copyWith => _$PriceSettingCopyWithImpl<PriceSetting>(this as PriceSetting, _$identity);
 
-  /// Serializes this PriceSetting to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceSetting&&const DeepCollectionEquality().equals(other.dayGroups, dayGroups));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(dayGroups));
 
@@ -206,11 +203,11 @@ return $default(_that.dayGroups);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _PriceSetting implements PriceSetting {
   const _PriceSetting({required final  List<DayGroup> dayGroups}): _dayGroups = dayGroups;
-  factory _PriceSetting.fromJson(Map<String, dynamic> json) => _$PriceSettingFromJson(json);
+  
 
  final  List<DayGroup> _dayGroups;
 @override List<DayGroup> get dayGroups {
@@ -226,17 +223,14 @@ class _PriceSetting implements PriceSetting {
 @pragma('vm:prefer-inline')
 _$PriceSettingCopyWith<_PriceSetting> get copyWith => __$PriceSettingCopyWithImpl<_PriceSetting>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$PriceSettingToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceSetting&&const DeepCollectionEquality().equals(other._dayGroups, _dayGroups));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_dayGroups));
 

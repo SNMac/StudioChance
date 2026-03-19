@@ -1,11 +1,13 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
+
 part 'time_slot.freezed.dart';
-part 'time_slot.g.dart';
 
 @freezed
 abstract class TimeSlot with _$TimeSlot {
   const factory TimeSlot({
+    required bool isAllDay,
     required int startTime,
     required int endTime,
     required int price,
@@ -13,6 +15,12 @@ abstract class TimeSlot with _$TimeSlot {
     required bool isPerPerson,
   }) = _TimeSlot;
 
-  factory TimeSlot.fromJson(Map<String, dynamic> json) =>
-      _$TimeSlotFromJson(json);
+  factory TimeSlot.empty() => const TimeSlot(
+    isAllDay: false,
+    startTime: 360,
+    endTime: 1080,
+    price: emptyValue,
+    isHourly: true,
+    isPerPerson: false,
+  );
 }

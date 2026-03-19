@@ -211,8 +211,8 @@ return $default(_that.headcountBase,_that.headcountExtraPrice,_that.isHeadcountH
 /// @nodoc
 @JsonSerializable()
 
-class _HeadcountRuleModel implements HeadcountRuleModel {
-  const _HeadcountRuleModel({required this.headcountBase, required this.headcountExtraPrice, required this.isHeadcountHourly, required this.isHeadcountPerPerson});
+class _HeadcountRuleModel extends HeadcountRuleModel {
+  const _HeadcountRuleModel({required this.headcountBase, required this.headcountExtraPrice, required this.isHeadcountHourly, required this.isHeadcountPerPerson}): super._();
   factory _HeadcountRuleModel.fromJson(Map<String, dynamic> json) => _$HeadcountRuleModelFromJson(json);
 
 @override final  int headcountBase;
