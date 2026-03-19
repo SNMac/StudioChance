@@ -32,14 +32,26 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
     super.dispose();
   }
 
-  /// displayedMonth에 해당하는 PageView 페이지로 즉시 이동
+  /// displayedMonth에 해당하는 PageView 페이지로 이동 (애니메이션 또는 즉시)
   void _syncPageToMonth(DateTime month) {
     final totalMonths = month.year * 12 + (month.month - 1);
     final refTotalMonths =
         _referenceMonth.year * 12 + (_referenceMonth.month - 1);
     final targetPage = _initialPage + (totalMonths - refTotalMonths);
-    if (_pageController.hasClients &&
-        _pageController.page?.round() != targetPage) {
+    if (!_pageController.hasClients ||
+        _pageController.page?.round() == targetPage) {
+      return;
+    }
+    final kind = ref
+        .read(homeCalendarControllerProvider.notifier)
+        .consumeMonthlyTransition();
+    if (kind == CalendarTransitionKind.animate) {
+      _pageController.animateToPage(
+        targetPage,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
       _pageController.jumpToPage(targetPage);
     }
   }
