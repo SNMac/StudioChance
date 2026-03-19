@@ -1,6 +1,6 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-19
+Last Updated: 2026-03-20
 
 ## Phase 1~7: 초기 구현 ✅ (완료)
 - 상수, 상태관리, 탭바, 네비바, 월간 캘린더, 3일 캘린더, HomeScreen 조합 모두 완료
@@ -81,21 +81,62 @@ Last Updated: 2026-03-19
 
 ---
 
-## 최종 검증
-- [ ] 월간 캘린더 overflow 없이 접힘/펼침
-- [ ] 월간 캘린더 좌우 스와이프 월 이동
-- [ ] 날짜 이동 시 월간 캘린더 열림/닫힘 상태 유지
-- [ ] 3일 캘린더 좌우 스와이프 날짜 이동 (1일 단위, 스냅)
-- [ ] 3일 캘린더 시간 열 고정, 날짜 열만 스크롤
-- [ ] 3일 캘린더 세로 구분선: 종일 행부터 bouncing 시에도 연속 (날짜 영역 내)
-- [ ] 열 사이 구분선 bouncing 시에도 연속
-- [ ] 현재 시간 캡슐 위치, 둥근 모서리, 텍스트 정렬 정상
-- [ ] 높이: 월간 캘린더 260, 3일 헤더 28
-- [ ] picker 완료 버튼에서만 날짜 이동 + animateToPage
+## Phase 13: 피드백 반영 6차 (다음 세션 구현 예정)
+
+### 버그 수정 (우선순위 높음)
+
+- [ ] **13-3**: 오늘 날짜 초기 위치 오류 — 오늘이 3일 캘린더 **첫 번째 열**에 표시되어야 함 (현재 가운데 열)
+  - `_referenceDate` 또는 `initialPage=10000` 기준 날짜 계산 재검토
+- [ ] **13-4**: 현재 시간 UI 위치 오류 — 2시 2분인데 2시 구분선보다 위에 표시됨
+  - `currentTimeTopPosition()` `-6px` 보정값 제거 또는 재계산 필요
+  - 현재: `hourHeight * (hour + minute/60) - capsuleHeight/2` → 캡슐 보정이 위치를 앞당김
+- [ ] **13-10**: 시간 라벨과 구분선 X축 정렬 불일치 — `Transform.translate(0, -12)` 값 재조정
+  - 목표: 시간 라벨 세로 중앙이 구분선과 일치 (현재는 구분선 '위'로 올라가 있음)
+- [ ] **13-11**: `CurrentTimeLine` 날짜별 Y위치 틀어짐 — 페이지별 ScrollController 오프셋 차이 여부 확인
+
+### UI 개선
+
+- [ ] **13-5**: 현재 시간 캡슐 Y축 정렬 개선
+  - **방법**: 텍스트 라벨 먼저 시간 구분선과 Y축 정렬 → 그 위에 캡슐 씌우기
+  - 캡슐 높이 조정 가능 (현재 `currentTimeCapsuleHeight = 13`)
+- [ ] **13-6**: 핀치 줌 제스처 영역 확장 — 좌측 고정 시간 열에서도 인식되어야 함
+  - `GestureDetector`를 `ThreeDayCalendar` 최상위 레벨로 이동 또는 래핑
+- [ ] **13-7**: 월간 캘린더 요일 헤더 높이 → **20px** (현재 `monthlyCalendarWeekdayRowHeight = 36`)
+  - `ui_constants.dart` 상수 변경 + 레이아웃 업데이트
+- [ ] **13-8**: 월간 캘린더 날짜 그리드 상하좌우 **8px 패딩** 추가
+  - 전체 높이 260px 유지, 패딩 추가 시 내부 셀 크기 조정 필요할 수 있음
+- [ ] **13-9**: 월간 캘린더 날짜 선택 시 3일 캘린더 `animateToPage` 적용
+  - Phase 11-1에서 `jumpToPage`로 변경했던 것을 `animateToPage`로 되돌림
+  - `home_calendar_controller.dart`의 `CalendarTransitionKind` 분기 수정
+
+### 애니메이션 개선
+
+- [ ] **13-1**: 3일 캘린더 스크롤 중 월간 캘린더 선택 UI 부드럽게 이동
+  - 현재: `selectedStartDate` 변경 시 월간 캘린더 선택 셀이 즉시(딱딱하게) 변경됨
+  - 목표: `AnimatedContainer` 또는 `AnimatedPositioned`로 선택 셀 이동 애니메이션
+
+### 버그 수정 (낮은 우선순위)
+
+- [ ] **13-2**: Bouncing 스크롤 후 입력 차단 현상
+  - 상단/하단 끝까지 스크롤 후 원래 크기로 돌아오는 동안 스크롤 불가
+  - `BouncingScrollPhysics` + `_syncAllScrollControllers` 상호작용 문제로 추정
+
+---
+
+## 최종 검증 (Phase 12 기준 — Phase 13 완료 후 재검증 필요)
+- [x] 월간 캘린더 overflow 없이 접힘/펼침
+- [x] 월간 캘린더 좌우 스와이프 월 이동
+- [x] 날짜 이동 시 월간 캘린더 열림/닫힘 상태 유지
+- [x] 3일 캘린더 좌우 스와이프 날짜 이동 (1일 단위, 스냅)
+- [x] 3일 캘린더 시간 열 고정, 날짜 열만 스크롤
+- [x] 3일 캘린더 세로 구분선: 종일 행부터 bouncing 시에도 연속
+- [x] 열 사이 구분선 bouncing 시에도 연속
+- [ ] 현재 시간 캡슐 위치, 둥근 모서리, 텍스트 정렬 정상 (13-4, 13-5 수정 후 재검증)
+- [x] picker 완료 버튼에서만 날짜 이동 + animateToPage
 - [ ] 오늘 버튼 → 3일 캘린더 animateToPage + 현재 시간 스크롤
-- [ ] 월간 캘린더 날짜 선택 → jumpToPage (애니메이션 없음)
-- [ ] 오늘 날짜 UI: 선택 시 label 사각형 + systemBackground 원(24×24) + label 숫자
-- [ ] 오늘 날짜 UI: 미선택 시 label 원(24×24) + systemBackground 숫자
-- [ ] 0시/24시 구분선 없음, 1~23시 레이블 구분선 위에 표시
-- [ ] 다크 모드 색상 정상 표시
-- [ ] `dart analyze lib/` 에러 없음
+- [ ] 월간 캘린더 날짜 선택 → animateToPage (13-9 수정 후)
+- [x] 오늘 날짜 UI: 선택 시 label 사각형 + systemBackground 원(24×24) + label 숫자
+- [x] 오늘 날짜 UI: 미선택 시 label 원(24×24) + systemBackground 숫자
+- [x] 0시/24시 구분선 없음, 1~23시 레이블 구분선과 Y축 정렬 (13-10 수정 후 재검증)
+- [x] 다크 모드 색상 정상 표시
+- [x] `dart analyze lib/` 에러 없음
