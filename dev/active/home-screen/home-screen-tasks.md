@@ -2,133 +2,97 @@
 
 Last Updated: 2026-03-19
 
-## Phase 1: 상수 및 상태 관리 기반
+## Phase 1: 상수 및 상태 관리 기반 ✅
 
 ### 1-1. UI 상수 추가
-- [ ] `ui_constants.dart`에 홈 화면 관련 상수 추가
+- [x] `ui_constants.dart`에 홈 화면 관련 상수 추가
   - `homeNavBarHeight`, `allDayRowHeight`, `defaultHourHeight`
   - `minHourHeight`, `maxHourHeight`
   - `calendarDividerThickness`, `currentTimeLineThickness`
   - `currentTimeCapsuleWidth`, `currentTimeCapsuleHeight`
-  - `tabBarHeight`
+  - `tabBarHeight`, `timeColumnWidth`
+  - `monthlyCalendarHeight`, `monthlyCalendarDayRowHeight`, `monthlyCalendarWeekdayRowHeight`
 
 ### 1-2. HomeCalendarState (Freezed)
-- [ ] `lib/presentation/providers/home_calendar_controller.dart` 생성
-- [ ] `HomeCalendarState` freezed 클래스 정의
-  - `selectedStartDate`, `isMonthlyCalendarVisible`, `hourHeight`, `displayedMonth`
-- [ ] `HomeCalendarController` Riverpod Notifier 구현
-  - `selectDate(DateTime)`, `toggleMonthlyCalendar()`
-  - `updateHourHeight(double)` (clamp 적용)
-  - `goToToday()`, `navigateDays(int)`
-- [ ] 코드 생성 실행 (`build_runner`)
+- [x] `lib/presentation/providers/home_calendar_controller.dart` 생성
+- [x] `HomeCalendarState` freezed 클래스 정의
+- [x] `HomeCalendarController` Riverpod Notifier 구현 (5개 메서드)
+- [x] 코드 생성 실행 (`build_runner`)
 
 ### 1-3. HourHeight 영구 저장
-- [ ] `lib/presentation/providers/hour_height_preference_provider.dart` 생성
-- [ ] SharedPreferences read/write 로직 구현
-- [ ] HomeCalendarController `build()`에서 저장값 불러오기
-- [ ] `updateHourHeight` 호출 시 SharedPreferences 저장
+- [x] `lib/presentation/providers/hour_height_preference_provider.dart` 생성
+- [x] SharedPreferences read/write 로직 구현
+- [x] HomeCalendarController `build()`에서 저장값 불러오기
+- [x] `updateHourHeight` 호출 시 SharedPreferences 저장
 
 ---
 
-## Phase 2: 하단 탭바
+## Phase 2: 하단 탭바 ✅
 
 ### 2-1. HomeTabBar 위젯
-- [ ] `lib/presentation/home/widgets/home_tab_bar.dart` 생성
-- [ ] 탭 3개 구현 (홈, 예약 통계, 마이페이지)
-- [ ] 선택/비선택 아이콘 및 색상 처리
-- [ ] 높이: 49 + SafeArea bottom
-- [ ] 로컬 상태로 선택 탭 관리 (StatefulWidget)
+- [x] `lib/presentation/home/widgets/home_tab_bar.dart` 생성
+- [x] 탭 3개 구현 (홈, 예약 통계, 마이페이지)
+- [x] 선택/비선택 아이콘 및 색상 처리
+- [x] 높이: 49 + SafeArea bottom
+- [x] 로컬 상태로 선택 탭 관리 (StatefulWidget)
 
 ---
 
-## Phase 3: 네비게이션 바
+## Phase 3: 네비게이션 바 ✅
 
 ### 3-1. HomeNavBar 위젯
-- [ ] `lib/presentation/home/widgets/home_nav_bar.dart` 생성
-- [ ] 좌측: 연월 + chevron 버튼
-  - 월간 캘린더 표시 여부에 따라 chevron up/down 전환
-  - `bodyLarge` 폰트
-- [ ] 우측: calendar.circle 버튼 (44×44 터치 영역, 아이콘 20×20)
-  - `showCupertinoModalPopup`으로 날짜 picker
-- [ ] 우측: 오늘 날짜 버튼 (44×44 터치, 원형 20×20)
-  - 배경 `label`, 숫자 `systemBackground`
-  - `bodyMedium` 폰트
+- [x] `lib/presentation/home/widgets/home_nav_bar.dart` 생성
+- [x] 좌측: 연월 + chevron 버튼 (chevron up/down 전환)
+- [x] 우측: calendar_circle 버튼 + CupertinoDatePicker
+- [x] 우측: 오늘 날짜 원형 버튼
 
 ---
 
-## Phase 4: 월간 캘린더
+## Phase 4: 월간 캘린더 ✅
 
 ### 4-1. MonthlyCalendarHeader
-- [ ] `lib/presentation/home/widgets/monthly_calendar/monthly_calendar_header.dart` 생성
-- [ ] 일월화수목금토 7열 표시
-- [ ] `labelMedium`, 일=systemRed, 토=systemBlue, 나머지=secondaryLabel
+- [x] `monthly_calendar_header.dart` 생성 (일~토 7열)
 
 ### 4-2. MonthlyCalendarGrid
-- [ ] `lib/presentation/home/widgets/monthly_calendar/monthly_calendar_grid.dart` 생성
-- [ ] 이전/해당/다음 달 날짜 계산 로직
-- [ ] 5행 × 7열 고정 표시
-- [ ] 날짜 색상: 일=systemRed, 토=systemBlue, 이전/다음달=opacity 0.3
-- [ ] 선택 상태 표시: 첫째날(label bg + systemBackground text), 나머지 2일(secondarySystemFill bg)
-- [ ] 날짜 탭 → `selectDate()` 호출
+- [x] `monthly_calendar_grid.dart` 생성
+- [x] 5행 × 7열 고정, 날짜 계산, opacity 처리
+- [x] 선택 상태 표시 (3일 범위)
 
 ### 4-3. MonthlyCalendar 조합
-- [ ] `lib/presentation/home/widgets/monthly_calendar/monthly_calendar.dart` 생성
-- [ ] Header + Grid 조합
-- [ ] `AnimatedContainer` 접힘/펼침 연결 (HomeScreen에서 처리)
+- [x] `monthly_calendar.dart` 생성 (Header + Grid)
 
 ---
 
-## Phase 5: 3일 캘린더 헤더
+## Phase 5: 3일 캘린더 헤더 ✅
 
 ### 5-1. ThreeDayHeader
-- [ ] `lib/presentation/home/widgets/three_day_calendar/three_day_header.dart` 생성
-- [ ] 좌측 시간 컬럼 너비 공간 확보
-- [ ] 3열: 요일 + 일자 표시
-- [ ] 오늘: 요일 `label`, 일자 원형(`label` bg, `systemBackground` text)
-- [ ] 비오늘: `secondaryLabel`, 토=systemBlue, 일=systemRed
-- [ ] 하단 구분선 (separator, 0.5)
+- [x] `three_day_header.dart` 생성
+- [x] 3열 요일/일자, 오늘 원형 배경, 토/일 색상
+- [x] 하단 구분선
 
 ---
 
-## Phase 6: 3일 캘린더 바디
+## Phase 6: 3일 캘린더 바디 ✅
 
 ### 6-1. AllDayRow
-- [ ] `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` 생성
-- [ ] 높이 40, 좌측 "종일" 레이블 (labelSmall, secondaryLabel)
-- [ ] 3열 빈 영역 (이벤트 추후 추가)
-- [ ] 하단 구분선
+- [x] `all_day_row.dart` 생성
 
 ### 6-2. CurrentTimeIndicator
-- [ ] `lib/presentation/home/widgets/three_day_calendar/current_time_indicator.dart` 생성
-- [ ] `Timer.periodic` 1분 업데이트
-- [ ] 캡슐 UI (32×13, systemRed, "HH:MM", white, 10px)
-- [ ] 수평선 (systemRed, 두께 1.0)
-- [ ] hourHeight 변경 시 위치 재계산
+- [x] `current_time_indicator.dart` 생성 (Timer 1분, 캡슐+선)
 
 ### 6-3. TimeGrid
-- [ ] `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` 생성
-- [ ] 전체 높이: `hourHeight * 24`
-- [ ] 시간 구분선 25개 (0~24시)
-- [ ] 시간 레이블 (labelSmall, secondaryLabel)
-- [ ] 초기 스크롤: 현재 시간 중앙 계산
-- [ ] 3열 이벤트 영역 (빈 상태)
-- [ ] CurrentTimeIndicator Stack 배치
-- [ ] 핀치 줌 → `updateHourHeight()`, 스크롤 offset 비율 재조정
+- [x] `time_grid.dart` 생성 (스크롤, 구분선, 핀치줌, 현재시간선)
 
 ### 6-4. ThreeDayCalendar 조합
-- [ ] `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` 생성
-- [ ] Header + AllDayRow + TimeGrid 조합
-- [ ] `GestureDetector` 수평 스와이프 → `navigateDays()` 호출
-- [ ] 스와이프 시 날짜 경계에 스냅
+- [x] `three_day_calendar.dart` 생성 (스와이프 날짜 이동)
 
 ---
 
-## Phase 7: HomeScreen 최종 조합
+## Phase 7: HomeScreen 최종 조합 ✅
 
-- [ ] `lib/presentation/home/home_screen.dart` 업데이트
-  - `ConsumerStatefulWidget`으로 변경
+- [x] `lib/presentation/home/screens/home_screen.dart` ConsumerWidget으로 구현
   - HomeNavBar + AnimatedContainer(MonthlyCalendar) + ThreeDayCalendar 조합
-  - HomeTabBar 추가 (Scaffold bottomNavigationBar 또는 Column 최하단)
+  - HomeTabBar (Scaffold bottomNavigationBar)
   - HomeCalendarController 연결
 
 ---
@@ -141,4 +105,4 @@ Last Updated: 2026-03-19
 - [ ] 3일 캘린더 스와이프 날짜 이동
 - [ ] 현재 시간선 1분 업데이트 확인
 - [ ] 확대/축소 후 앱 재시작 시 저장값 복원
-- [ ] 코드 생성 파일 충돌 없음 (`build_runner`)
+- [ ] `dart analyze lib/` 에러 없음 ✅ (2026-03-19 확인)

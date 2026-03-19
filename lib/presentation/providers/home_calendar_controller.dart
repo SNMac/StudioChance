@@ -1,0 +1,90 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/providers/hour_height_preference_provider.dart';
+
+part 'home_calendar_controller.freezed.dart';
+part 'home_calendar_controller.g.dart';
+
+/// 홈 캘린더 화면의 UI 상태
+@freezed
+abstract class HomeCalendarState with _$HomeCalendarState {
+  const factory HomeCalendarState({
+    /// 3일 캘린더의 첫 번째 날짜
+    required DateTime selectedStartDate,
+
+    /// 월간 캘린더 표시 여부
+    required bool isMonthlyCalendarVisible,
+
+    /// 시간 행 높이 (확대/축소 기준값)
+    required double hourHeight,
+
+    /// 네비게이션 바에 표시되는 연월 (day=1 고정)
+    required DateTime displayedMonth,
+  }) = _HomeCalendarState;
+}
+
+/// 홈 캘린더 상태 관리 컨트롤러
+@riverpod
+class HomeCalendarController extends _$HomeCalendarController {
+  @override
+  HomeCalendarState build() {
+    final now = DateTime.now();
+
+    // SharedPreferences에서 hourHeight 불러오기 (아직 로드 안 됐을 경우 기본값 사용)
+    final prefs = ref.watch(sharedPreferencesProvider).asData?.value;
+    final hourHeight = prefs != null ? loadHourHeight(prefs) : defaultHourHeight;
+
+    return HomeCalendarState(
+      selectedStartDate: DateTime(now.year, now.month, now.day),
+      isMonthlyCalendarVisible: false,
+      hourHeight: hourHeight,
+      displayedMonth: DateTime(now.year, now.month, 1),
+    );
+  }
+
+  /// 날짜 선택: selectedStartDate 및 displayedMonth 업데이트, 월간 캘린더 닫기
+  void selectDate(DateTime date) {
+    state = state.copyWith(
+      selectedStartDate: DateTime(date.year, date.month, date.day),
+      isMonthlyCalendarVisible: false,
+      displayedMonth: DateTime(date.year, date.month, 1),
+    );
+  }
+
+  /// 월간 캘린더 표시 토글
+  void toggleMonthlyCalendar() {
+    state = state.copyWith(
+      isMonthlyCalendarVisible: !state.isMonthlyCalendarVisible,
+    );
+  }
+
+  /// 시간 행 높이 업데이트 및 SharedPreferences에 저장
+  Future<void> updateHourHeight(double height) async {
+    final clamped = height.clamp(minHourHeight, maxHourHeight);
+    state = state.copyWith(hourHeight: clamped);
+
+    final prefs = ref.read(sharedPreferencesProvider).asData?.value;
+    if (prefs != null) await saveHourHeight(prefs, clamped);
+  }
+
+  /// 오늘 날짜로 이동, 월간 캘린더 닫기
+  void goToToday() {
+    final now = DateTime.now();
+    state = state.copyWith(
+      selectedStartDate: DateTime(now.year, now.month, now.day),
+      isMonthlyCalendarVisible: false,
+      displayedMonth: DateTime(now.year, now.month, 1),
+    );
+  }
+
+  /// 날짜를 days만큼 이동, displayedMonth는 이동 후 날짜 기준으로 업데이트
+  void navigateDays(int days) {
+    final newStart = state.selectedStartDate.add(Duration(days: days));
+    state = state.copyWith(
+      selectedStartDate: newStart,
+      displayedMonth: DateTime(newStart.year, newStart.month, 1),
+    );
+  }
+}
