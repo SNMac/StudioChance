@@ -82,6 +82,12 @@ class MonthlyCalendarGrid extends ConsumerWidget {
 
             final cellDate = DateTime(cellYear, cellMonth, day);
 
+            // 오늘 날짜 판별
+            final today = DateTime.now();
+            final bool isToday = cellDate.year == today.year &&
+                cellDate.month == today.month &&
+                cellDate.day == today.day;
+
             // 기본 텍스트 색상 (요일 기준)
             final Color baseColor;
             if (col == 0) {
@@ -105,20 +111,64 @@ class MonthlyCalendarGrid extends ConsumerWidget {
 
             BoxDecoration? decoration;
             Color finalTextColor = textColor;
+            Widget? innerCircle;
 
             if (isSelected1) {
-              // 첫째 날: 배경 label 색, 텍스트 systemBackground
-              decoration = BoxDecoration(
-                color: context.label,
-                borderRadius: BorderRadius.circular(8),
-              );
-              finalTextColor = context.systemBackground;
+              if (isToday) {
+                // 오늘 & 선택: label 사각형 + systemBackground 원 + label 숫자
+                decoration = BoxDecoration(
+                  color: context.label,
+                  borderRadius: BorderRadius.circular(8),
+                );
+                innerCircle = Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: context.systemBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$day',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontSize: 16,
+                      color: context.label,
+                    ),
+                  ),
+                );
+                finalTextColor = Colors.transparent; // innerCircle이 텍스트를 그림
+              } else {
+                // 일반 날짜 선택: label 사각형 + systemBackground 숫자
+                decoration = BoxDecoration(
+                  color: context.label,
+                  borderRadius: BorderRadius.circular(8),
+                );
+                finalTextColor = context.systemBackground;
+              }
             } else if (isSelected2 || isSelected3) {
-              // 둘째, 셋째 날: 배경 secondarySystemFill, 텍스트 원래 색상
               decoration = BoxDecoration(
                 color: context.secondarySystemFill,
                 borderRadius: BorderRadius.circular(8),
               );
+            } else if (isToday) {
+              // 오늘 & 미선택: label 원 + systemBackground 숫자
+              innerCircle = Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: context.label,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$day',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontSize: 16,
+                    color: context.systemBackground,
+                  ),
+                ),
+              );
+              finalTextColor = Colors.transparent; // innerCircle이 텍스트를 그림
             }
 
             return Expanded(
@@ -134,15 +184,16 @@ class MonthlyCalendarGrid extends ConsumerWidget {
                     height: 40,
                     decoration: decoration ?? const BoxDecoration(),
                     alignment: Alignment.center,
-                    child: Text(
-                      '$day',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(
-                        fontSize: 16,
-                        color: finalTextColor,
-                      ),
-                    ),
+                    child: innerCircle ??
+                        Text(
+                          '$day',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.copyWith(
+                            fontSize: 16,
+                            color: finalTextColor,
+                          ),
+                        ),
                   ),
                 ),
               ),
