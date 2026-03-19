@@ -2,107 +2,63 @@
 
 Last Updated: 2026-03-19
 
-## Phase 1: 상수 및 상태 관리 기반 ✅
+## Phase 1~7: 초기 구현 ✅ (완료)
+- 상수, 상태관리, 탭바, 네비바, 월간 캘린더, 3일 캘린더, HomeScreen 조합 모두 완료
 
-### 1-1. UI 상수 추가
-- [x] `ui_constants.dart`에 홈 화면 관련 상수 추가
-  - `homeNavBarHeight`, `allDayRowHeight`, `defaultHourHeight`
-  - `minHourHeight`, `maxHourHeight`
-  - `calendarDividerThickness`, `currentTimeLineThickness`
-  - `currentTimeCapsuleWidth`, `currentTimeCapsuleHeight`
-  - `tabBarHeight`, `timeColumnWidth`
-  - `monthlyCalendarHeight`, `monthlyCalendarDayRowHeight`, `monthlyCalendarWeekdayRowHeight`
+## Phase 8: 피드백 반영 1차 ✅ (완료)
+- [x] 8-1: HomeNavBar 플랫폼별 높이 (`Platform.isIOS ? 44 : kToolbarHeight`)
+- [x] 8-2: 날짜 picker 플랫폼별 모달 (iOS Cupertino / Android Material)
+- [x] 8-3: 월간 캘린더 좌우 PageView (월 단위 스냅, PageController initialPage=10000)
+- [x] 8-4: 월간 캘린더 선택 셀 40×40 명확화 (Center > Container 구조)
+- [x] 8-5: 월간 캘린더 overflow `mainAxisSize: MainAxisSize.min` 추가
+- [x] 8-6: 3일 헤더 수직→수평 레이아웃 (Row, 간격 4)
+- [x] 8-7: 3일 캘린더 날짜 열 사이 세로 구분선
+- [x] 8-8: 시간 열↔날짜 열 사이 구분선 + 1px gap
+- [x] 8-9: 스크롤 `BouncingScrollPhysics()`
+- [x] 8-10: 3일 캘린더 헤더 PageView 연속 스크롤+스냅
 
-### 1-2. HomeCalendarState (Freezed)
-- [x] `lib/presentation/providers/home_calendar_controller.dart` 생성
-- [x] `HomeCalendarState` freezed 클래스 정의
-- [x] `HomeCalendarController` Riverpod Notifier 구현 (5개 메서드)
-- [x] 코드 생성 실행 (`build_runner`)
+## Phase 9: 피드백 반영 2차 ✅ (완료)
+- [x] 9-1: 요일 헤더 구분선 제거 (`_ThreeDayHeaderPage` 구분선 없음)
+- [x] 9-2: 0~1시 높이 - 시간 레이블 `Transform.translate(0, -12)`으로 구분선 위로 이동
+- [x] 9-3: 현재 시간 캡슐 `borderRadius(100)`, 텍스트 `height: 1.0`
+- [x] 9-4: 월간 캘린더 overflow → `OverflowBox(maxHeight)` 로 근본 해결
+- [x] 9-5: 3일 캘린더 좌우 스크롤 → PageView 전체 영역 + shared ScrollController
+- [x] 9-6: picker 완료 버튼에서만 날짜 적용 (`StatefulBuilder` + `tempDate`)
+- [x] 9-7: 상수 변경 (`monthlyCalendarHeight=260`, `threeDayHeaderHeight=28`)
+- [x] 9-8: bouncing 구분선 → `LayoutBuilder` + Positioned 오버레이 (ThreeDayCalendar Stack)
+- [x] 9-9: 0시/24시 구분선 제거 (루프 `1..23`으로 변경)
 
-### 1-3. HourHeight 영구 저장
-- [x] `lib/presentation/providers/hour_height_preference_provider.dart` 생성
-- [x] SharedPreferences read/write 로직 구현
-- [x] HomeCalendarController `build()`에서 저장값 불러오기
-- [x] `updateHourHeight` 호출 시 SharedPreferences 저장
+## Phase 10: 피드백 반영 3차 ✅ (완료)
+- [x] 10-1: 월간 캘린더 overflow → `OverflowBox` 로 재수정
+- [x] 10-2: picker 날짜 선택 후 월간 캘린더 선택 표시 → 이슈 10-7 해결로 자동 해결
+- [x] 10-3: 시간 열 구분선 시작 위치 → `top: threeDayHeaderHeight + 0.5` (종일 행부터)
+- [x] 10-4: 열 사이 구분선 bouncing 시에도 연속 → LayoutBuilder 오버레이로 처리
+- [x] 10-5: 0~1시 영역 넓음 → 레이블 `Transform.translate(0,-12)` 구분선 위로
+- [x] 10-6: 현재 시간 캡슐 위치 → `SizedBox(width: timeColumnWidth+0.5-capsuleWidth)` 좌측 여백
+- [x] 10-7: 날짜 이동 시 월간 캘린더 상태 유지 → `selectDate`/`goToToday`에서 `isMonthlyCalendarVisible` 변경 제거
 
----
-
-## Phase 2: 하단 탭바 ✅
-
-### 2-1. HomeTabBar 위젯
-- [x] `lib/presentation/home/widgets/home_tab_bar.dart` 생성
-- [x] 탭 3개 구현 (홈, 예약 통계, 마이페이지)
-- [x] 선택/비선택 아이콘 및 색상 처리
-- [x] 높이: 49 + SafeArea bottom
-- [x] 로컬 상태로 선택 탭 관리 (StatefulWidget)
-
----
-
-## Phase 3: 네비게이션 바 ✅
-
-### 3-1. HomeNavBar 위젯
-- [x] `lib/presentation/home/widgets/home_nav_bar.dart` 생성
-- [x] 좌측: 연월 + chevron 버튼 (chevron up/down 전환)
-- [x] 우측: calendar_circle 버튼 + CupertinoDatePicker
-- [x] 우측: 오늘 날짜 원형 버튼
-
----
-
-## Phase 4: 월간 캘린더 ✅
-
-### 4-1. MonthlyCalendarHeader
-- [x] `monthly_calendar_header.dart` 생성 (일~토 7열)
-
-### 4-2. MonthlyCalendarGrid
-- [x] `monthly_calendar_grid.dart` 생성
-- [x] 5행 × 7열 고정, 날짜 계산, opacity 처리
-- [x] 선택 상태 표시 (3일 범위)
-
-### 4-3. MonthlyCalendar 조합
-- [x] `monthly_calendar.dart` 생성 (Header + Grid)
-
----
-
-## Phase 5: 3일 캘린더 헤더 ✅
-
-### 5-1. ThreeDayHeader
-- [x] `three_day_header.dart` 생성
-- [x] 3열 요일/일자, 오늘 원형 배경, 토/일 색상
-- [x] 하단 구분선
-
----
-
-## Phase 6: 3일 캘린더 바디 ✅
-
-### 6-1. AllDayRow
-- [x] `all_day_row.dart` 생성
-
-### 6-2. CurrentTimeIndicator
-- [x] `current_time_indicator.dart` 생성 (Timer 1분, 캡슐+선)
-
-### 6-3. TimeGrid
-- [x] `time_grid.dart` 생성 (스크롤, 구분선, 핀치줌, 현재시간선)
-
-### 6-4. ThreeDayCalendar 조합
-- [x] `three_day_calendar.dart` 생성 (스와이프 날짜 이동)
-
----
-
-## Phase 7: HomeScreen 최종 조합 ✅
-
-- [x] `lib/presentation/home/screens/home_screen.dart` ConsumerWidget으로 구현
-  - HomeNavBar + AnimatedContainer(MonthlyCalendar) + ThreeDayCalendar 조합
-  - HomeTabBar (Scaffold bottomNavigationBar)
-  - HomeCalendarController 연결
+## Phase 11: 피드백 반영 4차 (진행중)
+- [x] 11-1: 월간 캘린더 날짜 선택 시 3일 캘린더 슬라이드 애니메이션 제거 → `animateToPage` → `jumpToPage`
+- [x] 11-2: 피커/오늘 버튼 → 월간 캘린더 표시 월 + 네비바 연/월 미반영 수정
+- [x] 11-3: 피커 모달에 grabber 표시 + 끌어내려서 dismiss 지원
+- [x] 11-4: 네비바 chevron 크기 12×7, 간격 8 (커스텀 CustomPaint)
+- [x] 11-5: 현재 시간 캡슐이 시간 레이블을 가리도록 수직 위치 보정
+- [x] 11-6: 월간 캘린더 펼쳤을 때 3일 캘린더와 간격 제거 → 헤더 SizedBox(height: 60) 고정
+- [x] 11-7: 오늘 버튼 클릭 시 3일 캘린더 현재 시간 위치로 스크롤
+- [x] 11-8: 현재 시간 타이머 딜레이 → 정각에 맞춘 타이머로 교체
 
 ---
 
 ## 최종 검증
-
+- [ ] 월간 캘린더 overflow 없이 접힘/펼침
+- [ ] 월간 캘린더 좌우 스와이프 월 이동
+- [ ] 날짜 이동 시 월간 캘린더 열림/닫힘 상태 유지
+- [ ] 3일 캘린더 좌우 스와이프 날짜 이동 (연속 스크롤 + 스냅)
+- [ ] 3일 캘린더 세로 구분선: 종일 행부터 bouncing 시에도 연속
+- [ ] 열 사이 구분선 bouncing 시에도 연속
+- [ ] 현재 시간 캡슐 위치, 둥근 모서리, 텍스트 정렬 정상
+- [ ] 높이: 월간 캘린더 260, 3일 헤더 28
+- [ ] picker 완료 버튼에서만 날짜 이동 + 애니메이션
+- [ ] 0시/24시 구분선 없음, 1~23시 레이블 구분선 위에 표시
 - [ ] 다크 모드 색상 정상 표시
-- [ ] 오늘 날짜 자동 설정 확인
-- [ ] 월간 캘린더 접힘/펼침 애니메이션 동작
-- [ ] 3일 캘린더 스와이프 날짜 이동
-- [ ] 현재 시간선 1분 업데이트 확인
-- [ ] 확대/축소 후 앱 재시작 시 저장값 복원
-- [ ] `dart analyze lib/` 에러 없음 ✅ (2026-03-19 확인)
+- [ ] `dart analyze lib/` 에러 없음 ✅

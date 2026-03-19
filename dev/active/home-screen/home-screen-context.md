@@ -2,142 +2,265 @@
 
 Last Updated: 2026-03-19
 
+## 현재 구현 상태
+
+Phase 1~11 완료. `dart analyze lib/` → No issues found.
+
+---
+
 ## 핵심 파일 경로
 
 | 역할 | 경로 |
 |------|------|
-| 홈 화면 (현재 Placeholder) | `lib/presentation/home/home_screen.dart` |
+| 홈 화면 | `lib/presentation/home/screens/home_screen.dart` |
+| 홈 캘린더 컨트롤러 | `lib/presentation/providers/home_calendar_controller.dart` |
+| hourHeight 저장 | `lib/presentation/providers/hour_height_preference_provider.dart` |
+| 네비게이션 바 | `lib/presentation/home/widgets/home_nav_bar.dart` |
+| 하단 탭바 | `lib/presentation/home/widgets/home_tab_bar.dart` |
+| 월간 캘린더 (PageView) | `lib/presentation/home/widgets/monthly_calendar/monthly_calendar.dart` |
+| 월간 캘린더 헤더 | `lib/presentation/home/widgets/monthly_calendar/monthly_calendar_header.dart` |
+| 월간 캘린더 그리드 | `lib/presentation/home/widgets/monthly_calendar/monthly_calendar_grid.dart` |
+| 3일 캘린더 (PageView 전체) | `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` |
+| 종일 행 | `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` |
+| 시간 그리드 | `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` |
+| 현재시간 인디케이터 | `lib/presentation/home/widgets/three_day_calendar/current_time_indicator.dart` |
 | 색상 Extension | `lib/presentation/commons/extensions/context_colors.dart` |
-| 폰트/테마 정의 | `lib/my_app.dart` |
 | UI 상수 | `lib/constants/ui_constants.dart` |
-| 데이터 상수 | `lib/constants/data_constants.dart` |
-| 앱 라우터 | `lib/router/app_router.dart` |
-| 라우트 경로 | `lib/router/router_path.dart` |
-| 앱 상태 Provider | `lib/presentation/providers/app_auth_controller.dart` |
+
+---
 
 ## 색상 시스템
 
-`context_colors.dart`의 Extension 사용. `BuildContext` 기반으로 다크/라이트 모드 자동 대응.
+`context_colors.dart`의 Extension 사용:
 
 ```dart
 context.label              // 주 텍스트
 context.secondaryLabel     // 보조 텍스트
 context.systemBackground   // 배경
-context.separator          // 구분선 (opacity 0.5 두께선)
-context.secondarySystemFill // 선택 셀 배경 (2, 3번째 선택일)
+context.separator          // 구분선
+context.secondarySystemFill // 선택 셀 배경 (월간 캘린더 2,3번째 선택일)
 context.systemRed          // 일요일, 현재 시간선
 context.systemBlue         // 토요일, 탭바 선택색
 context.white              // 캡슐 텍스트, 오늘 날짜 숫자
 ```
 
-## 텍스트 스타일
+---
 
-`Theme.of(context).textTheme.*` 사용:
+## UI 상수 (ui_constants.dart)
 
 ```dart
-bodyLarge     // 16px, w500 → 연월 버튼
-bodyMedium    // 14px, w500 → 3일 헤더, 오늘 날짜
-bodySmall     // 12px, w500 → (캡슐은 크기만 10으로 오버라이드)
-labelLarge    // 14px, w400 → (날짜는 크기만 16으로 오버라이드)
-labelMedium   // 12px, w400 → 요일 헤더
-labelSmall    // 10px, w400 → 시간 레이블
+const double homeNavBarHeight = 44.0;
+const double timeColumnWidth = 44.0;
+const double allDayRowHeight = 40.0;
+const double defaultHourHeight = 36.0;
+const double minHourHeight = 18.0;
+const double maxHourHeight = 72.0;
+const double calendarDividerThickness = 0.5;
+const double currentTimeLineThickness = 1.0;
+const double currentTimeCapsuleWidth = 32.0;
+const double currentTimeCapsuleHeight = 13.0;
+const double monthlyCalendarDayRowHeight = 40.0;
+const double monthlyCalendarWeekdayRowHeight = 36.0;
+const double monthlyCalendarHeight = 260.0;  // 헤더(60) + 날짜5행(200)
+const double threeDayHeaderHeight = 28.0;
+const double tabBarHeight = 49.0;
 ```
 
-커스텀 크기:
-```dart
-Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10)  // 캡슐
-Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16) // 날짜
+---
+
+## HomeScreen 구조
+
+```
+Scaffold
+├── body: SafeArea(bottom:false)
+│   └── Column
+│       ├── HomeNavBar (Platform.isIOS ? 44 : kToolbarHeight)
+│       ├── AnimatedContainer(height: 0 or 260, Clip.hardEdge)
+│       │   └── OverflowBox(maxHeight: 260, alignment: topCenter)
+│       │       └── MonthlyCalendar (260px 채움)
+│       └── Expanded
+│           └── ThreeDayCalendar (ConsumerStatefulWidget)
+└── bottomNavigationBar: HomeTabBar (height: 49 + SafeArea.bottom)
 ```
 
-## 기존 패턴 참조
+---
 
-### Provider 패턴 (riverpod_generator)
+## MonthlyCalendar 구조
+
+```
+ColoredBox(systemBackground)
+└── Column
+    ├── SizedBox(height: 60)  ← monthlyCalendarHeight - dayRowHeight*5
+    │   └── MonthlyCalendarHeader (일~토 요일 헤더)
+    └── SizedBox(height: 200)  ← monthlyCalendarDayRowHeight * 5
+        └── PageView.builder (initialPage=10000, 월 단위 스냅)
+            └── MonthlyCalendarGrid(displayedMonth, selectedStartDate)
+```
+
+### MonthlyCalendar ref.listen 목록
+1. `displayedMonth` → `_syncPageToMonth()` (jumpToPage, 애니메이션 없음)
+2. `isMonthlyCalendarVisible` → true로 바뀔 때 postFrameCallback으로 `_syncPageToMonth()`
+
+**이유**: 월간 캘린더가 숨겨진 상태(height=0)에서는 `jumpToPage`가 실패할 수 있으므로,
+열릴 때 한번 더 동기화.
+
+---
+
+## ThreeDayCalendar 구조
+
+```
+ConsumerStatefulWidget
+├── _pageController (PageController, initialPage=10000)
+├── _sharedScrollController (ScrollController, 페이지 간 수직 위치 공유)
+└── build():
+    LayoutBuilder
+    └── Stack
+        ├── PageView.builder (PageScrollPhysics, 1일 스냅)
+        │   └── Column (per page)
+        │       ├── SizedBox(height: 28)  ← threeDayHeaderHeight
+        │       │   └── _ThreeDayHeaderPage(startDate)
+        │       ├── Divider(height: 0.5, separator)
+        │       ├── AllDayRow (height: 40)
+        │       └── Expanded(TimeGrid(scrollController: _sharedScrollController))
+        ├── Positioned(시간열↔날짜열 구분선, top: dividerTop, bottom: 0)
+        ├── Positioned(1번째↔2번째 열 구분선)
+        └── Positioned(2번째↔3번째 열 구분선)
+```
+
+### ThreeDayCalendar ref.listen 목록
+1. `scrollToCurrentTimeTriggerProvider` → `_scrollToCurrentTime()` (오늘 버튼)
+2. `selectedStartDate` → `jumpToPage()` (외부 날짜 변경 시)
+
+### ThreeDayCalendar 주요 메서드
+- `_scrollToCurrentTime()`: 현재 시간이 뷰포트 중앙에 오도록 스크롤 (animateTo)
+- `_dateForPage(int)`: 페이지 인덱스 → DateTime 변환
+- `_referenceDate`: 앱 시작 시 기준 날짜 (시간 제거)
+
+---
+
+## HomeCalendarState 구조
+
 ```dart
-// 상태를 가진 Controller
-@riverpod
-class HomeCalendarController extends _$HomeCalendarController {
-  @override
-  HomeCalendarState build() => HomeCalendarState(...);
-}
-
-// Freezed 상태 클래스
 @freezed
 abstract class HomeCalendarState with _$HomeCalendarState {
-  const factory HomeCalendarState({...}) = _HomeCalendarState;
+  const factory HomeCalendarState({
+    required DateTime selectedStartDate,  // 3일 캘린더 첫째 날
+    required bool isMonthlyCalendarVisible,
+    required double hourHeight,           // 시간 행 높이 (핀치줌)
+    required DateTime displayedMonth,     // 네비바 연월 표시 (day=1 고정)
+  }) = _HomeCalendarState;
 }
 ```
 
-### SharedPreferences 패턴
+### HomeCalendarController 메서드
+- `selectDate(DateTime)` → selectedStartDate + displayedMonth 업데이트
+- `toggleMonthlyCalendar()` → isMonthlyCalendarVisible 토글
+- `updateHourHeight(double)` → 핀치줌 + SharedPreferences 저장
+- `goToToday()` → 오늘로 이동 + scrollToCurrentTimeTrigger.trigger() 호출
+- `setDisplayedMonth(DateTime)` → 월간 캘린더 PageView onPageChanged에서 호출
+
+### scrollToCurrentTimeTriggerProvider
 ```dart
-@Riverpod(keepAlive: true)
-SharedPreferences sharedPreferences(Ref ref) { ... }
+@riverpod
+class ScrollToCurrentTimeTrigger extends _$ScrollToCurrentTimeTrigger {
+  @override
+  int build() => 0;
+  void trigger() => state = state + 1;
+}
 ```
-기존 사용 여부 확인 후 패턴 통일.
+- `goToToday()`에서 `ref.read(...).trigger()` 호출
+- ThreeDayCalendar에서 `ref.listen(scrollToCurrentTimeTriggerProvider, ...)`으로 감지
 
-### StatefulWidget 사용 시
-`ConsumerStatefulWidget` + `ConsumerState` 사용 (ScrollController, AnimationController 등 로컬 상태 필요 시)
+---
 
-## 주요 결정 사항
-
-### 확대/축소 범위
-- 기본: 36px/시간
-- 최소: 18px/시간 (0.5x)
-- 최대: 72px/시간 (2.0x)
-
-### 초기 스크롤 위치
-현재 시간이 화면 중앙에 오도록 계산:
-```
-offset = (currentHour + currentMinute/60) * hourHeight - viewportHeight/2
-offset = offset.clamp(0, maxScrollExtent)
-```
-
-### 3일 캘린더 스와이프
-- `GestureDetector.onHorizontalDragEnd` 사용
-- velocity 기반 이동량 결정 (`velocity.pixelsPerSecond.dx`)
-- 최소 drag distance: 화면 너비의 1/3 이상 시 최소 1일 이동
-- 항상 날짜 경계(00:00)에 스냅
-
-### 현재 시간 업데이트
-- `Timer.periodic(const Duration(minutes: 1), ...)` 사용
-- `CurrentTimeIndicator` 위젯 내부에서 `mounted` 체크와 함께 관리
-- `initState`에서 시작, `dispose`에서 취소
-
-### CupertinoIcons 매핑
-| 명세 | Flutter CupertinoIcon |
-|------|----------------------|
-| chevron.down | `CupertinoIcons.chevron_down` |
-| chevron.up | `CupertinoIcons.chevron_up` |
-| calendar.circle | `CupertinoIcons.calendar` (circle 버전 없으면 대체) |
-| house | `CupertinoIcons.house` |
-| house.fill | `CupertinoIcons.house_fill` |
-| chart.line.uptrend.xyaxis | `CupertinoIcons.chart_bar` / `CupertinoIcons.chart_bar_fill` |
-| person | `CupertinoIcons.person` |
-| person.fill | `CupertinoIcons.person_fill` |
-
-> `calendar_circle` 아이콘 존재 확인 완료
-
-## 월간 캘린더 날짜 계산 로직
+## HomeNavBar 구조
 
 ```dart
-// 해당 월의 첫 번째 요일 (일=0, 월=1, ..., 토=6)
-final firstDayOfMonth = DateTime(year, month, 1);
-final startWeekday = firstDayOfMonth.weekday % 7; // Sunday = 0
+// 좌측: 연월 텍스트 + chevron (크기 12×7, 간격 8)
+_ChevronIcon(isUp: bool, color: Color)  // CustomPaint로 구현
+  → _ChevronPainter: strokeWidth 1.5, 두 직선으로 V/∧ 그림
 
-// 5행 × 7열 = 35칸
-// startWeekday 이전: 이전 달 날짜 (opacity 0.3)
-// 해당 월 날짜
-// 35 - (startWeekday + daysInMonth) 이후: 다음 달 날짜 (opacity 0.3)
+// 피커: showModalBottomSheet(enableDrag: true) + Grabber 표시
+//   - Grabber: Container(width:36, height:4, borderRadius:2, systemGrey3)
+//   - StatefulBuilder + tempDate (완료 버튼에서만 selectDate 호출)
 ```
+
+---
+
+## CurrentTimeIndicator 핵심 로직
+
+```dart
+// topPosition: 캡슐이 시간 레이블과 수직 정렬되도록 capsuleHeight/2 위로 이동
+static double topPosition(double hourHeight) {
+  final now = DateTime.now();
+  return hourHeight * (now.hour + now.minute / 60) - currentTimeCapsuleHeight / 2;
+}
+
+// 타이머: 다음 분 정각에 맞춰 첫 번째 Timer 설정 후 1분 간격 반복
+// → 분 경계에서 즉시 갱신됨
+void _scheduleNextUpdate() {
+  final nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute)
+      .add(const Duration(minutes: 1));
+  final delay = nextMinute.difference(now);
+  _timer = Timer(delay, () {
+    setState(() => _now = DateTime.now());
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      setState(() => _now = DateTime.now());
+    });
+  });
+}
+```
+
+---
+
+## TimeGrid 구조
+
+```dart
+GestureDetector(onScaleStart/Update: 핀치줌)
+└── SingleChildScrollView(BouncingScrollPhysics, sharedScrollController)
+    └── SizedBox(height: hourHeight * 24)
+        └── Stack
+            ├── SizedBox.expand()  // 배경 레이어
+            ├── for hour in 1..23: Positioned(top: hourHeight*hour)
+            │   └── Row[
+            │       SizedBox(width: 44),  // 시간 레이블
+            │       Transform.translate(0, -12): Align(topRight): Text("HH:00"),
+            │       SizedBox(width: 1.5),
+            │       Expanded(Divider(separator, 0.5))
+            │   ]
+            └── Positioned(top: CurrentTimeIndicator.topPosition(hourHeight))
+                └── CurrentTimeIndicator(hourHeight)
+```
+
+열 사이 구분선은 ThreeDayCalendar Stack의 Positioned 오버레이에서 처리.
+dividerTop = threeDayHeaderHeight(28) + 0.5
+
+---
+
+## 주의사항
+
+### 월간 캘린더 높이 계산
+- `monthlyCalendarHeight = 260` = 헤더 60px + 날짜 5행 200px
+- 헤더가 SizedBox(height: 60)으로 고정되어야 전체 260px를 채움
+- OverflowBox(maxHeight: 260)로 AnimatedContainer tight constraints 우회
+- MonthlyCalendar Column의 mainAxisSize: min 제거 (default max 사용)
+
+### ThreeDayCalendar - animateToPage vs jumpToPage
+- 외부 날짜 변경(월간 캘린더 선택, 피커, 오늘 버튼): `jumpToPage` (즉시 이동)
+- 사용자 스와이프: PageView가 자연스럽게 처리
+
+### CurrentTimeIndicator 타이머
+- 이전: `Timer.periodic(1분)` → 시작 시점 기준 1분 간격 (분 경계 불일치)
+- 현재: 첫 Timer는 다음 정각까지 대기 후, 이후 1분 간격 Timer.periodic
+
+### 코드 생성
+ScrollToCurrentTimeTrigger 추가로 build_runner 재실행 완료.
+HomeCalendarState 필드 변경 없음.
+
+---
 
 ## 의존성
-
-- `shared_preferences: ^2.5.4` (이미 추가됨)
-- `riverpod_generator`, `freezed` (이미 추가됨)
+- `shared_preferences: ^2.5.4`
+- `riverpod_generator`, `freezed`
 - `flutter/cupertino.dart` (CupertinoIcons, CupertinoDatePicker)
-
-## 코드 생성
-
-구현 완료 후 반드시 실행:
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
+- `dart:io` (Platform.isIOS)
