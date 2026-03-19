@@ -4,61 +4,42 @@ Last Updated: 2026-03-19
 
 ## 현재 구현 상태
 
-Phase 1~11 완료. `dart analyze lib/` → No issues found.
-**Phase 12 (피드백 반영 5차)는 미구현 상태** - 다음 세션에서 작업 필요.
+Phase 1~12 완료. `dart analyze lib/` → No issues found.
+브랜치: `feat/#5-home`
 
 ---
 
-## Phase 12 작업 배경 (이번 세션 논의)
+## Phase 12 구현 내용 (이번 세션 완료)
 
-### 12-1: 애니메이션 정책 명확화
-Phase 11-1에서 "월간 캘린더 날짜 선택 시 3일 캘린더 슬라이드 애니메이션 제거"를 구현하면서
-`animateToPage` → `jumpToPage`로 전면 교체했으나, 이는 의도와 다름.
+### 핵심 아키텍처 변경
 
-**올바른 의도**:
-- 월간 캘린더에서 날짜를 탭하면 → 선택한 날짜가 잠깐 눌린 효과 후 차례차례 선택이 바뀌며 오는 효과 (이 효과 제거 → `jumpToPage` 유지)
-- 오늘 버튼 → 3일 캘린더 `animateToPage` 필요
-- 피커로 날짜 이동 → 3일 캘린더 `animateToPage` 필요
-- 3일 캘린더 스크롤 중 월 경계 통과 → 월간 캘린더 PageView `animateToPage` 필요
+**3일 캘린더 구조 (`three_day_calendar.dart`)**:
+- `PageController(viewportFraction: 1/3, initialPage: 10000)` — 1페이지=1일, 3일 동시 표시
+- 좌측 고정 시간 열 (시간 레이블 1~23시 + `CurrentTimeCapsule`)
+- 우측 PageView (날짜 헤더 + AllDayCell + TimeGrid)
+- 수직 스크롤: `_dayScrollControllers: Map<int, ScrollController>` + `_syncAllScrollControllers` (`_isSyncing` 재진입 방지)
+- 컨트롤러 eviction: `_evictDistantControllers(page)` — ±5 범위 밖 dispose
+- 핀치 줌: ThreeDayCalendar 레벨 GestureDetector + scroll offset 비율 보정 + `unawaited(updateHourHeight(...))`
+- `three_day_header.dart` 삭제 (`_DayHeaderCell` 인라인 통합)
 
-**구현 아이디어**: `HomeCalendarController`에 `DateChangeSource` enum 추가하거나 별도 트리거 Provider로 소스 구분
+**애니메이션 정책 (`home_calendar_controller.dart`)**:
+- `CalendarTransitionKind` enum + `_threeDayTransition` / `_monthlyTransition` 필드 (non-state)
+- `consumeThreeDayTransition()` / `consumeMonthlyTransition()` consume-and-reset 패턴
+- `selectDateFromSwipe()` — 월 경계 통과 시만 monthly animate
+- `selectDateFromPicker()` — 두 캘린더 모두 animate
+- `goToToday()` — 두 캘린더 모두 animate
 
-### 12-2 & 12-3: 오늘 날짜 UI + 버튼 크기
-월간 캘린더 그리드 내 오늘 날짜 셀 렌더링 3단계:
-1. 오늘 & 선택됨: label 둥근 사각형 배경 + systemBackground 원(24×24) + label 숫자
-2. 오늘 & 미선택: label 원(24×24) + systemBackground 숫자
-3. 일반 선택: 기존 label 둥근 사각형 + systemBackground 숫자
+**CurrentTimeIndicator (`current_time_indicator.dart`)**:
+- `CurrentTimeCapsule` / `CurrentTimeLine` 분리 (각각 `Positioned` 직접 반환)
+- `currentTimeTopPosition()` — -6px 보정으로 시간 레이블 중앙과 y축 정렬
+- `CurrentTimeLine` 모든 날짜 열에 렌더링: 오늘 systemRed, 비오늘 30% opacity
 
-네비바 우측 버튼: 오늘 날짜 버튼 + 피커 버튼 모두 24×24로 통일 (터치 영역 44×44 유지)
+**AllDayRow → AllDayCell**: "종일" 레이블은 고정 시간 열로 이동, AllDayCell은 빈 SizedBox만
 
-### 12-4: 3일 캘린더 스크롤 방식 변경 (핵심 리팩토링)
-**현재**: `PageController(viewportFraction: 1.0)` → 1페이지 = 3일 (20,21,22 → 23,24,25로 3일씩 이동)
-**의도**: 1페이지 = 1일, 뷰포트에 3일 표시 (20,21,22 → 스크롤 → 21,22,23으로 1일씩 이동)
-- 빠른 스와이프는 가속도에 비례해 여러 날 이동 가능
-- 항상 일(day) 단위로 스냅
-
-**구현 방향**: `PageController(viewportFraction: 1/3)` 검토
-- 단, 1/3 viewportFraction은 가운데 페이지가 "선택됨"으로 표시되는 문제 있을 수 있음
-- 또는 완전 커스텀 스크롤 (Scrollable + SnapScrollPhysics)
-- ThreeDayHeader, AllDayRow, TimeGrid 모두 영향받음
-
-### 12-5: 3일 캘린더 레이아웃 구조 변경 (핵심 리팩토링)
-**현재**: 시간 열이 PageView 내부에 포함 → 좌우 스크롤 시 시간 열도 함께 이동
-**의도**: 시간 열은 고정, 날짜 열만 스크롤
-
-**목표 구조**:
-```
-Row
-├── 고정 SizedBox(width: timeColumnWidth): 시간 레이블
-└── Expanded: PageView (날짜 영역)
-    └── 각 날짜의 헤더 + 종일 행 + 시간 그리드
-        └── 구분선도 날짜 영역 내부에 존재
-```
-
-**주의사항**:
-- 수직 sharedScrollController는 유지 (페이지 간 스크롤 위치 공유)
-- CurrentTimeIndicator는 날짜 열 영역에만 선이 그려지고, 캡슐은 고정 시간 열에 표시
-- 세로 구분선(시간열↔날짜열)은 고정 구역과 스크롤 구역 경계에 위치
+### 주요 설계 결정
+- `pageWidth` 계산: `(constraints.maxWidth - timeColumnWidth - calendarDividerThickness) / 3` (날짜 열 구분선 위치 정확도)
+- `viewportFraction: 1/3`에서 `PageScrollPhysics` → 1손가락 수평 스와이프 자동 처리
+- `GestureDetector` ScaleGestureRecognizer(2손가락) vs PageScrollPhysics(1손가락) — Flutter 제스처 아레나에서 자동 구분
 
 ---
 
@@ -75,9 +56,9 @@ Row
 | 월간 캘린더 헤더 | `lib/presentation/home/widgets/monthly_calendar/monthly_calendar_header.dart` |
 | 월간 캘린더 그리드 | `lib/presentation/home/widgets/monthly_calendar/monthly_calendar_grid.dart` |
 | 3일 캘린더 (PageView 전체) | `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` |
-| 종일 행 | `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` |
+| 종일 이벤트 셀 | `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` (`AllDayCell`) |
 | 시간 그리드 | `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` |
-| 현재시간 인디케이터 | `lib/presentation/home/widgets/three_day_calendar/current_time_indicator.dart` |
+| 현재시간 캡슐+선 | `lib/presentation/home/widgets/three_day_calendar/current_time_indicator.dart` (`CurrentTimeCapsule`, `CurrentTimeLine`) |
 | 색상 Extension | `lib/presentation/commons/extensions/context_colors.dart` |
 | UI 상수 | `lib/constants/ui_constants.dart` |
 

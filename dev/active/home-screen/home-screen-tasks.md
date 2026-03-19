@@ -47,58 +47,37 @@ Last Updated: 2026-03-19
 - [x] 11-7: 오늘 버튼 클릭 시 3일 캘린더 현재 시간 위치로 스크롤
 - [x] 11-8: 현재 시간 타이머 딜레이 → 정각에 맞춘 타이머로 교체
 
-## Phase 12: 피드백 반영 5차 (미구현 - 다음 작업)
+## Phase 12: 피드백 반영 5차 ✅ (완료)
 
-### 12-1: 애니메이션 정책 수정 ⬜
-- **문제**: 11-1에서 모든 `animateToPage`를 `jumpToPage`로 교체했으나, 일부 케이스에는 애니메이션이 필요함
-- **올바른 정책**:
-  - `jumpToPage` (애니메이션 없음): 월간 캘린더에서 날짜 선택 시
-  - `animateToPage` (슬라이드 애니메이션): 오늘 버튼, 피커로 날짜 이동, 3일 캘린더 스크롤 중 월 변경 시 월간 캘린더 PageView 이동
-- **수정 대상**: `ThreeDayCalendar`의 `selectedStartDate` listen 분기 처리 + 월간 캘린더 `_syncPageToMonth` 분기 처리
-- **아이디어**: `HomeCalendarController`에 날짜 변경 소스를 추적하는 필드 추가 (`DateChangeSource enum`) 또는 별도 트리거 Provider 사용
+### 12-1: 애니메이션 정책 수정 ✅
+- `CalendarTransitionKind` enum + `consumeThreeDayTransition()` / `consumeMonthlyTransition()` consume 패턴 구현
+- `selectDateFromSwipe()` (월 경계 통과 시만 animate) / `selectDateFromPicker()` (두 캘린더 모두 animate) 추가
+- `goToToday()` 수정 — 두 플래그 animate
+- `monthly_calendar.dart` `_syncPageToMonth` animateToPage/jumpToPage 분기 처리
 
-### 12-2: 월간 캘린더 오늘 날짜 UI ⬜
-- **현재**: 오늘 날짜도 선택일과 동일한 label색 둥근 사각형만 표시
-- **목표**:
-  - 오늘 날짜가 선택된 경우: label색 둥근 사각형 + 그 안에 systemBackground 24×24 원 + 원 안에 숫자(label색)
-  - 오늘 날짜가 선택 해제된 경우: label색 24×24 원 + 원 안에 숫자(systemBackground색)
-  - 일반 날짜 선택 시: 기존과 동일 (label색 둥근 사각형 + 숫자 systemBackground)
-- **수정 대상**: `monthly_calendar_grid.dart` 날짜 셀 렌더링 로직
+### 12-2: 월간 캘린더 오늘 날짜 UI ✅
+- `monthly_calendar_grid.dart` — isToday 판별 추가
+- 오늘+선택: label 사각형 40×40 + systemBackground 원 24×24 + label 숫자
+- 오늘+미선택: label 원 24×24 + systemBackground 숫자
+- 일반 선택: 기존 유지
 
-### 12-3: 네비바 버튼 크기 통일 ⬜
-- **현재**: 오늘 날짜 버튼 20×20, 캘린더 피커 버튼 아이콘 크기 미지정
-- **목표**: 오늘 날짜 버튼 + 캘린더 피커 버튼 모두 24×24로 통일 (터치 영역 44×44 유지)
-- **수정 대상**: `home_nav_bar.dart`
+### 12-3: 네비바 버튼 크기 통일 ✅
+- 오늘 버튼 + 피커 아이콘 모두 24×24 (터치 영역 44×44 유지)
 
-### 12-4: 3일 캘린더 스크롤 방식 변경 ⬜
-- **현재**: PageView 1페이지 = 3일, 스크롤 시 3일씩 이동 (예: 20,21,22 → 23,24,25)
-- **목표**: PageView 1페이지 = 1일, 뷰포트에 3일 표시 (예: 20,21,22 표시 중 → 스크롤 → 21,22,23)
-  - 한 번에 1일씩 이동 (기본)
-  - 빠른 스와이프 시 가속도에 따라 여러 날 이동 가능
-  - 항상 일(day) 단위로 스냅
-- **구현 방식**: `PageView`의 `viewportFraction: 1/3`으로 변경하거나, `ListWheelScrollView` 검토, 또는 커스텀 스크롤 + `SnapScrollPhysics` 구현
-  - 권장: `PageController(viewportFraction: 1/3)` + 페이지 기준점을 가운데 날짜로 잡기
-  - 대안: 완전 커스텀 (`Scrollable` + `ScrollPhysics` 상속)
-- **영향 범위**: `three_day_calendar.dart`, `three_day_header.dart`, `time_grid.dart`, `all_day_row.dart`
+### 12-4: 3일 캘린더 1일 단위 스크롤 ✅
+- `PageController(viewportFraction: 1/3)` — 1페이지=1일, 3일 동시 표시
+- 1일씩 스냅, 빠른 스와이프 시 여러 날 이동
 
-### 12-5: 3일 캘린더 좌우 스크롤 레이아웃 구조 변경 ⬜
-- **현재**: 시간 열(timeColumn)이 PageView 내부에 포함되어 좌우 스크롤 시 함께 움직임, 구분선도 배경에 오버레이
-- **목표**: 시간 열은 고정, 날짜 헤더 + 종일 행 + 시간 그리드 열만 좌우 스크롤, 구분선도 날짜 열 영역 내에 존재
-- **구현 방식**:
-  ```
-  Row
-  ├── 고정: 시간 열 (SizedBox, width: timeColumnWidth)  ← 스크롤 안됨
-  │   └── 시간 레이블 + (세로) 시간열↔날짜열 구분선
-  └── Expanded: 날짜 영역 전체
-      └── PageView (3일 뷰, 좌우 스크롤)
-          └── Column (per page/day)
-              ├── 3일 헤더
-              ├── 종일 행
-              └── TimeGrid (시간 그리드, 수직 스크롤)
-                  └── 시간 구분선 + 열 간 구분선 포함
-  ```
-- **주의**: 수직 스크롤(sharedScrollController)과 수평 스크롤(PageView) 분리 유지 필요
-- **영향 범위**: `three_day_calendar.dart`, `time_grid.dart`, `three_day_header.dart`, `all_day_row.dart`
+### 12-5: 3일 캘린더 시간 열 고정 구조 ✅
+- 고정 시간 열 (시간 레이블 + CurrentTimeCapsule) + PageView (날짜 열만 스크롤)
+- 페이지별 개별 ScrollController + `_syncAllScrollControllers` (`_isSyncing` 재진입 방지)
+- `_evictDistantControllers` — ±5 범위 밖 컨트롤러 dispose
+- `three_day_header.dart` 삭제 (`_DayHeaderCell` 인라인 통합)
+
+### 12-6: CurrentTimeIndicator y축 정렬 ✅
+- `currentTimeTopPosition()` -6px 보정으로 시간 레이블 중앙과 일치
+- `CurrentTimeCapsule` / `CurrentTimeLine` 분리 (각각 Positioned 직접 반환)
+- `CurrentTimeLine` 모든 날짜 열에 표시: 오늘 systemRed, 비오늘 30% opacity
 
 ---
 
