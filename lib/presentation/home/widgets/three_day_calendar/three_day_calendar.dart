@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/time_grid.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
 /// 3일 캘린더 최상위 위젯
-/// PageView로 전체 영역을 감싸 연속 스크롤 + 1일 스냅 날짜 이동을 지원함
-/// 시간 그리드 수직 스크롤은 shared ScrollController로 페이지 간 위치 유지
+/// - 좌측 고정 시간 열 (시간 레이블 + 현재 시간 캡슐)
+/// - 우측 PageView (viewportFraction: 1/3, 1페이지=1일, 3일 동시 표시)
+/// - 수직 스크롤: 페이지별 ScrollController + 중앙 offset 동기화
 class ThreeDayCalendar extends ConsumerStatefulWidget {
   const ThreeDayCalendar({super.key});
 
@@ -19,7 +23,6 @@ class ThreeDayCalendar extends ConsumerStatefulWidget {
 class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   static const _initialPage = 10000;
 
-  /// 앱 시작 시 기준일 (시간 제거)
   final _referenceDate = DateTime(
     DateTime.now().year,
     DateTime.now().month,
@@ -27,63 +30,157 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   );
 
   late final PageController _pageController;
+  late final ScrollController _timeColumnScrollController;
 
-  /// 모든 페이지가 공유하는 수직 ScrollController (스크롤 위치 유지)
-  late final ScrollController _sharedScrollController;
+  /// 현재 수직 스크롤 오프셋 (모든 날짜 열과 시간 열이 공유)
+  double _currentVerticalOffset = 0.0;
+
+  /// 재진입 방지 플래그 (_syncAllScrollControllers 무한 루프 방지)
+  bool _isSyncing = false;
+
+  /// 페이지 인덱스 → ScrollController 맵 (수직 스크롤 동기화)
+  final Map<int, ScrollController> _dayScrollControllers = {};
+
+  /// 핀치 줌 시작 시점의 hourHeight 기준값
+  double _baseHourHeight = defaultHourHeight;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _initialPage);
-    _sharedScrollController = ScrollController();
+    _pageController = PageController(
+      initialPage: _initialPage,
+      viewportFraction: 1 / 3,
+    );
+    _timeColumnScrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentTime());
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _sharedScrollController.dispose();
+    _timeColumnScrollController.dispose();
+    for (final ctrl in _dayScrollControllers.values) {
+      ctrl.dispose();
+    }
     super.dispose();
+  }
+
+  /// 페이지별 ScrollController 반환 (없으면 생성, 리스너 자동 등록)
+  ScrollController _controllerForPage(int page) {
+    return _dayScrollControllers.putIfAbsent(page, () {
+      final ctrl = ScrollController(
+        initialScrollOffset: _currentVerticalOffset,
+      );
+      ctrl.addListener(() {
+        if (_isSyncing || !ctrl.hasClients) return;
+        final offset = ctrl.offset;
+        if (offset == _currentVerticalOffset) return;
+        _currentVerticalOffset = offset;
+        _syncAllScrollControllers(offset, except: ctrl);
+      });
+      return ctrl;
+    });
+  }
+
+  /// 모든 날짜 열 + 시간 열 수직 스크롤 동기화 (재진입 방지)
+  void _syncAllScrollControllers(double offset, {ScrollController? except}) {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    try {
+      for (final ctrl in _dayScrollControllers.values) {
+        if (ctrl == except) continue;
+        if (ctrl.hasClients && ctrl.offset != offset) ctrl.jumpTo(offset);
+      }
+      if (_timeColumnScrollController.hasClients &&
+          _timeColumnScrollController.offset != offset) {
+        _timeColumnScrollController.jumpTo(offset);
+      }
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  /// 현재 페이지 ±5 범위 밖의 ScrollController를 해제하여 메모리 누수 방지
+  void _evictDistantControllers(int currentPage) {
+    final toRemove = _dayScrollControllers.keys
+        .where((page) => (page - currentPage).abs() > 5)
+        .toList();
+    for (final page in toRemove) {
+      _dayScrollControllers.remove(page)?.dispose();
+    }
   }
 
   /// 현재 시간이 뷰포트 중앙에 오도록 스크롤
   void _scrollToCurrentTime() {
-    if (!_sharedScrollController.hasClients) return;
     final hourHeight = ref.read(homeCalendarControllerProvider).hourHeight;
     final now = DateTime.now();
     final currentOffset = hourHeight * (now.hour + now.minute / 60);
-    final viewportHeight = _sharedScrollController.position.viewportDimension;
-    final maxExtent = _sharedScrollController.position.maxScrollExtent;
+
+    // 임의의 active controller로 viewportDimension 파악
+    double viewportHeight = 600; // fallback
+    for (final ctrl in _dayScrollControllers.values) {
+      if (ctrl.hasClients) {
+        viewportHeight = ctrl.position.viewportDimension;
+        break;
+      }
+    }
+    if (_timeColumnScrollController.hasClients) {
+      viewportHeight =
+          _timeColumnScrollController.position.viewportDimension;
+    }
+
+    final maxExtent = (hourHeight * 24 - viewportHeight).clamp(0.0, double.infinity);
     final target =
         (currentOffset - viewportHeight / 2).clamp(0.0, maxExtent);
-    _sharedScrollController.animateTo(
-      target,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    _currentVerticalOffset = target;
+    _syncAllScrollControllers(target);
   }
 
-  /// 페이지 인덱스를 날짜로 변환
   DateTime _dateForPage(int page) {
     return _referenceDate.add(Duration(days: page - _initialPage));
   }
 
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 오늘 버튼 클릭 시 현재 시간으로 스크롤
+    final hourHeight = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.hourHeight),
+    );
+
+    // 오늘 버튼 → 현재 시간 스크롤
     ref.listen(scrollToCurrentTimeTriggerProvider, (prev, next) {
       if (prev == next) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentTime());
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _scrollToCurrentTime());
     });
 
-    // 외부(goToToday, 월간 캘린더 선택)에서 selectedStartDate 변경 시 PageView 동기화
+    // 외부 날짜 변경 → PageView 동기화 (애니메이션 정책 분기)
     ref.listen(
       homeCalendarControllerProvider.select((s) => s.selectedStartDate),
       (prev, next) {
         if (prev == next) return;
         final delta = next.difference(_referenceDate).inDays;
         final targetPage = _initialPage + delta;
-        if (_pageController.hasClients &&
-            _pageController.page?.round() != targetPage) {
+        if (!_pageController.hasClients ||
+            _pageController.page?.round() == targetPage) {
+          return;
+        }
+        final kind = ref
+            .read(homeCalendarControllerProvider.notifier)
+            .consumeThreeDayTransition();
+        if (kind == CalendarTransitionKind.animate) {
+          _pageController.animateToPage(
+            targetPage,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        } else {
           _pageController.jumpToPage(targetPage);
         }
       },
@@ -91,112 +188,210 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 열 사이 구분선 위치 계산
-        // 가용 너비 = 전체 - 시간 열(44) - gap(1.5)
-        final colWidth = (constraints.maxWidth - timeColumnWidth - 1.5) / 3;
-        // 구분선 시작 top = 헤더(28) + 헤더 구분선(0.5)
-        const dividerTop = threeDayHeaderHeight + 0.5;
+        final pageWidth = constraints.maxWidth / 3;
 
-        return Stack(
-      children: [
-        // PageView가 전체 영역을 감싸 좌우 스와이프 감지
-        PageView.builder(
-          controller: _pageController,
-          physics: const PageScrollPhysics(),
-          onPageChanged: (index) {
-            final newStart = _dateForPage(index);
-            ref
-                .read(homeCalendarControllerProvider.notifier)
-                .selectDate(newStart);
-          },
-          itemBuilder: (context, index) {
-            return Column(
-              children: [
-                // 요일/일자 헤더 (구분선 없음)
-                SizedBox(
-                  height: threeDayHeaderHeight,
-                  child: _ThreeDayHeaderPage(startDate: _dateForPage(index)),
-                ),
-                // 헤더 하단 구분선
-                Divider(
-                  height: 0.5,
-                  thickness: 0.5,
-                  color: context.separator,
-                ),
-                // 종일 이벤트 행
-                const AllDayRow(),
-                // 시간 그리드 (shared ScrollController로 수직 위치 유지)
-                Expanded(
-                  child: TimeGrid(scrollController: _sharedScrollController),
-                ),
-              ],
-            );
-          },
-        ),
-        // 시간 열↔날짜 열 세로 구분선 오버레이
-        // 종일 행 상단(dividerTop)부터 시작, bouncing 시에도 끊기지 않도록 전체 높이
-        Positioned(
-          left: timeColumnWidth + 1.0,
-          top: dividerTop,
-          bottom: 0,
-          child: Container(width: 0.5, color: context.separator),
-        ),
-        // 1번째↔2번째 열 사이 구분선
-        Positioned(
-          left: timeColumnWidth + 1.5 + colWidth,
-          top: dividerTop,
-          bottom: 0,
-          child: Container(width: 0.5, color: context.separator),
-        ),
-        // 2번째↔3번째 열 사이 구분선
-        Positioned(
-          left: timeColumnWidth + 1.5 + colWidth * 2 + 0.5,
-          top: dividerTop,
-          bottom: 0,
-          child: Container(width: 0.5, color: context.separator),
-        ),
-      ],
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── 고정 시간 열 ──────────────────────────────
+            SizedBox(
+              width: timeColumnWidth,
+              child: Column(
+                children: [
+                  // 헤더 높이 공백
+                  SizedBox(height: threeDayHeaderHeight),
+                  Container(
+                      height: calendarDividerThickness,
+                      color: context.separator),
+                  // "종일" 레이블
+                  SizedBox(
+                    height: allDayRowHeight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '종일',
+                        textAlign: TextAlign.center,
+                        style:
+                            Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: context.secondaryLabel,
+                                ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                      height: calendarDividerThickness,
+                      color: context.separator),
+                  // 시간 레이블 + 캡슐 (수직 스크롤, 사용자 드래그 불가)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _timeColumnScrollController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: hourHeight * 24,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // 시간 레이블 (1~23시)
+                            for (int hour = 1; hour < 24; hour++)
+                              Positioned(
+                                top: hourHeight * hour,
+                                left: 0,
+                                right: 0,
+                                child: Transform.translate(
+                                  offset: const Offset(0, -12),
+                                  child: Align(
+                                    alignment: Alignment.topRight,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(right: 4),
+                                      child: Text(
+                                        '${hour.toString().padLeft(2, '0')}:00',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: context.secondaryLabel,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // 현재 시간 캡슐: CurrentTimeCapsule이 Positioned를 직접 반환
+                            CurrentTimeCapsule(hourHeight: hourHeight),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 시간열↔날짜열 구분선
+            Container(width: calendarDividerThickness, color: context.separator),
+
+            // ── 날짜 열 영역 ──────────────────────────────
+            Expanded(
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: _pageController,
+                    physics: const PageScrollPhysics(),
+                    onPageChanged: (index) {
+                      final newStart = _dateForPage(index);
+                      _evictDistantControllers(index);
+                      ref
+                          .read(homeCalendarControllerProvider.notifier)
+                          .selectDateFromSwipe(newStart);
+                    },
+                    itemBuilder: (context, index) {
+                      final date = _dateForPage(index);
+                      return Column(
+                        children: [
+                          // 요일/일자 헤더
+                          SizedBox(
+                            height: threeDayHeaderHeight,
+                            child: _DayHeaderCell(date: date),
+                          ),
+                          Container(
+                              height: calendarDividerThickness,
+                              color: context.separator),
+                          // 종일 이벤트 셀
+                          const AllDayCell(),
+                          Container(
+                              height: calendarDividerThickness,
+                              color: context.separator),
+                          // 이벤트 그리드 (수직 스크롤)
+                          // 핀치 줌: GestureDetector → ScaleGestureRecognizer(2손가락)와
+                          //          PageScrollPhysics(1손가락)가 Flutter 제스처 아레나에서 자동 구분됨
+                          Expanded(
+                            child: GestureDetector(
+                              onScaleStart: (_) {
+                                _baseHourHeight = ref
+                                    .read(homeCalendarControllerProvider)
+                                    .hourHeight;
+                              },
+                              onScaleUpdate: (details) {
+                                if (details.pointerCount < 2) return;
+                                final oldHeight = ref
+                                    .read(homeCalendarControllerProvider)
+                                    .hourHeight;
+                                final newHeight =
+                                    (_baseHourHeight * details.scale)
+                                        .clamp(minHourHeight, maxHourHeight);
+                                // 스크롤 비율 보정: 확대/축소 후 뷰포트 중앙 위치 유지
+                                if (oldHeight > 0 && newHeight != oldHeight) {
+                                  // 뷰포트 높이 파악 (maxScrollExtent 계산에 사용)
+                                  double viewportH = 600;
+                                  if (_timeColumnScrollController.hasClients) {
+                                    viewportH = _timeColumnScrollController
+                                        .position.viewportDimension;
+                                  }
+                                  final rawOffset = _currentVerticalOffset *
+                                      (newHeight / oldHeight);
+                                  final maxOffset =
+                                      (newHeight * 24 - viewportH)
+                                          .clamp(0.0, double.infinity);
+                                  final newOffset =
+                                      rawOffset.clamp(0.0, maxOffset);
+                                  _currentVerticalOffset = newOffset;
+                                  _syncAllScrollControllers(newOffset);
+                                }
+                                // updateHourHeight는 Future<void> — unawaited로 fire-and-forget
+                                unawaited(
+                                  ref
+                                      .read(homeCalendarControllerProvider
+                                          .notifier)
+                                      .updateHourHeight(newHeight),
+                                );
+                              },
+                              child: TimeGrid(
+                                scrollController: _controllerForPage(index),
+                                isToday: _isToday(date),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  // 날짜 열 사이 수직 구분선 (1일↔2일, 2일↔3일)
+                  Positioned(
+                    left: pageWidth,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                        width: calendarDividerThickness,
+                        color: context.separator),
+                  ),
+                  Positioned(
+                    left: pageWidth * 2,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                        width: calendarDividerThickness,
+                        color: context.separator),
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-/// PageView 각 페이지용 헤더 (요일+일자 수평 표시, 구분선 없음)
-class _ThreeDayHeaderPage extends StatelessWidget {
-  const _ThreeDayHeaderPage({required this.startDate});
+// ─── 헤더 셀 ────────────────────────────────────────────────────────────────
 
-  final DateTime startDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final days = List.generate(3, (i) => startDate.add(Duration(days: i)));
-
-    return Row(
-      children: [
-        // 좌측 시간 컬럼 너비 확보 (구분선 없음)
-        SizedBox(width: timeColumnWidth + 1.5),
-        // 3열 날짜 헤더 (열 사이 구분선 없음)
-        Expanded(
-          child: Row(
-            children: days
-                .map((day) => Expanded(child: _DayHeaderCell(date: day)))
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// 하루 날짜 헤더 셀: 요일 + 일자 수평 표시
 class _DayHeaderCell extends StatelessWidget {
   const _DayHeaderCell({required this.date});
 
   final DateTime date;
 
   static const _weekdayLabels = ['월', '화', '수', '목', '금', '토', '일'];
-
   String get _weekdayLabel => _weekdayLabels[date.weekday - 1];
 
   bool get _isToday {
@@ -244,7 +439,6 @@ class _DayHeaderCell extends StatelessWidget {
 
   Widget _buildDayNumber(BuildContext context) {
     final dayText = date.day.toString();
-
     if (_isToday) {
       return Container(
         width: 20,
@@ -262,7 +456,6 @@ class _DayHeaderCell extends StatelessWidget {
         ),
       );
     }
-
     return Text(
       dayText,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
