@@ -65,7 +65,7 @@ class HomeNavBar extends ConsumerWidget {
                   child: Center(
                     child: Icon(
                       CupertinoIcons.calendar_circle,
-                      size: 20.0,
+                      size: 24.0,
                       color: context.label,
                     ),
                   ),
@@ -79,11 +79,11 @@ class HomeNavBar extends ConsumerWidget {
                   height: navBarHeight,
                   child: Center(
                     child: Container(
-                      width: 20.0,
-                      height: 20.0,
+                      width: 24.0,
+                      height: 24.0,
                       decoration: BoxDecoration(
                         color: context.label,
-                        borderRadius: BorderRadius.circular(10.0),
+                        borderRadius: BorderRadius.circular(12.0),
                       ),
                       alignment: Alignment.center,
                       child: Text(
@@ -151,7 +151,7 @@ class HomeNavBar extends ConsumerWidget {
                           Navigator.pop(ctx);
                           ref
                               .read(homeCalendarControllerProvider.notifier)
-                              .selectDate(tempDate);
+                              .selectDateFromPicker(tempDate);
                         },
                       ),
                     ],
@@ -179,7 +179,7 @@ class HomeNavBar extends ConsumerWidget {
         lastDate: DateTime(2100),
       ).then((date) {
         if (date != null) {
-          ref.read(homeCalendarControllerProvider.notifier).selectDate(date);
+          ref.read(homeCalendarControllerProvider.notifier).selectDateFromPicker(date);
         }
       });
     }
