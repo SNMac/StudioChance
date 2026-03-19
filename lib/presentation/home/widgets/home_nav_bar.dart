@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,9 +20,10 @@ class HomeNavBar extends ConsumerWidget {
     final month = state.displayedMonth;
     final monthText = '${month.year}년 ${month.month}월';
     final today = DateTime.now().day;
+    final navBarHeight = Platform.isIOS ? homeNavBarHeight : kToolbarHeight;
 
     return Container(
-      height: homeNavBarHeight,
+      height: navBarHeight,
       color: context.systemBackground,
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
@@ -29,7 +32,7 @@ class HomeNavBar extends ConsumerWidget {
           GestureDetector(
             onTap: notifier.toggleMonthlyCalendar,
             child: SizedBox(
-              height: homeNavBarHeight,
+              height: navBarHeight,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -40,13 +43,9 @@ class HomeNavBar extends ConsumerWidget {
                       color: context.label,
                     ),
                   ),
-                  const SizedBox(width: 4.0),
-                  Icon(
-                    // 월간 캘린더 표시 여부에 따라 chevron 방향 전환
-                    state.isMonthlyCalendarVisible
-                        ? CupertinoIcons.chevron_up
-                        : CupertinoIcons.chevron_down,
-                    size: 16.0,
+                  const SizedBox(width: 8.0),
+                  _ChevronIcon(
+                    isUp: state.isMonthlyCalendarVisible,
                     color: context.label,
                   ),
                 ],
@@ -62,7 +61,7 @@ class HomeNavBar extends ConsumerWidget {
                 onTap: () => _showDatePicker(context, ref, state),
                 child: SizedBox(
                   width: 44.0,
-                  height: 44.0,
+                  height: navBarHeight,
                   child: Center(
                     child: Icon(
                       CupertinoIcons.calendar_circle,
@@ -77,7 +76,7 @@ class HomeNavBar extends ConsumerWidget {
                 onTap: notifier.goToToday,
                 child: SizedBox(
                   width: 44.0,
-                  height: 44.0,
+                  height: navBarHeight,
                   child: Center(
                     child: Container(
                       width: 20.0,
@@ -105,23 +104,132 @@ class HomeNavBar extends ConsumerWidget {
     );
   }
 
-  /// CupertinoDatePicker를 모달로 표시
+  /// 플랫폼별 날짜 picker 모달 표시
   void _showDatePicker(
     BuildContext context,
     WidgetRef ref,
     HomeCalendarState state,
   ) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => SizedBox(
-        height: 300,
-        child: CupertinoDatePicker(
-          mode: CupertinoDatePickerMode.date,
-          initialDateTime: state.selectedStartDate,
-          onDateTimeChanged: (date) =>
-              ref.read(homeCalendarControllerProvider.notifier).selectDate(date),
+    if (Platform.isIOS) {
+      // grabber + 끌어내려서 dismiss 지원 (showModalBottomSheet + enableDrag)
+      // 완료 버튼에서만 날짜 적용 (StatefulBuilder로 임시 날짜 관리)
+      DateTime tempDate = state.selectedStartDate;
+      showModalBottomSheet<void>(
+        context: context,
+        enableDrag: true,
+        backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
         ),
-      ),
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => SizedBox(
+            height: 360,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Grabber
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8, bottom: 4),
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemGrey3.resolveFrom(ctx),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  // 완료 버튼
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      CupertinoButton(
+                        child: const Text('완료'),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          ref
+                              .read(homeCalendarControllerProvider.notifier)
+                              .selectDate(tempDate);
+                        },
+                      ),
+                    ],
+                  ),
+                  // 날짜 picker
+                  Expanded(
+                    child: CupertinoDatePicker(
+                      mode: CupertinoDatePickerMode.date,
+                      initialDateTime: state.selectedStartDate,
+                      onDateTimeChanged: (date) =>
+                          setModalState(() => tempDate = date),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      showDatePicker(
+        context: context,
+        initialDate: state.selectedStartDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      ).then((date) {
+        if (date != null) {
+          ref.read(homeCalendarControllerProvider.notifier).selectDate(date);
+        }
+      });
+    }
+  }
+}
+
+/// 네비바 chevron 아이콘 (너비 12, 높이 7)
+class _ChevronIcon extends StatelessWidget {
+  const _ChevronIcon({required this.isUp, required this.color});
+
+  final bool isUp;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(12, 7),
+      painter: _ChevronPainter(color: color, isUp: isUp),
     );
   }
+}
+
+class _ChevronPainter extends CustomPainter {
+  _ChevronPainter({required this.color, required this.isUp});
+
+  final Color color;
+  final bool isUp;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    if (isUp) {
+      path.moveTo(0, size.height);
+      path.lineTo(size.width / 2, 0);
+      path.lineTo(size.width, size.height);
+    } else {
+      path.moveTo(0, 0);
+      path.lineTo(size.width / 2, size.height);
+      path.lineTo(size.width, 0);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ChevronPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.isUp != isUp;
 }

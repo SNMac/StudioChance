@@ -128,20 +128,19 @@ class MonthlyCalendarGrid extends ConsumerWidget {
                       .read(homeCalendarControllerProvider.notifier)
                       .selectDate(cellDate);
                 },
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: DecoratedBox(
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 40,
                     decoration: decoration ?? const BoxDecoration(),
-                    child: Center(
-                      child: Text(
-                        '$day',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelLarge?.copyWith(
-                          fontSize: 16,
-                          color: finalTextColor,
-                        ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$day',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(
+                        fontSize: 16,
+                        color: finalTextColor,
                       ),
                     ),
                   ),

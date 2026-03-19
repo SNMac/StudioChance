@@ -29,7 +29,11 @@ class HomeScreen extends ConsumerWidget {
               height: isMonthlyCalendarVisible ? monthlyCalendarHeight : 0,
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(),
-              child: const MonthlyCalendar(),
+              child: OverflowBox(
+                maxHeight: monthlyCalendarHeight,
+                alignment: Alignment.topCenter,
+                child: const MonthlyCalendar(),
+              ),
             ),
             const Expanded(
               child: ThreeDayCalendar(),

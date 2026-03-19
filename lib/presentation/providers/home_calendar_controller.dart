@@ -7,6 +7,15 @@ import 'package:studio_chance/presentation/providers/hour_height_preference_prov
 part 'home_calendar_controller.freezed.dart';
 part 'home_calendar_controller.g.dart';
 
+/// 오늘 버튼 클릭 시 3일 캘린더 스크롤 트리거 (값이 바뀔 때마다 스크롤 실행)
+@riverpod
+class ScrollToCurrentTimeTrigger extends _$ScrollToCurrentTimeTrigger {
+  @override
+  int build() => 0;
+
+  void trigger() => state = state + 1;
+}
+
 /// 홈 캘린더 화면의 UI 상태
 @freezed
 abstract class HomeCalendarState with _$HomeCalendarState {
@@ -44,11 +53,10 @@ class HomeCalendarController extends _$HomeCalendarController {
     );
   }
 
-  /// 날짜 선택: selectedStartDate 및 displayedMonth 업데이트, 월간 캘린더 닫기
+  /// 날짜 선택: selectedStartDate 및 displayedMonth 업데이트 (월간 캘린더 상태 유지)
   void selectDate(DateTime date) {
     state = state.copyWith(
       selectedStartDate: DateTime(date.year, date.month, date.day),
-      isMonthlyCalendarVisible: false,
       displayedMonth: DateTime(date.year, date.month, 1),
     );
   }
@@ -69,14 +77,19 @@ class HomeCalendarController extends _$HomeCalendarController {
     if (prefs != null) await saveHourHeight(prefs, clamped);
   }
 
-  /// 오늘 날짜로 이동, 월간 캘린더 닫기
+  /// 오늘 날짜로 이동 (월간 캘린더 상태 유지) + 3일 캘린더 현재 시간으로 스크롤
   void goToToday() {
     final now = DateTime.now();
     state = state.copyWith(
       selectedStartDate: DateTime(now.year, now.month, now.day),
-      isMonthlyCalendarVisible: false,
       displayedMonth: DateTime(now.year, now.month, 1),
     );
+    ref.read(scrollToCurrentTimeTriggerProvider.notifier).trigger();
+  }
+
+  /// 월간 캘린더 PageView에서 월 이동 시 displayedMonth 업데이트
+  void setDisplayedMonth(DateTime month) {
+    state = state.copyWith(displayedMonth: DateTime(month.year, month.month, 1));
   }
 
   /// 날짜를 days만큼 이동, displayedMonth는 이동 후 날짜 기준으로 업데이트

@@ -32,13 +32,17 @@ class AllDayRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                // 우측: 3열 균등 빈 영역 (이벤트 추후 추가)
-                const Expanded(
+                // 시간 열↔날짜 열 구분선은 ThreeDayCalendar Stack 오버레이에서 처리
+                const SizedBox(width: 1.5),
+                // 우측: 3열 균등 빈 영역 (이벤트 추후 추가, 열 사이 구분선 포함)
+                Expanded(
                   child: Row(
                     children: [
-                      Expanded(child: SizedBox()),
-                      Expanded(child: SizedBox()),
-                      Expanded(child: SizedBox()),
+                      const Expanded(child: SizedBox()),
+                      Container(width: 0.5, color: context.separator),
+                      const Expanded(child: SizedBox()),
+                      Container(width: 0.5, color: context.separator),
+                      const Expanded(child: SizedBox()),
                     ],
                   ),
                 ),

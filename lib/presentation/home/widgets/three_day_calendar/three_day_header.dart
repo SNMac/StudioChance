@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
 /// 3일 캘린더 헤더 위젯
-/// selectedStartDate 기준 3일의 요일/일자를 표시하며 하단 구분선을 포함함
-class ThreeDayHeader extends ConsumerWidget {
-  const ThreeDayHeader({super.key});
+/// startDate 기준 3일의 요일/일자를 표시하며 하단 구분선을 포함함
+class ThreeDayHeader extends StatelessWidget {
+  const ThreeDayHeader({super.key, required this.startDate});
+
+  final DateTime startDate;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(homeCalendarControllerProvider);
-    final start = state.selectedStartDate;
-
-    // selectedStartDate 기준 3일 목록 생성
-    final days = List.generate(3, (i) => start.add(Duration(days: i)));
+  Widget build(BuildContext context) {
+    // startDate 기준 3일 목록 생성
+    final days = List.generate(3, (i) => startDate.add(Duration(days: i)));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -24,12 +21,18 @@ class ThreeDayHeader extends ConsumerWidget {
           children: [
             // 좌측 시간 컬럼 너비 확보
             SizedBox(width: timeColumnWidth),
-            // 3열 날짜 헤더
+            // 시간 열과 날짜 열 사이 구분선 (간격 1px 포함)
+            Container(width: 0.5, color: context.separator),
+            const SizedBox(width: 1),
+            // 3열 날짜 헤더 (각 열 사이 구분선 포함)
             Expanded(
               child: Row(
-                children: days
-                    .map((day) => Expanded(child: _DayHeaderCell(date: day)))
-                    .toList(),
+                children: [
+                  for (int i = 0; i < days.length; i++) ...[
+                    if (i > 0) Container(width: 0.5, color: context.separator),
+                    Expanded(child: _DayHeaderCell(date: days[i])),
+                  ],
+                ],
               ),
             ),
           ],
@@ -67,23 +70,26 @@ class _DayHeaderCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const SizedBox(height: 6),
-        // 요일 텍스트
-        Text(
-          _weekdayLabel,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: _weekdayTextColor(context),
-              ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 요일 텍스트
+            Text(
+              _weekdayLabel,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: _weekdayTextColor(context),
+                  ),
+            ),
+            const SizedBox(width: 4),
+            // 일자 표시
+            _buildDayNumber(context),
+          ],
         ),
-        const SizedBox(height: 2),
-        // 일자 표시
-        _buildDayNumber(context),
-        const SizedBox(height: 6),
-      ],
+      ),
     );
   }
 

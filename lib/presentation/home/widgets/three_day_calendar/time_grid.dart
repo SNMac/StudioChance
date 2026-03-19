@@ -11,7 +11,10 @@ import 'package:studio_chance/presentation/providers/home_calendar_controller.da
 /// 시간 레이블, 구분선, 현재 시간 인디케이터를 포함하며
 /// 수직 스크롤과 핀치 줌을 지원함
 class TimeGrid extends ConsumerStatefulWidget {
-  const TimeGrid({super.key});
+  const TimeGrid({super.key, this.scrollController});
+
+  /// 외부에서 주입하는 ScrollController (null이면 내부 생성)
+  final ScrollController? scrollController;
 
   @override
   ConsumerState<TimeGrid> createState() => _TimeGridState();
@@ -19,6 +22,7 @@ class TimeGrid extends ConsumerStatefulWidget {
 
 class _TimeGridState extends ConsumerState<TimeGrid> {
   late final ScrollController _scrollController;
+  bool _ownsScrollController = false;
 
   /// 핀치 줌 시작 시점의 기준 hourHeight
   double _baseHourHeight = defaultHourHeight;
@@ -26,14 +30,19 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    // 레이아웃 완료 후 현재 시간으로 초기 스크롤
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentTime());
+    if (widget.scrollController != null) {
+      _scrollController = widget.scrollController!;
+    } else {
+      _scrollController = ScrollController();
+      _ownsScrollController = true;
+      // 외부 주입 시 초기 스크롤은 ThreeDayCalendar에서 처리
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentTime());
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    if (_ownsScrollController) _scrollController.dispose();
     super.dispose();
   }
 
@@ -43,7 +52,6 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
     final hourHeight = ref.read(homeCalendarControllerProvider).hourHeight;
     final now = DateTime.now();
     final currentOffset = hourHeight * (now.hour + now.minute / 60);
-    // context.size 대신 scrollController의 viewportDimension 사용 (정확한 뷰포트 높이)
     final viewportHeight = _scrollController.position.viewportDimension;
     final target =
         (currentOffset - viewportHeight / 2).clamp(0.0, double.infinity);
@@ -73,14 +81,11 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
             ? _scrollController.offset / (_baseHourHeight * 24)
             : 0.0;
 
-        // updateHourHeight는 Future<void>이지만 SharedPreferences 저장만 비동기,
-        // 상태 업데이트는 동기적으로 수행됨
         unawaited(
           ref.read(homeCalendarControllerProvider.notifier).updateHourHeight(newHeight),
         );
 
         if (_scrollController.hasClients) {
-          // 상한은 실제 스크롤 가능 범위(totalHeight - viewportDimension)로 계산
           final viewportDimension = _scrollController.position.viewportDimension;
           final maxOffset = (newHeight * 24 - viewportDimension).clamp(0.0, double.infinity);
           final newOffset = (ratio * (newHeight * 24)).clamp(0.0, maxOffset);
@@ -89,58 +94,47 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
       },
       child: SingleChildScrollView(
         controller: _scrollController,
-        physics: const ClampingScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         child: SizedBox(
           height: totalHeight,
           child: Stack(
             children: [
-              // 시간 레이블 + 3열 빈 이벤트 영역 (배경 레이어)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(width: timeColumnWidth),
-                  // 3열 빈 이벤트 영역
-                  const Expanded(
-                    child: Row(
-                      children: [
-                        Expanded(child: SizedBox()),
-                        Expanded(child: SizedBox()),
-                        Expanded(child: SizedBox()),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              // 3열 빈 이벤트 영역 (배경 레이어)
+              // 시간 열↔날짜 열 구분선 및 열 사이 구분선은 ThreeDayCalendar Stack 오버레이에서 처리
+              const SizedBox.expand(),
 
-              // 시간 구분선 및 레이블 (0~24시)
-              for (int hour = 0; hour <= 24; hour++)
+              // 시간 구분선 및 레이블 (1~23시만 표시, 0시/24시 제외)
+              // 레이블은 구분선 위에 위치하도록 Transform.translate로 위로 이동
+              for (int hour = 1; hour < 24; hour++)
                 Positioned(
                   top: hourHeight * hour,
                   left: 0,
                   right: 0,
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
                         width: timeColumnWidth,
-                        // 0시, 24시는 레이블 표시 안 함 (1~23시만 표시)
-                        child: hour > 0 && hour < 24
-                            ? Align(
-                                alignment: Alignment.topRight,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: Text(
-                                    '${hour.toString().padLeft(2, '0')}:00',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: context.secondaryLabel,
-                                        ),
-                                  ),
-                                ),
-                              )
-                            : null,
+                        child: Transform.translate(
+                          offset: const Offset(0, -12),
+                          child: Align(
+                            alignment: Alignment.topRight,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: Text(
+                                '${hour.toString().padLeft(2, '0')}:00',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: context.secondaryLabel,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
+                      const SizedBox(width: 1.5),
                       Expanded(
                         child: Divider(
                           height: 0,
