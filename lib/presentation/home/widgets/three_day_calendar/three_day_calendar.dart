@@ -316,63 +316,84 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
 
             // ── 날짜 열 영역 ──────────────────────────────
             Expanded(
-              child: Stack(
-                children: [
-                  PageView.builder(
-                    controller: _pageController,
-                    physics: const PageScrollPhysics(),
-                    // padEnds: false → 현재 페이지가 왼쪽 첫 번째 열에 표시됨 (오늘이 맨 왼쪽)
-                    padEnds: false,
-                    onPageChanged: (index) {
-                      _evictDistantControllers(index);
-                      // animateToPage 중에는 중간 페이지 날짜 변경 건너뜀
-                      // → monthly 캘린더가 중간 달을 순차 표시하는 현상 방지
-                      if (_isPageAnimating) return;
-                      ref
-                          .read(homeCalendarControllerProvider.notifier)
-                          .selectDateFromSwipe(_dateForPage(index));
-                    },
-                    itemBuilder: (context, index) {
-                      final date = _dateForPage(index);
-                      // 각 날짜 열 오른쪽에 구분선 → PageView 스크롤 시 날짜와 함께 이동
-                      return DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                              color: context.separator,
-                              width: calendarDividerThickness,
-                            ),
-                          ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // 날짜 열 하나의 너비 (픽셀 단위 정수 경계로 계산)
+                  final pageWidth = constraints.maxWidth / 3;
+                  // 구분선이 시작되는 Y 위치 (헤더 + 헤더구분선 + 종일영역 + 종일구분선)
+                  final dividerTop = threeDayHeaderHeight +
+                      calendarDividerThickness +
+                      allDayRowHeight +
+                      calendarDividerThickness;
+                  return Stack(
+                    children: [
+                      PageView.builder(
+                        controller: _pageController,
+                        physics: const PageScrollPhysics(),
+                        // padEnds: false → 현재 페이지가 왼쪽 첫 번째 열에 표시됨 (오늘이 맨 왼쪽)
+                        padEnds: false,
+                        onPageChanged: (index) {
+                          _evictDistantControllers(index);
+                          // animateToPage 중에는 중간 페이지 날짜 변경 건너뜀
+                          // → monthly 캘린더가 중간 달을 순차 표시하는 현상 방지
+                          if (_isPageAnimating) return;
+                          ref
+                              .read(homeCalendarControllerProvider.notifier)
+                              .selectDateFromSwipe(_dateForPage(index));
+                        },
+                        itemBuilder: (context, index) {
+                          final date = _dateForPage(index);
+                          // DecoratedBox 제거 → Column을 직접 반환
+                          return Column(
+                            children: [
+                              // 요일/일자 헤더
+                              SizedBox(
+                                height: threeDayHeaderHeight,
+                                child: _DayHeaderCell(date: date),
+                              ),
+                              Container(
+                                  height: calendarDividerThickness,
+                                  color: context.separator),
+                              // 종일 이벤트 셀
+                              const AllDayCell(),
+                              Container(
+                                  height: calendarDividerThickness,
+                                  color: context.separator),
+                              // 이벤트 그리드 (수직 스크롤)
+                              // 핀치 줌은 ThreeDayCalendar 최상위 GestureDetector에서 처리
+                              Expanded(
+                                child: TimeGrid(
+                                  scrollController: _controllerForPage(index),
+                                  isToday: _isToday(date),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      // 1번째↔2번째 날짜 열 구분선 오버레이
+                      Positioned(
+                        left: pageWidth,
+                        top: dividerTop,
+                        bottom: 0,
+                        child: Container(
+                          width: calendarDividerThickness,
+                          color: context.separator,
                         ),
-                        child: Column(
-                        children: [
-                          // 요일/일자 헤더
-                          SizedBox(
-                            height: threeDayHeaderHeight,
-                            child: _DayHeaderCell(date: date),
-                          ),
-                          Container(
-                              height: calendarDividerThickness,
-                              color: context.separator),
-                          // 종일 이벤트 셀
-                          const AllDayCell(),
-                          Container(
-                              height: calendarDividerThickness,
-                              color: context.separator),
-                          // 이벤트 그리드 (수직 스크롤)
-                          // 핀치 줌은 ThreeDayCalendar 최상위 GestureDetector에서 처리
-                          Expanded(
-                            child: TimeGrid(
-                              scrollController: _controllerForPage(index),
-                              isToday: _isToday(date),
-                            ),
-                          ),
-                        ],
+                      ),
+                      // 2번째↔3번째 날짜 열 구분선 오버레이
+                      Positioned(
+                        left: pageWidth * 2,
+                        top: dividerTop,
+                        bottom: 0,
+                        child: Container(
+                          width: calendarDividerThickness,
+                          color: context.separator,
                         ),
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
