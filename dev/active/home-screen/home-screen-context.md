@@ -1,11 +1,107 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20 (6차 업데이트)
+Last Updated: 2026-03-20 (7차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~16-2 완료. `dart analyze lib/` → No issues found.
+Phase 1~17 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+---
+
+## Phase 18 신규 발견 사항 (2026-03-20 세션)
+
+### 18-1: 시간열↔날짜열 수직 구분선 시작 위치 재수정 (17-2 이어서)
+
+**현상**: 수직 구분선이 종일(allday) 영역 안쪽에서 시작해야 하는데, 종일 영역 바깥(아래)부터 시작 중.
+
+**원인**: Phase 17-2에서 구분선을 시간 열 Expanded 내부의 시간 그리드 Stack 안에 넣음
+→ 시간 열 Column 구조: `[헤더(28px) | 헤더구분선(0.5px) | 종일(40px) | 종일구분선(0.5px) | Expanded(시간그리드)]`
+→ 구분선이 Expanded(시간그리드) 내부에 있으므로 종일 영역 **아래**부터 시작됨
+
+**해결**:
+- 시간 그리드 Stack에서 구분선 Positioned 제거
+- Row 레벨에 `SizedBox(width: 0.5, child: Column([헤더 공백, Expanded(ColoredBox)]))` 형태로 복원
+- 헤더(28px) + 헤더구분선(0.5px) 만큼 공백 → 그 아래(종일 행 시작점)부터 구분선 렌더링
+```dart
+SizedBox(
+  width: calendarDividerThickness,
+  child: Column(
+    children: [
+      SizedBox(height: threeDayHeaderHeight + calendarDividerThickness),
+      Expanded(child: ColoredBox(color: context.separator)),
+    ],
+  ),
+),
+```
+- 파일: `three_day_calendar.dart` (Row 안, 시간 열 SizedBox 다음)
+
+### 18-2: 날짜 열 구분선(DecoratedBox right border)이 요일 헤더 영역에도 표시
+
+**현상**: 날짜 열 사이 구분선이 요일/날짜 헤더 행 안쪽까지 이어져 있음. 헤더 행 아래부터 시작해야 함.
+
+**원인**: `DecoratedBox(border: Border(right: ...))` 가 Column 전체를 래핑 → 헤더 포함 전체 높이에 border 렌더링.
+
+**해결**: `DecoratedBox` 제거 → `Stack + Positioned` 방식으로 교체
+```dart
+return Stack(
+  children: [
+    Column(
+      children: [
+        SizedBox(height: threeDayHeaderHeight, child: _DayHeaderCell(date: date)),
+        Container(height: calendarDividerThickness, color: separator),
+        const AllDayCell(),
+        Container(height: calendarDividerThickness, color: separator),
+        Expanded(child: TimeGrid(...)),
+      ],
+    ),
+    // 헤더(28px) + 헤더구분선(0.5px) 이후부터 구분선 시작
+    Positioned(
+      top: threeDayHeaderHeight + calendarDividerThickness,
+      bottom: 0,
+      right: 0,
+      child: Container(width: calendarDividerThickness, color: context.separator),
+    ),
+  ],
+);
+```
+- **주의**: `Expanded`는 `Column`의 직접 자식이어야 하므로 `DecoratedBox`로 래핑하면 안 됨 → Stack 방식 필수
+- 파일: `three_day_calendar.dart` `itemBuilder`
+
+### 18-3: 좌우 스크롤 시 새 날짜의 수직 스크롤 위치가 이전 날짜와 다를 수 있음
+
+**현상**: 오늘 날짜 버튼을 누른 뒤 스크롤을 살짝 올리고 다음 날짜로 이동하면, 다음 날짜는 살짝 올린 스크롤이 반영되지 않음.
+
+**원인 분석**:
+`goToToday()` 흐름:
+1. `selectDate(today)` → `selectedStartDate` 변경 → `_pageController.animateToPage(todayPage, duration: 300ms)` 시작 (animate 트랜지션 정책)
+2. `scrollToCurrentTimeTrigger.trigger()` → `ref.listen` → `addPostFrameCallback(_scrollToCurrentTime)`
+3. 다음 프레임에 `_scrollToCurrentTime()` 실행 → **이 시점에 `animateToPage(300ms)` 가 아직 진행 중**
+4. `_syncAllScrollControllers(target)` 가 animateToPage 도중에 실행 → 인접 페이지 컨트롤러들이 target으로 동기화됨
+5. animateToPage 완료 → 일부 컨트롤러가 animation 과정에서 다른 위치로 이동됨
+6. 이후 사용자가 스크롤 살짝 → `_currentVerticalOffset` 업데이트 → 이미 `hasClients`가 false이거나 다른 상태인 컨트롤러에 sync가 제대로 전달 안 됨
+
+**해결 방향**: `_scrollToCurrentTime` 호출 타이밍을 animateToPage 완료 이후로 이동
+- `scrollToCurrentTimeTrigger` listen에서 `addPostFrameCallback` 대신, `animateToPage.then()` 내부에서 호출
+- 단, animateToPage를 쓰지 않는 경우(jumpToPage)에도 동작해야 함 → 조건 분기
+- 또는: `_scrollToCurrentTime`에 실행 지연 추가(animateToPage 300ms 이후)
+
+**더 근본적 해결**: `scrollToCurrentTimeTrigger` listen을 `addPostFrameCallback` 방식에서 벗어나, `animateToPage` 완료 시점과 명시적으로 동기화
+```dart
+// selectedStartDate listen 블록 내:
+if (kind == CalendarTransitionKind.animate) {
+  _isPageAnimating = true;
+  _pageController.animateToPage(...).then((_) {
+    if (mounted) {
+      _isPageAnimating = false;
+      ref.read(...).selectDateFromSwipe(_dateForPage(targetPage));
+      _scrollToCurrentTime(); // ← animateToPage 완료 후 실행
+    }
+  });
+}
+```
+- `scrollToCurrentTimeTrigger` listen은 유지하되, goToToday 경우는 animateToPage.then()에서 처리
+- 파일: `three_day_calendar.dart` `ref.listen(selectedStartDate)` 블록 + `ref.listen(scrollToCurrentTimeTrigger)` 블록
 
 ---
 
