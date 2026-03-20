@@ -75,11 +75,6 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         if (_isSyncing || !ctrl.hasClients) return;
         final offset = ctrl.offset;
         if (offset == _currentVerticalOffset) return;
-        // bouncing 범위(0 미만 또는 maxScrollExtent 초과)에서는 동기화 건너뜀
-        // → bouncing 중 다른 열이 bounce 위치로 jumpTo되어 입력이 차단되는 현상 방지
-        if (ctrl.position.hasContentDimensions) {
-          if (offset < 0 || offset > ctrl.position.maxScrollExtent) return;
-        }
         _currentVerticalOffset = offset;
         _syncAllScrollControllers(offset, except: ctrl);
       });
@@ -94,11 +89,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     try {
       for (final ctrl in _dayScrollControllers.values) {
         if (ctrl == except) continue;
-        if (ctrl.hasClients && ctrl.offset != offset) ctrl.jumpTo(offset);
+        if (!ctrl.hasClients || ctrl.offset == offset) continue;
+        try { ctrl.jumpTo(offset); } catch (_) {}
       }
       if (_timeColumnScrollController.hasClients &&
           _timeColumnScrollController.offset != offset) {
-        _timeColumnScrollController.jumpTo(offset);
+        try { _timeColumnScrollController.jumpTo(offset); } catch (_) {}
       }
     } finally {
       _isSyncing = false;
@@ -191,13 +187,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       },
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final dateAreaWidth = constraints.maxWidth - timeColumnWidth - calendarDividerThickness;
-        final pageWidth = dateAreaWidth / 3;
-
-        // GestureDetector를 최상위로 배치 → 시간 열 포함 전체 영역에서 핀치 줌 인식
-        return GestureDetector(
+    // GestureDetector를 최상위로 배치 → 시간 열 포함 전체 영역에서 핀치 줌 인식
+    return GestureDetector(
           onScaleStart: (_) {
             _baseHourHeight =
                 ref.read(homeCalendarControllerProvider).hourHeight;
@@ -270,28 +261,21 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                           clipBehavior: Clip.none,
                           children: [
                             // 시간 레이블 (1~23시)
+                            // FractionalTranslation(-0.5) → 레이블 중앙이 구분선 y와 정확히 일치
                             for (int hour = 1; hour < 24; hour++)
                               Positioned(
                                 top: hourHeight * hour,
-                                left: 0,
-                                right: 0,
-                                child: Transform.translate(
-                                  offset: const Offset(0, -6),
-                                  child: Align(
-                                    alignment: Alignment.topRight,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 4),
-                                      child: Text(
-                                        '${hour.toString().padLeft(2, '0')}:00',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: context.secondaryLabel,
-                                            ),
-                                      ),
-                                    ),
+                                right: 4,
+                                child: FractionalTranslation(
+                                  translation: const Offset(0, -0.5),
+                                  child: Text(
+                                    '${hour.toString().padLeft(2, '0')}:00',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: context.secondaryLabel,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -327,7 +311,17 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                     },
                     itemBuilder: (context, index) {
                       final date = _dateForPage(index);
-                      return Column(
+                      // 각 날짜 열 오른쪽에 구분선 → PageView 스크롤 시 날짜와 함께 이동
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(
+                              color: context.separator,
+                              width: calendarDividerThickness,
+                            ),
+                          ),
+                        ),
+                        child: Column(
                         children: [
                           // 요일/일자 헤더
                           SizedBox(
@@ -351,34 +345,15 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                             ),
                           ),
                         ],
+                        ),
                       );
                     },
-                  ),
-
-                  // 날짜 열 사이 수직 구분선 (1일↔2일, 2일↔3일)
-                  Positioned(
-                    left: pageWidth,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                        width: calendarDividerThickness,
-                        color: context.separator),
-                  ),
-                  Positioned(
-                    left: pageWidth * 2,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                        width: calendarDividerThickness,
-                        color: context.separator),
                   ),
                 ],
               ),
             ),
           ],
         ),
-        );
-      },
     );
   }
 }

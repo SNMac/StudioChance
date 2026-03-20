@@ -56,15 +56,16 @@ class HomeNavBar extends ConsumerWidget {
           // 우측: 버튼 2개
           Row(
             children: [
-              // calendar_circle 버튼 (날짜 picker 표시)
+              // 점포 필터 버튼 (애플 캘린더의 "캘린더 선택"과 유사)
+              // 시각적 크기: 24×24 (오늘 날짜 버튼과 동일)
               GestureDetector(
-                onTap: () => _showDatePicker(context, ref, state),
+                onTap: () => _showStoreFilter(context),
                 child: SizedBox(
                   width: 44.0,
                   height: navBarHeight,
                   child: Center(
                     child: Icon(
-                      CupertinoIcons.calendar_circle,
+                      CupertinoIcons.list_bullet,
                       size: 24.0,
                       color: context.label,
                     ),
@@ -104,85 +105,41 @@ class HomeNavBar extends ConsumerWidget {
     );
   }
 
-  /// 플랫폼별 날짜 picker 모달 표시
-  void _showDatePicker(
-    BuildContext context,
-    WidgetRef ref,
-    HomeCalendarState state,
-  ) {
-    if (Platform.isIOS) {
-      // grabber + 끌어내려서 dismiss 지원 (showModalBottomSheet + enableDrag)
-      // 완료 버튼에서만 날짜 적용 (StatefulBuilder로 임시 날짜 관리)
-      DateTime tempDate = state.selectedStartDate;
-      showModalBottomSheet<void>(
-        context: context,
-        enableDrag: true,
-        backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-        ),
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setModalState) => SizedBox(
-            height: 360,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Grabber
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 8, bottom: 4),
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey3.resolveFrom(ctx),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  // 완료 버튼
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      CupertinoButton(
-                        child: const Text('완료'),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          ref
-                              .read(homeCalendarControllerProvider.notifier)
-                              .selectDateFromPicker(tempDate);
-                        },
-                      ),
-                    ],
-                  ),
-                  // 날짜 picker
-                  Expanded(
-                    child: CupertinoDatePicker(
-                      mode: CupertinoDatePickerMode.date,
-                      initialDateTime: state.selectedStartDate,
-                      onDateTimeChanged: (date) =>
-                          setModalState(() => tempDate = date),
-                    ),
-                  ),
-                ],
+  /// 점포 필터 모달 표시
+  /// TODO: 실제 점포 목록 데이터 연동 필요 (점포/멤버 도메인)
+  void _showStoreFilter(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      enableDrag: true,
+      backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Grabber
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 4),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey3.resolveFrom(ctx),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('점포 필터 (구현 예정)'),
+            ),
+          ],
         ),
-      );
-    } else {
-      showDatePicker(
-        context: context,
-        initialDate: state.selectedStartDate,
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2100),
-      ).then((date) {
-        if (date != null) {
-          ref.read(homeCalendarControllerProvider.notifier).selectDateFromPicker(date);
-        }
-      });
-    }
+      ),
+    );
   }
 }
 

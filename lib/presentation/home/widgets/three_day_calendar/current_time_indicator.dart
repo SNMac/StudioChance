@@ -61,7 +61,7 @@ class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     return Positioned(
       top: currentTimeTopPosition(widget.hourHeight),
-      right: 0,
+      right: 4, // 시간 레이블 우측 패딩(4)과 수직 정렬
       child: Container(
         width: currentTimeCapsuleWidth,
         height: currentTimeCapsuleHeight,

@@ -20,6 +20,10 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
       DateTime(DateTime.now().year, DateTime.now().month, 1);
   late final PageController _pageController;
 
+  /// animateToPage 진행 중 플래그
+  /// onPageChanged가 중간 페이지마다 displayedMonth를 업데이트하는 것을 방지
+  bool _isAnimating = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,11 +50,16 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
         .read(homeCalendarControllerProvider.notifier)
         .consumeMonthlyTransition();
     if (kind == CalendarTransitionKind.animate) {
-      _pageController.animateToPage(
-        targetPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _isAnimating = true;
+      _pageController
+          .animateToPage(
+            targetPage,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          )
+          .then((_) {
+        if (mounted) _isAnimating = false;
+      });
     } else {
       _pageController.jumpToPage(targetPage);
     }
@@ -113,6 +122,9 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (index) {
+                  // 애니메이션 중에는 중간 페이지의 displayedMonth 업데이트 건너뜀
+                  // → 네비바 연/월이 중간 달을 순차 표시하는 현상 방지
+                  if (_isAnimating) return;
                   final newMonth = _monthForPage(index);
                   ref
                       .read(homeCalendarControllerProvider.notifier)

@@ -185,7 +185,8 @@ class MonthlyCalendarGrid extends ConsumerWidget {
                     curve: Curves.easeInOut,
                     width: 40,
                     height: 40,
-                    decoration: decoration ?? const BoxDecoration(),
+                    // 기본값도 radius 포함 → 선택/비선택 간 애니메이션 중 코너 유지
+                    decoration: decoration ?? BoxDecoration(borderRadius: BorderRadius.circular(8)),
                     alignment: Alignment.center,
                     child: innerCircle ??
                         Text(
