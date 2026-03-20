@@ -330,16 +330,6 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                                   ),
                                 ),
                               ),
-                            // 시간열↔날짜열 구분선: Stack 내부에서 캡슐보다 먼저 paint
-                            // → 헤더 영역 침범 없음, 캡슐이 구분선 위에 렌더링됨
-                            Positioned(
-                              top: 0,
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                  width: calendarDividerThickness,
-                                  color: context.separator),
-                            ),
                             // 현재 시간 캡슐: 구분선보다 나중에 paint → 구분선 위에 렌더링
                             CurrentTimeCapsule(hourHeight: hourHeight),
                           ],
@@ -347,6 +337,18 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+
+            // ── 시간열↔날짜열 수직 구분선 ─────────────────
+            // 헤더(28px) + 헤더구분선(0.5px) 영역은 구분선 없음, 종일 행부터 바닥까지 표시
+            SizedBox(
+              width: calendarDividerThickness,
+              child: Column(
+                children: [
+                  SizedBox(height: threeDayHeaderHeight + calendarDividerThickness),
+                  Expanded(child: ColoredBox(color: context.separator)),
                 ],
               ),
             ),
@@ -369,41 +371,45 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                 },
                 itemBuilder: (context, index) {
                   final date = _dateForPage(index);
-                  // DecoratedBox(right border) → 구분선이 각 날짜 셀에 속해 PageView와 함께 이동
-                  return DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(
-                          color: context.separator,
+                  // Stack + Positioned(right border) → 헤더 행 아래부터만 right border 표시
+                  return Stack(
+                    children: [
+                      Column(
+                        children: [
+                          // 요일/일자 헤더
+                          SizedBox(
+                            height: threeDayHeaderHeight,
+                            child: _DayHeaderCell(date: date),
+                          ),
+                          Container(
+                              height: calendarDividerThickness,
+                              color: context.separator),
+                          // 종일 이벤트 셀
+                          const AllDayCell(),
+                          Container(
+                              height: calendarDividerThickness,
+                              color: context.separator),
+                          // 이벤트 그리드 (수직 스크롤)
+                          // 핀치 줌은 ThreeDayCalendar 최상위 GestureDetector에서 처리
+                          Expanded(
+                            child: TimeGrid(
+                              scrollController: _controllerForPage(index),
+                              isToday: _isToday(date),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // 헤더(28px) + 헤더구분선(0.5px) 아래부터 right border
+                      Positioned(
+                        top: threeDayHeaderHeight + calendarDividerThickness,
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
                           width: calendarDividerThickness,
+                          color: context.separator,
                         ),
                       ),
-                    ),
-                    child: Column(
-                      children: [
-                        // 요일/일자 헤더
-                        SizedBox(
-                          height: threeDayHeaderHeight,
-                          child: _DayHeaderCell(date: date),
-                        ),
-                        Container(
-                            height: calendarDividerThickness,
-                            color: context.separator),
-                        // 종일 이벤트 셀
-                        const AllDayCell(),
-                        Container(
-                            height: calendarDividerThickness,
-                            color: context.separator),
-                        // 이벤트 그리드 (수직 스크롤)
-                        // 핀치 줌은 ThreeDayCalendar 최상위 GestureDetector에서 처리
-                        Expanded(
-                          child: TimeGrid(
-                            scrollController: _controllerForPage(index),
-                            isToday: _isToday(date),
-                          ),
-                        ),
-                      ],
-                    ),
+                    ],
                   );
                 },
               ),
