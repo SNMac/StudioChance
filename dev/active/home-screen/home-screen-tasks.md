@@ -106,7 +106,7 @@ Last Updated: 2026-03-20 (5차)
 
 ### 미착수
 
-- [ ] **17-4**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
+- [x] **17-4**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
   - 현재 `initialPage=10000` → ±10000일 (약 27년) 만 접근 가능
   - `_referenceDate`를 고정 날짜로 변경 또는 `initialPage` 대폭 증가 필요
   - `DateTime(2001, 1, 1)` 기준: `initialPage = DateTime.now().difference(DateTime(2001,1,1)).inDays`

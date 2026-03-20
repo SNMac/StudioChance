@@ -70,7 +70,7 @@ class HomeNavBar extends ConsumerWidget {
                   child: Center(
                     child: Icon(
                       CupertinoIcons.calendar_circle,
-                      size: 24.0,
+                      size: 28.0,
                       color: context.label,
                     ),
                   ),
