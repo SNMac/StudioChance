@@ -1,10 +1,10 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20 (2차 업데이트)
+Last Updated: 2026-03-20 (3차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~13 완료 (일부 미세조정 필요). `dart analyze lib/` → No issues found.
+Phase 1~14 완료 (일부 추가 수정 필요). `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
 
 ---
@@ -53,6 +53,68 @@ Phase 1~13 완료 (일부 미세조정 필요). `dart analyze lib/` → No issue
 ---
 
 ## Phase 14 피드백 (다음 세션 구현 예정)
+
+## Phase 14 구현 내용 (이번 세션 완료)
+
+### 14-1: 점포 필터 버튼
+- `CupertinoIcons.calendar_circle` → `CupertinoIcons.list_bullet` (24×24, 오늘 버튼과 동일)
+- `_showDatePicker` → `_showStoreFilter` (placeholder 바텀시트, 실제 데이터 미구현)
+- ⚠️ 다음 세션에서 아이콘 `calendar_circle`로 원복 필요 (15-2)
+
+### 14-2: bouncing sync 복원
+- bouncing 범위 skip 제거, `jumpTo`에 `try-catch` 추가
+- 결과: 여전히 bouncing 후 입력 차단 재발 → 15-1에서 근본 해결
+
+### 14-3: 시간 레이블 Y축 정렬 ✅
+- `Transform.translate(0,-6)` + `Align(topRight)` 구조 제거
+- `FractionalTranslation(Offset(0, -0.5))` 도입 → 레이블 중앙이 정확히 `hourHeight * hour` (구분선 위치)와 일치
+- 픽셀 추정 불필요, 폰트 크기 변경에도 자동 대응
+
+### 14-4: AnimatedContainer 기본 radius
+- 비선택 셀 `BoxDecoration()` → `BoxDecoration(borderRadius: BorderRadius.circular(8))`
+- 애니메이션 중 코너 radius가 0으로 보이는 문제 해소
+- 하지만 2번 깜빡임은 AnimatedContainer 구조적 한계 → 15-5에서 Container로 복원
+
+### 14-5: _isAnimating 플래그 ✅
+- `monthly_calendar.dart` `_MonthlyCalendarState`에 `_isAnimating: bool` 추가
+- `animateToPage` 전 `true`, `.then((_) => _isAnimating = false)`
+- `onPageChanged` 내: `if (_isAnimating) return;`
+- 결과: 네비바 연/월이 중간 달을 표시하는 버그 해소
+- 하지만 3-day `animateToPage` 중 `onPageChanged` → `selectDateFromSwipe` 문제는 별개 → 15-4
+
+### 14-6: 날짜 열 구분선 구조 변경 ✅
+- Stack Positioned 2개 제거 → 각 날짜 Column을 `DecoratedBox(right border)`로 래핑
+- `LayoutBuilder` 완전 제거 (더 이상 `pageWidth` 불필요)
+- bouncing 시 날짜 내용과 구분선이 함께 동작
+
+### 14-7: 캡슐 right: 4
+- `right: 0` → `right: 4` 적용
+- 결과: 오히려 너무 좌측으로 이동, 구분선과 단절됨 → 15-3에서 재조정
+
+---
+
+## Phase 15 피드백 (다음 세션)
+
+### 핵심 분석: 15-4 원인
+`selectDateFromMonthly` 호출 시:
+1. `_threeDayTransition = animate` 설정
+2. `selectDate` → `displayedMonth = 목표 월` 즉시 변경
+3. 3-day `animateToPage` 시작 (Dec→Oct 이동 시 페이지 여러 개 통과)
+4. 각 페이지 통과마다 `onPageChanged` → `selectDateFromSwipe(중간 날짜)` → `displayedMonth = 중간 달`
+5. monthly 캘린더 `ref.listen(displayedMonth)` → `jumpToPage(중간 달)` 연속 발생
+
+**해결**: `_isPageAnimating` 플래그로 3-day animateToPage 중 `onPageChanged` 이벤트에서 `selectDateFromSwipe` 호출 차단
+
+### 핵심 분석: 15-3 캡슐 위치
+- 시간 열 Stack: `clipBehavior: Clip.none` 이미 설정됨
+- `right: 0` → 캡슐 오른쪽이 시간 열 오른쪽 끝에 붙음 (= 구분선 왼쪽)
+- `right: 4` → 캡슐이 더 왼쪽으로 들어감 (잘못된 방향)
+- **정확한 위치**: 캡슐 왼쪽 = 시간 레이블 왼쪽, 캡슐 오른쪽 = 구분선 우측 살짝 넘어
+  - `right: -(calendarDividerThickness)` 또는 `right: -1` 로 구분선 위에 살짝 걸치도록
+
+---
+
+## Phase 14 피드백 (구현 완료)
 
 ### 14-1. 네비바 버튼 기능 변경 (피처)
 - 현재 "피커 버튼" → **점포 필터 버튼** (애플 캘린더의 "캘린더 선택"과 유사)

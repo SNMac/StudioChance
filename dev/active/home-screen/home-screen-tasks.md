@@ -1,99 +1,90 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-20
+Last Updated: 2026-03-20 (3차)
 
-## Phase 1~7: 초기 구현 ✅ (완료)
-## Phase 8~12: 피드백 1~5차 ✅ (완료)
+## Phase 1~13: 완료 ✅
 
-## Phase 13: 피드백 반영 6차 ✅ (완료 — 일부 추가 수정 필요, Phase 14로 이관)
+## Phase 14: 피드백 반영 7차 ✅ (완료 — 일부 추가 수정 필요, Phase 15로 이관)
 
-- [x] **13-3**: `PageView.builder(padEnds: false)` — 오늘 첫 번째 열 표시
-- [x] **13-4/5**: `currentTimeTopPosition()` `-6` 제거 — 캡슐 중앙 = 정확한 현재 시간 (추가 미세조정은 14-7)
-- [x] **13-6**: GestureDetector 최상위 이동 — 시간 열 포함 전체 핀치 줌 인식
-- [x] **13-7**: `monthlyCalendarWeekdayRowHeight = 20`
-- [x] **13-8**: 월간 캘린더 `Padding(all: 8)` + `Expanded` 레이아웃
-- [x] **13-9**: `selectDateFromMonthly()` 추가 + 월간→3일 animateToPage
-- [x] **13-10**: 시간 레이블 `Offset(0, -12)` → `Offset(0, -6)` (추가 조정 필요, 14-3)
-- [x] **13-2**: bouncing sync 중 입력 차단 임시 수정 (bouncing 범위 skip) — 완전 해결 필요 (14-2)
-- [x] **13-1**: `AnimatedContainer` 200ms 선택 UI 애니메이션 — 추가 수정 필요 (14-4)
-- [ ] **13-11**: CurrentTimeLine 날짜별 틀어짐 — Phase 14-2/14-6 수정 후 재검증
+- [x] **14-1**: 네비바 피커 → 점포 필터 버튼 (`CupertinoIcons.list_bullet`, placeholder 바텀시트) — 아이콘 재변경 필요 (15-2)
+- [x] **14-2**: bouncing sync 복원 (try-catch + bouncing skip 제거) — 완전 해결 안됨 (15-1)
+- [x] **14-3**: 시간 레이블 `FractionalTranslation(Offset(0,-0.5))` → 픽셀 추정 없이 정확한 중앙 정렬 ✅
+- [x] **14-4**: `AnimatedContainer` 기본 `BoxDecoration(radius:8)` → 애니메이션 중 코너 유지 — 2번 깜빡임 추가 수정 필요 (15-5)
+- [x] **14-5**: `_isAnimating` 플래그 → monthly calendar `onPageChanged` 중 중간값 방지 ✅ (하지만 3일 calendar animateToPage 중 monthly 중간 상태 버그 남음 → 15-4)
+- [x] **14-6**: Stack Positioned 구분선 2개 제거 → 각 날짜 Column `DecoratedBox(right border)`. `LayoutBuilder` 제거 ✅
+- [x] **14-7**: `CurrentTimeCapsule` `right: 0` → `right: 4` — 위치 아직 불일치 (15-3)
 
 ---
 
-## Phase 14: 피드백 반영 7차 (다음 세션 구현 예정)
-
-### 아키텍처 변경 (우선순위 높음)
-
-- [ ] **14-1**: 네비바 우측 버튼 기능 변경
-  - **현재**: 피커(날짜 선택기) 버튼
-  - **변경**: 점포 필터 버튼 (애플 캘린더의 "캘린더 선택"과 유사)
-  - 탭 시 사용자가 멤버로 있는 점포 목록 표시 → 어떤 점포의 일정을 볼지 필터링
-  - 날짜 피커는 별도 진입점 필요 여부 확인 필요
-  - ⚠️ **시각적 크기 확인**: 점포 필터 버튼 아이콘의 **시각적 크기**가 오늘 날짜 버튼(24×24)과 동일한지 확인
-    - 터치 영역(44×44)이 아닌 아이콘 자체 크기 기준
-    - `home_nav_bar.dart`에서 두 버튼의 아이콘/컨테이너 크기 일치 여부 점검
+## Phase 15: 피드백 반영 8차 (다음 세션 구현 예정)
 
 ### 버그 수정 (우선순위 높음)
 
-- [ ] **14-2**: bouncing 효과 전체 날짜 동기화
-  - **현재**: 13-2 수정으로 bouncing 중 sync 건너뜀 → 하나의 날짜 열만 늘어짐
-  - **원래 동작**: 모든 날짜 열이 함께 bouncing되어야 함
-  - **해결 방향**: bouncing 범위(offset < 0 또는 > maxExtent)에서도 sync 허용
-    - `_syncAllScrollControllers` + `jumpTo`가 BouncingScrollPhysics에서 음수 offset을 수용하는지 확인
-    - `try-catch`로 안전하게 감싸서 bouncing sync 재활성화
+- [ ] **15-1**: bouncing 후 스크롤 불가 재발
+  - 14-2에서 `try-catch` 추가했으나 여전히 bouncing 후 입력 차단 발생
+  - **근본 원인**: bouncing 중 `jumpTo(음수 offset)`이 다른 컨트롤러를 불안정 상태로 만듦
+  - **해결 방향 A** (권장): `BouncingScrollPhysics` → `ClampingScrollPhysics` 변경
+    - bouncing 시각 효과 없어지지만 안정성 확보
+    - iOS 앱이라 bouncing이 자연스럽다면 Option B
+  - **해결 방향 B**: bouncing 중 sync 재차단 (`offset < 0 || offset > maxExtent`), bouncing 종료 감지 후 재동기화
+    - `_scrollController.position.isScrollingNotifier` 또는 `ScrollNotification` 활용
 
-- [ ] **14-5**: 네비바 연/월 animateToPage 중 중간값 표시 버그
-  - 예: 12월 → 3월 이동 시 네비바에 "12월 → 1월 → 2월 → 3월" 순차 표시
-  - **원인**: `monthly_calendar.dart`의 `onPageChanged`가 animateToPage 중 중간 페이지마다 `setDisplayedMonth()` 호출
-  - **해결 방향**: `_MonthlyCalendarState`에 `_isAnimating` 플래그 추가
-    - `_syncPageToMonth`에서 animateToPage 호출 전 `_isAnimating = true`
-    - `animateToPage` 완료(`.then(...)`) 후 `_isAnimating = false`
-    - `onPageChanged` 내에서 `if (_isAnimating) return;` 조건 추가
+- [ ] **15-4**: 월간 캘린더→3일 캘린더 animateToPage 중 monthly 캘린더 중간 달 표시 버그
+  - **원인**: 3-day PageView `animateToPage` 중 `onPageChanged` → `selectDateFromSwipe(중간 날짜)` → `displayedMonth` 변경 → monthly 캘린더 jump
+    - 예: Dec → Oct 선택 시 3-day가 animateToPage 하면서 Nov, Nov-x, Oct… 순서로 `selectDateFromSwipe` 호출
+    - 이로 인해 monthly 캘린더가 12월→11월→10월 순으로 점프
+  - **해결**: `_ThreeDayCalendarState`에 `_isPageAnimating` 플래그 추가
+    - `animateToPage` 호출 시 `_isPageAnimating = true`
+    - `.then((_) { if (mounted) _isPageAnimating = false; })`
+    - `onPageChanged` 내: `if (_isPageAnimating)` → `selectDateFromSwipe` 건너뜀 (마지막 도착 페이지에서만 호출)
+  - 파일: `three_day_calendar.dart` `ref.listen(selectedStartDate)` 블록 + `onPageChanged`
+  - **주의**: `animateToPage` `.then()` 타이밍 이슈 — 도착 페이지에서는 `selectDateFromSwipe`가 반드시 호출되어야 함
+    - 대안: `_isPageAnimating = false` 후 현재 page로 `selectDateFromSwipe` 수동 호출
 
-- [ ] **14-6**: 날짜 열 사이 수직 구분선 구조 변경
-  - **현재**: `ThreeDayCalendar` Stack의 `Positioned` 오버레이 (고정)
-  - **변경**: 각 날짜 `Column`의 오른쪽 Border로 이동
-    - `DecoratedBox(decoration: BoxDecoration(border: Border(right: BorderSide(color: separator, width: 0.5))))` 로 각 페이지 Column 래핑
-    - Stack의 기존 2개 `Positioned` 구분선 제거
-  - **효과**: bouncing 시 날짜 내용과 구분선이 자연스럽게 연동
+- [ ] **15-2**: 점포 필터 버튼 아이콘 원복
+  - `CupertinoIcons.list_bullet` → `CupertinoIcons.calendar_circle` (Phase 14 이전 아이콘)
+  - 아이콘만 변경, 탭 동작(`_showStoreFilter`)은 유지
+  - 파일: `home_nav_bar.dart` line ~67
 
 ### UI 수정
 
-- [ ] **14-3**: 시간 라벨과 구분선 수평 정렬 추가 조정 필요
-  - `Transform.translate(0, -6)` 적용 후에도 아직 불일치
-  - labelSmall(10px) 폰트의 실제 렌더 높이 측정 필요
-  - **접근**: `-6`을 텍스트 실제 높이의 절반으로 동적 계산, 또는 값을 `-5`, `-4`로 시도
-  - `TextPainter`로 실제 렌더 높이 측정 후 정확한 값 산출 가능
+- [ ] **15-3**: 현재 시간 캡슐 X축 위치 재조정
+  - `right: 4` 적용 후 오히려 너무 좌측, 구분선과 이어지지 않음
+  - **목표**: 노션 캘린더처럼 캡슐이 시간 열과 날짜 열 구분선 위에 걸쳐 표시
+  - **구조 문제**: `CurrentTimeCapsule`은 시간 열 Stack 내부 → `right: 0`이어도 시간 열 오른쪽 끝
+    구분선(`calendarDividerThickness = 0.5px`)을 넘어 날짜 열로 못 나감
+  - **해결 방향**: `CurrentTimeCapsule`을 시간 열 Stack 밖으로 꺼내어 `ThreeDayCalendar Row` 레벨에서 `Positioned`로 배치
+    - 또는 시간 열 Stack의 `clipBehavior: Clip.none` + `right: -(capsuleWidth - timeColumnWidth)` 로 날짜 열 위로 overflow
+    - 현재 Stack은 이미 `clipBehavior: Clip.none` 설정되어 있으므로 `right` 값 조정으로 가능
+    - `right`가 음수면 Stack 오른쪽으로 overflow: `right: -(calendarDividerThickness)` (구분선 위에 걸치도록)
+    - 또는 기존 `right: 0` 복원 후 오른쪽으로 살짝 튀어나오게: overflow 이용
+  - 파일: `current_time_indicator.dart` `CurrentTimeCapsule.build()` Positioned
 
-- [ ] **14-4**: 월간 캘린더 선택 UI AnimatedContainer 수정
-  - **문제 1**: 선택한 날짜에 먼저 애니메이션이 뜨다가, 이전 날짜에서 새 날짜로 이어지는 순서 오류
-    - 원인: `AnimatedContainer`가 셀별 독립 동작 → 새 선택 셀이 이전 셀보다 먼저 rebuild
-    - 해결: Provider에서 `previousStartDate`를 추적하여 이전 셀도 동시에 애니메이션 처리
-  - **문제 2**: 애니메이션 중간에 코너 radius 없음
-    - 원인: 비선택 셀 기본값 `BoxDecoration()` (radius=0) → 선택 시 radius가 0에서 8로 보간
-    - **해결**: 비선택 셀도 `BoxDecoration(borderRadius: BorderRadius.circular(8))` 기본값 사용
-
-- [ ] **14-7**: 현재 시간 캡슐 X축 위치 조정
-  - **현재**: `Positioned(right: 0, ...)` → 시간 열 오른쪽 끝에 붙음
-  - **변경**: 시간 레이블과 수직 정렬되도록 `right: 4` (레이블 우측 패딩과 동일)
-  - 파일: `three_day_calendar.dart`의 `CurrentTimeCapsule` Positioned
+- [ ] **15-5**: 월간 캘린더 선택 UI 2번 깜빡임 제거
+  - **현상**: 날짜 탭 시 새 선택 날짜에 먼저 애니메이션 발생 (1번), 이후 기존 선택에서 새 선택으로 애니메이션 (2번)
+  - **원인**: `AnimatedContainer`가 셀별 독립 동작
+    - 새 선택 셀: `BoxDecoration(radius:8, color:null)` → `BoxDecoration(radius:8, color:label)` (fade-in = 1번 깜빡임)
+    - 기존 선택 셀: `BoxDecoration(radius:8, color:label)` → `BoxDecoration(radius:8, color:null)` (fade-out)
+  - **해결 (권장)**: `AnimatedContainer` → `Container` 복원. 선택 UI 즉시 변경
+    - 세련된 애니메이션은 추후 `AnimatedSwitcher` 또는 `CustomPainter` 방식으로 별도 구현
+  - 파일: `monthly_calendar_grid.dart`
 
 ---
 
-## 최종 검증 (Phase 14 완료 후 재검증)
+## 최종 검증 (Phase 15 완료 후 재검증)
 - [x] 월간 캘린더 overflow 없이 접힘/펼침
 - [x] 월간 캘린더 좌우 스와이프 월 이동
 - [x] 날짜 이동 시 월간 캘린더 열림/닫힘 상태 유지
-- [x] 3일 캘린더 좌우 스와이프 날짜 이동 (1일 단위, 스냅, padEnds:false로 오늘이 왼쪽)
+- [x] 3일 캘린더 좌우 스와이프 날짜 이동 (1일 단위, 스냅)
 - [x] 3일 캘린더 시간 열 고정, 날짜 열만 스크롤
-- [x] picker 완료 버튼에서만 날짜 이동 + animateToPage
-- [x] 오늘 날짜 UI: 선택 시 label 사각형 + systemBackground 원 + label 숫자
-- [x] 오늘 날짜 UI: 미선택 시 label 원 + systemBackground 숫자
+- [x] 네비바 animateToPage 중 중간값 없음 (`_isAnimating` ✅)
+- [x] 날짜 열 구분선 날짜별 소유 (DecoratedBox right border ✅)
+- [x] 시간 라벨 & 구분선 Y축 정렬 (`FractionalTranslation` ✅)
+- [x] 오늘 날짜 UI 정상
 - [x] 다크 모드 색상 정상
 - [x] `dart analyze lib/` 에러 없음
-- [ ] 현재 시간 캡슐 위치 정확 (14-7)
-- [ ] 시간 라벨 & 구분선 Y축 정렬 (14-3)
-- [ ] bouncing 시 전체 날짜 동기화 (14-2)
-- [ ] 네비바 연/월 animateToPage 중 중간값 없음 (14-5)
-- [ ] 날짜 열 구분선 날짜별 소유 구조 (14-6)
-- [ ] 점포 필터 버튼 구현 (14-1 — 별도 피처)
+- [ ] bouncing 시 전체 날짜 동기화 (15-1)
+- [ ] 3일 캘린더 animateToPage 중 monthly 중간 상태 없음 (15-4)
+- [ ] 점포 필터 버튼 아이콘 (15-2)
+- [ ] 현재 시간 캡슐 구분선 위에 걸치도록 (15-3)
+- [ ] 월간 캘린더 선택 UI 깜빡임 없음 (15-5)
