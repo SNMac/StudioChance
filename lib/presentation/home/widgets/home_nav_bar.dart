@@ -149,7 +149,7 @@ class HomeNavBar extends ConsumerWidget {
   }
 }
 
-/// 네비바 chevron 아이콘 (너비 12, 높이 7)
+/// 네비바 chevron 아이콘 (너비 12, 높이 6)
 class _ChevronIcon extends StatelessWidget {
   const _ChevronIcon({required this.isUp, required this.color});
 
@@ -159,7 +159,7 @@ class _ChevronIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(12, 7),
+      size: const Size(12, 6),
       painter: _ChevronPainter(color: color, isUp: isUp),
     );
   }
