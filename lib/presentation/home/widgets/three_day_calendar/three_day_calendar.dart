@@ -78,6 +78,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       ctrl.addListener(() {
         if (_isSyncing || !ctrl.hasClients) return;
         final offset = ctrl.offset;
+        // bouncing 범위(음수 또는 maxScrollExtent 초과)에서는 sync 건너뜀
+        // → 불안정한 offset을 다른 컨트롤러에 전파하지 않음
+        if (ctrl.position.hasContentDimensions) {
+          final maxExtent = ctrl.position.maxScrollExtent;
+          if (offset < 0 || offset > maxExtent) return;
+        }
         if (offset == _currentVerticalOffset) return;
         _currentVerticalOffset = offset;
         _syncAllScrollControllers(offset, except: ctrl);

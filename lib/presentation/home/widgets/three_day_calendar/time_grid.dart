@@ -29,7 +29,7 @@ class TimeGrid extends ConsumerWidget {
 
     return SingleChildScrollView(
       controller: scrollController,
-      physics: const ClampingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       child: SizedBox(
         height: totalHeight,
         child: Stack(
