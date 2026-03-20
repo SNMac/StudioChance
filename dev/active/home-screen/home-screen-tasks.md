@@ -1,6 +1,6 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-20 (6차)
+Last Updated: 2026-03-20 (7차)
 
 ## Phase 1~15: 완료 ✅
 
@@ -130,10 +130,17 @@ Last Updated: 2026-03-20 (6차)
 ### 미착수
 
 - [x] **17-4**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
-  - 현재 `initialPage=10000` → ±10000일 (약 27년) 만 접근 가능
-  - `_referenceDate`를 고정 날짜로 변경 또는 `initialPage` 대폭 증가 필요
-  - `DateTime(2001, 1, 1)` 기준: `initialPage = DateTime.now().difference(DateTime(2001,1,1)).inDays`
-  - 파일: `three_day_calendar.dart` `_initialPage`, `_referenceDate`
+  - `_referenceDate = DateTime(2001, 1, 1)`, `_initialPage = today.difference(referenceDate).inDays`
+  - ⚠️ **파생 버그**: `_dateForPage`와 `targetPage` 공식이 구 로직 그대로였음 → Phase 18-4에서 수정
+
+- [x] **18-4**: Phase 17-4 날짜 계산 공식 누락 버그 수정
+  - **현상**: 앱 시작 시 3일 캘린더가 2001-01-01부터 표시, 오늘 버튼이 잘못된 날짜(약 2051년)로 이동
+  - **원인**: `_dateForPage`: `page - _initialPage` → `page` 로 변경 누락
+    - `_dateForPage(_initialPage)` = `2001-01-01 + 0` = `2001-01-01` (오늘이어야 함)
+  - **원인2**: `targetPage = _initialPage + delta` → `next.difference(_referenceDate).inDays` 로 변경 누락
+    - 오늘 버튼: `delta = _initialPage`, `targetPage = 2 * _initialPage ≈ 18420` (2051년!)
+  - **해결**: `_dateForPage(page) = _referenceDate.add(Duration(days: page))`, `targetPage = next.difference(_referenceDate).inDays`
+  - 파일: `three_day_calendar.dart` `_dateForPage()`, `ref.listen(selectedStartDate)` 블록
 
 ---
 
@@ -162,3 +169,5 @@ Last Updated: 2026-03-20 (6차)
 - [x] 시간열↔날짜열 구분선이 종일 영역 안쪽부터 시작 (18-1) ✅
 - [x] 날짜 열 구분선이 헤더 행 아래부터 시작 (18-2) ✅
 - [x] 오늘 버튼 후 인접 날짜 스크롤 위치 동기화 (18-3) ✅
+- [x] 앱 시작 시 오늘 날짜로 시작 (18-4) ✅
+- [x] 오늘 버튼이 올바른 날짜로 이동 (18-4) ✅

@@ -1,11 +1,21 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20 (7차 업데이트)
+Last Updated: 2026-03-20 (8차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~17 완료. `dart analyze lib/` → No issues found.
+Phase 1~18 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+### 최근 수정 (Phase 18, 2026-03-20)
+
+- **18-1**: 시간열↔날짜열 수직 구분선 → Row 레벨 SizedBox 컬럼 방식으로 복원
+- **18-2**: 날짜 열 right border → Stack+Positioned(top: 28.5px) 방식으로 교체
+- **18-3**: `_scrollToCurrentTimePending` 플래그 추가 → animateToPage 중 scrollToCurrentTime 예약 후 완료 시 실행
+- **18-4 (중요)**: `_dateForPage` 및 `targetPage` 공식 버그 수정 (Phase 17-4 누락)
+  - `_dateForPage(page)`: `_referenceDate.add(Duration(days: page - _initialPage))` → `_referenceDate.add(Duration(days: page))`
+  - `targetPage`: `_initialPage + delta` → `next.difference(_referenceDate).inDays`
+  - 이 버그로 앱 시작 시 2001-01-01 표시, 오늘 버튼이 2051년경 페이지로 이동했었음
 
 ---
 
@@ -424,16 +434,21 @@ ColoredBox(systemBackground)
 
 ---
 
-## ThreeDayCalendar 구조 (현재)
+## ThreeDayCalendar 구조 (현재, Phase 18 기준)
 
 ```
 ConsumerStatefulWidget (_ThreeDayCalendarState)
-├── _pageController (PageController, viewportFraction: 1/3, initialPage: 10000)
+├── _referenceDate = DateTime(2001, 1, 1)  ← 고정 기준일
+├── _initialPage = today.difference(referenceDate).inDays  ← 오늘의 페이지 인덱스
+├── _pageController (PageController, viewportFraction: 1/3, initialPage: _initialPage)
 ├── _timeColumnScrollController (ScrollController, NeverScrollableScrollPhysics)
 ├── _dayScrollControllers: Map<int, ScrollController> (페이지별)
 ├── _currentVerticalOffset: double (공유 수직 오프셋)
 ├── _isSyncing: bool (sync 재진입 방지)
 ├── _isPageAnimating: bool (animateToPage 중 onPageChanged 차단)
+├── _scrollToCurrentTimePending: bool (animateToPage 완료 후 scrollToCurrentTime 예약)
+├── _dateForPage(page) = _referenceDate.add(Duration(days: page))
+│   ← page가 _initialPage이면 오늘, page+1이면 내일
 └── build():
     GestureDetector (핀치 줌)
     └── Row
@@ -449,17 +464,30 @@ ConsumerStatefulWidget (_ThreeDayCalendarState)
         │                   ├── for hour 1~23: Positioned(top: hourHeight*hour, right: 2)
         │                   │   └── FractionalTranslation(0, -0.5) → Text("HH:00")
         │                   └── CurrentTimeCapsule(hourHeight)  ← Positioned(right:0) 직접 반환
-        ├── Container(width: 0.5, separator)  ← 시간열↔날짜열 구분선
-        └── Expanded → Stack
-            └── PageView.builder(padEnds: false)
-                └── DecoratedBox(Border(right: 0.5, separator))  ← 각 셀 오른쪽 구분선
-                    └── Column
-                        ├── SizedBox(height: 28) → _DayHeaderCell
-                        ├── Container(height: 0.5)
-                        ├── AllDayCell
-                        ├── Container(height: 0.5)
-                        └── Expanded → TimeGrid(scrollController, isToday)
+        ├── SizedBox(width: 0.5)  ← 시간열↔날짜열 수직 구분선 (종일 행 상단~바닥)
+        │   └── Column
+        │       ├── SizedBox(height: 28.5)  ← 헤더+헤더구분선 공백
+        │       └── Expanded(ColoredBox(separator))  ← 실제 구분선
+        └── Expanded → PageView.builder(padEnds: false)
+            └── itemBuilder → Stack
+                ├── Column
+                │   ├── SizedBox(height: 28) → _DayHeaderCell
+                │   ├── Container(height: 0.5)
+                │   ├── AllDayCell
+                │   ├── Container(height: 0.5)
+                │   └── Expanded → TimeGrid(scrollController, isToday)
+                └── Positioned(top: 28.5, bottom: 0, right: 0)  ← 날짜 열 right border
+                    └── Container(width: 0.5, separator)
 ```
+
+### ref.listen 목록 (selectedStartDate)
+- `targetPage = next.difference(_referenceDate).inDays` ← _initialPage + delta 아님!
+- `kind == animate` → `animateToPage.then()` 후 `_scrollToCurrentTimePending` 확인
+- `kind != animate` → `jumpToPage`
+
+### ref.listen 목록 (scrollToCurrentTimeTrigger)
+- `_isPageAnimating == true` → `_scrollToCurrentTimePending = true` (예약)
+- `_isPageAnimating == false` → `addPostFrameCallback(_scrollToCurrentTime)` (즉시)
 
 ---
 
@@ -492,10 +520,12 @@ abstract class HomeCalendarState with _$HomeCalendarState {
 ## 주의사항
 
 ### 캘린더 날짜 범위
-- 지원 범위: **2001.01.01 ~ 2100.12.31**
-- 현재 `initialPage=10000`, `_referenceDate=today` → 최대 ±10000일 접근 가능 (약 27년 범위)
-- 전체 지원 범위를 커버하려면 `initialPage` 값을 크게 늘리거나 `_referenceDate`를 고정 날짜로 설정 필요
-- Phase 16 과제
+- 지원 범위: **2001.01.01 ~ 2100.12.31** (Phase 17-4 + 18-4에서 완전 구현)
+- `_referenceDate = DateTime(2001, 1, 1)` (고정)
+- `_initialPage = today.difference(2001-01-01).inDays` ≈ 9210
+- `_dateForPage(page) = _referenceDate.add(Duration(days: page))`
+  - page 0 = 2001-01-01, page _initialPage = 오늘, page 36524 ≈ 2100-12-31
+- **주의**: 구 공식 `page - _initialPage`는 틀린 공식. 혼용하지 말 것.
 
 ### BouncingScrollPhysics vs ClampingScrollPhysics
 - Phase 15-1에서 ClampingScrollPhysics 적용 (바운싱 제거)
