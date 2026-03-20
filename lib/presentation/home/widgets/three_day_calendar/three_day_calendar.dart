@@ -44,6 +44,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   /// onPageChanged가 중간 페이지마다 selectDateFromSwipe를 호출하는 것을 방지
   bool _isPageAnimating = false;
 
+  /// animateToPage 중에 scrollToCurrentTime 요청이 들어온 경우 완료 후 실행
+  bool _scrollToCurrentTimePending = false;
+
   /// 페이지 인덱스 → ScrollController 맵 (수직 스크롤 동기화)
   final Map<int, ScrollController> _dayScrollControllers = {};
 
@@ -195,10 +198,15 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     );
 
     // 오늘 버튼 → 현재 시간 스크롤
+    // animateToPage 진행 중이면 완료 후 실행 (스크롤 위치 경쟁 방지)
     ref.listen(scrollToCurrentTimeTriggerProvider, (prev, next) {
       if (prev == next) return;
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _scrollToCurrentTime());
+      if (_isPageAnimating) {
+        _scrollToCurrentTimePending = true;
+      } else {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _scrollToCurrentTime());
+      }
     });
 
     // 외부 날짜 변경 → PageView 동기화 (애니메이션 정책 분기)
@@ -230,6 +238,11 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
               ref
                   .read(homeCalendarControllerProvider.notifier)
                   .selectDateFromSwipe(_dateForPage(targetPage));
+              // 애니메이션 중 예약된 scrollToCurrentTime 실행
+              if (_scrollToCurrentTimePending) {
+                _scrollToCurrentTimePending = false;
+                _scrollToCurrentTime();
+              }
             }
           });
         } else {
