@@ -80,12 +80,13 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       final ctrl = ScrollController(
         initialScrollOffset: _currentVerticalOffset,
       );
-      // attach 직후 listener가 stale initialScrollOffset으로 _currentVerticalOffset을
-      // 덮어쓰는 것을 방지. postFrameCallback에서 true로 설정 후 정확한 위치로 교정.
+      // isInitialized = false 동안 listener 무시 → stale initialScrollOffset이
+      // _currentVerticalOffset을 덮어쓰는 것 방지.
+      // scheduleInit()에서 hasClients 확인 + offset 교정 완료 후 isInitialized = true.
       var isInitialized = false;
       ctrl.addListener(() {
         if (_isSyncing || !ctrl.hasClients) return;
-        if (!isInitialized) return; // 초기화 완료 전 listener 무시
+        if (!isInitialized) return;
         final offset = ctrl.offset;
         if (ctrl.position.hasContentDimensions) {
           final maxExtent = ctrl.position.maxScrollExtent;
@@ -100,18 +101,30 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         _currentVerticalOffset = offset;
         _syncAllScrollControllers(offset, except: ctrl);
       });
-      // attach 완료 후 현재 오프셋으로 교정 (initialScrollOffset이 stale한 경우 대비)
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        isInitialized = true;
-        if (!mounted || !ctrl.hasClients) return;
-        if (ctrl.offset != _currentVerticalOffset) {
-          _isSyncing = true;
-          try {
-            ctrl.jumpTo(_currentVerticalOffset);
-          } catch (_) {}
-          _isSyncing = false;
-        }
-      });
+
+      // hasClients = true 확인 후 offset 교정 → isInitialized = true
+      // hasClients = false이면 다음 프레임에서 재시도 (dispose 시 자동 중단)
+      // isInitialized = true를 hasClients 체크 이전에 설정하면, 교정 없이 listener가
+      // 활성화되어 stale offset으로 _currentVerticalOffset을 덮어쓰는 버그 발생
+      void scheduleInit() {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !_dayScrollControllers.containsValue(ctrl)) return;
+          if (!ctrl.hasClients) {
+            scheduleInit(); // 아직 attach 안 됨 → 다음 프레임 재시도
+            return;
+          }
+          if (ctrl.offset != _currentVerticalOffset) {
+            _isSyncing = true;
+            try {
+              ctrl.jumpTo(_currentVerticalOffset);
+            } catch (_) {}
+            _isSyncing = false;
+          }
+          isInitialized = true;
+        });
+      }
+
+      scheduleInit();
       return ctrl;
     });
   }

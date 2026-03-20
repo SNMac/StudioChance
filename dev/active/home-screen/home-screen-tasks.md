@@ -10,15 +10,14 @@ Last Updated: 2026-03-21 (8차)
 
 ### 미해결 버그
 
-- [ ] **20-1**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남
-  - **현상**: 좌우 스와이프 시 일부 날짜 열 스크롤 위치가 다른 열과 불일치
-  - **Phase 19-1에서 수정 시도**: `isInitialized` 플래그 추가했으나 버그 지속
-  - **의심 원인**:
-    1. `postFrameCallback` 시점에 `!hasClients`이면 교정 건너뜀 + 재시도 없음
-    2. 새 페이지 layout 미완료 상태에서 `jumpTo` 무음 실패 (`catch _ {}`)
-    3. PageView 프리빌드로 생성된 컨트롤러가 layout 전 교정 시도
-  - **해결 방향**: `postFrameCallback` 재시도 메커니즘 또는 `ScrollMetricsNotification` 활용
-  - 상세 분석: context.md Phase 20 섹션 참고
+- [x] **20-1**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남
+  - **근본 원인**: `isInitialized = true`를 `!ctrl.hasClients` 체크 **전**에 설정
+    - `hasClients = false`이면 교정 없이 early return, 그러나 `isInitialized = true`는 이미 설정됨
+    - 이후 ScrollView가 attach 될 때 `notifyListeners()` 발생 → listener 활성 상태로 진입
+    - `ctrl.offset = initialScrollOffset (stale Y)` != `_currentVerticalOffset (Z)` → stale Y로 덮어씀 + 전체 sync
+  - **해결**: `postFrameCallback`을 `scheduleInit()` 재귀 함수로 교체
+    - `hasClients = false`이면 다음 프레임 재시도 (dispose 시 `containsValue` 체크로 자동 중단)
+    - `isInitialized = true`를 교정 완료 **후**에 설정
   - 파일: `three_day_calendar.dart` `_controllerForPage()`
 
 ---
@@ -209,4 +208,4 @@ Last Updated: 2026-03-21 (8차)
 - [x] 오늘 버튼이 올바른 날짜로 이동 (18-4) ✅
 - [x] 시간열↔날짜열 수직 구분선 항상 가시 (19-2 Positioned overlay) ✅
 - [x] 현재 시간선 캡슐 오른쪽 끝과 정렬 (19-3 left: -0.25) ✅
-- [ ] **날짜별 수직 스크롤 위치 동기화 (20-1)** ← 미해결
+- [x] **날짜별 수직 스크롤 위치 동기화 (20-1)** ✅

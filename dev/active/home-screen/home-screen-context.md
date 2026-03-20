@@ -7,9 +7,9 @@ Last Updated: 2026-03-21 (10차 업데이트)
 Phase 1~19 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
 
-**미해결 버그 (Phase 20)**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남
-- Phase 19-1의 `isInitialized` 플래그 수정 이후에도 여전히 재현됨
-- 자세한 분석은 Phase 20 신규 발견 사항 섹션 참고
+**Phase 20 완료**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남 수정
+- 근본 원인: `isInitialized = true`를 `hasClients` 체크 전에 설정하던 버그
+- `scheduleInit()` 재귀 함수로 교체하여 해결
 
 ### 최근 수정 (Phase 19, 2026-03-21)
 
