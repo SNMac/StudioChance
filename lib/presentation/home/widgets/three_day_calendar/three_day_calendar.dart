@@ -328,7 +328,17 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                                   ),
                                 ),
                               ),
-                            // 현재 시간 캡슐: CurrentTimeCapsule이 Positioned를 직접 반환
+                            // 시간열↔날짜열 구분선: Stack 내부에서 캡슐보다 먼저 paint
+                            // → 헤더 영역 침범 없음, 캡슐이 구분선 위에 렌더링됨
+                            Positioned(
+                              top: 0,
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                  width: calendarDividerThickness,
+                                  color: context.separator),
+                            ),
+                            // 현재 시간 캡슐: 구분선보다 나중에 paint → 구분선 위에 렌더링
                             CurrentTimeCapsule(hourHeight: hourHeight),
                           ],
                         ),
@@ -338,9 +348,6 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                 ],
               ),
             ),
-
-            // 시간열↔날짜열 구분선
-            Container(width: calendarDividerThickness, color: context.separator),
 
             // ── 날짜 열 영역 ──────────────────────────────
             Expanded(

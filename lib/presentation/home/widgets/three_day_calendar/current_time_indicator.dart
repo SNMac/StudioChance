@@ -61,7 +61,7 @@ class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     return Positioned(
       top: currentTimeTopPosition(widget.hourHeight),
-      right: -calendarDividerThickness, // 시간 열 오른쪽 끝에 배치 → clipBehavior:Clip.none으로 구분선 위에 걸침
+      right: 0, // Stack 내부 right:0 구분선과 동일 위치, 나중에 paint되므로 구분선 위에 렌더링됨
       child: Container(
         width: currentTimeCapsuleWidth,
         height: currentTimeCapsuleHeight,
