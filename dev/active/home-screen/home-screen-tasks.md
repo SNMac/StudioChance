@@ -1,47 +1,87 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-20 (4차)
+Last Updated: 2026-03-20 (5차)
 
-## Phase 1~14: 완료 ✅
-
-## Phase 15: 피드백 반영 (진행 중)
-
-### 완료
-
-- [x] **15-4**: 월간→3일 animateToPage 중 monthly 캘린더 중간 달 표시 버그
-  - `_ThreeDayCalendarState`에 `_isPageAnimating` 플래그 추가
-  - `animateToPage` 중 `onPageChanged` → `selectDateFromSwipe` 차단
-  - `.then()` 후 `_isPageAnimating = false` + 도착 페이지 수동 `selectDateFromSwipe` ✅
-
-### 완료
-
-- [x] **15-1**: 바운싱 스크롤 복원 + 스크롤 불가 현상 근본 해결
-  - `time_grid.dart` `ClampingScrollPhysics` → `BouncingScrollPhysics` ✅
-  - `three_day_calendar.dart` bouncing 범위 sync 차단 (`hasContentDimensions` 가드) ✅
-
-- [x] **15-2**: 점포 필터 버튼 아이콘 — 이미 `CupertinoIcons.calendar_circle`로 복원되어 있음 ✅
-
-- [x] **15-3**: 현재 시간 캡슐 구분선 갭 제거 — `right: -calendarDividerThickness` ✅
-
-- [x] **15-4**: 월간→3일 animateToPage 중 monthly 중간 달 표시 버그 — `_isPageAnimating` 플래그 ✅
-
-- [x] **15-5**: 월간 캘린더 AnimatedContainer — 이미 Container로 되어 있었음 ✅
-
-- [x] **15-6**: GestureDetector → CupertinoButton 교체
-  - `home_nav_bar.dart` 3곳 (`minimumSize: Size.zero, padding: EdgeInsets.zero`) ✅
-  - `monthly_calendar_grid.dart` 날짜 셀 ✅
-
-- [x] **15-7**: 날짜 열 구분선 Stack Positioned 오버레이 방식으로 전환
-  - `DecoratedBox(right border)` 제거 → `LayoutBuilder + Positioned` 오버레이 2개 ✅
+## Phase 1~15: 완료 ✅
 
 ---
 
-## Phase 16: 다음 단계 과제 (미착수)
+## Phase 16: 피드백 반영 (미착수)
 
-- [ ] **16-1**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
+### 버그 수정 (우선순위 높음)
+
+- [ ] **16-1**: 바운싱 스크롤 전체 날짜 열 동기화
+  - **현상**: 맨 위/아래 overscroll 시 해당 날짜 열만 늘어남, 나머지 날짜 열은 정지
+  - **원인**: `_controllerForPage` 리스너에서 `offset < 0 || offset > maxExtent` 범위는 sync 완전 차단
+    - `jumpTo()`는 범위 밖 값 거부 → 대체 방법 필요
+  - **해결 방향**: `ScrollPosition.correctPixels(offset)` + `position.notifyListeners()` 사용
+    - `correctPixels`는 bounds 체크 없이 `_pixels` 직접 설정 → 음수/초과 offset도 전파 가능
+    - bouncing 중에는 `_currentVerticalOffset` 업데이트 생략 (정상 범위로 돌아올 때 재동기화)
+    - `_isSyncing` 플래그로 무한 루프 방지 유지
+  - **구현 스케치**:
+    ```dart
+    ctrl.addListener(() {
+      if (_isSyncing || !ctrl.hasClients) return;
+      final offset = ctrl.offset;
+      if (ctrl.position.hasContentDimensions) {
+        final maxExtent = ctrl.position.maxScrollExtent;
+        if (offset < 0 || offset > maxExtent) {
+          // bouncing 중: correctPixels로 다른 컨트롤러에 전파
+          _syncAllScrollControllersBouncing(offset, except: ctrl);
+          return; // _currentVerticalOffset 업데이트 생략
+        }
+      }
+      if (offset == _currentVerticalOffset) return;
+      _currentVerticalOffset = offset;
+      _syncAllScrollControllers(offset, except: ctrl);
+    });
+
+    void _syncAllScrollControllersBouncing(double offset, {ScrollController? except}) {
+      if (_isSyncing) return;
+      _isSyncing = true;
+      try {
+        for (final ctrl in _dayScrollControllers.values) {
+          if (ctrl == except || !ctrl.hasClients) continue;
+          try {
+            ctrl.position.correctPixels(offset);
+            ctrl.position.notifyListeners();
+          } catch (_) {}
+        }
+        // 시간 열은 NeverScrollableScrollPhysics이므로 correctPixels 적용 가능
+        if (_timeColumnScrollController.hasClients) {
+          try {
+            _timeColumnScrollController.position.correctPixels(offset);
+            _timeColumnScrollController.position.notifyListeners();
+          } catch (_) {}
+        }
+      } finally {
+        _isSyncing = false;
+      }
+    }
+    ```
+  - 파일: `three_day_calendar.dart`
+
+- [ ] **16-2**: 네비바 chevron 아이콘 비율 수정
+  - **현상**: chevron 아이콘이 비율이 깨진 느낌
+  - **현재 코드**: `CustomPaint(size: const Size(12, 7))` → 12:7 비율 (≈1.71:1)
+  - **분석**:
+    - V 형태: (0,0)→(6,7)→(12,0) 또는 (0,7)→(6,0)→(12,7)
+    - 각 arm의 각도 = arctan(7/6) ≈ 49° → 양쪽 벌어짐 = ~98° (너무 좁음)
+    - 자연스러운 chevron: 각 arm이 수평 대비 ~35~45° → 높이 = 6 * tan(35~45°) ≈ 4.2~6px
+    - 또는 `strokeCap.round` 때문에 선 끝에 추가 픽셀이 생겨 실제보다 커 보이는 효과
+  - **해결 방향**: 너비 12 유지, 높이 조정
+    - 옵션 A: `Size(12, 6)` → 각 arm 45° → 정사각형 비율의 chevron (일반적으로 자연스러움)
+    - 옵션 B: `Size(12, 5)` → 더 납작한 느낌 (iOS SF Symbols chevron.down에 가까움)
+    - strokeWidth 1.5는 그대로 유지
+  - **권장**: 실제 렌더링 확인 후 결정. `Size(12, 6)` 먼저 시도
+  - 파일: `home_nav_bar.dart` `_ChevronIcon.build()` → `CustomPaint(size: const Size(12, 7))`
+
+### 미착수
+
+- [ ] **16-3**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
   - 현재 `initialPage=10000` → ±10000일 (약 27년) 만 접근 가능
   - `_referenceDate`를 고정 날짜로 변경 또는 `initialPage` 대폭 증가 필요
-  - `DateTime(2001, 1, 1)` 기준으로 계산 시 `initialPage = DateTime.now().difference(DateTime(2001,1,1)).inDays`
+  - `DateTime(2001, 1, 1)` 기준: `initialPage = DateTime.now().difference(DateTime(2001,1,1)).inDays`
   - 파일: `three_day_calendar.dart` `_initialPage`, `_referenceDate`
 
 ---
@@ -59,9 +99,10 @@ Last Updated: 2026-03-20 (4차)
 - [x] 다크 모드 색상 정상
 - [x] `dart analyze lib/` 에러 없음
 - [x] 3일 캘린더 animateToPage 중 monthly 중간 상태 없음 (`_isPageAnimating` ✅)
-- [x] 바운싱 스크롤 복원 + 바운싱 후 스크롤 정상 동작 (15-1) ✅
+- [x] 바운싱 스크롤 복원 (15-1) ✅
 - [x] GestureDetector → CupertinoButton 교체 (15-6) ✅
 - [x] 현재 시간 캡슐과 구분선 사이 갭 제거 (15-3) ✅
 - [x] 날짜 열 구분선 틀어짐 없음 (15-7) ✅
 - [x] 월간 캘린더 선택 UI 깜빡임 없음 (15-5) ✅
-- [x] 점포 필터 버튼 아이콘 확인 (15-2) ✅
+- [ ] 바운싱 시 전체 날짜 열 동기화 (16-1)
+- [ ] 네비바 chevron 비율 (16-2)

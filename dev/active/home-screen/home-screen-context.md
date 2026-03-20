@@ -1,11 +1,42 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20 (4차 업데이트)
+Last Updated: 2026-03-20 (5차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~15-4 완료. `dart analyze lib/` → No issues found.
+Phase 1~15 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+---
+
+## Phase 16 신규 발견 사항 (2026-03-20 세션)
+
+### 16-1: 바운싱 스크롤 전체 날짜 열 동기화 재시도
+
+Phase 15-1에서 `BouncingScrollPhysics` 복원 + bouncing 범위 sync 차단을 적용했으나, 이로 인해 **overscroll 시 드래그 중인 날짜 열만 늘어나고 나머지 2열은 정지**하는 현상이 남아 있음.
+
+**원인 분석**:
+- `_controllerForPage` 리스너: `offset < 0 || offset > maxExtent`이면 sync를 완전 차단
+- `jumpTo()`는 bounds 밖 값 거부 → bouncing offset을 다른 컨트롤러에 전달 불가
+
+**해결 방향**: `ScrollPosition.correctPixels(offset)` + `position.notifyListeners()` 활용
+- `correctPixels`는 Flutter ScrollPosition 내부 메서드로 bounds 체크 없이 `_pixels` 직접 설정
+- bouncing 중에도 이 방법으로 다른 컨트롤러에 overscroll offset 전파 가능
+- `_currentVerticalOffset`은 bouncing 중 업데이트 생략 → 정상 범위 복귀 시 자동 재동기화
+- 별도 `_syncAllScrollControllersBouncing()` 메서드로 분리
+- 파일: `three_day_calendar.dart` `_controllerForPage` 리스너 + 신규 메서드 추가
+
+**주의**: 시간 열(`_timeColumnScrollController`)은 `NeverScrollableScrollPhysics`이나, `correctPixels`는 physics 우회하므로 적용 가능
+
+### 16-2: 네비바 chevron 아이콘 비율 수정
+
+**현재**: `CustomPaint(size: const Size(12, 7))` + `strokeWidth: 1.5, strokeCap: round`
+- V 형태: arm 각도 ≈ 49° (너무 좁게 벌어짐)
+- `strokeCap.round`로 선 끝에 추가 픽셀 → 시각적으로 비율이 더 이상해 보임
+
+**해결**: 너비 12 유지, 높이를 줄여 각도를 넓힘
+- `Size(12, 6)` 시도 → 각 arm 45° (일반적으로 자연스러운 chevron 형태)
+- 파일: `home_nav_bar.dart` `_ChevronIcon.build()` → `CustomPaint(size: const Size(12, 7))` 수정
 
 ---
 
