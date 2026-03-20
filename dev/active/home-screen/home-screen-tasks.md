@@ -6,7 +6,11 @@ Last Updated: 2026-03-20 (5차)
 
 ---
 
-## Phase 16: 피드백 반영 (미착수)
+## Phase 16: 완료 ✅
+
+---
+
+## Phase 17: 피드백 반영 (미착수)
 
 ### 버그 수정 (우선순위 높음)
 
@@ -76,9 +80,33 @@ Last Updated: 2026-03-20 (5차)
   - **권장**: 실제 렌더링 확인 후 결정. `Size(12, 6)` 먼저 시도
   - 파일: `home_nav_bar.dart` `_ChevronIcon.build()` → `CustomPaint(size: const Size(12, 7))`
 
+### 버그 수정 (우선순위 높음)
+
+- [ ] **17-1**: 날짜 열 구분선 좌우 스크롤 연동 복원
+  - **원인**: Phase 15-7의 Stack Positioned 오버레이 방식 → 구분선이 PageView 스크롤과 무관하게 고정
+  - **해결**: `DecoratedBox(right border)` 방식으로 복원 + `LayoutBuilder` 제거
+  - 파일: `three_day_calendar.dart` (itemBuilder + Positioned 오버레이 2개 제거)
+
+- [ ] **17-2 + 17-3**: 시간열↔날짜열 수직 구분선 + 현재 시간 캡슐 (묶어서 수정)
+  - **17-2**: 수직 구분선이 요일 헤더 영역 침범 → 종일 영역부터 시작되도록 수정
+  - **17-3**: 캡슐이 구분선에 잘림 → 구분선을 시간 열 Stack 내부 Positioned로 이동하고 캡슐보다 먼저 paint
+  - **해결**:
+    1. Row의 `Container(width: 0.5)` 구분선 제거
+    2. 시간 열 Stack에 구분선 추가 (Positioned, right: 0, top: threeDayHeaderHeight + calendarDividerThickness부터 시작):
+       ```dart
+       // Stack children 순서: 구분선 먼저, 캡슐 나중 → 캡슐이 구분선 위에 렌더링
+       Positioned(
+         top: 0, bottom: 0, right: 0,
+         child: Container(width: calendarDividerThickness, color: context.separator),
+       ),
+       CurrentTimeCapsule(hourHeight: hourHeight),
+       ```
+    3. 단, Stack 안의 구분선은 top: 0부터 시작하면 또 헤더 침범 → Stack은 시간 열 Expanded 내부에만 있으므로 헤더/종일 영역은 제외됨 ✅ (Stack = allday 이하 영역)
+  - 파일: `three_day_calendar.dart`
+
 ### 미착수
 
-- [ ] **16-3**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
+- [ ] **17-4**: 캘린더 날짜 범위 확장 (2001.01.01 ~ 2100.12.31)
   - 현재 `initialPage=10000` → ±10000일 (약 27년) 만 접근 가능
   - `_referenceDate`를 고정 날짜로 변경 또는 `initialPage` 대폭 증가 필요
   - `DateTime(2001, 1, 1)` 기준: `initialPage = DateTime.now().difference(DateTime(2001,1,1)).inDays`
@@ -106,3 +134,6 @@ Last Updated: 2026-03-20 (5차)
 - [x] 월간 캘린더 선택 UI 깜빡임 없음 (15-5) ✅
 - [x] 바운싱 시 전체 날짜 열 동기화 (16-1) ✅
 - [x] 네비바 chevron 비율 (16-2) ✅
+- [ ] 3일 캘린더 좌우 스크롤 시 날짜 열 구분선도 함께 이동 (17-1)
+- [ ] 시간열↔날짜열 구분선이 종일 영역부터 시작 (17-2)
+- [ ] 현재 시간 캡슐이 구분선 위에 렌더링 (17-3)

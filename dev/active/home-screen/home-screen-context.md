@@ -1,11 +1,95 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20 (5차 업데이트)
+Last Updated: 2026-03-20 (6차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~15 완료. `dart analyze lib/` → No issues found.
+Phase 1~16-2 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+---
+
+## Phase 17 신규 발견 사항 (2026-03-20 세션)
+
+### 17-1: 날짜 열 구분선 좌우 스크롤 시 고정 문제
+
+**현상**: 3일 캘린더 좌우 스크롤 시 날짜 열 사이 구분선이 움직이지 않고 고정되어 있음.
+
+**원인**: Phase 15-7에서 `DecoratedBox(right border)` 방식 → `LayoutBuilder + Stack Positioned 오버레이` 방식으로 변경했는데, Positioned 오버레이는 Stack 안에 고정 위치이므로 PageView 스크롤과 무관하게 항상 같은 자리에 렌더링됨.
+
+**해결 방향**: Phase 15-7을 되돌려 `DecoratedBox(right border)` 방식으로 복원.
+- 각 날짜 셀의 Column을 `DecoratedBox(decoration: BoxDecoration(border: Border(right: BorderSide(color: separator, width: calendarDividerThickness))))` 로 래핑
+- `LayoutBuilder` 제거 (pageWidth 계산 불필요)
+- Positioned 오버레이 2개 제거
+- 원래 있던 fractional pixel 문제는 실제로 체감하기 어려운 수준이었으므로, 이 방식이 더 낫다고 판단
+- 파일: `three_day_calendar.dart` (itemBuilder 부분 + Positioned 오버레이 제거)
+
+**주의**: `LayoutBuilder`를 제거하면 `pageWidth`와 `dividerTop`이 없어지므로, 해당 변수에 의존하는 코드도 함께 제거.
+
+### 17-2: 시간열↔날짜열 수직 구분선이 요일 헤더 영역까지 침범
+
+**현상**: 좌측 시간 표시 열과 우측 날짜 열 사이의 수직 구분선(0.5px)이 요일/날짜 헤더 영역에도 표시됨. 종일 영역부터 시작되어야 함.
+
+**원인**: 현재 구조:
+```dart
+Row([
+  SizedBox(width: 44),          // 시간 열
+  Container(width: 0.5),        // ← 이 구분선이 Row 전체 높이(헤더 포함)에 걸쳐 렌더링
+  Expanded(child: PageView),    // 날짜 열
+])
+```
+`Container(width: 0.5)`는 Row의 cross axis 방향으로 최대한 늘어남 → 헤더부터 바닥까지 전체 높이.
+
+**해결**:
+```dart
+SizedBox(
+  width: calendarDividerThickness,
+  child: Column(
+    children: [
+      // 헤더 영역 + 헤더 구분선: 빈 공간
+      SizedBox(height: threeDayHeaderHeight + calendarDividerThickness),
+      // 종일 영역부터 바닥까지: 실제 구분선
+      Expanded(child: ColoredBox(color: context.separator)),
+    ],
+  ),
+),
+```
+- 파일: `three_day_calendar.dart` `Container(width: calendarDividerThickness, ...)` 부분
+
+### 17-3: 현재 시간 캡슐이 시간열↔날짜열 구분선에 잘림
+
+**현상**: 현재 시간 캡슐 오른쪽 끝이 시간열↔날짜열 구분선에 가려져 보임.
+
+**원인**:
+- 캡슐은 시간 열 Stack 안의 `Positioned(right: -calendarDividerThickness)` → Stack 오른쪽 끝 밖으로 0.5px 삐져나옴
+- Row 렌더링 순서: 시간 열(1번) → 구분선(2번) → 날짜 열(3번)
+- Flutter Row는 순서대로 페인트 → 구분선(2번)이 시간 열(1번) overflow 위에 덧칠됨
+- 결과: 캡슐 오른쪽 0.5px가 구분선에 덮임 + 시각적으로 잘린 느낌
+
+**해결 방향**:
+- `right: -calendarDividerThickness` → `right: -(calendarDividerThickness + 2)` 또는 `right: -2`
+- 캡슐이 구분선을 2px 이상 넘어 날짜 열로 돌출 → 구분선에 가려지지 않음
+- 단, 구분선이 캡슐 위에 계속 렌더링되므로 캡슐이 구분선을 "뚫고" 나오는 느낌이 됨
+- 더 나은 방법: 구분선을 시간 열 Stack 안에 `Positioned(right: 0)` 오른쪽 가장자리 세로선으로 넣고, 캡슐을 그 위에 렌더링 (Stack 내 순서: 구분선 먼저, 캡슐 나중)
+  ```dart
+  Stack(
+    clipBehavior: Clip.none,
+    children: [
+      // ... 시간 레이블들 ...
+      // 구분선 (먼저 paint)
+      Positioned(
+        top: 0, bottom: 0, right: -calendarDividerThickness,
+        child: Container(width: calendarDividerThickness, color: context.separator),
+      ),
+      // 캡슐 (나중에 paint → 구분선 위에 렌더링)
+      CurrentTimeCapsule(hourHeight: hourHeight),
+    ],
+  )
+  ```
+- 이 방식을 쓰면 Row의 `Container(width: 0.5)` 구분선은 제거 (Stack 내부에서 처리)
+- **주의**: 17-2에서 수직 구분선을 헤더 이하로만 표시하는 수정과 함께 적용해야 함
+
+**구현 순서 권장**: 17-2와 17-3을 묶어서 한 번에 수정.
 
 ---
 
