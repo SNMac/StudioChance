@@ -29,8 +29,10 @@ class HomeNavBar extends ConsumerWidget {
       child: Row(
         children: [
           // 좌측: 연월 + chevron 버튼
-          GestureDetector(
-            onTap: notifier.toggleMonthlyCalendar,
+          CupertinoButton(
+            minimumSize: Size.zero,
+            padding: EdgeInsets.zero,
+            onPressed: notifier.toggleMonthlyCalendar,
             child: SizedBox(
               height: navBarHeight,
               child: Row(
@@ -58,8 +60,10 @@ class HomeNavBar extends ConsumerWidget {
             children: [
               // 점포 필터 버튼 (애플 캘린더의 "캘린더 선택"과 유사)
               // 시각적 크기: 24×24 (오늘 날짜 버튼과 동일)
-              GestureDetector(
-                onTap: () => _showStoreFilter(context),
+              CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                onPressed: () => _showStoreFilter(context),
                 child: SizedBox(
                   width: 44.0,
                   height: navBarHeight,
@@ -73,8 +77,10 @@ class HomeNavBar extends ConsumerWidget {
                 ),
               ),
               // 오늘 날짜 원형 버튼
-              GestureDetector(
-                onTap: notifier.goToToday,
+              CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                onPressed: notifier.goToToday,
                 child: SizedBox(
                   width: 44.0,
                   height: navBarHeight,

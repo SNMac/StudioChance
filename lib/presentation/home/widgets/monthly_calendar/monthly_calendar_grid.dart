@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
@@ -173,8 +174,10 @@ class MonthlyCalendarGrid extends ConsumerWidget {
             }
 
             return Expanded(
-              child: GestureDetector(
-                onTap: () {
+              child: CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                onPressed: () {
                   ref
                       .read(homeCalendarControllerProvider.notifier)
                       .selectDateFromMonthly(cellDate);
