@@ -1,12 +1,25 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-20 (7차)
+Last Updated: 2026-03-21 (8차)
 
-## Phase 1~15: 완료 ✅
+## Phase 1~19: 완료 ✅
 
 ---
 
-## Phase 16: 완료 ✅
+## Phase 20: 진행 중 🔧
+
+### 미해결 버그
+
+- [ ] **20-1**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남
+  - **현상**: 좌우 스와이프 시 일부 날짜 열 스크롤 위치가 다른 열과 불일치
+  - **Phase 19-1에서 수정 시도**: `isInitialized` 플래그 추가했으나 버그 지속
+  - **의심 원인**:
+    1. `postFrameCallback` 시점에 `!hasClients`이면 교정 건너뜀 + 재시도 없음
+    2. 새 페이지 layout 미완료 상태에서 `jumpTo` 무음 실패 (`catch _ {}`)
+    3. PageView 프리빌드로 생성된 컨트롤러가 layout 전 교정 시도
+  - **해결 방향**: `postFrameCallback` 재시도 메커니즘 또는 `ScrollMetricsNotification` 활용
+  - 상세 분석: context.md Phase 20 섹션 참고
+  - 파일: `three_day_calendar.dart` `_controllerForPage()`
 
 ---
 
@@ -194,6 +207,6 @@ Last Updated: 2026-03-20 (7차)
 - [x] 오늘 버튼 후 인접 날짜 스크롤 위치 동기화 (18-3) ✅
 - [x] 앱 시작 시 오늘 날짜로 시작 (18-4) ✅
 - [x] 오늘 버튼이 올바른 날짜로 이동 (18-4) ✅
-- [x] 새 날짜 열 스크롤 위치 정확히 동기화 (19-1 isInitialized) ✅
 - [x] 시간열↔날짜열 수직 구분선 항상 가시 (19-2 Positioned overlay) ✅
 - [x] 현재 시간선 캡슐 오른쪽 끝과 정렬 (19-3 left: -0.25) ✅
+- [ ] **날짜별 수직 스크롤 위치 동기화 (20-1)** ← 미해결

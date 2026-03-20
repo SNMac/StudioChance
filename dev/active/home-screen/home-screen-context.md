@@ -1,11 +1,15 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-21 (9차 업데이트)
+Last Updated: 2026-03-21 (10차 업데이트)
 
 ## 현재 구현 상태
 
 Phase 1~19 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+**미해결 버그 (Phase 20)**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남
+- Phase 19-1의 `isInitialized` 플래그 수정 이후에도 여전히 재현됨
+- 자세한 분석은 Phase 20 신규 발견 사항 섹션 참고
 
 ### 최근 수정 (Phase 19, 2026-03-21)
 
@@ -34,6 +38,71 @@ Phase 1~19 완료. `dart analyze lib/` → No issues found.
   - `_dateForPage(page)`: `_referenceDate.add(Duration(days: page - _initialPage))` → `_referenceDate.add(Duration(days: page))`
   - `targetPage`: `_initialPage + delta` → `next.difference(_referenceDate).inDays`
   - 이 버그로 앱 시작 시 2001-01-01 표시, 오늘 버튼이 2051년경 페이지로 이동했었음
+
+---
+
+## Phase 20 신규 발견 사항 (2026-03-21 세션)
+
+### 20-1: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남 (지속 버그)
+
+**현상**: 좌우 스와이프로 날짜를 이동할 때 일부 날짜 열의 수직 스크롤 위치가 다른 열과 맞지 않음. Phase 19-1 수정 이후에도 재현됨.
+
+**관련 코드 구조**:
+- `_controllerForPage(page)`: 페이지별 ScrollController 반환 (없으면 생성)
+  - `initialScrollOffset: _currentVerticalOffset` 로 초기화
+  - `isInitialized` 로컬 플래그: postFrameCallback에서 true 설정 전까지 listener 무시
+  - `postFrameCallback`: `isInitialized = true` + `ctrl.offset != _currentVerticalOffset` 이면 교정
+- `_syncAllScrollControllers(offset)`: 모든 컨트롤러에 `jumpTo(offset)` 전파
+- `_evictDistantControllers(currentPage)`: 현재 페이지 ±5 범위 밖 컨트롤러 dispose
+
+**의심 원인 분석**:
+
+1. **postFrameCallback 미연결 시 교정 생략**: postFrameCallback 시점에 `!ctrl.hasClients`이면 교정을 건너뜀. 이후 hasClients가 true가 되어도 재교정 없음.
+   - 단, controller 생성 시 `initialScrollOffset = _currentVerticalOffset`이므로 보통은 문제없음.
+   - 하지만 controller 생성과 postFrameCallback 사이 frame 간격에 `_currentVerticalOffset`이 바뀌면 교정 실패.
+
+2. **jumpTo 무음 실패**: `_syncAllScrollControllers`에서 `ctrl.jumpTo(offset)` 호출 시, 해당 ScrollView가 아직 layout 완료 전이면 `maxScrollExtent = 0`으로 jumpTo가 무시됨. `catch (_) {}`로 에러 삼킴.
+   - 새 페이지가 viewport에 진입한 직후, 내부 SingleChildScrollView의 SizedBox가 아직 measure 안 된 상태일 수 있음.
+
+3. **PageView 프리빌드 타이밍**: viewportFraction=1/3 + padEnds=false 조합에서 Flutter는 viewport 바깥 페이지도 일부 프리빌드. `itemBuilder`가 viewport 밖 페이지에 대해 호출되면 컨트롤러 생성 → 하지만 ScrollView가 화면에 없어 layout 미완료 → `hasClients = false` 또는 `maxScrollExtent = 0`.
+
+4. **_evictDistantControllers 후 재생성 시 stale offset**: 사용자가 5페이지 이상 스와이프 후 돌아오면, 기존 컨트롤러가 dispose되고 새 컨트롤러가 `initialScrollOffset = _currentVerticalOffset`으로 재생성됨. 이 시점의 `_currentVerticalOffset`이 정확하지 않을 수 있음.
+
+**미조사 사항**:
+- `BouncingScrollPhysics` 환경에서 `jumpTo` 호출 시 동작 확인 필요
+- PageView의 `itemBuilder` 호출 시점과 ScrollView의 layout 완료 시점 간격 측정
+- `_syncAllScrollControllersBouncing`에서 `correctPixels + notifyListeners` 호출이 정상 스크롤 중에도 의도치 않게 offset을 덮어쓰는 경우가 있는지 확인
+
+**해결 방향 후보**:
+
+A. `postFrameCallback` 미연결 대비 재시도 메커니즘:
+   - `hasClients = false`이면 다음 postFrameCallback으로 재예약
+   ```dart
+   void _scheduleCorrection(ScrollController ctrl) {
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       if (!mounted) return;
+       if (!ctrl.hasClients) {
+         _scheduleCorrection(ctrl); // 재시도
+         return;
+       }
+       isInitialized = true;
+       if (ctrl.offset != _currentVerticalOffset) {
+         _isSyncing = true;
+         try { ctrl.jumpTo(_currentVerticalOffset); } catch (_) {}
+         _isSyncing = false;
+       }
+     });
+   }
+   ```
+
+B. `NotificationListener<ScrollMetricsNotification>` 활용:
+   - ScrollView가 완전히 layout된 후 발생하는 ScrollMetricsNotification을 수신
+   - 이 시점에 offset 교정 → layout 전 jumpTo 실패 문제 해소
+
+C. `TimeGrid`에 `ScrollController` attach 콜백 추가:
+   - `SingleChildScrollView`의 physics를 커스텀하거나, 첫 번째 scroll notification을 수신해 초기 offset을 교정
+
+**권장**: A안(재시도) 먼저 시도. 무한 루프 방지를 위해 최대 재시도 횟수 제한 고려.
 
 ---
 
