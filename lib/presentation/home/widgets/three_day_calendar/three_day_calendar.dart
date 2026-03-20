@@ -100,11 +100,11 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       for (final ctrl in _dayScrollControllers.values) {
         if (ctrl == except) continue;
         if (!ctrl.hasClients || ctrl.offset == offset) continue;
-        try { ctrl.jumpTo(offset); } catch (_) {}
+        try { ctrl.jumpTo(offset); } catch (_) {} // 스크롤 위치가 아직 attach 안 된 경우 무시
       }
       if (_timeColumnScrollController.hasClients &&
           _timeColumnScrollController.offset != offset) {
-        try { _timeColumnScrollController.jumpTo(offset); } catch (_) {}
+        try { _timeColumnScrollController.jumpTo(offset); } catch (_) {} // 동일
       }
     } finally {
       _isSyncing = false;
