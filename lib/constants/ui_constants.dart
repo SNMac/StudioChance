@@ -16,6 +16,9 @@ const double calendarDividerThickness = 0.5;
 const double currentTimeLineThickness = 1.0;
 const double currentTimeCapsuleWidth = 32.0;
 const double currentTimeCapsuleHeight = 13.0;
+// 캡슐 우측 여백: 시간 열 오른쪽 끝에서 캡슐까지의 간격
+// CurrentTimeLine.left도 동일 값(음수)으로 맞춰 캡슐 오른쪽 끝에서 선이 시작되도록 함
+const double currentTimeCapsuleRightInset = 0.25;
 
 // 홈 화면 - 월간 캘린더
 const double monthlyCalendarDayRowHeight = 40.0; // 날짜 셀 행 높이

@@ -61,7 +61,7 @@ class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     return Positioned(
       top: currentTimeTopPosition(widget.hourHeight),
-      right: 0, // Stack 내부 right:0 구분선과 동일 위치, 나중에 paint되므로 구분선 위에 렌더링됨
+      right: currentTimeCapsuleRightInset, // 시간 열 오른쪽 끝에서 캡슐까지 여백
       child: Container(
         width: currentTimeCapsuleWidth,
         height: currentTimeCapsuleHeight,
@@ -138,9 +138,12 @@ class _CurrentTimeLineState extends State<CurrentTimeLine> {
     final color = widget.isToday
         ? context.systemRed
         : context.systemRed.withValues(alpha: 0.3);
+    // left: -currentTimeCapsuleRightInset → 캡슐 오른쪽 끝과 선의 시작점을 맞춤
+    // TimeGrid Stack은 clipBehavior: Clip.none 설정 필요
+    // (수직 구분선 overlay가 위에 렌더링되어 시각적으로는 날짜 열 시작부터 보임)
     return Positioned(
       top: top,
-      left: 0,
+      left: -currentTimeCapsuleRightInset,
       right: 0,
       child: Container(height: currentTimeLineThickness, color: color),
     );

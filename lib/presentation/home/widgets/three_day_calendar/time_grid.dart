@@ -33,6 +33,9 @@ class TimeGrid extends ConsumerWidget {
       child: SizedBox(
         height: totalHeight,
         child: Stack(
+          // Clip.none: CurrentTimeLine이 left: -currentTimeCapsuleRightInset으로
+          // 시간 열 방향으로 0.25px 넘어가는 것을 허용 (수직 구분선 overlay가 위에 렌더링됨)
+          clipBehavior: Clip.none,
           children: [
             const SizedBox.expand(),
 

@@ -10,6 +10,29 @@ Last Updated: 2026-03-20 (7차)
 
 ---
 
+## Phase 19: 완료 ✅
+
+### 버그 수정 (크리티컬)
+
+- [x] **19-1**: 수직 스크롤 위치 어긋남 (Critical) 수정
+  - **원인**: `_controllerForPage`로 새 컨트롤러 생성 시 `initialScrollOffset: _currentVerticalOffset`로 초기화하지만, 컨트롤러 attach 직후 listener가 stale offset으로 `_currentVerticalOffset`을 덮어쓰고 전체 열을 잘못된 위치로 sync하는 버그
+  - **해결**: `isInitialized` 로컬 flag 추가. postFrameCallback에서 true 설정 전까지 listener 무시. attach 후 `_currentVerticalOffset`으로 교정.
+  - 파일: `three_day_calendar.dart` `_controllerForPage()`
+
+- [x] **19-2**: 시간열↔날짜열 수직 구분선이 가려져 보이지 않는 문제
+  - **원인**: Row 안의 `SizedBox(width: 0.5, child: Column([SizedBox, Expanded(ColoredBox)]))` 방식은 layout 제약 조건에서 취약점 존재
+  - **해결**: Row-level SizedBox 완전 제거 → GestureDetector child를 Stack으로 감싸고 `Positioned(left: timeColumnWidth, top: 28.5, bottom: 0, width: 0.5)` overlay로 항상 최상단에 렌더링
+  - 파일: `three_day_calendar.dart` build()
+
+- [x] **19-3**: 현재 시간선 위치를 캡슐 right에 맞춰 조정
+  - **캡슐**: `right: currentTimeCapsuleRightInset` (= 0.25)
+  - **선**: `left: -currentTimeCapsuleRightInset` (= -0.25) → 캡슐 오른쪽 끝에서 선이 시작됨
+  - `ui_constants.dart`에 `currentTimeCapsuleRightInset = 0.25` 상수 추가
+  - `time_grid.dart` Stack: `clipBehavior: Clip.none` 추가 (선이 0.25px 넘어가는 것 허용)
+  - 파일: `ui_constants.dart`, `current_time_indicator.dart`, `time_grid.dart`
+
+---
+
 ## Phase 18: 완료 ✅
 
 ### 버그 수정 (우선순위 높음)
@@ -171,3 +194,6 @@ Last Updated: 2026-03-20 (7차)
 - [x] 오늘 버튼 후 인접 날짜 스크롤 위치 동기화 (18-3) ✅
 - [x] 앱 시작 시 오늘 날짜로 시작 (18-4) ✅
 - [x] 오늘 버튼이 올바른 날짜로 이동 (18-4) ✅
+- [x] 새 날짜 열 스크롤 위치 정확히 동기화 (19-1 isInitialized) ✅
+- [x] 시간열↔날짜열 수직 구분선 항상 가시 (19-2 Positioned overlay) ✅
+- [x] 현재 시간선 캡슐 오른쪽 끝과 정렬 (19-3 left: -0.25) ✅

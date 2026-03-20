@@ -80,8 +80,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       final ctrl = ScrollController(
         initialScrollOffset: _currentVerticalOffset,
       );
+      // attach 직후 listener가 stale initialScrollOffset으로 _currentVerticalOffset을
+      // 덮어쓰는 것을 방지. postFrameCallback에서 true로 설정 후 정확한 위치로 교정.
+      var isInitialized = false;
       ctrl.addListener(() {
         if (_isSyncing || !ctrl.hasClients) return;
+        if (!isInitialized) return; // 초기화 완료 전 listener 무시
         final offset = ctrl.offset;
         if (ctrl.position.hasContentDimensions) {
           final maxExtent = ctrl.position.maxScrollExtent;
@@ -95,6 +99,18 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         if (offset == _currentVerticalOffset) return;
         _currentVerticalOffset = offset;
         _syncAllScrollControllers(offset, except: ctrl);
+      });
+      // attach 완료 후 현재 오프셋으로 교정 (initialScrollOffset이 stale한 경우 대비)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        isInitialized = true;
+        if (!mounted || !ctrl.hasClients) return;
+        if (ctrl.offset != _currentVerticalOffset) {
+          _isSyncing = true;
+          try {
+            ctrl.jumpTo(_currentVerticalOffset);
+          } catch (_) {}
+          _isSyncing = false;
+        }
       });
       return ctrl;
     });
@@ -251,6 +267,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     );
 
     // GestureDetector를 최상위로 배치 → 시간 열 포함 전체 영역에서 핀치 줌 인식
+    // Stack으로 감싸서 수직 구분선을 Positioned overlay로 렌더링 (Row-level SizedBox 제거)
     return GestureDetector(
           onScaleStart: (_) {
             _baseHourHeight =
@@ -282,7 +299,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                   .updateHourHeight(newHeight),
             );
           },
-          child: Row(
+          child: Stack(
+          children: [
+            Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── 고정 시간 열 ──────────────────────────────
@@ -353,18 +372,6 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
               ),
             ),
 
-            // ── 시간열↔날짜열 수직 구분선 ─────────────────
-            // 헤더(28px) + 헤더구분선(0.5px) 영역은 구분선 없음, 종일 행부터 바닥까지 표시
-            SizedBox(
-              width: calendarDividerThickness,
-              child: Column(
-                children: [
-                  SizedBox(height: threeDayHeaderHeight + calendarDividerThickness),
-                  Expanded(child: ColoredBox(color: context.separator)),
-                ],
-              ),
-            ),
-
             // ── 날짜 열 영역 ──────────────────────────────
             Expanded(
               child: PageView.builder(
@@ -428,6 +435,20 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
             ),
           ],
         ),
+        // ── 시간열↔날짜열 수직 구분선 (Positioned overlay) ──────────
+        // Row-level SizedBox(0.5) 제거 → Positioned overlay로 항상 최상단에 렌더링
+        // 헤더(28px) + 헤더구분선(0.5px) 아래부터 시작, 종일 행 포함 전체 하단까지 표시
+        Positioned(
+          left: timeColumnWidth,
+          top: threeDayHeaderHeight + calendarDividerThickness,
+          bottom: 0,
+          child: SizedBox(
+            width: calendarDividerThickness,
+            child: ColoredBox(color: context.separator),
+          ),
+        ),
+      ],
+    ),
     );
   }
 }

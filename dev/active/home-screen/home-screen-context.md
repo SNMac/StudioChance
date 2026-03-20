@@ -1,11 +1,29 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-20 (8차 업데이트)
+Last Updated: 2026-03-21 (9차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~18 완료. `dart analyze lib/` → No issues found.
+Phase 1~19 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+### 최근 수정 (Phase 19, 2026-03-21)
+
+- **19-1 (Critical)**: 수직 스크롤 위치 어긋남 근본 원인 수정
+  - `_controllerForPage`에 `isInitialized` flag 추가
+  - attach 전 listener가 stale offset으로 `_currentVerticalOffset` 덮어쓰는 것 방지
+  - postFrameCallback에서 `isInitialized = true` 설정 + 정확한 offset으로 교정
+
+- **19-2**: 수직 구분선(시간열↔날짜열) 렌더링 방식 변경
+  - Row-level `SizedBox(width: 0.5)` 완전 제거
+  - GestureDetector child → Stack으로 교체
+  - `Positioned(left: 44, top: 28.5, bottom: 0, width: 0.5)` overlay로 항상 최상단 렌더링
+
+- **19-3**: 현재 시간선 left 값 조정
+  - `currentTimeCapsuleRightInset = 0.25` 상수 추가 (ui_constants.dart)
+  - `CurrentTimeCapsule.right` → `currentTimeCapsuleRightInset` 사용
+  - `CurrentTimeLine.left` → `-currentTimeCapsuleRightInset` (= -0.25) 로 캡슐 끝과 일치
+  - `TimeGrid` Stack: `clipBehavior: Clip.none` 추가
 
 ### 최근 수정 (Phase 18, 2026-03-20)
 
@@ -434,7 +452,7 @@ ColoredBox(systemBackground)
 
 ---
 
-## ThreeDayCalendar 구조 (현재, Phase 18 기준)
+## ThreeDayCalendar 구조 (현재, Phase 19 기준)
 
 ```
 ConsumerStatefulWidget (_ThreeDayCalendarState)
@@ -447,37 +465,45 @@ ConsumerStatefulWidget (_ThreeDayCalendarState)
 ├── _isSyncing: bool (sync 재진입 방지)
 ├── _isPageAnimating: bool (animateToPage 중 onPageChanged 차단)
 ├── _scrollToCurrentTimePending: bool (animateToPage 완료 후 scrollToCurrentTime 예약)
+├── _controllerForPage(page):
+│   ├── isInitialized: bool (로컬 closure 변수)
+│   ├── addListener: isInitialized == false이면 return (stale offset 덮어쓰기 방지)
+│   └── postFrameCallback: isInitialized=true + ctrl.jumpTo(_currentVerticalOffset) 교정
 ├── _dateForPage(page) = _referenceDate.add(Duration(days: page))
 │   ← page가 _initialPage이면 오늘, page+1이면 내일
 └── build():
     GestureDetector (핀치 줌)
-    └── Row
-        ├── SizedBox(width: 44)  ← 고정 시간 열
-        │   └── Column
-        │       ├── SizedBox(height: 28)  ← threeDayHeaderHeight 공백
-        │       ├── Container(height: 0.5, separator)
-        │       ├── SizedBox(height: 40) "종일" 레이블
-        │       ├── Container(height: 0.5, separator)
-        │       └── Expanded → SingleChildScrollView(NeverScrollable)
-        │           └── SizedBox(hourHeight*24)
-        │               └── Stack(clipBehavior: Clip.none)
-        │                   ├── for hour 1~23: Positioned(top: hourHeight*hour, right: 2)
-        │                   │   └── FractionalTranslation(0, -0.5) → Text("HH:00")
-        │                   └── CurrentTimeCapsule(hourHeight)  ← Positioned(right:0) 직접 반환
-        ├── SizedBox(width: 0.5)  ← 시간열↔날짜열 수직 구분선 (종일 행 상단~바닥)
-        │   └── Column
-        │       ├── SizedBox(height: 28.5)  ← 헤더+헤더구분선 공백
-        │       └── Expanded(ColoredBox(separator))  ← 실제 구분선
-        └── Expanded → PageView.builder(padEnds: false)
-            └── itemBuilder → Stack
-                ├── Column
-                │   ├── SizedBox(height: 28) → _DayHeaderCell
-                │   ├── Container(height: 0.5)
-                │   ├── AllDayCell
-                │   ├── Container(height: 0.5)
-                │   └── Expanded → TimeGrid(scrollController, isToday)
-                └── Positioned(top: 28.5, bottom: 0, right: 0)  ← 날짜 열 right border
-                    └── Container(width: 0.5, separator)
+    └── Stack  ← Phase 19: Row → Stack 교체 (구분선 overlay용)
+        ├── Row
+        │   ├── SizedBox(width: 44)  ← 고정 시간 열
+        │   │   └── Column
+        │   │       ├── SizedBox(height: 28)  ← threeDayHeaderHeight 공백
+        │   │       ├── Container(height: 0.5, separator)
+        │   │       ├── SizedBox(height: 40) "종일" 레이블
+        │   │       ├── Container(height: 0.5, separator)
+        │   │       └── Expanded → SingleChildScrollView(NeverScrollable)
+        │   │           └── SizedBox(hourHeight*24)
+        │   │               └── Stack(clipBehavior: Clip.none)
+        │   │                   ├── for hour 1~23: Positioned(top: hourHeight*hour, right: 2)
+        │   │                   │   └── FractionalTranslation(0, -0.5) → Text("HH:00")
+        │   │                   └── CurrentTimeCapsule(hourHeight)
+        │   │                       ← Positioned(right: currentTimeCapsuleRightInset) = 0.25
+        │   └── Expanded → PageView.builder(padEnds: false)
+        │       └── itemBuilder → Stack
+        │           ├── Column
+        │           │   ├── SizedBox(height: 28) → _DayHeaderCell
+        │           │   ├── Container(height: 0.5)
+        │           │   ├── AllDayCell
+        │           │   ├── Container(height: 0.5)
+        │           │   └── Expanded → TimeGrid(scrollController, isToday)
+        │           │       └── Stack(clipBehavior: Clip.none)  ← Clip.none 추가 (Phase 19)
+        │           │           ├── 수평 구분선 (1~23시)
+        │           │           └── CurrentTimeLine(hourHeight, isToday)
+        │           │               ← Positioned(left: -currentTimeCapsuleRightInset) = -0.25
+        │           └── Positioned(top: 28.5, bottom: 0, right: 0)  ← 날짜 열 right border
+        │               └── Container(width: 0.5, separator)
+        └── Positioned(left: 44, top: 28.5, bottom: 0)  ← 시간열↔날짜열 수직 구분선 overlay
+            └── SizedBox(width: 0.5, child: ColoredBox(separator))
 ```
 
 ### ref.listen 목록 (selectedStartDate)
