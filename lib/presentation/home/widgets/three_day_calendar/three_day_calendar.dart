@@ -21,13 +21,15 @@ class ThreeDayCalendar extends ConsumerStatefulWidget {
 }
 
 class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
-  static const _initialPage = 10000;
+  // 캘린더 지원 범위의 시작일 (2001.01.01 ~ 2100.12.31)
+  static final _referenceDate = DateTime(2001, 1, 1);
 
-  final _referenceDate = DateTime(
+  // 기준일(2001.01.01) 기준 오늘의 페이지 인덱스
+  static final _initialPage = DateTime(
     DateTime.now().year,
     DateTime.now().month,
     DateTime.now().day,
-  );
+  ).difference(_referenceDate).inDays;
 
   late final PageController _pageController;
   late final ScrollController _timeColumnScrollController;
