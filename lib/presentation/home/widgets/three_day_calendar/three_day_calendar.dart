@@ -38,6 +38,10 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   /// 재진입 방지 플래그 (_syncAllScrollControllers 무한 루프 방지)
   bool _isSyncing = false;
 
+  /// animateToPage 진행 중 플래그
+  /// onPageChanged가 중간 페이지마다 selectDateFromSwipe를 호출하는 것을 방지
+  bool _isPageAnimating = false;
+
   /// 페이지 인덱스 → ScrollController 맵 (수직 스크롤 동기화)
   final Map<int, ScrollController> _dayScrollControllers = {};
 
@@ -176,11 +180,22 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
             .read(homeCalendarControllerProvider.notifier)
             .consumeThreeDayTransition();
         if (kind == CalendarTransitionKind.animate) {
-          _pageController.animateToPage(
-            targetPage,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
+          _isPageAnimating = true;
+          _pageController
+              .animateToPage(
+                targetPage,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              )
+              .then((_) {
+            if (mounted) {
+              _isPageAnimating = false;
+              // 도착 페이지에서 날짜 동기화
+              ref
+                  .read(homeCalendarControllerProvider.notifier)
+                  .selectDateFromSwipe(_dateForPage(targetPage));
+            }
+          });
         } else {
           _pageController.jumpToPage(targetPage);
         }
@@ -265,7 +280,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                             for (int hour = 1; hour < 24; hour++)
                               Positioned(
                                 top: hourHeight * hour,
-                                right: 4,
+                                right: 2,
                                 child: FractionalTranslation(
                                   translation: const Offset(0, -0.5),
                                   child: Text(
@@ -303,11 +318,13 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                     // padEnds: false → 현재 페이지가 왼쪽 첫 번째 열에 표시됨 (오늘이 맨 왼쪽)
                     padEnds: false,
                     onPageChanged: (index) {
-                      final newStart = _dateForPage(index);
                       _evictDistantControllers(index);
+                      // animateToPage 중에는 중간 페이지 날짜 변경 건너뜀
+                      // → monthly 캘린더가 중간 달을 순차 표시하는 현상 방지
+                      if (_isPageAnimating) return;
                       ref
                           .read(homeCalendarControllerProvider.notifier)
-                          .selectDateFromSwipe(newStart);
+                          .selectDateFromSwipe(_dateForPage(index));
                     },
                     itemBuilder: (context, index) {
                       final date = _dateForPage(index);

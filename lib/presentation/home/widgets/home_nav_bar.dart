@@ -65,7 +65,7 @@ class HomeNavBar extends ConsumerWidget {
                   height: navBarHeight,
                   child: Center(
                     child: Icon(
-                      CupertinoIcons.list_bullet,
+                      CupertinoIcons.calendar_circle,
                       size: 24.0,
                       color: context.label,
                     ),

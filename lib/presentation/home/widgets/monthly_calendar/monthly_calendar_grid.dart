@@ -180,13 +180,10 @@ class MonthlyCalendarGrid extends ConsumerWidget {
                       .selectDateFromMonthly(cellDate);
                 },
                 child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
+                  child: Container(
                     width: 40,
                     height: 40,
-                    // 기본값도 radius 포함 → 선택/비선택 간 애니메이션 중 코너 유지
-                    decoration: decoration ?? BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                    decoration: decoration,
                     alignment: Alignment.center,
                     child: innerCircle ??
                         Text(
