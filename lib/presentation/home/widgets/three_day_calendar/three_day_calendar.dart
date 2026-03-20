@@ -78,11 +78,14 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       ctrl.addListener(() {
         if (_isSyncing || !ctrl.hasClients) return;
         final offset = ctrl.offset;
-        // bouncing 범위(음수 또는 maxScrollExtent 초과)에서는 sync 건너뜀
-        // → 불안정한 offset을 다른 컨트롤러에 전파하지 않음
         if (ctrl.position.hasContentDimensions) {
           final maxExtent = ctrl.position.maxScrollExtent;
-          if (offset < 0 || offset > maxExtent) return;
+          if (offset < 0 || offset > maxExtent) {
+            // bouncing 중: correctPixels로 다른 컨트롤러에 overscroll 전파
+            // jumpTo()는 범위 밖 값을 거부하므로 correctPixels 사용
+            _syncAllScrollControllersBouncing(offset, except: ctrl);
+            return; // _currentVerticalOffset은 정상 범위 값만 추적
+          }
         }
         if (offset == _currentVerticalOffset) return;
         _currentVerticalOffset = offset;
@@ -105,6 +108,31 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       if (_timeColumnScrollController.hasClients &&
           _timeColumnScrollController.offset != offset) {
         try { _timeColumnScrollController.jumpTo(offset); } catch (_) {} // 동일
+      }
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  /// bouncing 중 overscroll offset을 모든 컨트롤러에 전파
+  /// correctPixels는 bounds 체크 없이 직접 pixels 설정 → 음수/초과 offset 전달 가능
+  void _syncAllScrollControllersBouncing(
+      double offset, {ScrollController? except}) {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    try {
+      for (final ctrl in _dayScrollControllers.values) {
+        if (ctrl == except || !ctrl.hasClients) continue;
+        try {
+          ctrl.position.correctPixels(offset);
+          ctrl.position.notifyListeners();
+        } catch (_) {} // position이 아직 attach 안 된 경우 무시
+      }
+      if (_timeColumnScrollController.hasClients) {
+        try {
+          _timeColumnScrollController.position.correctPixels(offset);
+          _timeColumnScrollController.position.notifyListeners();
+        } catch (_) {} // 동일
       }
     } finally {
       _isSyncing = false;
