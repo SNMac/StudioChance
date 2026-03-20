@@ -181,7 +181,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   }
 
   DateTime _dateForPage(int page) {
-    return _referenceDate.add(Duration(days: page - _initialPage));
+    return _referenceDate.add(Duration(days: page));
   }
 
   bool _isToday(DateTime date) {
@@ -214,8 +214,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       homeCalendarControllerProvider.select((s) => s.selectedStartDate),
       (prev, next) {
         if (prev == next) return;
-        final delta = next.difference(_referenceDate).inDays;
-        final targetPage = _initialPage + delta;
+        final targetPage = next.difference(_referenceDate).inDays;
         if (!_pageController.hasClients ||
             _pageController.page?.round() == targetPage) {
           return;
