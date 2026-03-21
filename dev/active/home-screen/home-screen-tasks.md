@@ -6,9 +6,9 @@ Last Updated: 2026-03-21 (8차)
 
 ---
 
-## Phase 20: 진행 중 🔧
+## Phase 20~21: 완료 ✅
 
-### 미해결 버그
+### 스크롤 동기화 버그 수정
 
 - [x] **20-1 (1차)**: `isInitialized = true` 순서 + `scheduleInit()` 재귀 → 여전히 재현
 - [x] **20-2 (근본 원인 수정)**: unmount/remount 시 stale `initialScrollOffset` 문제
@@ -18,6 +18,12 @@ Last Updated: 2026-03-21 (8차)
     - `notifyListeners()` 발생 → `isInitialized = true` 상태 → listener가 stale offset으로 전체 sync
   - **해결**: `!hasClients`인 기존 컨트롤러 감지 → dispose + 재생성
   - 파일: `three_day_calendar.dart` `_controllerForPage()` (맨 앞 `existing` 체크 로직 추가)
+
+- [x] **21 (스냅 애니메이션 중 오프스크린 날짜 어긋남 수정)**:
+  - **현상**: 좌우 스와이프 스냅 완료 시 화면 밖으로 나가는 날짜 열이 잠깐 어긋난 위치로 보임
+  - **원인**: `onPageChanged`는 PageView 스냅 중간(0.5 경계)에 발화함. 새로 진입하는 페이지의 컨트롤러가 `scheduleInit()` 완료 전 stale 위치로 잠깐 렌더링됨
+  - **해결**: `onPageChanged` 내 `WidgetsBinding.instance.addPostFrameCallback`으로 `_syncAllScrollControllers(_currentVerticalOffset)` 호출 → 스냅 직후 다음 프레임에서 모든 컨트롤러 교정
+  - 파일: `three_day_calendar.dart` `onPageChanged` 블록
 
 ---
 
@@ -207,4 +213,5 @@ Last Updated: 2026-03-21 (8차)
 - [x] 오늘 버튼이 올바른 날짜로 이동 (18-4) ✅
 - [x] 시간열↔날짜열 수직 구분선 항상 가시 (19-2 Positioned overlay) ✅
 - [x] 현재 시간선 캡슐 오른쪽 끝과 정렬 (19-3 left: -0.25) ✅
-- [x] **날짜별 수직 스크롤 위치 동기화 (20-1)** ✅
+- [x] **날짜별 수직 스크롤 위치 동기화 (20-2)** ✅
+- [x] **스냅 애니메이션 중 오프스크린 날짜 어긋남 (21)** ✅

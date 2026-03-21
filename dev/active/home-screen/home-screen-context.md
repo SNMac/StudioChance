@@ -1,11 +1,15 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-21 (11차 업데이트)
+Last Updated: 2026-03-21 (12차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~20 완료. `dart analyze lib/` → No issues found.
+Phase 1~21 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+**Phase 21 완료**: 스냅 애니메이션 중 오프스크린 날짜 열 스크롤 어긋남 수정
+- `onPageChanged`에 `addPostFrameCallback(() => _syncAllScrollControllers(_currentVerticalOffset))` 추가
+- 스냅 완료 직후 다음 프레임에서 모든 컨트롤러를 정확한 offset으로 일괄 교정
 
 **Phase 20 완료**: 3일 캘린더 날짜별 수직 스크롤 위치 어긋남 수정
 - 20-1 (1차 시도): `isInitialized = true` 순서 변경 + `scheduleInit()` 재귀 → 여전히 재현
