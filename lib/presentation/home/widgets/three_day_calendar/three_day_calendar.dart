@@ -413,6 +413,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                 padEnds: false,
                 onPageChanged: (index) {
                   _evictDistantControllers(index);
+                  // 스냅 애니메이션 완료 후 모든 컨트롤러 스크롤 위치 교정
+                  // onPageChanged는 스냅 중간(0.5 경계)에 발화하므로 새로 진입하는
+                  // 페이지의 컨트롤러가 stale offset으로 잠깐 보이는 현상 방지
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _syncAllScrollControllers(_currentVerticalOffset);
+                  });
                   // animateToPage 중에는 중간 페이지 날짜 변경 건너뜀
                   // → monthly 캘린더가 중간 달을 순차 표시하는 현상 방지
                   if (_isPageAnimating) return;
