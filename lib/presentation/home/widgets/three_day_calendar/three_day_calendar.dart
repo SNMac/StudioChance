@@ -74,14 +74,35 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     super.dispose();
   }
 
-  /// 페이지별 ScrollController 반환 (없으면 생성, 리스너 자동 등록)
+  /// 페이지별 ScrollController 반환 (없으면 생성 또는 재생성, 리스너 자동 등록)
+  ///
+  /// 핵심 문제: ScrollController.initialScrollOffset은 final이라 최초 생성 시점에 고정됨.
+  /// Flutter는 컨트롤러가 새 ScrollPosition에 재연결(re-attach)될 때마다 이 값을 사용함.
+  ///
+  /// 버그 경로:
+  ///   1. 페이지가 cache extent 밖으로 나가면 위젯 unmount → hasClients = false
+  ///   2. 이 사이 _currentVerticalOffset이 변경됨
+  ///   3. 페이지 재진입 → itemBuilder 호출 → putIfAbsent가 기존 ctrl 반환
+  ///   4. 재연결 시 stale initialScrollOffset으로 position 초기화 → notifyListeners
+  ///   5. isInitialized = true 상태이므로 listener가 stale offset을 _currentVerticalOffset에 씀
+  ///   6. 전체 열이 잘못된 위치로 snap됨
+  ///
+  /// 해결: hasClients = false인 기존 컨트롤러를 감지 → dispose 후 현재 offset으로 재생성
   ScrollController _controllerForPage(int page) {
+    // 페이지가 unmount되었다가 remount될 때: 기존 컨트롤러의 initialScrollOffset이 stale함
+    // → dispose하고 현재 _currentVerticalOffset으로 재생성
+    final existing = _dayScrollControllers[page];
+    if (existing != null && !existing.hasClients) {
+      existing.dispose();
+      _dayScrollControllers.remove(page);
+    }
+
     return _dayScrollControllers.putIfAbsent(page, () {
       final ctrl = ScrollController(
         initialScrollOffset: _currentVerticalOffset,
       );
-      // isInitialized = false 동안 listener 무시 → stale initialScrollOffset이
-      // _currentVerticalOffset을 덮어쓰는 것 방지.
+      // isInitialized = false 동안 listener 무시 → 초기 attach 시 발생하는
+      // notifyListeners가 _currentVerticalOffset을 덮어쓰는 것 방지.
       // scheduleInit()에서 hasClients 확인 + offset 교정 완료 후 isInitialized = true.
       var isInitialized = false;
       ctrl.addListener(() {
@@ -103,14 +124,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       });
 
       // hasClients = true 확인 후 offset 교정 → isInitialized = true
-      // hasClients = false이면 다음 프레임에서 재시도 (dispose 시 자동 중단)
-      // isInitialized = true를 hasClients 체크 이전에 설정하면, 교정 없이 listener가
-      // 활성화되어 stale offset으로 _currentVerticalOffset을 덮어쓰는 버그 발생
+      // hasClients = false이면 다음 프레임에서 재시도 (evict 시 containsValue로 자동 중단)
       void scheduleInit() {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !_dayScrollControllers.containsValue(ctrl)) return;
           if (!ctrl.hasClients) {
-            scheduleInit(); // 아직 attach 안 됨 → 다음 프레임 재시도
+            scheduleInit();
             return;
           }
           if (ctrl.offset != _currentVerticalOffset) {
