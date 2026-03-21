@@ -303,11 +303,72 @@ dart run build_runner build --delete-conflicting-outputs
 
 ---
 
+## 성능 가이드라인
+
+### watch vs select
+
+`ref.watch(provider)`는 상태 객체 전체를 구독 → 관련 없는 필드 변경에도 rebuild 발생.
+필요한 필드만 구독하려면 `select` 사용:
+
+```dart
+// ❌ 전체 상태 구독 → hourHeight/selectedStartDate 변경 시에도 rebuild
+final isVisible = ref.watch(homeCalendarControllerProvider).isMonthlyCalendarVisible;
+
+// ✅ 필요한 필드만 구독
+final isVisible = ref.watch(
+  homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+);
+
+// 여러 필드가 필요하면 각각 select
+final month = ref.watch(homeCalendarControllerProvider.select((s) => s.displayedMonth));
+final isVisible = ref.watch(homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible));
+```
+
+**기준**: 위젯에서 사용하는 필드가 상태 객체 전체 필드의 일부라면 select 사용.
+
+### build() 내 연산 주의사항
+
+build()는 flutter 프레임워크가 빈번하게 호출하므로, 무거운 연산이나 반복 호출은 루프 밖으로 이동:
+
+```dart
+// ❌ 루프 내 반복 호출 (35회)
+for (int i = 0; i < 35; i++) {
+  final today = DateTime.now(); // 매 셀마다 새 DateTime 객체 생성
+}
+
+// ✅ 루프 밖에서 한 번만 계산
+final today = DateTime.now();
+for (int i = 0; i < 35; i++) {
+  final isToday = cellDate.year == today.year && ...;
+}
+```
+
+### ScrollController 관리 (복수 컨트롤러)
+
+Map으로 여러 ScrollController를 관리할 때:
+- `dispose()`에서 맵의 모든 컨트롤러를 해제할 것
+- 범위 밖 컨트롤러는 주기적으로 evict하여 메모리 관리
+- `hasClients = false`인 컨트롤러는 re-attach 시 `initialScrollOffset`(stale) 사용 → unmount 감지 후 재생성 필요
+
+```dart
+// unmount 감지 → 재생성 패턴
+final existing = _controllers[page];
+if (existing != null && !existing.hasClients) {
+  existing.dispose();
+  _controllers.remove(page);
+}
+return _controllers.putIfAbsent(page, () => ScrollController(
+  initialScrollOffset: _currentOffset, // 현재 offset으로 생성
+));
+```
+
+---
+
 ## 참조 문서
 
 | 문서 | 내용 |
 |------|------|
-| [riverpod-patterns.md](resources/riverpod-patterns.md) | 프로바이더 상세 패턴, 상태 관리 |
+| [riverpod-patterns.md](resources/riverpod-patterns.md) | 프로바이더 상세 패턴, 상태 관리, select 최적화 |
 | [widget-patterns.md](resources/widget-patterns.md) | 위젯 구성, ref.listen, PopScope |
 | [data-layer-patterns.md](resources/data-layer-patterns.md) | Repository, DataSource, Model, Firestore |
 | [error-handling.md](resources/error-handling.md) | Exception 계층, Either 체이닝, UI 매핑 |

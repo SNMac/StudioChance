@@ -59,5 +59,10 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - 기본 폰트: Pretendard (400, 500, 600, 700)
 - Material 3 디자인 시스템 사용
 
+## 성능 규칙
+- `ref.watch(provider)` → 필요한 필드만 `select` 사용 (`ref.watch(provider.select((s) => s.field))`)
+- `build()` 내 루프에서 `DateTime.now()` 등 반복 호출 금지 → 루프 밖 `final` 변수로 1회만
+- 복수 `ScrollController`를 Map으로 관리 시: `hasClients = false` 감지 → dispose 후 재생성
+
 ## 중요 사항
 - API Key 관련 문자열은 gitignore 처리되어있는 별도 파일로 분리하고 import하여 사용
