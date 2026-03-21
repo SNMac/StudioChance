@@ -1,8 +1,23 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-21 (8차)
+Last Updated: 2026-03-21 (9차)
 
 ## Phase 1~19: 완료 ✅
+
+---
+
+## Phase 22: 완료 ✅
+
+### 성능 개선
+
+- [x] **22-1**: `MonthlyCalendarGrid` `DateTime.now()` 35번 → build 상단 1번으로 이동
+  - 파일: `monthly_calendar_grid.dart` 줄 34 (루프 밖)
+- [x] **22-2**: `HomeScreen` `watch()` → `select((s) => s.isMonthlyCalendarVisible)`
+  - `hourHeight`, `selectedStartDate` 변경 시 HomeScreen rebuild 방지
+  - 파일: `home_screen.dart` 줄 16
+- [x] **22-3**: `HomeNavBar` `watch()` → `displayedMonth`, `isMonthlyCalendarVisible` 각각 select
+  - `hourHeight`, `selectedStartDate` 변경 시 HomeNavBar rebuild 방지
+  - 파일: `home_nav_bar.dart` 줄 16-22
 
 ---
 
@@ -215,3 +230,4 @@ Last Updated: 2026-03-21 (8차)
 - [x] 현재 시간선 캡슐 오른쪽 끝과 정렬 (19-3 left: -0.25) ✅
 - [x] **날짜별 수직 스크롤 위치 동기화 (20-2)** ✅
 - [x] **스냅 애니메이션 중 오프스크린 날짜 어긋남 (21)** ✅
+- [x] **성능: DateTime.now() 35→1회, watch→select (22)** ✅

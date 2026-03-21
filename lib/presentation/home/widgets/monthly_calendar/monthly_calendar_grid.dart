@@ -33,6 +33,9 @@ class MonthlyCalendarGrid extends ConsumerWidget {
 
     final totalDays = _daysInMonth(year, month);
 
+    // 오늘 날짜 — 루프 밖에서 한 번만 계산 (35개 셀 공유)
+    final today = DateTime.now();
+
     // 이전 달 정보
     final prevMonth = month == 1 ? 12 : month - 1;
     final prevYear = month == 1 ? year - 1 : year;
@@ -84,8 +87,7 @@ class MonthlyCalendarGrid extends ConsumerWidget {
 
             final cellDate = DateTime(cellYear, cellMonth, day);
 
-            // 오늘 날짜 판별
-            final today = DateTime.now();
+            // 오늘 날짜 판별 (today는 루프 밖에서 한 번만 계산)
             final bool isToday = cellDate.year == today.year &&
                 cellDate.month == today.month &&
                 cellDate.day == today.day;

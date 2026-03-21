@@ -13,11 +13,15 @@ class HomeNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(homeCalendarControllerProvider);
     final notifier = ref.read(homeCalendarControllerProvider.notifier);
+    final month = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.displayedMonth),
+    );
+    final isMonthlyCalendarVisible = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+    );
 
     // 네비게이션 바에 표시할 연월 텍스트
-    final month = state.displayedMonth;
     final monthText = '${month.year}년 ${month.month}월';
     final today = DateTime.now().day;
     final navBarHeight = Platform.isIOS ? homeNavBarHeight : kToolbarHeight;
@@ -47,7 +51,7 @@ class HomeNavBar extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8.0),
                   _ChevronIcon(
-                    isUp: state.isMonthlyCalendarVisible,
+                    isUp: isMonthlyCalendarVisible,
                     color: context.label,
                   ),
                 ],

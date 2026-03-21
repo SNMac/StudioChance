@@ -13,8 +13,9 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMonthlyCalendarVisible =
-        ref.watch(homeCalendarControllerProvider).isMonthlyCalendarVisible;
+    final isMonthlyCalendarVisible = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+    );
 
     return Scaffold(
       backgroundColor: context.systemBackground,

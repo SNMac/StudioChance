@@ -1,11 +1,16 @@
 # 홈 화면 구현 - 컨텍스트
 
-Last Updated: 2026-03-21 (12차 업데이트)
+Last Updated: 2026-03-21 (13차 업데이트)
 
 ## 현재 구현 상태
 
-Phase 1~21 완료. `dart analyze lib/` → No issues found.
+Phase 1~22 완료. `dart analyze lib/` → No issues found.
 브랜치: `feat/#5-home`
+
+**Phase 22 완료**: 홈 화면 성능 개선 (3곳)
+- `MonthlyCalendarGrid`: `DateTime.now()` 35번 → build 상단 1번으로 이동 (`monthly_calendar_grid.dart:34`)
+- `HomeScreen`: `watch()` 전체 → `select((s) => s.isMonthlyCalendarVisible)` (`home_screen.dart:16`)
+- `HomeNavBar`: `watch()` 전체 → `displayedMonth`, `isMonthlyCalendarVisible` 각각 select (`home_nav_bar.dart:16-22`)
 
 **Phase 21 완료**: 스냅 애니메이션 중 오프스크린 날짜 열 스크롤 어긋남 수정
 - `onPageChanged`에 `addPostFrameCallback(() => _syncAllScrollControllers(_currentVerticalOffset))` 추가
