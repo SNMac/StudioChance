@@ -1,12 +1,14 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-27 (3차 — 구현 완료)
+Last Updated: 2026-03-27 (5차 — 우측 여백 두 라벨 적용 확인 및 문서 확정)
 
 ---
 
 ## 현재 구현 상태
 
 **모든 Phase 구현 완료, 버그 수정 완료. flutter analyze 오류 없음.**
+
+> 4차 수정: 아이콘 크기 12→10, 상단 간격 2→4, 우측 최소 4px 여백, FittedBox 자동 축소, 아이콘-첫 텍스트 세로 중앙 정렬 적용.
 
 ---
 
@@ -36,16 +38,29 @@ Last Updated: 2026-03-27 (3차 — 구현 완료)
 
 > ⚠️ 초기 구현 시 스트립/배경 색상이 반전되어 있었음. 수정 완료.
 
-### 아이콘 위치
+### 아이콘 위치 및 레이아웃
 
 ```
-Row: [SizedBox(8)] [Icon] [SizedBox(2.5)] [텍스트 Column]
-       ↑                   ↑
-  스트립(4px)+간격(4px)   아이콘↔텍스트 간격
+Row:
+  [SizedBox(8)]  ← 스트립(4px)+간격(4px)
+  Expanded(
+    Padding(top:4, right:4)
+    FittedBox(scaleDown, topLeft)
+      Row(crossAxis: start)
+        SizedBox(height:15, Center(Icon 10×10))  ← 첫 텍스트 라인 중앙 정렬
+        SizedBox(width:2.5)
+        Column: [이름·인원] [전화번호]
+  )
 ```
 
 - `SizedBox(width: 8)` = 스트립 4px + 라벨 영역 왼쪽에서 4px 간격
 - 초기 구현은 `SizedBox(width: 4)`로 아이콘이 스트립에 붙어있는 느낌이었음 → 8로 수정
+- `FittedBox(fit: BoxFit.scaleDown)` — 콘텐츠가 너무 넓을 때 아이콘+텍스트 전체를 비율 유지하며 축소
+- `SizedBox(height: 15.0, child: Center(child: icon))` — labelSmall 라인 높이(10×1.5=15px)와 아이콘 중앙 정렬
+- 아이콘 크기: 10×10 (초기 12×12에서 수정)
+- 상단 간격: `top: 4` (초기 `top: 2`에서 수정)
+- 우측 여백: `Padding(right: 4)`가 FittedBox 전체를 감쌈 → FittedBox 가용폭 = `셀너비 - 8(좌) - 4(우)`. 첫째·둘째 텍스트 라인 모두 이 범위 내에서 렌더링되므로 두 라벨 모두 우측 4px 여백 보장
+- `overflow: TextOverflow.ellipsis` 제거 — FittedBox가 축소하므로 ellipsis 불필요
 
 ### 라벨 높이 (Figma 16px vs Flutter labelSmall 15px)
 
@@ -60,7 +75,7 @@ Row: [SizedBox(8)] [Icon] [SizedBox(2.5)] [텍스트 Column]
 | pendingPayment | `assets/images/icons/circle_dashed.svg` (viewBox 10×10) |
 | cancelled | `assets/images/icons/circle_slash.svg` |
 
-공통: `SvgPicture.asset(path, width:12, height:12, colorFilter: ColorFilter.mode(lblColor, BlendMode.srcIn))`
+공통: `SvgPicture.asset(path, width:10, height:10, colorFilter: ColorFilter.mode(lblColor, BlendMode.srcIn))`
 
 ### minHourHeight 변경 주의사항
 

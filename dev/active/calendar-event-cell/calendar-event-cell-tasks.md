@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-27 (3차 — 구현 완료 및 버그 수정)
+Last Updated: 2026-03-27 (5차 — 구현 완전 확정)
 
 ---
 
@@ -76,6 +76,15 @@ Last Updated: 2026-03-27 (3차 — 구현 완료 및 버그 수정)
   - 잘못됨: SizedBox(width:4) → 아이콘이 스트립에 붙어있는 느낌
   - 수정됨: SizedBox(width:8) → 스트립 4px + 라벨 영역 왼쪽에서 4px 간격
   - 파일: `reservation_cell.dart` Row children 첫 번째 SizedBox
+
+- [x] **Fix-3**: 아이콘 크기 / 상단 간격 / 우측 여백 / 자동 축소 / 세로 중앙 정렬
+  - 아이콘 12×12 → 10×10
+  - 상단 간격 `top:2` → `top:4`
+  - 우측 최소 여백 `right:4` 추가 (iPhone 13 mini 텍스트 붙음 방지)
+  - `FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.topLeft)` 로 아이콘+텍스트 비율 축소
+  - `SizedBox(height:15, Center(icon))` — labelSmall 라인 높이 기준으로 아이콘-첫 텍스트 중앙 정렬
+  - `overflow: TextOverflow.ellipsis` 제거 (FittedBox가 처리)
+  - 파일: `reservation_cell.dart`
 
 ---
 
