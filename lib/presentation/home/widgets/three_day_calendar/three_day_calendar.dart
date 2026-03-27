@@ -58,7 +58,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         startTime: today.add(const Duration(hours: 7)),
         endTime: today.add(const Duration(hours: 8, minutes: 30)),
       ),
-      // 오늘 — 10:00~13:00 (예약 취소, 초록)
+      // 오늘 — 10:00~13:00 (예약 취소, 초록) — 겹침 테스트: 뒤에 위치 (짧은 것 → 낮은 z)
       ReservationDisplayData(
         reserverName: '김민준', headcount: 4,
         phoneNumber: '010-5555-1234',
@@ -67,6 +67,16 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         isAllDay: false,
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 13)),
+      ),
+      // 오늘 — 10:00~14:00 (입금 대기, 노랑) — 겹침 테스트: 위에 위치 (긴 것 → 높은 z)
+      ReservationDisplayData(
+        reserverName: '이서준', headcount: 3,
+        phoneNumber: '010-7777-9999',
+        status: ReservationStatus.pendingPayment,
+        colorTheme: ReservationCellColorTheme.yellow,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 10)),
+        endTime: today.add(const Duration(hours: 14)),
       ),
       // 내일 — 10:00~14:00 (입금 대기, 노랑)
       ReservationDisplayData(

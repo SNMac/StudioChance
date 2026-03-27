@@ -90,9 +90,17 @@ class ReservationDisplayData {
 // ── 예약 셀 위젯 ──────────────────────────────────────────────────────────────
 
 class ReservationCell extends StatelessWidget {
-  const ReservationCell({super.key, required this.data});
+  const ReservationCell({
+    super.key,
+    required this.data,
+    this.clipContent = false,
+  });
 
   final ReservationDisplayData data;
+
+  /// true: 겹침 셀(상단) — FittedBox 없이 내용이 ClipRRect에 의해 잘림
+  /// false: 일반 셀 — FittedBox로 축소 처리 (기본값)
+  final bool clipContent;
 
   @override
   Widget build(BuildContext context) {
@@ -138,49 +146,17 @@ class ReservationCell extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 1.5, right: 4),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.topLeft,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // labelSmall 라인 높이(15px) 기준으로 아이콘과 첫 번째 텍스트 중앙 정렬
-                          SizedBox(
-                            height: 15.0,
-                            child: Center(
-                              child: _StatusIcon(
-                                status: data.status,
-                                color: lblColor,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 2.5),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${data.reserverName} · ${data.headcount}인',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: lblColor),
-                                maxLines: 1,
-                              ),
-                              Text(
-                                data.phoneNumber,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: lblColor),
-                                maxLines: 1,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    padding: EdgeInsets.only(
+                      top: 1.5,
+                      right: clipContent ? 0 : 4,
                     ),
+                    child: clipContent
+                        ? _buildClipContent(context, lblColor)
+                        : FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.topLeft,
+                            child: _buildContentRow(context, lblColor),
+                          ),
                   ),
                 ),
               ],
@@ -188,6 +164,87 @@ class ReservationCell extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// 겹침 셀용 — 내용이 ClipRRect에 의해 잘림 (FittedBox 없음)
+  Widget _buildClipContent(BuildContext context, Color lblColor) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 15.0,
+          child: Center(
+            child: _StatusIcon(status: data.status, color: lblColor),
+          ),
+        ),
+        const SizedBox(width: 2.5),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${data.reserverName} · ${data.headcount}인',
+                style: Theme.of(context)
+                    .textTheme
+                    .labelSmall
+                    ?.copyWith(color: lblColor),
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+              ),
+              Text(
+                data.phoneNumber,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelSmall
+                    ?.copyWith(color: lblColor),
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 일반 셀용 — FittedBox 내부 Row
+  Widget _buildContentRow(BuildContext context, Color lblColor) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // labelSmall 라인 높이(15px) 기준으로 아이콘과 첫 번째 텍스트 중앙 정렬
+        SizedBox(
+          height: 15.0,
+          child: Center(
+            child: _StatusIcon(status: data.status, color: lblColor),
+          ),
+        ),
+        const SizedBox(width: 2.5),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${data.reserverName} · ${data.headcount}인',
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: lblColor),
+              maxLines: 1,
+            ),
+            Text(
+              data.phoneNumber,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: lblColor),
+              maxLines: 1,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

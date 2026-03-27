@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-27 (8차 — 내부 top 패딩 1.5 확정)
+Last Updated: 2026-03-27 (10차 — 이벤트 겹침 레이아웃 구현)
 
 ---
 
@@ -52,6 +52,8 @@ Last Updated: 2026-03-27 (8차 — 내부 top 패딩 1.5 확정)
 **파일:** `lib/presentation/home/widgets/three_day_calendar/time_grid.dart`
 
 - [x] **5-1~5-4**: events 파라미터, _topOffset/_cellHeight 계산, Positioned 배치
+  - 위 구분선 간격: +0.5px, 아래 구분선 간격: −1.5px
+  - `_cellHeight = hourHeight * duration / 60 - 2.0` (clamp 1.0 이상)
 
 ---
 
@@ -118,8 +120,28 @@ Last Updated: 2026-03-27 (8차 — 내부 top 패딩 1.5 확정)
 
 ---
 
+---
+
+## Phase 7: 이벤트 겹침 레이아웃 (2개) ✅
+
+**파일:** `time_grid.dart`, `reservation_cell.dart`, `three_day_calendar.dart`
+
+- [x] **7-1**: `_PositionedEvent` 클래스 추가 (event, left, right, clipContent)
+- [x] **7-2**: `_computePositions()` 함수 — z 순서 정렬 + 열 배정 알고리즘
+  - z 순서: 시작이 빠를수록 낮은 z (뒤), 같은 시작이면 짧은 것이 낮은 z
+  - 열 배정: 각 열의 마지막 종료 시간 추적으로 재사용 가능 여부 판단
+  - 열 0 → 전체 너비, 열 1+ → left=52 오른쪽 영역
+- [x] **7-3**: `ReservationCell`에 `clipContent` 파라미터 추가
+  - false (기본): FittedBox 축소 (기존 동작)
+  - true: FittedBox 없음, ClipRRect에 의해 내용 잘림, Expanded+TextOverflow.clip
+- [x] **7-4**: 목업 데이터에 오늘 10:00-14:00 노랑 겹침 이벤트 추가
+
+---
+
 ## 스코프 아웃 (추후 구현)
 
-- 동일 날짜 동일 시간대 다중 예약 겹침 레이아웃
+- **3개 이상 겹침 레이아웃** — 현재 열 1과 동일 위치(left=52)로 처리됨, 미결정
+  - 추천: 균등 분할(N등분, 노션 캘린더 방식)
+  - 대안: 계단식 스택(열 너비 115px 기준 3번째 열 ~17px → 너무 좁음)
 - 예약 셀 탭 → 상세 화면 이동
 - Riverpod provider 연결 (실제 예약 데이터)

@@ -1,15 +1,16 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-27 (8차 — 내부 top 패딩 1.5 확정)
+Last Updated: 2026-03-27 (10차 — 이벤트 겹침 레이아웃 구현)
 
 ---
 
 ## 현재 구현 상태
 
-**모든 Phase 구현 완료, 버그 수정 완료. flutter analyze 오류 없음.**
+**Phase 1~7 구현 완료, 버그 수정 완료. flutter analyze 오류 없음.**
 
 > 4차 수정: 아이콘 크기 12→10, 상단 간격 2→4, 우측 최소 4px 여백, FittedBox 자동 축소, 아이콘-첫 텍스트 세로 중앙 정렬 적용.
 > 7차 수정: minHourHeight 40→36 (사용자 정정 — 최소 시간 간격 높이 36px). 6차에서 추가한 Padding bottom:4 롤백 — FittedBox 높이를 제한해 텍스트가 축소되는 부작용 확인, 피그마 스펙과 맞지 않음.
+> 10차 수정: 이벤트 겹침 레이아웃 구현 (2개 기준). _computePositions() + ReservationCell.clipContent.
 
 ---
 
@@ -129,19 +130,72 @@ class ReservationDisplayData {
 | 영역 | left | right | top | bottom |
 |------|------|-------|-----|--------|
 | 종일(AllDay) | 1 | 8 | 1 | 4 |
-| 시간대(TimeGrid) | 1 | 8 | +0.5 | −0.5 |
+| 시간대(TimeGrid) | 1 | 8 | +0.5 | −1.5 |
 
 TimeGrid 위치 계산:
 ```dart
 top    = hourHeight * (start.hour + start.minute / 60) + 0.5
-height = hourHeight * duration_minutes / 60 - 1.0  (clamp 1.0 이상)
+height = hourHeight * duration_minutes / 60 - 2.0  (clamp 1.0 이상)
+// 위 구분선 간격: 0.5px, 아래 구분선 간격: 1.5px
 ```
 
 ---
 
+## 이벤트 겹침 레이아웃 설계 (Phase 7)
+
+### z 순서 규칙
+
+- 시작이 빠를수록 낮은 z (Stack에서 뒤에 위치)
+- 같은 시작 시간이면 짧은 것이 낮은 z (긴 것이 위에 쌓임)
+- 같은 시작+종료이면 목록 순서 유지 (안정 정렬)
+
+### 열 배정 알고리즘
+
+```dart
+// 각 열의 마지막 이벤트 종료 시간을 추적
+// 새 이벤트 시작 ≥ 열 종료 시간 → 해당 열 재사용 (겹치지 않음)
+// 모든 열과 겹치면 새 열 추가
+```
+
+### 위치 계산
+
+| 열 | left | right | clipContent |
+|----|------|-------|-------------|
+| 0 (뒤) | 1 | 8 | false (FittedBox) |
+| 1+ (앞) | 52 | 8 | true (ClipRRect 잘림) |
+
+`_overlapTopLeft = 52.0` 근거:
+- 뒤 셀 내용 시작: 1(left) + 4(strip) + 4(gap) + 10(icon) + 2.5(gap) = 21.5px
+- 3자(한글 10px 기준) ≈ 30px
+- 21.5 + 30 ≈ 52px → 뒤 셀 이름 3자 노출
+- 앞 셀 너비(115px 열 기준): 115 - 52 - 8 = 55px → 아이콘+3자 가능
+
+### clipContent=true 레이아웃
+
+```
+Row:
+  SizedBox(width:8) ← 스트립+간격
+  Expanded(
+    Padding(top:1.5)  ← right:0 (잘림으로 여백 불필요)
+    Row(crossAxis: start)
+      SizedBox(height:15, Center(Icon 10×10))
+      SizedBox(width:2.5)
+      Expanded(  ← 너비 채워서 자연스럽게 잘림
+        Column: [이름·인원(clip)] [전화번호(clip)]
+  )
+```
+
+### 3개 이상 겹침 (미구현, 추후 결정)
+
+현재: 열 1과 동일 위치(left=52)로 처리됨 (겹쳐서 표시됨)
+
+추천: **균등 분할(N등분, 노션 캘린더 방식)**
+- 115px 열 기준: 2개=각53px, 3개=각35px
+- 계단식 대안: 3번째 열 ~17px → 너무 좁아 실용 불가
+
 ## 다음 작업 (추후)
 
-1. **다중 이벤트 겹침 레이아웃** — 동일 날짜/시간에 예약이 겹칠 때 분할 표시
+1. **3개 이상 겹침 레이아웃** — 균등 분할 방식 확정 후 구현
 2. **실제 데이터 연결** — Reservation 도메인 엔티티 + Riverpod provider
 3. **셀 탭** → 예약 상세 화면 이동
 4. **빌드 러너 불필요** — 이번 구현에 코드 생성 없음 (freezed/riverpod 미사용)
