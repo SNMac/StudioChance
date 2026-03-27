@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
 /// 3일 캘린더 날짜별 이벤트 그리드
@@ -13,12 +14,22 @@ class TimeGrid extends ConsumerWidget {
     super.key,
     required this.scrollController,
     required this.isToday,
+    required this.events,
   });
 
   final ScrollController scrollController;
 
   /// 해당 날짜가 오늘인지 여부 (현재 시간선 색상 결정)
   final bool isToday;
+
+  final List<ReservationDisplayData> events;
+
+  double _topOffset(DateTime start, double hourHeight) =>
+      hourHeight * (start.hour + start.minute / 60) + 0.5;
+
+  double _cellHeight(DateTime start, DateTime end, double hourHeight) =>
+      (hourHeight * end.difference(start).inMinutes / 60 - 1.0)
+          .clamp(1.0, double.infinity);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,6 +62,21 @@ class TimeGrid extends ConsumerWidget {
                   color: context.separator,
                 ),
               ),
+
+            // 시간대 이벤트 셀
+            // TODO: 동일 시간대 다중 예약 겹침 처리 미구현
+            for (final event in events)
+              if (!event.isAllDay &&
+                  event.startTime != null &&
+                  event.endTime != null)
+                Positioned(
+                  top: _topOffset(event.startTime!, hourHeight),
+                  left: 1,
+                  right: 8,
+                  height: _cellHeight(
+                      event.startTime!, event.endTime!, hourHeight),
+                  child: ReservationCell(data: event),
+                ),
 
             // 현재 시간선: CurrentTimeLine이 Positioned를 직접 반환
             CurrentTimeLine(hourHeight: hourHeight, isToday: isToday),

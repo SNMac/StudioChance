@@ -19,6 +19,8 @@ Future<void> saveHourHeight(SharedPreferences prefs, double height) async {
 }
 
 /// hourHeight 값을 SharedPreferences에서 불러옴 (없으면 기본값 반환)
+/// clamp 적용: 저장된 값이 범위 밖일 경우(예: 이전 minHourHeight=18 기기) 보정
 double loadHourHeight(SharedPreferences prefs) {
-  return prefs.getDouble(_kHourHeightKey) ?? defaultHourHeight;
+  final saved = prefs.getDouble(_kHourHeightKey) ?? defaultHourHeight;
+  return saved.clamp(minHourHeight, maxHourHeight);
 }

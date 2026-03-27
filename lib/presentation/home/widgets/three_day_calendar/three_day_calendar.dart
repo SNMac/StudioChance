@@ -6,6 +6,7 @@ import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/time_grid.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
@@ -23,6 +24,105 @@ class ThreeDayCalendar extends ConsumerStatefulWidget {
 class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   // 캘린더 지원 범위의 시작일 (2001.01.01 ~ 2100.12.31)
   static final _referenceDate = DateTime(2001, 1, 1);
+
+  // ── 목업 이벤트 데이터 ────────────────────────────────────────────────────
+  // TODO: Riverpod provider에서 실제 예약 데이터 수신으로 교체 예정.
+  static final _mockEvents = _buildMockEvents();
+
+  static List<ReservationDisplayData> _buildMockEvents() {
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    final tomorrow = today.add(const Duration(days: 1));
+    final dayAfter = today.add(const Duration(days: 2));
+
+    return [
+      // 오늘 — 종일 (예약 확정, 초록)
+      ReservationDisplayData(
+        reserverName: '유훈자', headcount: 2,
+        phoneNumber: '010-3109-6381',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.green,
+        isAllDay: true,
+        date: today,
+      ),
+      // 오늘 — 07:00~08:30 (예약 확정, 초록)
+      ReservationDisplayData(
+        reserverName: '유훈자', headcount: 2,
+        phoneNumber: '010-3109-6381',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.green,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 7)),
+        endTime: today.add(const Duration(hours: 8, minutes: 30)),
+      ),
+      // 오늘 — 10:00~13:00 (예약 취소, 초록)
+      ReservationDisplayData(
+        reserverName: '김민준', headcount: 4,
+        phoneNumber: '010-5555-1234',
+        status: ReservationStatus.cancelled,
+        colorTheme: ReservationCellColorTheme.green,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 10)),
+        endTime: today.add(const Duration(hours: 13)),
+      ),
+      // 내일 — 10:00~14:00 (입금 대기, 노랑)
+      ReservationDisplayData(
+        reserverName: '이서준', headcount: 3,
+        phoneNumber: '010-7777-9999',
+        status: ReservationStatus.pendingPayment,
+        colorTheme: ReservationCellColorTheme.yellow,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 10)),
+        endTime: tomorrow.add(const Duration(hours: 14)),
+      ),
+      // 내일 — 15:00~16:00 (예약 확정, 파랑) — 1시간 최소 셀
+      ReservationDisplayData(
+        reserverName: '박지원', headcount: 1,
+        phoneNumber: '010-1234-5678',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.blue,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 15)),
+        endTime: tomorrow.add(const Duration(hours: 16)),
+      ),
+      // 모레 — 종일 (입금 대기, 주황)
+      ReservationDisplayData(
+        reserverName: '최수아', headcount: 5,
+        phoneNumber: '010-2222-3333',
+        status: ReservationStatus.pendingPayment,
+        colorTheme: ReservationCellColorTheme.orange,
+        isAllDay: true,
+        date: dayAfter,
+      ),
+      // 모레 — 13:00~15:00 (예약 취소, 보라)
+      ReservationDisplayData(
+        reserverName: '정하은', headcount: 2,
+        phoneNumber: '010-8888-4444',
+        status: ReservationStatus.cancelled,
+        colorTheme: ReservationCellColorTheme.purple,
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 13)),
+        endTime: dayAfter.add(const Duration(hours: 15)),
+      ),
+    ];
+  }
+
+  /// 특정 날짜의 이벤트 목록 반환
+  static List<ReservationDisplayData> _eventsForDate(
+      DateTime date, {required bool allDay}) {
+    return _mockEvents.where((e) {
+      if (e.isAllDay != allDay) return false;
+      if (allDay) {
+        final d = e.date!;
+        return d.year == date.year && d.month == date.month && d.day == date.day;
+      }
+      final s = e.startTime!;
+      return s.year == date.year && s.month == date.month && s.day == date.day;
+    }).toList();
+  }
 
   // 기준일(2001.01.01) 기준 오늘의 페이지 인덱스
   static final _initialPage = DateTime(
@@ -442,7 +542,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                               height: calendarDividerThickness,
                               color: context.separator),
                           // 종일 이벤트 셀
-                          const AllDayCell(),
+                          AllDayCell(
+                            events: _eventsForDate(date, allDay: true),
+                          ),
                           Container(
                               height: calendarDividerThickness,
                               color: context.separator),
@@ -452,6 +554,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                             child: TimeGrid(
                               scrollController: _controllerForPage(index),
                               isToday: _isToday(date),
+                              events: _eventsForDate(date, allDay: false),
                             ),
                           ),
                         ],
