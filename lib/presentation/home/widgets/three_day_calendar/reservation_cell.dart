@@ -136,37 +136,50 @@ class ReservationCell extends StatelessWidget {
               children: [
                 // 4px 스트립 너비 + 라벨 영역 왼쪽에서 4px 간격
                 const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: _StatusIcon(status: data.status, color: lblColor),
-                ),
-                const SizedBox(width: 2.5),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${data.reserverName} · ${data.headcount}인',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(color: lblColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          data.phoneNumber,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(color: lblColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    padding: const EdgeInsets.only(top: 4, right: 4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.topLeft,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // labelSmall 라인 높이(15px) 기준으로 아이콘과 첫 번째 텍스트 중앙 정렬
+                          SizedBox(
+                            height: 15.0,
+                            child: Center(
+                              child: _StatusIcon(
+                                status: data.status,
+                                color: lblColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2.5),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${data.reserverName} · ${data.headcount}인',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(color: lblColor),
+                                maxLines: 1,
+                              ),
+                              Text(
+                                data.phoneNumber,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(color: lblColor),
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -200,8 +213,8 @@ class _StatusIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return SvgPicture.asset(
       _svgPath(status),
-      width: 12,
-      height: 12,
+      width: 10,
+      height: 10,
       colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
     );
   }
