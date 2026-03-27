@@ -104,17 +104,17 @@ class ReservationCell extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       child: Stack(
         children: [
-          // 전체 배경 (foreground 색상)
-          Container(color: fgColor),
+          // 전체 배경 (~Background: 연한 색)
+          Container(color: bgColor),
 
-          // 좌측 4px 진한 스트립 (background 색상)
+          // 좌측 4px 진한 스트립 (~Foreground: 진한 색)
           Positioned(
             left: 0,
             top: 0,
             bottom: 0,
             child: SizedBox(
               width: 4,
-              child: ColoredBox(color: bgColor),
+              child: ColoredBox(color: fgColor),
             ),
           ),
 
@@ -134,7 +134,8 @@ class ReservationCell extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(width: 4),
+                // 4px 스트립 너비 + 라벨 영역 왼쪽에서 4px 간격
+                const SizedBox(width: 8),
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: _StatusIcon(status: data.status, color: lblColor),
