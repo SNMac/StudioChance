@@ -99,8 +99,8 @@ class HomeNavBar extends ConsumerWidget {
                       alignment: Alignment.center,
                       child: Text(
                         '$today',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.normal,
                           color: context.systemBackground,
                         ),
                       ),

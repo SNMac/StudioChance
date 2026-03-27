@@ -61,7 +61,7 @@ HomeScreen (Scaffold)
 |------|--------|
 | 연월 버튼 | `bodyLarge` (16px, w500) |
 | 3일 헤더 요일/일자 | `bodyMedium` (14px, w500) |
-| 오늘 날짜 버튼 숫자 | `bodyMedium` (14px, w500) |
+| 오늘 날짜 버튼 숫자 | `bodyLarge` (16px, normal) |
 | 월간 캘린더 요일 | `labelMedium` (12px, w400) |
 | 월간 캘린더 날짜 | `labelLarge` 크기만 16px |
 | 시간 레이블 | `labelSmall` (10px, w400) |
@@ -175,7 +175,7 @@ HomeScreen (Scaffold)
 - 숫자만 표시 (예: `19`)
 - 원형 배경: `context.label`, 숫자: `context.systemBackground`
 - 크기 20 × 20 (코너 radius 10)
-- 폰트: `bodyMedium`
+- 폰트: `bodyLarge` (FontWeight.normal)
 - 탭 시 `goToToday()` 호출
 
 ---
