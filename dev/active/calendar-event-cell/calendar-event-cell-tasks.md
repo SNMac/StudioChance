@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-27 (5차 — 구현 완전 확정)
+Last Updated: 2026-03-27 (8차 — 내부 top 패딩 1.5 확정)
 
 ---
 
@@ -22,7 +22,7 @@ Last Updated: 2026-03-27 (5차 — 구현 완전 확정)
 
 **파일:** `lib/constants/ui_constants.dart`, `lib/presentation/providers/hour_height_preference_provider.dart`
 
-- [x] **2-1**: `defaultHourHeight` 36.0 → 40.0, `minHourHeight` 18.0 → 40.0 변경
+- [x] **2-1**: `defaultHourHeight` 36.0 → 40.0, `minHourHeight` 18.0 → 36.0 변경
 - [x] **2-2**: `loadHourHeight`에 `.clamp(minHourHeight, maxHourHeight)` 추가
 
 ---
@@ -85,6 +85,19 @@ Last Updated: 2026-03-27 (5차 — 구현 완전 확정)
   - `SizedBox(height:15, Center(icon))` — labelSmall 라인 높이 기준으로 아이콘-첫 텍스트 중앙 정렬
   - `overflow: TextOverflow.ellipsis` 제거 (FittedBox가 처리)
   - 파일: `reservation_cell.dart`
+
+- [x] **Fix-4**: minHourHeight 수정 및 bottom:4 롤백
+  - minHourHeight 40 → 36 (사용자 정정: 최소 시간 간격 높이 36px, 1시간 셀 최소 35px 충족)
+  - 6차에서 추가한 Padding(bottom:4) 롤백 — FittedBox 높이 제한으로 텍스트 축소 발생
+  - 피그마 스펙: 내부 padding에 bottom 없음, 외부 Positioned(bottom:4)만 사용
+  - 파일: `ui_constants.dart`, `reservation_cell.dart`
+
+- [x] **Fix-5**: 내부 top 패딩 조정
+  - 피그마 기준 셀 상단~아이콘 상단 = 4px
+  - SizedBox(height:15)가 아이콘(10px)을 중앙정렬 → 아이콘 위 내부 여백 2.5px
+  - 따라서 Padding top = 4 - 2.5 = **1.5px** (기존 top:4 → top:1.5)
+  - 결과: 종일 셀 하단 여백 = 35 - 1.5 - 30 = 3.5px (기존 1px에서 개선)
+  - 파일: `reservation_cell.dart` Padding(top: 1.5, right: 4)
 
 ---
 

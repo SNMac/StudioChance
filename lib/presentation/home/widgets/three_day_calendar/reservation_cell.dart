@@ -138,7 +138,7 @@ class ReservationCell extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 4, right: 4),
+                    padding: const EdgeInsets.only(top: 1.5, right: 4),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.topLeft,
