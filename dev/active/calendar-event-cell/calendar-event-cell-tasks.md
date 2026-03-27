@@ -1,123 +1,81 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-27 (2차)
+Last Updated: 2026-03-27 (3차 — 구현 완료 및 버그 수정)
 
 ---
 
-## Phase 1: 색상 상수 추가
+## Phase 1~6: 구현 완료 ✅
+
+---
+
+## Phase 1: 색상 상수 추가 ✅
 
 **파일:** `lib/presentation/colors.dart`
-**크기:** S
 
-- [ ] **1-1**: Background 색상 7개 추가
-  - `redBackground(#FF9E99)`, `orangeBackground(#FFD599)`, `yellowBackground(#FFEB99)`
-  - `greenBackground(#AEEABD)`, `blueBackground(#99CAFF)`
-  - `indigoBackground(#AEADEB)`, `purpleBackground(#D7A9EF)`
-
-- [ ] **1-2**: Foreground 색상 7개 추가
-  - `redForeground(#FF3B30)`, `orangeForeground(#FF9500)`, `yellowForeground(#FFCC00)`
-  - `greenForeground(#34C759)`, `blueForeground(#007AFF)`
-  - `indigoForeground(#5856D6)`, `purpleForeground(#AF52DE)`
-
-- [ ] **1-3**: Label 색상 7개 추가
-  - `redLabel(#990800)`, `orangeLabel(#995900)`, `yellowLabel(#997A00)`
-  - `greenLabel(#207936)`, `blueLabel(#004999)`
-  - `indigoLabel(#1F1E7B)`, `purpleLabel(#5E1980)`
+- [x] **1-1**: Background 색상 7개 추가 (redBackground ~ purpleBackground)
+- [x] **1-2**: Foreground 색상 7개 추가 (redForeground ~ purpleForeground)
+- [x] **1-3**: Label 색상 7개 추가 (redLabel ~ purpleLabel)
 
 ---
 
-## Phase 2: 줌 범위 수정
+## Phase 2: 줌 범위 수정 ✅
 
-**파일:** `lib/constants/ui_constants.dart`
-**크기:** S
+**파일:** `lib/constants/ui_constants.dart`, `lib/presentation/providers/hour_height_preference_provider.dart`
 
-- [ ] **2-1**: `defaultHourHeight` 36.0 → 40.0 변경
-- [ ] **2-2**: `minHourHeight` 18.0 → 40.0 변경
-  - 주의: `HomeCalendarController.build()`에서 초기값이 clamp 없이 주입됨 → 두 값을 함께 변경해야 앱 시작 시 hourHeight=36 동작 방지
-- [ ] **2-3**: `HomeCalendarController`의 `loadHourHeight` 반환 시 `.clamp(minHourHeight, maxHourHeight)` 적용 확인 및 추가
+- [x] **2-1**: `defaultHourHeight` 36.0 → 40.0, `minHourHeight` 18.0 → 40.0 변경
+- [x] **2-2**: `loadHourHeight`에 `.clamp(minHourHeight, maxHourHeight)` 추가
 
 ---
 
-## Phase 3: ReservationCell 위젯 구현
+## Phase 3: ReservationCell 위젯 구현 ✅
 
 **파일:** `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` (신규)
-**크기:** M
 
-- [ ] **3-1**: `ReservationStatus` enum 구현
-  - `confirmed`, `pendingPayment`, `cancelled`
-
-- [ ] **3-2**: `ReservationCellColorTheme` enum 구현
-  - 7개 케이스: `red`, `orange`, `yellow`, `green`, `blue`, `indigo`, `purple`
-  - getter 3개: `backgroundColor`, `foregroundColor`, `labelColor`
-  - `lib/presentation/colors.dart`의 색상 상수 참조
-
-- [ ] **3-3**: `ReservationDisplayData` 클래스 구현
-  - 필드: `reserverName`, `headcount`, `phoneNumber`, `status`, `colorTheme`, `isAllDay`, `startTime?`, `endTime?`
-  - `// TODO: 예약 도메인 엔티티 정의 후 교체 예정` 주석 추가
-
-- [ ] **3-4**: `_StatusIcon` private 위젯 구현 (모두 SVG)
-  - confirmed: `assets/images/icons/checkmark_circle_fill.svg`
-  - pendingPayment: `assets/images/icons/circle_dashed.svg`
-  - cancelled: `assets/images/icons/circle_slash.svg`
-  - 공통: `SvgPicture.asset(path, width: 12, height: 12, colorFilter: ColorFilter.mode(labelColor, BlendMode.srcIn))`
-
-- [ ] **3-5**: `ReservationCell` StatelessWidget 구현
-  - `ClipRRect(borderRadius: BorderRadius.circular(4))`
-  - `Stack`: foreground 배경 + 4px background 스트립 + 0.5px 외곽선 overlay + 콘텐츠 Row
-  - Row: `SizedBox(4)` + Padding(top:2)+아이콘 + `SizedBox(2.5)` + Padding(top:2)+텍스트 Column
-  - 텍스트 Column: `labelSmall` (fontSize:10, height:1.5) 그대로 사용 (height 오버라이드 불필요)
-    - "이름 · N인" / "010-XXXX-XXXX", maxLines:1, overflow:ellipsis
-  - `crossAxisAlignment: CrossAxisAlignment.start`
+- [x] **3-1**: `ReservationStatus` enum (confirmed, pendingPayment, cancelled)
+- [x] **3-2**: `ReservationCellColorTheme` enum (7색, 3개 getter)
+- [x] **3-3**: `ReservationDisplayData` 클래스 (date 필드 포함)
+- [x] **3-4**: `_StatusIcon` widget (SVG 3종, colorFilter)
+- [x] **3-5**: `ReservationCell` widget
 
 ---
 
-## Phase 4: AllDayCell 수정
+## Phase 4: AllDayCell 수정 ✅
 
 **파일:** `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart`
-**크기:** S
 
-- [ ] **4-1**: `AllDayCell`에 `List<ReservationDisplayData> events` 파라미터 추가
-- [ ] **4-2**: `SizedBox` → `SizedBox + Stack` 구조로 변경
-- [ ] **4-3**: 각 이벤트에 `Positioned(left: 1, right: 8, top: 1, bottom: 4)` 적용
-- [ ] **4-4**: `// TODO: 다중 이벤트 겹침 처리 미구현` 주석 추가
+- [x] **4-1~4-4**: events 파라미터, Positioned(left:1, right:8, top:1, bottom:4) 배치
 
 ---
 
-## Phase 5: TimeGrid 수정
+## Phase 5: TimeGrid 수정 ✅
 
 **파일:** `lib/presentation/home/widgets/three_day_calendar/time_grid.dart`
-**크기:** S
 
-- [ ] **5-1**: `TimeGrid`에 `List<ReservationDisplayData> events` 파라미터 추가
-- [ ] **5-2**: `_topOffset(DateTime start, double hourHeight)` 구현
-  - `hourHeight * (start.hour + start.minute / 60) + 0.5`
-- [ ] **5-3**: `_cellHeight(DateTime start, DateTime end, double hourHeight)` 구현
-  - `hourHeight * end.difference(start).inMinutes / 60 - 1.0`
-  - `.clamp(1.0, double.infinity)` 적용
-- [ ] **5-4**: Stack에 이벤트 Positioned 추가
-  - `left: 1, right: 8`, `top: _topOffset`, `height: _cellHeight`
+- [x] **5-1~5-4**: events 파라미터, _topOffset/_cellHeight 계산, Positioned 배치
 
 ---
 
-## Phase 6: ThreeDayCalendar 목업 데이터 추가
+## Phase 6: ThreeDayCalendar 목업 데이터 ✅
 
 **파일:** `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart`
-**크기:** S
 
-- [ ] **6-1**: `_buildMockEvents()` static 메서드 구현
-  - 오늘 기준 상대 날짜 사용 (`DateTime.now()` 기반)
-  - 포함 이벤트 (7개, 3가지 상태 × 여러 색상):
-    - 오늘 종일: confirmed + green
-    - 오늘 07:00~08:30: confirmed + green
-    - 오늘 10:00~13:00: cancelled + green (circle_slash)
-    - 내일 10:00~14:00: pendingPayment + yellow (circle_dashed)
-    - 내일 15:00~16:00: confirmed + blue (1시간 최소 셀 확인용)
-    - 모레 종일: pendingPayment + orange
-    - 모레 13:00~15:00: cancelled + purple
+- [x] **6-1**: `_buildMockEvents()` 오늘 기준 7개 이벤트
+- [x] **6-2**: `_eventsForDate()` 날짜 필터링
+- [x] **6-3~6-4**: AllDayCell, TimeGrid에 연결
 
-- [ ] **6-2**: `_eventsForDate(DateTime date, {required bool allDay})` 헬퍼 구현
-- [ ] **6-3**: `AllDayCell(events: _eventsForDate(date, allDay: true))`로 업데이트
-- [ ] **6-4**: `TimeGrid(events: _eventsForDate(date, allDay: false))`로 업데이트
+---
+
+## 버그 수정 ✅
+
+- [x] **Fix-1**: 셀 색상 반전 수정
+  - 잘못됨: 좌측 스트립=~Background, 우측 배경=~Foreground
+  - 수정됨: 좌측 스트립=~Foreground (진한 색), 우측 배경=~Background (연한 색)
+  - 파일: `reservation_cell.dart` (build() 내 bgColor/fgColor 할당 교체)
+
+- [x] **Fix-2**: 아이콘 라벨 영역 간격 수정
+  - 잘못됨: SizedBox(width:4) → 아이콘이 스트립에 붙어있는 느낌
+  - 수정됨: SizedBox(width:8) → 스트립 4px + 라벨 영역 왼쪽에서 4px 간격
+  - 파일: `reservation_cell.dart` Row children 첫 번째 SizedBox
 
 ---
 
@@ -127,14 +85,14 @@ Last Updated: 2026-03-27 (2차)
 - [ ] **V-2**: 오늘 07:00~08:30 - 초록 확정 (1.5시간 셀, 텍스트 2줄)
 - [ ] **V-3**: 오늘 10:00~13:00 - 초록 취소 (circle_slash, 3시간 셀)
 - [ ] **V-4**: 내일 10:00~14:00 - 노랑 대기 (circle_dashed, 노란 배경)
-- [ ] **V-5**: 내일 15:00~16:00 - 파랑 확정 (1시간 최소 셀, 텍스트 ellipsis 확인)
+- [ ] **V-5**: 내일 15:00~16:00 - 파랑 확정 (1시간 셀, 텍스트 ellipsis 확인)
 - [ ] **V-6**: 모레 종일 - 주황 대기
 - [ ] **V-7**: 모레 13:00~15:00 - 보라 취소
-- [ ] **V-8**: 셀 외곽선 0.5px (systemBackground)
-- [ ] **V-9**: 좌측 4px 진한 스트립 vs 나머지 배경 색상 차이 확인
-- [ ] **V-10**: 다크 모드에서 외곽선 색상 자동 적응
-- [ ] **V-11**: 핀치 줌 아웃 → hourHeight=40 이하 제한 확인
-- [ ] **V-12**: SVG colorFilter 적용 (아이콘이 labelColor로 렌더링되는지)
+- [ ] **V-8**: 좌측 스트립(~Foreground, 진한 색) vs 우측 배경(~Background, 연한 색) 확인
+- [ ] **V-9**: 아이콘이 라벨 영역 왼쪽에서 4px 떨어진 위치 확인
+- [ ] **V-10**: 셀 외곽선 0.5px (systemBackground)
+- [ ] **V-11**: 다크 모드 외곽선 자동 적응
+- [ ] **V-12**: 핀치 줌 아웃 → hourHeight=40 이하 제한 확인
 
 ---
 

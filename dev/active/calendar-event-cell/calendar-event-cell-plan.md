@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 구현 계획
 
-Last Updated: 2026-03-27 (2차)
+Last Updated: 2026-03-27 (3차 — 구현 완료)
 
 ---
 
@@ -32,11 +32,11 @@ Last Updated: 2026-03-27 (2차)
 
 ```
 ┌────────────────────────────────────┐  ← border: 0.5px, systemBackground, radius 4
-│████│ 아이콘  예약자명 · 예약인원     │  ← 배경: ~Foreground 색상
-│████│         010-XXXX-XXXX         │  ← 좌측 4px strip: ~Background 색상
+│████│    아이콘  예약자명 · 예약인원  │  ← 배경: ~Background 색상 (연한 색)
+│████│            010-XXXX-XXXX      │  ← 좌측 4px strip: ~Foreground 색상 (진한 색)
 └────────────────────────────────────┘
   ↑
- 4px 진한 스트립 (~Background)
+ 4px 진한 스트립 (~Foreground)
 ```
 
 | 항목 | 값 |
@@ -45,13 +45,13 @@ Last Updated: 2026-03-27 (2차)
 | 외곽선 색상 | `context.systemBackground` |
 | 코너 반지름 | 4 |
 | 좌측 진한 스트립 너비 | 4px |
-| 스트립 색상 | `~Background` (예: greenBackground) |
-| 나머지 배경 | `~Foreground` 색상 |
+| 스트립 색상 | `~Foreground` (진한 색, 예: greenForeground #34C759) |
+| 나머지 배경 | `~Background` 색상 (연한 색, 예: greenBackground #AEEABD) |
 | 텍스트 / 아이콘 색상 | `~Label` 색상 |
 
 ### 셀 내부 레이아웃
 
-- 아이콘: 셀 왼쪽에서 4px (진한 스트립 우측 끝에 위치)
+- 아이콘: 라벨 영역 왼쪽에서 4px (= 셀 왼쪽에서 8px: 스트립 4 + 간격 4)
 - 아이콘 ↔ 텍스트 간격: 2.5px
 - 텍스트 1행: `예약자명 · 예약인원` (예: "유훈자 · 2인")
 - 텍스트 2행: 전화번호 (예: "010-3109-6381")

@@ -1,156 +1,139 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-27 (2차)
+Last Updated: 2026-03-27 (3차 — 구현 완료)
 
 ---
 
-## 핵심 파일
+## 현재 구현 상태
 
-### 수정 대상
-
-| 파일 | 위치 | 수정 내용 |
-|------|------|----------|
-| `colors.dart` | `lib/presentation/colors.dart` | 색상 21개 추가 |
-| `ui_constants.dart` | `lib/constants/ui_constants.dart` | `defaultHourHeight` 36→40, `minHourHeight` 18→40 |
-| `all_day_row.dart` | `lib/presentation/home/widgets/three_day_calendar/` | `events` 파라미터, 셀 배치 |
-| `time_grid.dart` | `lib/presentation/home/widgets/three_day_calendar/` | `events` 파라미터, 셀 배치 |
-| `three_day_calendar.dart` | `lib/presentation/home/widgets/three_day_calendar/` | 목업 데이터 전달 |
-
-### 신규 생성
-
-| 파일 | 위치 | 내용 |
-|------|------|------|
-| `reservation_cell.dart` | `lib/presentation/home/widgets/three_day_calendar/` | ReservationCell 위젯 + 관련 타입 |
+**모든 Phase 구현 완료, 버그 수정 완료. flutter analyze 오류 없음.**
 
 ---
 
-## 현재 코드 상태
+## 수정된 파일 목록
 
-### `all_day_row.dart` (현재)
+| 파일 | 변경 내용 |
+|------|----------|
+| `lib/presentation/colors.dart` | 색상 21개 추가 (Background/Foreground/Label × 7) |
+| `lib/constants/ui_constants.dart` | defaultHourHeight 36→40, minHourHeight 18→40 |
+| `lib/presentation/providers/hour_height_preference_provider.dart` | loadHourHeight에 clamp 추가 |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | **신규** — 전체 셀 구현 |
+| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` | events 파라미터 추가, 셀 배치 |
+| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | events 파라미터 추가, 셀 배치 |
+| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | import 추가, 목업 데이터, 호출부 연결 |
+
+---
+
+## 핵심 결정 및 설계
+
+### 색상 구조 (확정)
+
+```
+좌측 4px 스트립 → colorTheme.foregroundColor (~Foreground, 진한 색)
+우측 라벨 영역 배경 → colorTheme.backgroundColor (~Background, 연한 색)
+텍스트/아이콘 → colorTheme.labelColor (~Label, 어두운 색)
+```
+
+> ⚠️ 초기 구현 시 스트립/배경 색상이 반전되어 있었음. 수정 완료.
+
+### 아이콘 위치
+
+```
+Row: [SizedBox(8)] [Icon] [SizedBox(2.5)] [텍스트 Column]
+       ↑                   ↑
+  스트립(4px)+간격(4px)   아이콘↔텍스트 간격
+```
+
+- `SizedBox(width: 8)` = 스트립 4px + 라벨 영역 왼쪽에서 4px 간격
+- 초기 구현은 `SizedBox(width: 4)`로 아이콘이 스트립에 붙어있는 느낌이었음 → 8로 수정
+
+### 라벨 높이 (Figma 16px vs Flutter labelSmall 15px)
+
+- `labelSmall`: fontSize=10, height=1.5 → 라인 높이 15px
+- Figma 스펙 16px와 1px 차이 → 시각적으로 구분 불가, 높이 오버라이드 없이 `labelSmall` 그대로 사용
+
+### 아이콘 (모두 SVG)
+
+| 상태 | 파일 |
+|------|------|
+| confirmed | `assets/images/icons/checkmark_circle_fill.svg` |
+| pendingPayment | `assets/images/icons/circle_dashed.svg` (viewBox 10×10) |
+| cancelled | `assets/images/icons/circle_slash.svg` |
+
+공통: `SvgPicture.asset(path, width:12, height:12, colorFilter: ColorFilter.mode(lblColor, BlendMode.srcIn))`
+
+### minHourHeight 변경 주의사항
+
+- `defaultHourHeight` 36→40, `minHourHeight` 18→40 함께 변경
+- `HomeCalendarController.build()`에서 초기값이 clamp 없이 state에 주입 → 두 값 동기화 필수
+- `loadHourHeight`에 `.clamp()` 추가 → 이전 기기에 36이 저장된 경우 40으로 보정
+
+### ReservationDisplayData (임시 뷰 모델)
+
 ```dart
-class AllDayCell extends StatelessWidget {
-  const AllDayCell({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(height: allDayRowHeight); // 빈 상태
-  }
+// TODO: 예약(Reservation) 도메인 엔티티 정의 후 교체 예정
+class ReservationDisplayData {
+  final String reserverName;
+  final int headcount;
+  final String phoneNumber;
+  final ReservationStatus status;
+  final ReservationCellColorTheme colorTheme;
+  final bool isAllDay;
+  final DateTime? date;       // 종일 이벤트용
+  final DateTime? startTime;  // 시간대 이벤트용
+  final DateTime? endTime;    // 시간대 이벤트용
 }
 ```
 
-### `time_grid.dart` Stack children (현재)
+---
+
+## 목업 데이터 구성 (ThreeDayCalendar._mockEvents)
+
+오늘(`today`) 기준 상대 날짜, `_buildMockEvents()` static 메서드로 앱 시작 시 1회 생성:
+
+| 날짜 | 시간 | 상태 | 색상 |
+|------|------|------|------|
+| 오늘 | 종일 | confirmed | green |
+| 오늘 | 07:00~08:30 | confirmed | green |
+| 오늘 | 10:00~13:00 | cancelled | green |
+| 내일 | 10:00~14:00 | pendingPayment | yellow |
+| 내일 | 15:00~16:00 | confirmed | blue |
+| 모레 | 종일 | pendingPayment | orange |
+| 모레 | 13:00~15:00 | cancelled | purple |
+
+---
+
+## 셀 배치 오프셋 (확정)
+
+| 영역 | left | right | top | bottom |
+|------|------|-------|-----|--------|
+| 종일(AllDay) | 1 | 8 | 1 | 4 |
+| 시간대(TimeGrid) | 1 | 8 | +0.5 | −0.5 |
+
+TimeGrid 위치 계산:
 ```dart
-Stack(
-  children: [
-    const SizedBox.expand(),
-    // 수평 시간 구분선 (1~23시)
-    for (int hour = 1; hour < 24; hour++)
-      Positioned(top: hourHeight * hour, left: 0, right: 0,
-        child: Divider(height: 0, thickness: calendarDividerThickness, ...)),
-    // 현재 시간선
-    CurrentTimeLine(hourHeight: hourHeight, isToday: isToday),
-  ],
-)
+top    = hourHeight * (start.hour + start.minute / 60) + 0.5
+height = hourHeight * duration_minutes / 60 - 1.0  (clamp 1.0 이상)
 ```
 
-### `ui_constants.dart` 관련 상수
-```dart
-const double allDayRowHeight = 40.0;   // 종일 행 높이 (변경 없음)
-const double defaultHourHeight = 36.0; // 기본 시간 높이 (변경 없음)
-const double minHourHeight = 18.0;     // ← 40.0으로 변경
-const double maxHourHeight = 72.0;     // 변경 없음
-const double calendarDividerThickness = 0.5; // 변경 없음
-```
+---
 
-### `three_day_calendar.dart` 이벤트 전달 지점
-```dart
-// Line ~444: AllDayCell 사용
-const AllDayCell(), // → AllDayCell(events: _eventsForDate(date, allDay: true))
+## 다음 작업 (추후)
 
-// Line ~451: TimeGrid 사용
-Expanded(
-  child: TimeGrid(
-    scrollController: _controllerForPage(index),
-    isToday: _isToday(date),
-  ), // → events: _eventsForDate(date, allDay: false) 추가
-),
-```
+1. **다중 이벤트 겹침 레이아웃** — 동일 날짜/시간에 예약이 겹칠 때 분할 표시
+2. **실제 데이터 연결** — Reservation 도메인 엔티티 + Riverpod provider
+3. **셀 탭** → 예약 상세 화면 이동
+4. **빌드 러너 불필요** — 이번 구현에 코드 생성 없음 (freezed/riverpod 미사용)
 
 ---
 
 ## 외부 의존성
 
-### flutter_svg (pubspec.yaml)
 ```yaml
-flutter_svg: ^2.2.3
-```
-- 이미 추가됨 ✅
-- `SvgPicture.asset()`으로 circle_slash.svg 렌더링
-- 색상 적용: `colorFilter: ColorFilter.mode(color, BlendMode.srcIn)`
-
-### SVG 에셋
-SVG 에셋 (3종 모두 확인됨):
-- `assets/images/icons/checkmark_circle_fill.svg` ✅ (예약 확정)
-- `assets/images/icons/circle_dashed.svg` ✅ (입금 대기, viewBox 10×10, fill="black" 확인됨)
-- `assets/images/icons/circle_slash.svg` ✅ (예약 취소)
-
----
-
-## 색상 구현 참고
-
-### 기존 `context_colors.dart` 패턴
-```dart
-// CupertinoDynamicColor 방식 (Light/Dark 자동 적응)
-Color get systemRed =>
-    CupertinoDynamicColor.resolve(CupertinoColors.systemRed, this);
+flutter_svg: ^2.2.3  # pubspec.yaml에 이미 포함
 ```
 
-### 셀 색상 주의사항
-- 셀 색상 21개는 **라이트 모드 전용 고정 색상**입니다 (디자인 스펙상 Light/Dark 구분 없음).
-- `context_colors.dart` extension에 추가하지 않고, `colors.dart`에 `const Color` 상수로 정의합니다.
-- `CupertinoDynamicColor` 불필요.
-
----
-
-## 셀 위치 계산 (TimeGrid)
-
-```dart
-// startTime, endTime이 null이 아닌 경우만 TimeGrid에 배치
-double _topOffset(ReservationDisplayData event, double hourHeight) {
-  final start = event.startTime!;
-  return hourHeight * (start.hour + start.minute / 60) + 0.5;
-}
-
-double _cellHeight(ReservationDisplayData event, double hourHeight) {
-  final minutes = event.endTime!.difference(event.startTime!).inMinutes;
-  return hourHeight * (minutes / 60) - 1.0; // 0.5 top + 0.5 bottom inset
-}
-```
-
----
-
-## 아이콘 구현
-
-모든 상태 아이콘을 SVG로 통일 (Light weight 문제 해결됨):
-- `checkmark_circle_fill.svg` → 예약 확정 (Light weight SVG)
-- `circle_dashed.svg` → 입금 대기 (점선 원, Light weight SVG)
-- `circle_slash.svg` → 예약 취소
-
-렌더링 방식:
-```dart
-SvgPicture.asset(
-  path,
-  width: 12,
-  height: 12,
-  colorFilter: ColorFilter.mode(labelColor, BlendMode.srcIn),
-)
-```
-
-**주의:** `BlendMode.srcIn`은 SVG 내부 fill을 지정 색상으로 교체합니다. SVG의 최상위 path가 `fill="black"` (또는 임의의 단색)이어야 합니다. circle_dashed.svg 확인됨 ✅
-
----
-
-## 관련 문서
-
-- `dev/active/home-screen/home-screen-plan.md` - Phase 6 (AllDay), Phase 6-2 (TimeGrid)
-- `dev/active/home-screen/home-screen-tasks.md` - 전체 진행 상황
+SVG 에셋 (pubspec.yaml assets에 등록 필요 여부는 `assets/images/icons/` 폴더 전체가 이미 등록되어 있는지 확인 권장):
+- `assets/images/icons/checkmark_circle_fill.svg`
+- `assets/images/icons/circle_dashed.svg`
+- `assets/images/icons/circle_slash.svg`
