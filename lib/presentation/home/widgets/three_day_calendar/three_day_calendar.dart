@@ -56,7 +56,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   );
 
   static (List<ReservationDisplayData>, Map<String, Reservation>) _buildMockData() {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final dayAfter = today.add(const Duration(days: 2));
 

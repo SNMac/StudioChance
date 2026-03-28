@@ -283,6 +283,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
           .selectDateFromContinuation(originalDate);
       ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime);
       await showReservationDetailModal(context, reservation);
+      // Provider 조작은 mounted와 무관하게 안전 (notifier는 위젯 생명주기 독립적)
       highlightNotifier.clear();
     } else {
       // ① 일반 셀 탭
