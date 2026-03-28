@@ -1,17 +1,19 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
+Last Updated: 2026-03-28 (Phase 8 완료 — Phase 9는 context reset 이후 진행)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~8 구현 완료 (14차 추가 수정 포함). Phase 9 설계 확정, 미구현.**
-**flutter analyze 오류 없음.**
+**Phase 1~8 구현 완료. flutter analyze 오류 없음.**
+**Phase 9(셀 탭 인터랙션)는 context reset 이후 시작 예정.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
-> Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 — **구현 완료**
+> Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
 > Phase 9: 셀 탭 인터랙션 (팝업 애니메이션 + 모달) — **설계 확정, 미구현**
+>
+> 미결 디자인 결정: OverflowCell 배경 색상 (현재 `tertiarySystemFill` 임시)
 
 ---
 
@@ -22,13 +24,11 @@ Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
 | `lib/presentation/colors.dart` | 색상 21개 추가 (Background/Foreground/Label × 7) |
 | `lib/constants/ui_constants.dart` | defaultHourHeight 36→40, minHourHeight 18→36 |
 | `lib/presentation/providers/hour_height_preference_provider.dart` | loadHourHeight에 clamp 추가 |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | **신규** — 전체 셀 구현 + clipContent 파라미터 |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | **신규** — 전체 셀 구현, clipContent, isContinuation, continuesNextDay, 코너 반경 |
+| `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart` | **신규** — N개 오버플로우 셀 (멀티컬러 스트립 + "N개" 텍스트) |
 | `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` | events 파라미터 추가, 셀 배치 |
-| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | 스택 레이아웃 알고리즘 (delta 기반 stagger) |
-| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | import 추가, 목업 데이터, 호출부 연결 |
-
-**Phase 8에서 추가된 파일:**
-- `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart` (신규)
+| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | 스택 레이아웃 알고리즘, delta stagger, 자정 넘김 배치, 바운스 연장 |
+| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | 목업 데이터(전체 시나리오), _eventsForDate 자정 분할 |
 
 ---
 
@@ -95,16 +95,16 @@ Row:
 | 오늘 | 07:00~08:30 | confirmed | green | 단독 |
 | 오늘 | 10:00 × 4개 | mixed | red/blue/green/yellow | N=4 오버플로우 |
 | 오늘 | 16:00~17:00 | cancelled | purple | 단독 |
-| 내일 | 09:00 × 2개 (delta=0) | conf/pending | orange/indigo | N=2 동시 시작 → cellWidth stagger |
-| 내일 | 13:00 × 3개 (delta=0) | mixed | green/yellow/purple | N=3 동시 시작 → cellWidth stagger |
-| 오늘 | 22:00 ~ 익일 02:00 | confirmed | indigo | 자정 넘김 (이도윤): 오늘=정상 셀, 내일=연속 셀 |
+| 오늘 | 22:00~24:00 (+내일 00:00~02:00) | confirmed | indigo | 자정 넘김(이도윤): 오늘=정상·하단코너없음, 내일=배경+스트립·상단코너없음 |
+| 내일 | 09:00 × 2개 (delta=0) | conf/pending | orange/indigo | N=2 동시 시작 → cellWidth stagger (~53px) |
+| 내일 | 13:00 × 3개 (delta=0) | mixed | green/yellow/purple | N=3 동시 시작 → cellWidth stagger (~35px) |
 | 내일 | 17:00 × 2개 (delta=20분) | conf/pending | red/blue | N=2 delta>0 → 8px stagger |
 | 내일 | 20:30 × 2개 (delta=30분) | conf/cancelled | orange/indigo | N=2 delta>0 → 8px stagger |
 | 모레 | 종일 | pendingPayment | orange | 단독 |
 | 모레 | 10:00~12:00 | confirmed | indigo | 단독 |
-| 모레 | 15:00~16:00 | confirmed | blue | 단독 (최소 높이) |
+| 모레 | 15:00~16:00 | confirmed | blue | 단독 (최소 높이 검증) |
 | 모레 | 17:00~19:00 | cancelled | red | 단독 |
-| 모레 | 20:00 × 2개 (delta=60분) | conf/pending | orange/blue | N=2 >30분 → 4px gap stagger |
+| 모레 | 20:00 × 2개 (delta=60분) | conf/pending | orange/blue | N=2 delta>0 → 8px stagger |
 
 ---
 
@@ -294,13 +294,18 @@ continuesNextDay → height += 1000               (그리드 아래로 연장, b
 
 ---
 
-## 다음 작업
+## 다음 작업 (context reset 이후)
 
-1. **OverflowCell 색상 확정** (사용자 결정 대기)
-   - 현재: `context.tertiarySystemFill` 임시 배경
+1. **Phase 9: 셀 탭 인터랙션** — context reset 후 시작
+   - `TimeGrid` → `ConsumerStatefulWidget` 전환
+   - 일반 셀 탭: 팝업 애니메이션 + 예약 상세 모달
+   - 오버플로우 셀 탭: 이벤트 목록 모달 → 상세 모달
+   - 자정 넘김 연속 셀(`isContinuation=true`) 탭 동작 결정 필요 (원본 이벤트 모달? 탭 불가?)
+   - 탭 시 셀 색상 변화 여부 TBD
+
+2. **OverflowCell 배경 색상 확정** (디자인 결정 사항)
+   - 현재: `context.tertiarySystemFill` 임시
    - 확정 후 `overflow_cell.dart` 수정
-2. **Phase 9: 셀 탭 인터랙션** — 셀 팝업 + 예약 상세 모달 구현
-   - 자정 넘김 연속 셀 탭 동작 정의 필요 (원본 이벤트로 이동? 탭 불가?)
 
 ---
 

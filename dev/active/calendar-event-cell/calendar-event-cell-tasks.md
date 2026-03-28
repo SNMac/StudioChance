@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
+Last Updated: 2026-03-28 (Phase 8 완료 — Phase 9는 context reset 이후 진행)
 
 ---
 
@@ -103,16 +103,17 @@ Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
   - 외곽선: 0.5px systemBackground
   - 내용: "N개" 텍스트 (secondaryLabel 색상)
 - [x] **8-2**: `time_grid.dart` 스택 알고리즘 구현
-  - `_minCellWidthFor1Char = 31.0`, `_differentStartStagger = 8.0` 상수
+  - `_minCellWidthFor1Char = 31.0`, `_differentStartStagger = 8.0`, `_bounceExtension = 1000.0` 상수
   - `_PositionedItem` (normal/overflow 분기, clipContent 포함)
   - `_computePositions(events, columnWidth)`:
     - 그리디 인터벌 컬러링 → 열 배정
     - Union-Find → 연결 컴포넌트 묶기
     - N = max(col)+1, cellWidth = usableWidth/N
-    - **N=2 전용 Step 5a**: delta ≤ 30분 → cellWidth stagger, delta > 30분 → 8px stagger
+    - **N=2 전용 Step 5a**: delta == 0 → cellWidth stagger, delta > 0 → 8px stagger
     - cellWidth < 31 → OverflowCell
     - **스택 배치**: left = 1.0 + col × stagger, right = 8.0 (고정)
     - clipContent = col > 0
+  - `_placementFor()`: isContinuation→topGap=0·위로 1000px 연장, continuesNextDay→bottomGap=0·아래로 1000px 연장
   - `LayoutBuilder` → columnWidth 획득
 - [x] **8-3**: `reservation_cell.dart` clipContent 파라미터 복원
   - clipContent=false: FittedBox scaleDown (back 셀, 단독 셀)
@@ -122,6 +123,7 @@ Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
   - 내일: N=2 delta=0, N=3 delta=0, N=2 delta=20분, N=2 delta=30분
   - 모레: 단독들 + N=2 delta=60분 (4px gap)
 - [ ] **8-5**: OverflowCell 배경 색상 확정 (사용자 결정 대기, 현재 `tertiarySystemFill` 임시)
+  > Phase 8 구현은 완료. 이 항목은 디자인 결정 사항으로 Phase 9 이후 처리.
 - [x] **8-6**: N=2 stagger 임계값 수정 — `delta ≤ 30` → `delta == 0`
   - delta=0 (동시 시작)만 cellWidth stagger, delta>0은 모두 8px 고정
 - [x] **8-7**: 자정 넘김 이벤트 처리
@@ -137,7 +139,7 @@ Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
 
 ---
 
-## Phase 9: 셀 탭 인터랙션 ⬜ (미구현, Phase 8 이후)
+## Phase 9: 셀 탭 인터랙션 ⬜ (미구현 — context reset 이후 시작)
 
 **파일:** `time_grid.dart` (StatefulWidget 전환 필요), 신규 모달 위젯
 
