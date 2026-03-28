@@ -68,6 +68,124 @@ abstract class _$ScrollToCurrentTimeTrigger extends $Notifier<int> {
   }
 }
 
+/// isContinuation 셀 탭 시 지정 시간으로 수직 스크롤하는 트리거
+
+@ProviderFor(ScrollToTimeTrigger)
+final scrollToTimeTriggerProvider = ScrollToTimeTriggerProvider._();
+
+/// isContinuation 셀 탭 시 지정 시간으로 수직 스크롤하는 트리거
+final class ScrollToTimeTriggerProvider
+    extends $NotifierProvider<ScrollToTimeTrigger, DateTime?> {
+  /// isContinuation 셀 탭 시 지정 시간으로 수직 스크롤하는 트리거
+  ScrollToTimeTriggerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'scrollToTimeTriggerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$scrollToTimeTriggerHash();
+
+  @$internal
+  @override
+  ScrollToTimeTrigger create() => ScrollToTimeTrigger();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime?>(value),
+    );
+  }
+}
+
+String _$scrollToTimeTriggerHash() =>
+    r'4875e47942cabb804947c115ecb9f74e36e359f3';
+
+/// isContinuation 셀 탭 시 지정 시간으로 수직 스크롤하는 트리거
+
+abstract class _$ScrollToTimeTrigger extends $Notifier<DateTime?> {
+  DateTime? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<DateTime?, DateTime?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<DateTime?, DateTime?>,
+              DateTime?,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// isContinuation 탭 시 원본 날짜 TimeGrid에 하이라이트를 전달하기 위한 Provider
+
+@ProviderFor(PendingHighlightId)
+final pendingHighlightIdProvider = PendingHighlightIdProvider._();
+
+/// isContinuation 탭 시 원본 날짜 TimeGrid에 하이라이트를 전달하기 위한 Provider
+final class PendingHighlightIdProvider
+    extends $NotifierProvider<PendingHighlightId, String?> {
+  /// isContinuation 탭 시 원본 날짜 TimeGrid에 하이라이트를 전달하기 위한 Provider
+  PendingHighlightIdProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pendingHighlightIdProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pendingHighlightIdHash();
+
+  @$internal
+  @override
+  PendingHighlightId create() => PendingHighlightId();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$pendingHighlightIdHash() =>
+    r'1aa0cbcc30e46c3ab4cba30ead9e173056b19396';
+
+/// isContinuation 탭 시 원본 날짜 TimeGrid에 하이라이트를 전달하기 위한 Provider
+
+abstract class _$PendingHighlightId extends $Notifier<String?> {
+  String? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<String?, String?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String?, String?>,
+              String?,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 /// 홈 캘린더 상태 관리 컨트롤러
 
 @ProviderFor(HomeCalendarController)
@@ -105,7 +223,7 @@ final class HomeCalendarControllerProvider
 }
 
 String _$homeCalendarControllerHash() =>
-    r'd8fe1c37401f98510e4e8978284481d6f06ac136';
+    r'273e19954cffa6c2cb46fdf82d783fa7af6e37fe';
 
 /// 홈 캘린더 상태 관리 컨트롤러
 

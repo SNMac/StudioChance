@@ -19,6 +19,26 @@ class ScrollToCurrentTimeTrigger extends _$ScrollToCurrentTimeTrigger {
   void trigger() => state = state + 1;
 }
 
+/// isContinuation 셀 탭 시 지정 시간으로 수직 스크롤하는 트리거
+@riverpod
+class ScrollToTimeTrigger extends _$ScrollToTimeTrigger {
+  @override
+  DateTime? build() => null;
+
+  void trigger(DateTime time) => state = time;
+  void clear() => state = null;
+}
+
+/// isContinuation 탭 시 원본 날짜 TimeGrid에 하이라이트를 전달하기 위한 Provider
+@riverpod
+class PendingHighlightId extends _$PendingHighlightId {
+  @override
+  String? build() => null;
+
+  void set(String id) => state = id;
+  void clear() => state = null;
+}
+
 /// 홈 캘린더 화면의 UI 상태
 @freezed
 abstract class HomeCalendarState with _$HomeCalendarState {
@@ -148,6 +168,13 @@ class HomeCalendarController extends _$HomeCalendarController {
   /// 피커에서 날짜 확정 시 이동 (home_nav_bar.dart에서 호출)
   /// 3일 캘린더 + 월간 캘린더 모두 animateToPage
   void selectDateFromPicker(DateTime date) {
+    _threeDayTransition = CalendarTransitionKind.animate;
+    _monthlyTransition = CalendarTransitionKind.animate;
+    selectDate(date);
+  }
+
+  /// isContinuation 셀 탭 시 원본 날짜로 이동 (3일 캘린더 + 월간 캘린더 모두 animate)
+  void selectDateFromContinuation(DateTime date) {
     _threeDayTransition = CalendarTransitionKind.animate;
     _monthlyTransition = CalendarTransitionKind.animate;
     selectDate(date);
