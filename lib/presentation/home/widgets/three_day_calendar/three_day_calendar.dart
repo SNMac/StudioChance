@@ -546,6 +546,29 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     _syncAllScrollControllers(target);
   }
 
+  /// 지정 시간이 뷰포트 중앙에 오도록 스크롤 (isContinuation 탭 후 호출)
+  void _scrollToTime(DateTime time) {
+    final hourHeight = ref.read(homeCalendarControllerProvider).hourHeight;
+    final offset = hourHeight * (time.hour + time.minute / 60);
+
+    double viewportHeight = 600; // fallback
+    for (final ctrl in _dayScrollControllers.values) {
+      if (ctrl.hasClients) {
+        viewportHeight = ctrl.position.viewportDimension;
+        break;
+      }
+    }
+    if (_timeColumnScrollController.hasClients) {
+      viewportHeight = _timeColumnScrollController.position.viewportDimension;
+    }
+
+    final maxExtent =
+        (hourHeight * 24 - viewportHeight).clamp(0.0, double.infinity);
+    final target = (offset - viewportHeight / 2).clamp(0.0, maxExtent);
+    _currentVerticalOffset = target;
+    _syncAllScrollControllers(target);
+  }
+
   DateTime _dateForPage(int page) {
     return _referenceDate.add(Duration(days: page));
   }
@@ -607,6 +630,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
               if (_scrollToCurrentTimePending) {
                 _scrollToCurrentTimePending = false;
                 _scrollToCurrentTime();
+              }
+              // isContinuation 탭 → 해당 시간으로 수직 스크롤
+              final scrollToTime = ref.read(scrollToTimeTriggerProvider);
+              if (scrollToTime != null) {
+                _scrollToTime(scrollToTime);
+                ref.read(scrollToTimeTriggerProvider.notifier).clear();
               }
             }
           });
