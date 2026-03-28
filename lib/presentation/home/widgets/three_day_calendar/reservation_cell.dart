@@ -1,97 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:studio_chance/presentation/colors.dart';
+import 'package:studio_chance/domain/entities/reservation_summary.dart';
+import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-
-// ── 예약 상태 ────────────────────────────────────────────────────────────────
-
-enum ReservationStatus {
-  confirmed,      // 예약 확정 (checkmark_circle_fill)
-  pendingPayment, // 입금 대기 (circle_dashed)
-  cancelled,      // 예약 취소 (circle_slash)
-}
-
-// ── 색상 테마 ────────────────────────────────────────────────────────────────
-
-enum ReservationCellColorTheme {
-  red,
-  orange,
-  yellow,
-  green,
-  blue,
-  indigo,
-  purple;
-
-  Color get backgroundColor => switch (this) {
-        ReservationCellColorTheme.red => redBackground,
-        ReservationCellColorTheme.orange => orangeBackground,
-        ReservationCellColorTheme.yellow => yellowBackground,
-        ReservationCellColorTheme.green => greenBackground,
-        ReservationCellColorTheme.blue => blueBackground,
-        ReservationCellColorTheme.indigo => indigoBackground,
-        ReservationCellColorTheme.purple => purpleBackground,
-      };
-
-  Color get foregroundColor => switch (this) {
-        ReservationCellColorTheme.red => redForeground,
-        ReservationCellColorTheme.orange => orangeForeground,
-        ReservationCellColorTheme.yellow => yellowForeground,
-        ReservationCellColorTheme.green => greenForeground,
-        ReservationCellColorTheme.blue => blueForeground,
-        ReservationCellColorTheme.indigo => indigoForeground,
-        ReservationCellColorTheme.purple => purpleForeground,
-      };
-
-  Color get labelColor => switch (this) {
-        ReservationCellColorTheme.red => redLabel,
-        ReservationCellColorTheme.orange => orangeLabel,
-        ReservationCellColorTheme.yellow => yellowLabel,
-        ReservationCellColorTheme.green => greenLabel,
-        ReservationCellColorTheme.blue => blueLabel,
-        ReservationCellColorTheme.indigo => indigoLabel,
-        ReservationCellColorTheme.purple => purpleLabel,
-      };
-}
 
 // ── 예약 셀 표시용 데이터 ─────────────────────────────────────────────────────
 
-/// 예약 셀 표시용 임시 뷰 모델.
-/// TODO: 예약(Reservation) 도메인 엔티티 정의 후 교체 예정.
+/// 예약 셀 렌더링에 필요한 최소 데이터.
+/// [summary]는 도메인 ReservationSummary를 그대로 사용.
+/// [isContinuation] / [continuesNextDay]는 셀 분할 로직에서만 추가됨.
 class ReservationDisplayData {
   const ReservationDisplayData({
-    required this.reserverName,
-    required this.headcount,
-    required this.phoneNumber,
-    required this.status,
-    required this.colorTheme,
-    required this.isAllDay,
-    this.date,
-    this.startTime,
-    this.endTime,
+    required this.summary,
     this.isContinuation = false,
     this.continuesNextDay = false,
   });
 
-  final String reserverName;
-  final int headcount;
-  final String phoneNumber;
-  final ReservationStatus status;
-  final ReservationCellColorTheme colorTheme;
-  final bool isAllDay;
+  final ReservationSummary summary;
 
-  /// 종일 이벤트가 속한 날짜 (isAllDay = true 일 때 사용)
-  final DateTime? date;
-
-  /// 시간대 이벤트 시작 시간 (isAllDay = false 일 때 사용)
-  final DateTime? startTime;
-
-  /// 시간대 이벤트 종료 시간 (isAllDay = false 일 때 사용)
-  final DateTime? endTime;
-
-  /// true: 자정을 넘어 다음 날에 이어지는 셀 (텍스트·아이콘 미표시, 배경+스트립만)
+  /// true: 이전 날에서 이어지는 연속 셀 (텍스트·아이콘 미표시, 배경+스트립만)
   final bool isContinuation;
 
-  /// true: 자정을 넘어 다음 날로 이어지는 셀 (하단 코너·여백 없음)
+  /// true: 다음 날로 이어지는 셀 (하단 코너·여백 없음)
   final bool continuesNextDay;
 }
 
@@ -102,13 +32,17 @@ class ReservationCell extends StatelessWidget {
     super.key,
     required this.data,
     this.clipContent = false,
+    this.isHighlighted = false,
   });
 
   final ReservationDisplayData data;
 
-  /// true: 스택 front/middle 셀 — 단일행, TextOverflow.clip (겹침 셀)
-  /// false: 스택 back 셀 또는 단독 셀 — FittedBox scaleDown (기본값)
+  /// true: 스택 front/middle 셀 — 단일행, TextOverflow.clip
+  /// false: 스택 back 셀 또는 단독 셀 — FittedBox scaleDown
   final bool clipContent;
+
+  /// true: 배경 = foregroundColor, 스트립 = foregroundColor, 라벨 = white
+  final bool isHighlighted;
 
   BorderRadius get _cellBorderRadius {
     const r = Radius.circular(4);
@@ -122,19 +56,23 @@ class ReservationCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = data.colorTheme.backgroundColor;
-    final fgColor = data.colorTheme.foregroundColor;
-    final lblColor = data.colorTheme.labelColor;
+    final storeColor = data.summary.storeSummary.color;
+    final bgColor = isHighlighted
+        ? Color(storeColor.foregroundColorValue)
+        : Color(storeColor.backgroundColorValue);
+    final fgColor = Color(storeColor.foregroundColorValue);
+    final lblColor = isHighlighted ? Colors.white : Color(storeColor.labelColorValue);
     final borderRadius = _cellBorderRadius;
 
     return ClipRRect(
       borderRadius: borderRadius,
       child: Stack(
         children: [
-          // 전체 배경 (~Background: 연한 색)
+          // 전체 배경
           Container(color: bgColor),
 
-          // 좌측 4px 진한 스트립 (~Foreground: 진한 색)
+          // 좌측 4px 스트립
+          // isHighlighted=true: fgColor == bgColor → 시각적으로 단일 색상
           Positioned(
             left: 0,
             top: 0,
@@ -145,7 +83,7 @@ class ReservationCell extends StatelessWidget {
             ),
           ),
 
-          // 외곽선 overlay (systemBackground, 0.5px)
+          // 외곽선 overlay
           Container(
             decoration: BoxDecoration(
               border: Border.all(
@@ -156,9 +94,8 @@ class ReservationCell extends StatelessWidget {
             ),
           ),
 
-          // isContinuation=true: 배경+스트립만 표시 (텍스트·아이콘 없음)
+          // isContinuation=true: 배경+스트립만 (텍스트·아이콘 없음)
           if (!data.isContinuation)
-            // 콘텐츠 Row
             Positioned.fill(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,19 +124,15 @@ class ReservationCell extends StatelessWidget {
     );
   }
 
-  /// front/middle 셀용: 단일행, TextOverflow.clip
   Widget _buildClipContent(BuildContext context, Color lblColor) {
-    final style = Theme.of(context)
-        .textTheme
-        .labelSmall
-        ?.copyWith(color: lblColor);
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           height: 15.0,
           child: Center(
-            child: _StatusIcon(status: data.status, color: lblColor),
+            child: _StatusIcon(status: data.summary.status, color: lblColor),
           ),
         ),
         const SizedBox(width: 2.5),
@@ -209,13 +142,13 @@ class ReservationCell extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${data.reserverName} · ${data.headcount}인',
+                '${data.summary.customerName} · ${data.summary.headCount}인',
                 style: style,
                 maxLines: 1,
                 overflow: TextOverflow.clip,
               ),
               Text(
-                data.phoneNumber,
+                data.summary.customerPhone,
                 style: style,
                 maxLines: 1,
                 overflow: TextOverflow.clip,
@@ -227,19 +160,15 @@ class ReservationCell extends StatelessWidget {
     );
   }
 
-  /// back 셀 / 단독 셀용: FittedBox 내부 Row (셀이 좁을 때 비율 유지 축소)
   Widget _buildContentRow(BuildContext context, Color lblColor) {
-    final style = Theme.of(context)
-        .textTheme
-        .labelSmall
-        ?.copyWith(color: lblColor);
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           height: 15.0,
           child: Center(
-            child: _StatusIcon(status: data.status, color: lblColor),
+            child: _StatusIcon(status: data.summary.status, color: lblColor),
           ),
         ),
         const SizedBox(width: 2.5),
@@ -248,12 +177,12 @@ class ReservationCell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${data.reserverName} · ${data.headcount}인',
+              '${data.summary.customerName} · ${data.summary.headCount}인',
               style: style,
               maxLines: 1,
             ),
             Text(
-              data.phoneNumber,
+              data.summary.customerPhone,
               style: style,
               maxLines: 1,
             ),
@@ -275,9 +204,9 @@ class _StatusIcon extends StatelessWidget {
   static String _svgPath(ReservationStatus status) => switch (status) {
         ReservationStatus.confirmed =>
           'assets/images/icons/checkmark_circle_fill.svg',
-        ReservationStatus.pendingPayment =>
+        ReservationStatus.pending =>
           'assets/images/icons/circle_dashed.svg',
-        ReservationStatus.cancelled =>
+        ReservationStatus.canceled =>
           'assets/images/icons/circle_slash.svg',
       };
 
