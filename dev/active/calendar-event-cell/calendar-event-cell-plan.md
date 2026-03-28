@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 구현 계획
 
-Last Updated: 2026-03-27 (3차 — 구현 완료)
+Last Updated: 2026-03-29 (Phase 9 완료 — 모달 UI 후속 수정 필요)
 
 ---
 
@@ -11,18 +11,23 @@ Last Updated: 2026-03-27 (3차 — 구현 완료)
 
 ---
 
-## 현재 상태
+## 현재 상태 (Phase 9 완료)
+
+Phase 1~9 구현 완료. 최종 코드 리뷰 APPROVED.
+후속 수정 필요: Android/iOS 테스트에서 모달 UI 버그 발견.
 
 | 파일 | 현황 |
 |------|------|
-| `AllDayCell` | 빈 `SizedBox(height: 40)` |
-| `TimeGrid` | 시간 구분선 + 현재 시간선만 존재, 이벤트 없음 |
-| `colors.dart` | 로그인 화면 색상만 있음 (셀 색상 없음) |
-| `ui_constants.dart` | `minHourHeight = 18.0` (→ 40.0 변경 필요) |
-| `circle_slash.svg` | `assets/images/icons/circle_slash.svg` ✅ |
-| `circle_dashed.svg` | `assets/images/icons/circle_dashed.svg` ✅ (Light 입금 대기) |
-| `checkmark_circle_fill.svg` | `assets/images/icons/checkmark_circle_fill.svg` ✅ (Light 예약 확정) |
-| `flutter_svg` | `pubspec.yaml`에 `^2.2.3` ✅ |
+| `colors.dart` | 셀 색상 21개 추가 완료 |
+| `ui_constants.dart` | `defaultHourHeight=40`, `minHourHeight=36` 완료 |
+| `reservation_cell.dart` | ReservationDisplayData(ReservationSummary 내장), isHighlighted 완료 |
+| `overflow_cell.dart` | **삭제됨** (Phase 9에서 제거) |
+| `all_day_row.dart` | ReservationDisplayData 필드 접근 수정 완료 |
+| `time_grid.dart` | ConsumerStatefulWidget, 탭 인터랙션 3종, stagger 임계값 제거 완료 |
+| `three_day_calendar.dart` | mock Reservation 맵, scrollToTimeTrigger listen 완료 |
+| `home_calendar_controller.dart` | ScrollToTimeTrigger, PendingHighlightId provider, selectDateFromContinuation() 완료 |
+| `reservation_detail_modal.dart` | 신규 — 하프 시트 플레이스홀더 (후속 수정 필요) |
+| `reservation_list_modal.dart` | 신규 — N≥4 그룹 목록 모달 (후속 수정 필요) |
 
 ---
 
@@ -479,6 +484,7 @@ lib/
 
 ## 미구현 (추후 작업)
 
-- 동일 시간대 다중 예약 겹침 레이아웃
+- **모달 UI 버그 수정** (Phase 10) — `reservation_detail_modal.dart`, `reservation_list_modal.dart` Android/iOS 수정
+- `ReservationDetailModal` 실제 디자인 구현 (예약 상세 편집 폼)
+- 실제 Firestore 데이터 연결 (mock 제거)
 - Reservation 도메인 엔티티 + Riverpod 연결
-- 셀 탭 → 예약 상세 화면 이동

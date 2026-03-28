@@ -1,19 +1,19 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-28 (Phase 8 완료 — Phase 9는 context reset 이후 진행)
+Last Updated: 2026-03-29 (Phase 9 완료 — 모달 UI 후속 수정 필요)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~8 구현 완료. flutter analyze 오류 없음.**
-**Phase 9(셀 탭 인터랙션)는 context reset 이후 시작 예정.**
+**Phase 1~9 구현 완료. 최종 코드 리뷰 APPROVED.**
+**후속 수정: Android/iOS 테스트에서 모달 UI 버그 발견 — 수정 미완료.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
-> Phase 9: 셀 탭 인터랙션 (팝업 애니메이션 + 모달) — **설계 확정, 미구현**
+> Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료**
 >
-> 미결 디자인 결정: OverflowCell 배경 색상 (현재 `tertiarySystemFill` 임시)
+> 미결: 모달 UI 버그 수정 (`reservation_detail_modal.dart`, `reservation_list_modal.dart`)
 
 ---
 
@@ -24,11 +24,14 @@ Last Updated: 2026-03-28 (Phase 8 완료 — Phase 9는 context reset 이후 진
 | `lib/presentation/colors.dart` | 색상 21개 추가 (Background/Foreground/Label × 7) |
 | `lib/constants/ui_constants.dart` | defaultHourHeight 36→40, minHourHeight 18→36 |
 | `lib/presentation/providers/hour_height_preference_provider.dart` | loadHourHeight에 clamp 추가 |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | **신규** — 전체 셀 구현, clipContent, isContinuation, continuesNextDay, 코너 반경 |
-| `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart` | **신규** — N개 오버플로우 셀 (멀티컬러 스트립 + "N개" 텍스트) |
-| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` | events 파라미터 추가, 셀 배치 |
-| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | 스택 레이아웃 알고리즘, delta stagger, 자정 넘김 배치, 바운스 연장 |
-| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | 목업 데이터(전체 시나리오), _eventsForDate 자정 분할 |
+| `lib/presentation/providers/home_calendar_controller.dart` | ScrollToTimeTrigger, PendingHighlightId provider 추가, selectDateFromContinuation() 메서드 추가 |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | ReservationDisplayData 재구성(ReservationSummary 내장), ReservationCellColorTheme/셀 ReservationStatus 제거, isHighlighted 파라미터 추가 |
+| `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart` | **삭제** (Phase 9에서 제거) |
+| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` | ReservationDisplayData 필드 접근 수정 |
+| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | ConsumerStatefulWidget 전환, _PositionedItem 변경, stagger 임계값 제거, 탭 핸들러 3종, reservations 파라미터, pendingHighlightIdProvider watch |
+| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | ReservationDisplayData 생성 로직 수정, mock Reservation 맵, scrollToTimeTrigger listen |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **신규** — 하프 시트 플레이스홀더 (후속 수정 필요) |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart` | **신규** — N≥4 그룹 목록 모달 (후속 수정 필요) |
 
 ---
 
@@ -272,40 +275,65 @@ continuesNextDay → height += 1000               (그리드 아래로 연장, b
 
 ---
 
-## Phase 9: 셀 탭 인터랙션 설계 (미구현)
+## Phase 9: 셀 탭 인터랙션 (구현 완료)
 
-### 결정 사항 (2026-03-28 확정)
+### 탭 흐름별 동작
 
-**일반 겹침 셀 탭 (스택 상태):**
-- 누른 셀이 위로 팝업 애니메이션
-- 예약 상세 모달 표시
-- 탭 시 셀 색상 변화 → **TBD (사용자 결정 대기)**
-- 모달 닫기 → 셀 원래 위치로 복귀 애니메이션
+**① 일반 셀 탭 (N<4, groupEvents == null):**
+- `_highlightedId` / `_selectedId` = event.id → setState (하이라이트 + z-순서 최상단)
+- `showReservationDetailModal(reservations[event.id])` await
+- 모달 닫힘 후 상태 초기화
 
-**오버플로우 셀 탭:**
-- 겹쳐진 이벤트 목록 모달 표시 (팝업 없이 직접 모달)
-- 모달에서 이벤트 선택 → 예약 상세 모달
+**② N≥4 그룹 셀 탭 (groupEvents != null):**
+- `showReservationListModal(groupEvents)` → 선택된 `ReservationSummary`
+- 선택 후 하이라이트 + 상세 모달
 
-### 구현 필요 항목 (추후)
-- `GestureDetector` + `AnimatedPositioned` 또는 `Hero` 애니메이션
-- 예약 상세 모달 위젯
-- 오버플로우 목록 모달 위젯
-- TimeGrid 내 탭 상태 관리 (StatefulWidget 전환 필요)
+**③ isContinuation 셀 탭:**
+- `pendingHighlightIdProvider.set(event.id)` → 원본 TimeGrid 하이라이트
+- `homeCalendarController.selectDateFromContinuation(originalDate)` → 날짜 이동
+- `scrollToTimeTriggerProvider.trigger(originalStartTime)` → 수직 스크롤
+- `showReservationDetailModal(reservations[event.id])` await
+- 모달 닫힘 후 `pendingHighlightIdProvider.clear()`
+
+### 실제 구현 vs 설계 차이
+
+- **scrollToTimeTrigger**: 설계에서는 `ref.listen` 제안 → 구현에서는 `animateToPage.then()` 내 `ref.read()` 폴링 (경쟁 조건 방지 목적, 의도적 개선)
+- **OverflowCell**: 제거됨. N≥4도 항상 스택 표시. `groupEvents` 필드로 목록 모달 연동.
+
+### 커밋 이력 (Phase 9)
+
+| 커밋 | 내용 |
+|------|------|
+| `8c386cc` | ReservationDisplayData 재구성, isHighlighted 추가 |
+| `637cffa` | OverflowCell 제거, TimeGrid ConsumerStatefulWidget 전환 |
+| `3cd9cab` | ReservationDetailModal, ReservationListModal 신규 |
+| `7e9aa57` | 코드 품질 수정 (DateFormat 위치, Icon size, TODO) |
+| `cd6955a` | TimeGrid 탭 인터랙션 3가지 흐름 |
+| `1fed115` | state 누수 수정 |
+| `4e19f0b` | highlightNotifier 사전 캡처 |
+| `f160a24` | scrollToTimeTrigger 처리 추가 |
+| `f1eb57e` | DateTime.now() 중복 정리 + 주석 보완 |
 
 ---
 
-## 다음 작업 (context reset 이후)
+## 다음 작업: 모달 UI 버그 수정
 
-1. **Phase 9: 셀 탭 인터랙션** — context reset 후 시작
-   - `TimeGrid` → `ConsumerStatefulWidget` 전환
-   - 일반 셀 탭: 팝업 애니메이션 + 예약 상세 모달
-   - 오버플로우 셀 탭: 이벤트 목록 모달 → 상세 모달
-   - 자정 넘김 연속 셀(`isContinuation=true`) 탭 동작 결정 필요 (원본 이벤트 모달? 탭 불가?)
-   - 탭 시 셀 색상 변화 여부 TBD
+### Android — ReservationDetailModal
+1. `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가 → 너비 문제 해결
+2. `Material` 내 `Column`을 `SingleChildScrollView(controller: scrollController, child: Column(...))`로 감쌈 → 드래그 동작 활성화
+3. iOS: `showCupertinoSheet` 기본 전체화면 동작 유지 (Flutter 3.38.5에서 half-sheet 불가, `detents`/`topGap` 파라미터 없음)
 
-2. **OverflowCell 배경 색상 확정** (디자인 결정 사항)
-   - 현재: `context.tertiarySystemFill` 임시
-   - 확정 후 `overflow_cell.dart` 수정
+### Android/iOS — ReservationListModal
+1. `ReservationListModal`에 `ScrollController? scrollController` 파라미터 추가
+2. 위젯 구조: `Material → SafeArea → SingleChildScrollView(controller) → Column[Grabber pill, Padding(GroupedFormContainer)]`
+3. Grabber pill 추가 (36×5, `outlineVariant` 색상)
+4. Android `showModalBottomSheet`에 `DraggableScrollableSheet(initialChildSize: 0.5, minChildSize: 0.3, maxChildSize: 1.0)` + `backgroundColor: Colors.transparent` 추가
+5. iOS: `showCupertinoSheet` 기본 전체화면 동작 유지
+
+### showCupertinoSheet 한계 (Flutter 3.38.5)
+- `topGap`, `detents` 파라미터 없음
+- 내부 `_kTopGapRatio = 0.08` 고정값 사용 (화면 높이의 8% gap)
+- iOS half-sheet 구현 불가 (현재 Flutter 버전 한계)
 
 ---
 

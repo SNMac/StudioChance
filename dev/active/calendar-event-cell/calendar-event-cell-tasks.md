@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-28 (Phase 8 완료 — Phase 9는 context reset 이후 진행)
+Last Updated: 2026-03-29 (Phase 9 완료 — 모달 UI 후속 수정 필요)
 
 ---
 
@@ -139,22 +139,58 @@ Last Updated: 2026-03-28 (Phase 8 완료 — Phase 9는 context reset 이후 진
 
 ---
 
-## Phase 9: 셀 탭 인터랙션 ⬜ (미구현 — context reset 이후 시작)
+## Phase 9: 셀 탭 인터랙션 ✅ (완료 — 모달 UI 후속 수정 필요)
 
-**파일:** `time_grid.dart` (StatefulWidget 전환 필요), 신규 모달 위젯
+**파일:** `time_grid.dart`, `reservation_detail_modal.dart`, `reservation_list_modal.dart`, `home_calendar_controller.dart`
 
-### 9-1: 일반 겹침 셀 탭
-- [ ] 누른 셀 팝업 애니메이션 (위로 올라오는 효과)
-- [ ] 예약 상세 모달 표시
-- [ ] 탭 시 셀 색상 변화 (**TBD — 사용자 결정 대기**)
-- [ ] 모달 닫기 → 셀 원래 위치 복귀 애니메이션
+### 9-0: home_calendar_controller.dart 신규 Provider + 메서드
+- [x] `ScrollToTimeTrigger` provider 추가
+- [x] `PendingHighlightId` provider 추가
+- [x] `selectDateFromContinuation()` 메서드 추가
 
-### 9-2: 오버플로우 셀 탭
-- [ ] 겹쳐진 이벤트 목록 모달 표시
-- [ ] 목록에서 이벤트 선택 → 예약 상세 모달
+### 9-1: reservation_cell.dart — ReservationDisplayData 재구성
+- [x] `ReservationSummary` 내장 구조로 재구성
+- [x] `ReservationCellColorTheme`, 셀 `ReservationStatus` enum 제거
+- [x] `isHighlighted` 파라미터 추가 (foreground 색 배경 + white 텍스트)
 
-### 9-3: 예약 상세 모달 위젯
-- [ ] 디자인 확정 후 구현
+### 9-2: OverflowCell 제거 + TimeGrid ConsumerStatefulWidget 전환
+- [x] `overflow_cell.dart` 삭제
+- [x] `_PositionedItem.overflow` 생성자 및 stagger 임계값 제거
+- [x] `_PositionedItem`에 `groupEvents` 필드 추가 (N≥4)
+- [x] `TimeGrid` → `ConsumerStatefulWidget` 전환
+- [x] `_selectedId`, `_highlightedId` 로컬 상태 추가
+
+### 9-3: 모달 위젯 신규
+- [x] `reservation_detail_modal.dart` — 하프 시트 플레이스홀더
+- [x] `reservation_list_modal.dart` — N≥4 그룹 목록 모달
+
+### 9-4: TimeGrid 탭 인터랙션 3가지 흐름
+- [x] 일반 셀 탭: 하이라이트 + z-순서 최상단 + 상세 모달
+- [x] N≥4 그룹 탭: 목록 모달 → 선택 → 상세 모달
+- [x] isContinuation 탭: pendingHighlightId + 날짜 이동 + 수직 스크롤 + 상세 모달
+
+### 9-5: three_day_calendar.dart 수정
+- [x] `ReservationDisplayData` 생성 로직 수정 (summary 내장)
+- [x] mock `Reservation` 맵 추가
+- [x] `scrollToTimeTrigger` listen + 페이지 이동 완료 후 수직 스크롤
+
+---
+
+## Phase 10: 모달 UI 버그 수정 ⬜ (미구현)
+
+**파일:** `reservation_detail_modal.dart`, `reservation_list_modal.dart`
+
+### 10-1: ReservationDetailModal (Android)
+- [ ] `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가
+- [ ] `Material` 내 `Column` → `SingleChildScrollView(controller: scrollController, child: Column(...))` 로 감쌈
+- [ ] iOS TODO 주석 업데이트 (`showCupertinoSheet`에서 half-sheet 불가 명시)
+
+### 10-2: ReservationListModal (Android/iOS)
+- [ ] `ScrollController? scrollController` 파라미터 추가
+- [ ] Grabber pill 추가 (36×5, `outlineVariant` 색상)
+- [ ] Android: `DraggableScrollableSheet(initialChildSize: 0.5, minChildSize: 0.3, maxChildSize: 1.0)` 적용
+- [ ] Android: `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가
+- [ ] iOS: `showCupertinoSheet` 기본 전체화면 유지 (half-sheet 불가 주석 추가)
 
 ---
 
