@@ -251,7 +251,14 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         _selectedId = selected.id;
       });
       final reservation = widget.reservations[selected.id];
-      if (reservation == null || !mounted) return;
+      if (reservation == null) {
+        setState(() {
+          _highlightedId = null;
+          _selectedId = null;
+        });
+        return;
+      }
+      if (!mounted) return;
       await showReservationDetailModal(context, reservation);
       if (!mounted) return;
       setState(() {
@@ -274,7 +281,6 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
           .selectDateFromContinuation(originalDate);
       ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime);
       await showReservationDetailModal(context, reservation);
-      if (!mounted) return;
       ref.read(pendingHighlightIdProvider.notifier).clear();
     } else {
       // ① 일반 셀 탭
@@ -283,7 +289,14 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         _selectedId = item.event.summary.id;
       });
       final reservation = widget.reservations[item.event.summary.id];
-      if (reservation == null || !mounted) return;
+      if (reservation == null) {
+        setState(() {
+          _highlightedId = null;
+          _selectedId = null;
+        });
+        return;
+      }
+      if (!mounted) return;
       await showReservationDetailModal(context, reservation);
       if (!mounted) return;
       setState(() {
