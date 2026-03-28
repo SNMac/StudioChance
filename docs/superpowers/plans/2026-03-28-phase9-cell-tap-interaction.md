@@ -1,12 +1,18 @@
 # Phase 9: 캘린더 셀 탭 인터랙션 구현 계획
 
+> **Status (2026-03-29): ✅ Task 1~7 모두 완료. 최종 코드 리뷰 APPROVED.**
+>
+> **후속 수정 필요:** Android/iOS 테스트에서 모달 UI 버그 발견.
+> 상세 내용은 design doc 말미 "후속 수정 필요: 모달 UI 버그" 섹션 참고.
+> 수정 대상 파일: `reservation_detail_modal.dart`, `reservation_list_modal.dart`
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 3일 캘린더 예약 셀 탭 인터랙션 구현 — z-순서 최상단 이동, 하이라이트, 상세 모달(하프 시트), N≥4 목록 모달, isContinuation 원본 날짜 네비게이션.
 
 **Architecture:** `ReservationDisplayData`를 `ReservationSummary` 내장 구조로 재구성. `OverflowCell` 제거 후 N≥4도 스택 표시. `TimeGrid` → `ConsumerStatefulWidget` 전환으로 로컬 탭 상태 관리. `PendingHighlightId` provider로 cross-widget 하이라이트, `ScrollToTimeTrigger` provider로 isContinuation 수직 스크롤 조정.
 
-**Tech Stack:** Flutter, Riverpod (riverpod_generator), Freezed, Platform-adaptive modals (iOS: showCupertinoSheet+SheetDetent, Android: DraggableScrollableSheet)
+**Tech Stack:** Flutter, Riverpod (riverpod_generator), Freezed, Platform-adaptive modals (iOS: showCupertinoSheet, Android: DraggableScrollableSheet)
 
 ---
 

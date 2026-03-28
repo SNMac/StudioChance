@@ -298,3 +298,79 @@ final selected = await showModalBottomSheet<ReservationSummary>(
 - `ReservationDetailModal` 실제 디자인 구현
 - 실제 Firestore 데이터 연결 (mock 제거)
 - build_runner 불필요 — 코드 생성 없음
+
+---
+
+## 구현 완료 노트 (2026-03-29)
+
+### 상태
+
+Phase 9 전체 구현 완료. 최종 코드 리뷰 APPROVED.
+
+커밋 이력 (a2d33b0 이후):
+- `8c386cc`: ReservationDisplayData 재구성, isHighlighted 추가
+- `637cffa`: OverflowCell 제거, TimeGrid ConsumerStatefulWidget 전환
+- `3cd9cab`: ReservationDetailModal, ReservationListModal 신규
+- `7e9aa57`: 코드 품질 수정 (DateFormat 위치, Icon size, TODO)
+- `cd6955a`: TimeGrid 탭 인터랙션 3가지 흐름
+- `1fed115`: state 누수 수정
+- `4e19f0b`: highlightNotifier 사전 캡처
+- `f160a24`: scrollToTimeTrigger 처리 추가
+- `f1eb57e`: DateTime.now() 중복 정리 + 주석 보완
+
+### 실제 구현과 설계 간 차이
+
+**scrollToTimeTrigger 처리 방식:**
+설계에서는 `ref.listen` 사용을 제안했으나, 구현에서는 `animateToPage.then()` 내부에서 `ref.read()` 폴링 방식을 사용. 페이지 이동 완료 후 처리를 보장하여 경쟁 조건 방지 — 의도적 개선.
+
+**ReservationListModal:**
+설계에서는 "고정 크기 (콘텐츠에 맞게 자동)"이라 했으나, Android/iOS 테스트 후 `DraggableScrollableSheet` 및 `topGap` 적용이 필요함 (아래 후속 수정 사항 참고).
+
+---
+
+## 후속 수정 필요: 모달 UI 버그 (Android/iOS 테스트 결과)
+
+### 발견된 문제
+
+**Android — ReservationDetailModal:**
+1. 화면 너비를 채우지 않음 → `backgroundColor: Colors.transparent` 누락으로 기본 Material Sheet가 컨텐츠 배경 위로 겹쳐 나타남
+2. 드래그로 높이 최대로 늘릴 수 없음 → `DraggableScrollableSheet.builder`에서 전달하는 `scrollController`를 `SingleChildScrollView`에 연결하지 않아 드래그 동작 불능
+
+**Android/iOS — ReservationListModal:**
+1. 초기 높이가 최대 → `DraggableScrollableSheet` 미적용 (Android), iOS는 `showCupertinoSheet` 기본 동작으로 전체 화면 오픈
+2. Grabber(드래그 핸들 pill) 없음
+3. 초기 절반 높이 시작 + 상하 스와이프 높이 조절 미구현
+
+### showCupertinoSheet topGap 관련 발견
+
+사용자가 `topGap` 파라미터로 iOS 높이 조절 가능하다고 언급했으나, **Flutter 3.38.5에서 `showCupertinoSheet`는 `topGap` 파라미터를 지원하지 않음** (직접 소스 확인).
+
+`showCupertinoSheet` 실제 파라미터 (Flutter 3.38.5):
+```dart
+Future<T?> showCupertinoSheet<T>({
+  required BuildContext context,
+  WidgetBuilder? pageBuilder, // deprecated (v3.33.0-0.2.pre 이후)
+  WidgetBuilder? builder,
+  bool useNestedNavigation = false,
+  bool enableDrag = true,
+})
+```
+
+내부적으로 `_kTopGapRatio = 0.08` 고정값 사용 (화면 높이의 8% gap). 외부에서 제어 불가.
+
+`detents` 파라미터도 없음 — iOS에서 half-sheet 구현 불가 (현재 Flutter 3.38.5 한계).
+
+### 수정 방향
+
+**reservation_detail_modal.dart:**
+- `Material` 위젯 내부 `Column`을 `SingleChildScrollView(controller: scrollController, child: Column(...))`로 감쌈 → 드래그 동작 활성화
+- `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가 → 너비 문제 해결
+- iOS: `showCupertinoSheet` 기본 전체화면 동작 유지 (half-sheet 불가 확인됨, TODO 주석 업데이트 필요)
+
+**reservation_list_modal.dart:**
+- `ReservationListModal`에 `ScrollController? scrollController` 파라미터 추가
+- 위젯 구조: `Material → SafeArea → SingleChildScrollView(controller) → Column[Grabber pill, Padding(GroupedFormContainer)]`
+- Grabber pill 추가 (36×5, `outlineVariant` 색상) — `ReservationDetailModal`과 동일 스타일
+- Android `showModalBottomSheet`에 `DraggableScrollableSheet(initialChildSize: 0.5, minChildSize: 0.3, maxChildSize: 1.0)` 추가
+- Android `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가
+- iOS: `showCupertinoSheet` 기본 전체화면 동작 유지
