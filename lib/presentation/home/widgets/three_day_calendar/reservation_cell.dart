@@ -68,6 +68,7 @@ class ReservationDisplayData {
     this.date,
     this.startTime,
     this.endTime,
+    this.isContinuation = false,
   });
 
   final String reserverName;
@@ -85,6 +86,9 @@ class ReservationDisplayData {
 
   /// 시간대 이벤트 종료 시간 (isAllDay = false 일 때 사용)
   final DateTime? endTime;
+
+  /// true: 자정을 넘어 다음 날에 이어지는 셀 (텍스트·아이콘 미표시, 배경+스트립만)
+  final bool isContinuation;
 }
 
 // ── 예약 셀 위젯 ──────────────────────────────────────────────────────────────
@@ -137,30 +141,32 @@ class ReservationCell extends StatelessWidget {
             ),
           ),
 
-          // 콘텐츠 Row
-          Positioned.fill(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: 1.5,
-                      right: clipContent ? 0 : 4,
+          // isContinuation=true: 배경+스트립만 표시 (텍스트·아이콘 없음)
+          if (!data.isContinuation)
+            // 콘텐츠 Row
+            Positioned.fill(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: 1.5,
+                        right: clipContent ? 0 : 4,
+                      ),
+                      child: clipContent
+                          ? _buildClipContent(context, lblColor)
+                          : FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.topLeft,
+                              child: _buildContentRow(context, lblColor),
+                            ),
                     ),
-                    child: clipContent
-                        ? _buildClipContent(context, lblColor)
-                        : FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.topLeft,
-                            child: _buildContentRow(context, lblColor),
-                          ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

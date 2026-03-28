@@ -1,12 +1,12 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-28 (13차 — 스택 레이아웃 + delta 기반 stagger 구현 완료)
+Last Updated: 2026-03-28 (14차 — stagger 임계값 수정 + 자정 넘김 이벤트 구현)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~8 구현 완료 (Phase 8 알고리즘 스택 방식으로 교체). Phase 9 설계 확정, 미구현.**
+**Phase 1~8 구현 완료 (14차 추가 수정 포함). Phase 9 설계 확정, 미구현.**
 **flutter analyze 오류 없음.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
@@ -97,8 +97,9 @@ Row:
 | 오늘 | 16:00~17:00 | cancelled | purple | 단독 |
 | 내일 | 09:00 × 2개 (delta=0) | conf/pending | orange/indigo | N=2 동시 시작 → cellWidth stagger |
 | 내일 | 13:00 × 3개 (delta=0) | mixed | green/yellow/purple | N=3 동시 시작 → cellWidth stagger |
-| 내일 | 17:00 × 2개 (delta=20분) | conf/pending | red/blue | N=2 ≤30분 → cellWidth stagger |
-| 내일 | 20:30 × 2개 (delta=30분) | conf/cancelled | orange/indigo | N=2 =30분 경계 → cellWidth stagger |
+| 오늘 | 22:00 ~ 익일 02:00 | confirmed | indigo | 자정 넘김 (이도윤): 오늘=정상 셀, 내일=연속 셀 |
+| 내일 | 17:00 × 2개 (delta=20분) | conf/pending | red/blue | N=2 delta>0 → 8px stagger |
+| 내일 | 20:30 × 2개 (delta=30분) | conf/cancelled | orange/indigo | N=2 delta>0 → 8px stagger |
 | 모레 | 종일 | pendingPayment | orange | 단독 |
 | 모레 | 10:00~12:00 | confirmed | indigo | 단독 |
 | 모레 | 15:00~16:00 | confirmed | blue | 단독 (최소 높이) |
@@ -134,14 +135,15 @@ height = hourHeight * duration_minutes / 60 - 2.0  (clamp 1.0 이상)
 ```
 delta = front 셀 시작시간 − back 셀 시작시간 (분)
 
-delta ≤ 30분:
+delta == 0 (동시 시작):
   → cellWidth stagger (= usableWidth/2, ~53px at 115px 열)
-  → 이름 ~3자 표시 (비겹침 구간이 좁아 겹침 구간에서도 이름 보장 필요)
+  → 이름 ~3자 표시 (겹침 구간 전체에서 이름 보장 필요)
 
-delta > 30분:
+delta > 0 (시작 시간 다름, 1분 이상):
   → _differentStartStagger = 8px 고정 (foreground strip 4px + gap 4px)
   → 비겹침 구간에서 이름 충분히 노출. 겹침 구간엔 strip만 보여도 충분.
   → back 셀 좌측 8px만 노출 (4px 채색 스트립 + 4px 배경색 gap)
+  → 전화번호 가려져도 무방 (사용자 확인)
 ```
 
 ### N≥3 stagger 규칙
@@ -161,8 +163,8 @@ delta > 30분:
 3. Union-Find: 겹치는 이벤트들을 같은 컴포넌트로 묶음
 4. 컴포넌트별 N = max(col) + 1
 5a. N=2 전용: 직접 겹치는 (col0, col1) 쌍의 최소 delta 계산
-    → delta ≤ 30분: stagger = usableWidth/2
-    → delta > 30분: stagger = 8.0 (_differentStartStagger)
+    → delta == 0: stagger = usableWidth/2
+    → delta > 0: stagger = 8.0 (_differentStartStagger)
 5b. 위치 계산:
     cellWidth = usableWidth / N  (오버플로우 임계값)
     cellWidth < 31px → OverflowCell
@@ -211,6 +213,34 @@ class _PositionedItem {
 
 ---
 
+## 자정 넘김 이벤트 구현 (14차)
+
+### ReservationDisplayData.isContinuation
+
+```dart
+final bool isContinuation; // 기본값 false
+// true: 전날에서 이어지는 연속 셀 (배경+스트립만, 텍스트·아이콘 없음)
+```
+
+### _eventsForDate 분할 로직
+
+```
+이벤트 start가 이 날짜인 경우:
+  - end > 자정 → endTime = 자정으로 제한해서 추가 (정상 셀)
+  - end ≤ 자정 → 원본 그대로 추가
+
+이벤트 start가 이전 날인 경우:
+  - start < dateStart AND end > dateStart
+  → startTime = dateStart, isContinuation = true 로 추가 (연속 셀)
+```
+
+### ReservationCell isContinuation 처리
+
+`isContinuation=true`이면 콘텐츠 Row를 렌더링하지 않음.
+배경(`backgroundColor`) + 좌측 4px 스트립(`foregroundColor`) + 외곽선만 표시.
+
+---
+
 ## Phase 9: 셀 탭 인터랙션 설계 (미구현)
 
 ### 결정 사항 (2026-03-28 확정)
@@ -239,6 +269,7 @@ class _PositionedItem {
    - 현재: `context.tertiarySystemFill` 임시 배경
    - 확정 후 `overflow_cell.dart` 수정
 2. **Phase 9: 셀 탭 인터랙션** — 셀 팝업 + 예약 상세 모달 구현
+   - 자정 넘김 연속 셀 탭 동작 정의 필요 (원본 이벤트로 이동? 탭 불가?)
 
 ---
 

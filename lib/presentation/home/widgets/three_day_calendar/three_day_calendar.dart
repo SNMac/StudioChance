@@ -111,6 +111,17 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         endTime: today.add(const Duration(hours: 17)),
       ),
 
+      // 22:00 ~ 익일 02:00 — 자정 넘김 예약 (오늘: 22:00~24:00 / 내일: 00:00~02:00 연속)
+      ReservationDisplayData(
+        reserverName: '이도윤', headcount: 3,
+        phoneNumber: '010-5050-7070',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.indigo,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 22)),
+        endTime: tomorrow.add(const Duration(hours: 2)),
+      ),
+
       // ── 내일 ─────────────────────────────────────────────────────────────────
 
       // 09:00 — N=2, delta=0 (동시 시작) → cellWidth stagger (~53px, 이름 3자)
@@ -162,8 +173,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         endTime: tomorrow.add(const Duration(hours: 17)),
       ),
 
-      // 17:00 — N=2, delta=20분 (≤30분) → cellWidth stagger (이름 3자 표시)
-      // 비겹침 구간 20분×hourHeight가 좁으므로 반절 방식으로 이름 보장
+      // 17:00 — N=2, delta=20분 (>0분) → 8px 고정 stagger (strip+gap만 노출)
+      // 전화번호 가려져도 무방; 비겹침 구간에서 이름 충분히 노출됨
       ReservationDisplayData(
         reserverName: '한소희', headcount: 2,
         phoneNumber: '010-1357-2468',
@@ -183,7 +194,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         endTime: tomorrow.add(const Duration(hours: 19)),
       ),
 
-      // 20:30 — N=2, delta=30분 (경계값, ≤30분) → cellWidth stagger
+      // 20:30 — N=2, delta=30분 (>0분) → 8px 고정 stagger
       ReservationDisplayData(
         reserverName: '박보검', headcount: 4,
         phoneNumber: '010-9999-1111',
@@ -272,18 +283,69 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     ];
   }
 
-  /// 특정 날짜의 이벤트 목록 반환
+  /// 특정 날짜의 이벤트 목록 반환.
+  /// 자정을 넘기는 시간대 이벤트는 두 날짜에 각각 분할:
+  ///   - 시작일: endTime을 자정(00:00)으로 제한 (정상 셀)
+  ///   - 익일: startTime=자정, isContinuation=true (배경+스트립만 표시)
   static List<ReservationDisplayData> _eventsForDate(
       DateTime date, {required bool allDay}) {
-    return _mockEvents.where((e) {
-      if (e.isAllDay != allDay) return false;
+    final dateStart = DateTime(date.year, date.month, date.day);
+    final dateMidnight = dateStart.add(const Duration(days: 1));
+    final result = <ReservationDisplayData>[];
+
+    for (final e in _mockEvents) {
+      if (e.isAllDay != allDay) continue;
+
       if (allDay) {
         final d = e.date!;
-        return d.year == date.year && d.month == date.month && d.day == date.day;
+        if (d.year == date.year && d.month == date.month && d.day == date.day) {
+          result.add(e);
+        }
+        continue;
       }
-      final s = e.startTime!;
-      return s.year == date.year && s.month == date.month && s.day == date.day;
-    }).toList();
+
+      final start = e.startTime!;
+      final end = e.endTime!;
+
+      // 이 날짜에 시작하는 이벤트
+      if (start.year == date.year &&
+          start.month == date.month &&
+          start.day == date.day) {
+        // 자정을 넘기는 경우: endTime을 자정으로 제한
+        if (end.isAfter(dateMidnight)) {
+          result.add(ReservationDisplayData(
+            reserverName: e.reserverName,
+            headcount: e.headcount,
+            phoneNumber: e.phoneNumber,
+            status: e.status,
+            colorTheme: e.colorTheme,
+            isAllDay: false,
+            startTime: start,
+            endTime: dateMidnight,
+          ));
+        } else {
+          result.add(e);
+        }
+        continue;
+      }
+
+      // 이전 날에 시작해서 이 날짜 자정 이후까지 이어지는 이벤트 → 연속 셀
+      if (start.isBefore(dateStart) && end.isAfter(dateStart)) {
+        result.add(ReservationDisplayData(
+          reserverName: e.reserverName,
+          headcount: e.headcount,
+          phoneNumber: e.phoneNumber,
+          status: e.status,
+          colorTheme: e.colorTheme,
+          isAllDay: false,
+          startTime: dateStart,
+          endTime: end,
+          isContinuation: true,
+        ));
+      }
+    }
+
+    return result;
   }
 
   // 기준일(2001.01.01) 기준 오늘의 페이지 인덱스

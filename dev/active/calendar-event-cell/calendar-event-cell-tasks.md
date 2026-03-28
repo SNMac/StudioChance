@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-28 (13차 — 스택 레이아웃 + delta 기반 stagger 구현 완료)
+Last Updated: 2026-03-28 (14차 — stagger 임계값 수정 + 자정 넘김 이벤트 구현)
 
 ---
 
@@ -122,6 +122,13 @@ Last Updated: 2026-03-28 (13차 — 스택 레이아웃 + delta 기반 stagger �
   - 내일: N=2 delta=0, N=3 delta=0, N=2 delta=20분, N=2 delta=30분
   - 모레: 단독들 + N=2 delta=60분 (4px gap)
 - [ ] **8-5**: OverflowCell 배경 색상 확정 (사용자 결정 대기, 현재 `tertiarySystemFill` 임시)
+- [x] **8-6**: N=2 stagger 임계값 수정 — `delta ≤ 30` → `delta == 0`
+  - delta=0 (동시 시작)만 cellWidth stagger, delta>0은 모두 8px 고정
+- [x] **8-7**: 자정 넘김 이벤트 처리
+  - `ReservationDisplayData.isContinuation` 필드 추가
+  - `ReservationCell`: isContinuation=true 시 배경+스트립만 렌더링
+  - `_eventsForDate`: 자정 넘김 이벤트 분할 (시작일 endTime 제한 + 익일 continuation 셀)
+  - 목업 데이터: 오늘 22:00 ~ 내일 02:00 (이도윤, indigo, confirmed) 추가
 
 ---
 
@@ -151,8 +158,9 @@ Last Updated: 2026-03-28 (13차 — 스택 레이아웃 + delta 기반 stagger �
 - [ ] **V-3**: 오늘 10:00 N=4 → 오버플로우 셀, 멀티컬러 스트립 표시
 - [ ] **V-4**: 내일 09:00 N=2 delta=0 → cellWidth stagger, 이름 3자 노출
 - [ ] **V-5**: 내일 13:00 N=3 delta=0 → cellWidth stagger, 이름 1~2자 노출
-- [ ] **V-6**: 내일 17:00 N=2 delta=20분 → cellWidth stagger (≤30분 규칙)
-- [ ] **V-7**: 내일 20:30 N=2 delta=30분 → cellWidth stagger (경계값)
+- [ ] **V-6**: 내일 17:00 N=2 delta=20분 → 8px stagger (delta>0 규칙)
+- [ ] **V-7**: 내일 20:30 N=2 delta=30분 → 8px stagger (delta>0 규칙)
+- [ ] **V-14**: 오늘 22:00 → 내일 02:00 자정 넘김: 오늘 22:00~24:00 정상 셀, 내일 00:00~02:00 배경+스트립만 표시
 - [ ] **V-8**: 모레 20:00 N=2 delta=60분 → 8px stagger (back 셀 strip+gap만 노출)
 - [ ] **V-9**: 좌측 스트립(Foreground) vs 우측 배경(Background) 확인
 - [ ] **V-10**: 아이콘 셀 왼쪽에서 4px 간격
