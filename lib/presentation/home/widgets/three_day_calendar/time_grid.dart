@@ -259,6 +259,22 @@ class TimeGrid extends ConsumerWidget {
       (hourHeight * end.difference(start).inMinutes / 60 - 2.0)
           .clamp(1.0, double.infinity);
 
+  /// isContinuation / continuesNextDay 여부에 따라 top·height 계산.
+  /// topGap: isContinuation=true → 0.0 (위 코너 없음, 구분선에 밀착)
+  /// bottomGap: continuesNextDay=true → 0.0 (아래 코너 없음, 구분선에 밀착)
+  ({double top, double height}) _placementFor(
+      ReservationDisplayData event, double hourHeight) {
+    final topGap = event.isContinuation ? 0.0 : 0.5;
+    final bottomGap = event.continuesNextDay ? 0.0 : 1.5;
+    final start = event.startTime!;
+    final end = event.endTime!;
+    final top = hourHeight * (start.hour + start.minute / 60) + topGap;
+    final height =
+        (hourHeight * end.difference(start).inMinutes / 60 - topGap - bottomGap)
+            .clamp(1.0, double.infinity);
+    return (top: top, height: height);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hourHeight = ref.watch(
@@ -309,18 +325,19 @@ class TimeGrid extends ConsumerWidget {
                       child: OverflowCell(events: item.overflowEvents!),
                     )
                   else
-                    Positioned(
-                      top: _topOffset(item.event!.startTime!, hourHeight),
-                      left: item.left,
-                      right: item.right,
-                      height: _cellHeight(
-                          item.event!.startTime!, item.event!.endTime!,
-                          hourHeight),
-                      child: ReservationCell(
-                        data: item.event!,
-                        clipContent: item.clipContent,
-                      ),
-                    ),
+                    Builder(builder: (context) {
+                      final p = _placementFor(item.event!, hourHeight);
+                      return Positioned(
+                        top: p.top,
+                        left: item.left,
+                        right: item.right,
+                        height: p.height,
+                        child: ReservationCell(
+                          data: item.event!,
+                          clipContent: item.clipContent,
+                        ),
+                      );
+                    }),
 
                 // 현재 시간선
                 CurrentTimeLine(hourHeight: hourHeight, isToday: isToday),

@@ -311,7 +311,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       if (start.year == date.year &&
           start.month == date.month &&
           start.day == date.day) {
-        // 자정을 넘기는 경우: endTime을 자정으로 제한
+        // 자정을 넘기는 경우: endTime을 자정으로 제한, 하단 코너·여백 없음
         if (end.isAfter(dateMidnight)) {
           result.add(ReservationDisplayData(
             reserverName: e.reserverName,
@@ -322,6 +322,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
             isAllDay: false,
             startTime: start,
             endTime: dateMidnight,
+            continuesNextDay: true,
           ));
         } else {
           result.add(e);

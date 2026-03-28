@@ -69,6 +69,7 @@ class ReservationDisplayData {
     this.startTime,
     this.endTime,
     this.isContinuation = false,
+    this.continuesNextDay = false,
   });
 
   final String reserverName;
@@ -89,6 +90,9 @@ class ReservationDisplayData {
 
   /// true: 자정을 넘어 다음 날에 이어지는 셀 (텍스트·아이콘 미표시, 배경+스트립만)
   final bool isContinuation;
+
+  /// true: 자정을 넘어 다음 날로 이어지는 셀 (하단 코너·여백 없음)
+  final bool continuesNextDay;
 }
 
 // ── 예약 셀 위젯 ──────────────────────────────────────────────────────────────
@@ -106,14 +110,25 @@ class ReservationCell extends StatelessWidget {
   /// false: 스택 back 셀 또는 단독 셀 — FittedBox scaleDown (기본값)
   final bool clipContent;
 
+  BorderRadius get _cellBorderRadius {
+    const r = Radius.circular(4);
+    return BorderRadius.only(
+      topLeft: data.isContinuation ? Radius.zero : r,
+      topRight: data.isContinuation ? Radius.zero : r,
+      bottomLeft: data.continuesNextDay ? Radius.zero : r,
+      bottomRight: data.continuesNextDay ? Radius.zero : r,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bgColor = data.colorTheme.backgroundColor;
     final fgColor = data.colorTheme.foregroundColor;
     final lblColor = data.colorTheme.labelColor;
+    final borderRadius = _cellBorderRadius;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: borderRadius,
       child: Stack(
         children: [
           // 전체 배경 (~Background: 연한 색)
@@ -130,14 +145,14 @@ class ReservationCell extends StatelessWidget {
             ),
           ),
 
-          // 외곽선 overlay (systemBackground, 0.5px, radius 4)
+          // 외곽선 overlay (systemBackground, 0.5px)
           Container(
             decoration: BoxDecoration(
               border: Border.all(
                 color: context.systemBackground,
                 width: 0.5,
               ),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: borderRadius,
             ),
           ),
 

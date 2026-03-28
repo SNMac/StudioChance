@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-28 (14차 — stagger 임계값 수정 + 자정 넘김 이벤트 구현)
+Last Updated: 2026-03-28 (15차 — 자정 넘김 셀 코너·여백 제거)
 
 ---
 
@@ -215,29 +215,50 @@ class _PositionedItem {
 
 ## 자정 넘김 이벤트 구현 (14차)
 
-### ReservationDisplayData.isContinuation
+### ReservationDisplayData 자정 넘김 필드
 
 ```dart
-final bool isContinuation; // 기본값 false
-// true: 전날에서 이어지는 연속 셀 (배경+스트립만, 텍스트·아이콘 없음)
+final bool isContinuation;   // 기본값 false
+// true: 전날에서 이어지는 연속 셀 (배경+스트립만, 텍스트·아이콘 없음, 상단 코너 없음)
+
+final bool continuesNextDay; // 기본값 false
+// true: 다음날로 이어지는 시작 셀 (정상 표시, 하단 코너 없음)
 ```
 
 ### _eventsForDate 분할 로직
 
 ```
 이벤트 start가 이 날짜인 경우:
-  - end > 자정 → endTime = 자정으로 제한해서 추가 (정상 셀)
+  - end > 자정 → endTime = 자정으로 제한, continuesNextDay=true 추가 (하단 코너 없음)
   - end ≤ 자정 → 원본 그대로 추가
 
 이벤트 start가 이전 날인 경우:
   - start < dateStart AND end > dateStart
-  → startTime = dateStart, isContinuation = true 로 추가 (연속 셀)
+  → startTime = dateStart, isContinuation=true 로 추가 (상단 코너 없음)
 ```
 
-### ReservationCell isContinuation 처리
+### ReservationCell 코너·여백 처리
 
-`isContinuation=true`이면 콘텐츠 Row를 렌더링하지 않음.
-배경(`backgroundColor`) + 좌측 4px 스트립(`foregroundColor`) + 외곽선만 표시.
+`_cellBorderRadius` getter:
+```dart
+BorderRadius.only(
+  topLeft/topRight:    isContinuation ? Radius.zero : Radius.circular(4),
+  bottomLeft/bottomRight: continuesNextDay ? Radius.zero : Radius.circular(4),
+)
+```
+
+`isContinuation=true`이면 콘텐츠 Row도 렌더링하지 않음.
+
+### time_grid `_placementFor` 공식
+
+```
+topGap    = isContinuation   ? 0.0 : 0.5
+bottomGap = continuesNextDay ? 0.0 : 1.5
+top    = hourHeight × (start.hour + start.minute/60) + topGap
+height = (hourHeight × durationMin/60 − topGap − bottomGap).clamp(1.0, ∞)
+```
+
+시각 효과: 자정 경계에서 두 셀이 코너·틈새 없이 연결되어 한눈에 이어지는 일정임을 알 수 있음.
 
 ---
 
