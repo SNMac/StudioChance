@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-27 (10차 — 이벤트 겹침 레이아웃 구현)
+Last Updated: 2026-03-28 (13차 — 스택 레이아웃 + delta 기반 stagger 구현 완료)
 
 ---
 
@@ -35,7 +35,7 @@ Last Updated: 2026-03-27 (10차 — 이벤트 겹침 레이아웃 구현)
 - [x] **3-2**: `ReservationCellColorTheme` enum (7색, 3개 getter)
 - [x] **3-3**: `ReservationDisplayData` 클래스 (date 필드 포함)
 - [x] **3-4**: `_StatusIcon` widget (SVG 3종, colorFilter)
-- [x] **3-5**: `ReservationCell` widget
+- [x] **3-5**: `ReservationCell` widget + `clipContent` 파라미터
 
 ---
 
@@ -61,7 +61,7 @@ Last Updated: 2026-03-27 (10차 — 이벤트 겹침 레이아웃 구현)
 
 **파일:** `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart`
 
-- [x] **6-1**: `_buildMockEvents()` 오늘 기준 7개 이벤트
+- [x] **6-1**: `_buildMockEvents()` 오늘 기준 이벤트
 - [x] **6-2**: `_eventsForDate()` 날짜 필터링
 - [x] **6-3~6-4**: AllDayCell, TimeGrid에 연결
 
@@ -69,79 +69,100 @@ Last Updated: 2026-03-27 (10차 — 이벤트 겹침 레이아웃 구현)
 
 ## 버그 수정 ✅
 
-- [x] **Fix-1**: 셀 색상 반전 수정
-  - 잘못됨: 좌측 스트립=~Background, 우측 배경=~Foreground
-  - 수정됨: 좌측 스트립=~Foreground (진한 색), 우측 배경=~Background (연한 색)
-  - 파일: `reservation_cell.dart` (build() 내 bgColor/fgColor 할당 교체)
+- [x] **Fix-1**: 셀 색상 반전 수정 (스트립↔배경 교체)
+- [x] **Fix-2**: 아이콘 간격 SizedBox(4)→SizedBox(8)
+- [x] **Fix-3**: 아이콘 12→10, top:4, right:4, FittedBox, 세로 중앙 정렬
+- [x] **Fix-4**: minHourHeight 40→36, Padding(bottom:4) 롤백
+- [x] **Fix-5**: Padding top:4→1.5 (셀 상단~아이콘 4px 유지하면서 하단 여백 개선)
 
-- [x] **Fix-2**: 아이콘 라벨 영역 간격 수정
-  - 잘못됨: SizedBox(width:4) → 아이콘이 스트립에 붙어있는 느낌
-  - 수정됨: SizedBox(width:8) → 스트립 4px + 라벨 영역 왼쪽에서 4px 간격
-  - 파일: `reservation_cell.dart` Row children 첫 번째 SizedBox
+---
 
-- [x] **Fix-3**: 아이콘 크기 / 상단 간격 / 우측 여백 / 자동 축소 / 세로 중앙 정렬
-  - 아이콘 12×12 → 10×10
-  - 상단 간격 `top:2` → `top:4`
-  - 우측 최소 여백 `right:4` 추가 (iPhone 13 mini 텍스트 붙음 방지)
-  - `FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.topLeft)` 로 아이콘+텍스트 비율 축소
-  - `SizedBox(height:15, Center(icon))` — labelSmall 라인 높이 기준으로 아이콘-첫 텍스트 중앙 정렬
-  - `overflow: TextOverflow.ellipsis` 제거 (FittedBox가 처리)
-  - 파일: `reservation_cell.dart`
+## Phase 7: 이벤트 겹침 레이아웃 (2개 기준) ✅
 
-- [x] **Fix-4**: minHourHeight 수정 및 bottom:4 롤백
-  - minHourHeight 40 → 36 (사용자 정정: 최소 시간 간격 높이 36px, 1시간 셀 최소 35px 충족)
-  - 6차에서 추가한 Padding(bottom:4) 롤백 — FittedBox 높이 제한으로 텍스트 축소 발생
-  - 피그마 스펙: 내부 padding에 bottom 없음, 외부 Positioned(bottom:4)만 사용
-  - 파일: `ui_constants.dart`, `reservation_cell.dart`
+**파일:** `time_grid.dart`, `reservation_cell.dart`, `three_day_calendar.dart`
 
-- [x] **Fix-5**: 내부 top 패딩 조정
-  - 피그마 기준 셀 상단~아이콘 상단 = 4px
-  - SizedBox(height:15)가 아이콘(10px)을 중앙정렬 → 아이콘 위 내부 여백 2.5px
-  - 따라서 Padding top = 4 - 2.5 = **1.5px** (기존 top:4 → top:1.5)
-  - 결과: 종일 셀 하단 여백 = 35 - 1.5 - 30 = 3.5px (기존 1px에서 개선)
-  - 파일: `reservation_cell.dart` Padding(top: 1.5, right: 4)
+- [x] **7-1**: `_PositionedEvent` 클래스 (event, left, right, clipContent)
+- [x] **7-2**: `_computePositions()` — z 순서 정렬 + 열 배정 (고정 left=52 방식)
+  - 열 0 → 전체 너비 (clipContent=false)
+  - 열 1+ → left=52 (clipContent=true)
+- [x] **7-3**: `ReservationCell.clipContent` 파라미터
+- [x] **7-4**: 목업 데이터에 오늘 10:00-14:00 노랑 이벤트 추가
+
+> ⚠️ Phase 7은 임시 구현 (고정 left=52). Phase 8에서 균등 분할로 교체 예정.
+
+---
+
+## Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 ✅
+
+**파일:** `time_grid.dart` (전면 교체), `overflow_cell.dart` (신규), `reservation_cell.dart` (clipContent 복원), `three_day_calendar.dart`
+
+- [x] **8-1**: `overflow_cell.dart` 신규 생성
+  - `OverflowCell` 위젯 (events: List<ReservationDisplayData>)
+  - 배경: `context.tertiarySystemFill` (임시, 사용자 결정 대기)
+  - 좌측 4px 멀티컬러 스트립 (각 이벤트의 foregroundColor 균등 분할)
+  - 외곽선: 0.5px systemBackground
+  - 내용: "N개" 텍스트 (secondaryLabel 색상)
+- [x] **8-2**: `time_grid.dart` 스택 알고리즘 구현
+  - `_minCellWidthFor1Char = 31.0`, `_differentStartStagger = 8.0` 상수
+  - `_PositionedItem` (normal/overflow 분기, clipContent 포함)
+  - `_computePositions(events, columnWidth)`:
+    - 그리디 인터벌 컬러링 → 열 배정
+    - Union-Find → 연결 컴포넌트 묶기
+    - N = max(col)+1, cellWidth = usableWidth/N
+    - **N=2 전용 Step 5a**: delta ≤ 30분 → cellWidth stagger, delta > 30분 → 8px stagger
+    - cellWidth < 31 → OverflowCell
+    - **스택 배치**: left = 1.0 + col × stagger, right = 8.0 (고정)
+    - clipContent = col > 0
+  - `LayoutBuilder` → columnWidth 획득
+- [x] **8-3**: `reservation_cell.dart` clipContent 파라미터 복원
+  - clipContent=false: FittedBox scaleDown (back 셀, 단독 셀)
+  - clipContent=true: 단일행 TextOverflow.clip (front/middle 셀)
+- [x] **8-4**: 목업 데이터 전체 시나리오 커버
+  - 오늘: 단독 + N=4 오버플로우
+  - 내일: N=2 delta=0, N=3 delta=0, N=2 delta=20분, N=2 delta=30분
+  - 모레: 단독들 + N=2 delta=60분 (4px gap)
+- [ ] **8-5**: OverflowCell 배경 색상 확정 (사용자 결정 대기, 현재 `tertiarySystemFill` 임시)
+
+---
+
+## Phase 9: 셀 탭 인터랙션 ⬜ (미구현, Phase 8 이후)
+
+**파일:** `time_grid.dart` (StatefulWidget 전환 필요), 신규 모달 위젯
+
+### 9-1: 일반 겹침 셀 탭
+- [ ] 누른 셀 팝업 애니메이션 (위로 올라오는 효과)
+- [ ] 예약 상세 모달 표시
+- [ ] 탭 시 셀 색상 변화 (**TBD — 사용자 결정 대기**)
+- [ ] 모달 닫기 → 셀 원래 위치 복귀 애니메이션
+
+### 9-2: 오버플로우 셀 탭
+- [ ] 겹쳐진 이벤트 목록 모달 표시
+- [ ] 목록에서 이벤트 선택 → 예약 상세 모달
+
+### 9-3: 예약 상세 모달 위젯
+- [ ] 디자인 확정 후 구현
 
 ---
 
 ## 시각적 검증 항목
 
-- [ ] **V-1**: 오늘 종일 행 - 초록 확정 셀 (checkmark_circle_fill SVG)
-- [ ] **V-2**: 오늘 07:00~08:30 - 초록 확정 (1.5시간 셀, 텍스트 2줄)
-- [ ] **V-3**: 오늘 10:00~13:00 - 초록 취소 (circle_slash, 3시간 셀)
-- [ ] **V-4**: 내일 10:00~14:00 - 노랑 대기 (circle_dashed, 노란 배경)
-- [ ] **V-5**: 내일 15:00~16:00 - 파랑 확정 (1시간 셀, 텍스트 ellipsis 확인)
-- [ ] **V-6**: 모레 종일 - 주황 대기
-- [ ] **V-7**: 모레 13:00~15:00 - 보라 취소
-- [ ] **V-8**: 좌측 스트립(~Foreground, 진한 색) vs 우측 배경(~Background, 연한 색) 확인
-- [ ] **V-9**: 아이콘이 라벨 영역 왼쪽에서 4px 떨어진 위치 확인
-- [ ] **V-10**: 셀 외곽선 0.5px (systemBackground)
-- [ ] **V-11**: 다크 모드 외곽선 자동 적응
-- [ ] **V-12**: 핀치 줌 아웃 → hourHeight=40 이하 제한 확인
+- [ ] **V-1**: 오늘 종일 행 - 초록 확정 셀
+- [ ] **V-2**: 오늘 07:00~08:30 - 초록 확정 (1.5시간)
+- [ ] **V-3**: 오늘 10:00 N=4 → 오버플로우 셀, 멀티컬러 스트립 표시
+- [ ] **V-4**: 내일 09:00 N=2 delta=0 → cellWidth stagger, 이름 3자 노출
+- [ ] **V-5**: 내일 13:00 N=3 delta=0 → cellWidth stagger, 이름 1~2자 노출
+- [ ] **V-6**: 내일 17:00 N=2 delta=20분 → cellWidth stagger (≤30분 규칙)
+- [ ] **V-7**: 내일 20:30 N=2 delta=30분 → cellWidth stagger (경계값)
+- [ ] **V-8**: 모레 20:00 N=2 delta=60분 → 8px stagger (back 셀 strip+gap만 노출)
+- [ ] **V-9**: 좌측 스트립(Foreground) vs 우측 배경(Background) 확인
+- [ ] **V-10**: 아이콘 셀 왼쪽에서 4px 간격
+- [ ] **V-11**: 셀 외곽선 0.5px
+- [ ] **V-12**: 다크 모드 외곽선 자동 적응
+- [ ] **V-13**: 핀치 줌 아웃 → hourHeight=36 이하 제한 확인
 
 ---
 
----
+## 스코프 아웃 (추후)
 
-## Phase 7: 이벤트 겹침 레이아웃 (2개) ✅
-
-**파일:** `time_grid.dart`, `reservation_cell.dart`, `three_day_calendar.dart`
-
-- [x] **7-1**: `_PositionedEvent` 클래스 추가 (event, left, right, clipContent)
-- [x] **7-2**: `_computePositions()` 함수 — z 순서 정렬 + 열 배정 알고리즘
-  - z 순서: 시작이 빠를수록 낮은 z (뒤), 같은 시작이면 짧은 것이 낮은 z
-  - 열 배정: 각 열의 마지막 종료 시간 추적으로 재사용 가능 여부 판단
-  - 열 0 → 전체 너비, 열 1+ → left=52 오른쪽 영역
-- [x] **7-3**: `ReservationCell`에 `clipContent` 파라미터 추가
-  - false (기본): FittedBox 축소 (기존 동작)
-  - true: FittedBox 없음, ClipRRect에 의해 내용 잘림, Expanded+TextOverflow.clip
-- [x] **7-4**: 목업 데이터에 오늘 10:00-14:00 노랑 겹침 이벤트 추가
-
----
-
-## 스코프 아웃 (추후 구현)
-
-- **3개 이상 겹침 레이아웃** — 현재 열 1과 동일 위치(left=52)로 처리됨, 미결정
-  - 추천: 균등 분할(N등분, 노션 캘린더 방식)
-  - 대안: 계단식 스택(열 너비 115px 기준 3번째 열 ~17px → 너무 좁음)
-- 예약 셀 탭 → 상세 화면 이동
-- Riverpod provider 연결 (실제 예약 데이터)
+- 실제 데이터 연결 — Reservation 도메인 엔티티 + Riverpod provider
+- 빌드 러너 불필요 — 코드 생성 없음 (freezed/riverpod 미사용)

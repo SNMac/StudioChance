@@ -98,8 +98,8 @@ class ReservationCell extends StatelessWidget {
 
   final ReservationDisplayData data;
 
-  /// true: 겹침 셀(상단) — FittedBox 없이 내용이 ClipRRect에 의해 잘림
-  /// false: 일반 셀 — FittedBox로 축소 처리 (기본값)
+  /// true: 스택 front/middle 셀 — 단일행, TextOverflow.clip (겹침 셀)
+  /// false: 스택 back 셀 또는 단독 셀 — FittedBox scaleDown (기본값)
   final bool clipContent;
 
   @override
@@ -142,7 +142,6 @@ class ReservationCell extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 4px 스트립 너비 + 라벨 영역 왼쪽에서 4px 간격
                 const SizedBox(width: 8),
                 Expanded(
                   child: Padding(
@@ -167,8 +166,12 @@ class ReservationCell extends StatelessWidget {
     );
   }
 
-  /// 겹침 셀용 — 내용이 ClipRRect에 의해 잘림 (FittedBox 없음)
+  /// front/middle 셀용: 단일행, TextOverflow.clip
   Widget _buildClipContent(BuildContext context, Color lblColor) {
+    final style = Theme.of(context)
+        .textTheme
+        .labelSmall
+        ?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -186,19 +189,13 @@ class ReservationCell extends StatelessWidget {
             children: [
               Text(
                 '${data.reserverName} · ${data.headcount}인',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: lblColor),
+                style: style,
                 maxLines: 1,
                 overflow: TextOverflow.clip,
               ),
               Text(
                 data.phoneNumber,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: lblColor),
+                style: style,
                 maxLines: 1,
                 overflow: TextOverflow.clip,
               ),
@@ -209,12 +206,15 @@ class ReservationCell extends StatelessWidget {
     );
   }
 
-  /// 일반 셀용 — FittedBox 내부 Row
+  /// back 셀 / 단독 셀용: FittedBox 내부 Row (셀이 좁을 때 비율 유지 축소)
   Widget _buildContentRow(BuildContext context, Color lblColor) {
+    final style = Theme.of(context)
+        .textTheme
+        .labelSmall
+        ?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // labelSmall 라인 높이(15px) 기준으로 아이콘과 첫 번째 텍스트 중앙 정렬
         SizedBox(
           height: 15.0,
           child: Center(
@@ -228,18 +228,12 @@ class ReservationCell extends StatelessWidget {
           children: [
             Text(
               '${data.reserverName} · ${data.headcount}인',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: lblColor),
+              style: style,
               maxLines: 1,
             ),
             Text(
               data.phoneNumber,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: lblColor),
+              style: style,
               maxLines: 1,
             ),
           ],

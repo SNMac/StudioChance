@@ -39,7 +39,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final dayAfter = today.add(const Duration(days: 2));
 
     return [
-      // 오늘 — 종일 (예약 확정, 초록)
+      // ── 오늘: 단독 1개 + 4개 겹침(오버플로우) ──────────────────────────────
+
+      // 종일 — 단독
       ReservationDisplayData(
         reserverName: '유훈자', headcount: 2,
         phoneNumber: '010-3109-6381',
@@ -48,7 +50,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         isAllDay: true,
         date: today,
       ),
-      // 오늘 — 07:00~08:30 (예약 확정, 초록)
+
+      // 07:00~08:30 — 단독 1개 (정상 셀 검증)
       ReservationDisplayData(
         reserverName: '유훈자', headcount: 2,
         phoneNumber: '010-3109-6381',
@@ -58,7 +61,26 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         startTime: today.add(const Duration(hours: 7)),
         endTime: today.add(const Duration(hours: 8, minutes: 30)),
       ),
-      // 오늘 — 10:00~13:00 (예약 취소, 초록) — 겹침 테스트: 뒤에 위치 (짧은 것 → 낮은 z)
+
+      // 10:00~XX — 4개 동시 겹침 → 오버플로우 셀 (N=4, ~26.5px < 31px)
+      ReservationDisplayData(
+        reserverName: '박지원', headcount: 1,
+        phoneNumber: '010-1111-2222',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.red,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 10)),
+        endTime: today.add(const Duration(hours: 11)),
+      ),
+      ReservationDisplayData(
+        reserverName: '최수아', headcount: 2,
+        phoneNumber: '010-3333-4444',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.blue,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 10)),
+        endTime: today.add(const Duration(hours: 12)),
+      ),
       ReservationDisplayData(
         reserverName: '김민준', headcount: 4,
         phoneNumber: '010-5555-1234',
@@ -68,7 +90,6 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 13)),
       ),
-      // 오늘 — 10:00~14:00 (입금 대기, 노랑) — 겹침 테스트: 위에 위치 (긴 것 → 높은 z)
       ReservationDisplayData(
         reserverName: '이서준', headcount: 3,
         phoneNumber: '010-7777-9999',
@@ -78,27 +99,113 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 14)),
       ),
-      // 내일 — 10:00~14:00 (입금 대기, 노랑)
+
+      // 16:00~17:00 — 단독 1개 (오버플로우 이후 정상 셀 검증)
       ReservationDisplayData(
-        reserverName: '이서준', headcount: 3,
-        phoneNumber: '010-7777-9999',
+        reserverName: '정하은', headcount: 1,
+        phoneNumber: '010-8888-4444',
+        status: ReservationStatus.cancelled,
+        colorTheme: ReservationCellColorTheme.purple,
+        isAllDay: false,
+        startTime: today.add(const Duration(hours: 16)),
+        endTime: today.add(const Duration(hours: 17)),
+      ),
+
+      // ── 내일 ─────────────────────────────────────────────────────────────────
+
+      // 09:00 — N=2, delta=0 (동시 시작) → cellWidth stagger (~53px, 이름 3자)
+      ReservationDisplayData(
+        reserverName: '나현우', headcount: 2,
+        phoneNumber: '010-2222-1111',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.orange,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 9)),
+        endTime: tomorrow.add(const Duration(hours: 11)),
+      ),
+      ReservationDisplayData(
+        reserverName: '임지수', headcount: 5,
+        phoneNumber: '010-4444-3333',
+        status: ReservationStatus.pendingPayment,
+        colorTheme: ReservationCellColorTheme.indigo,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 9)),
+        endTime: tomorrow.add(const Duration(hours: 13)),
+      ),
+
+      // 13:00 — N=3, delta=0 → cellWidth stagger (~35px, 이름 1~2자)
+      ReservationDisplayData(
+        reserverName: '강민서', headcount: 3,
+        phoneNumber: '010-6666-5555',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.green,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 13)),
+        endTime: tomorrow.add(const Duration(hours: 15)),
+      ),
+      ReservationDisplayData(
+        reserverName: '오세진', headcount: 2,
+        phoneNumber: '010-8888-7777',
         status: ReservationStatus.pendingPayment,
         colorTheme: ReservationCellColorTheme.yellow,
         isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 10)),
-        endTime: tomorrow.add(const Duration(hours: 14)),
-      ),
-      // 내일 — 15:00~16:00 (예약 확정, 파랑) — 1시간 최소 셀
-      ReservationDisplayData(
-        reserverName: '박지원', headcount: 1,
-        phoneNumber: '010-1234-5678',
-        status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.blue,
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 15)),
+        startTime: tomorrow.add(const Duration(hours: 13)),
         endTime: tomorrow.add(const Duration(hours: 16)),
       ),
-      // 모레 — 종일 (입금 대기, 주황)
+      ReservationDisplayData(
+        reserverName: '윤채원', headcount: 1,
+        phoneNumber: '010-0000-9999',
+        status: ReservationStatus.cancelled,
+        colorTheme: ReservationCellColorTheme.purple,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 13)),
+        endTime: tomorrow.add(const Duration(hours: 17)),
+      ),
+
+      // 17:00 — N=2, delta=20분 (≤30분) → cellWidth stagger (이름 3자 표시)
+      // 비겹침 구간 20분×hourHeight가 좁으므로 반절 방식으로 이름 보장
+      ReservationDisplayData(
+        reserverName: '한소희', headcount: 2,
+        phoneNumber: '010-1357-2468',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.red,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 17)),
+        endTime: tomorrow.add(const Duration(hours: 19, minutes: 30)),
+      ),
+      ReservationDisplayData(
+        reserverName: '도경수', headcount: 3,
+        phoneNumber: '010-2468-1357',
+        status: ReservationStatus.pendingPayment,
+        colorTheme: ReservationCellColorTheme.blue,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 17, minutes: 20)),
+        endTime: tomorrow.add(const Duration(hours: 19)),
+      ),
+
+      // 20:30 — N=2, delta=30분 (경계값, ≤30분) → cellWidth stagger
+      ReservationDisplayData(
+        reserverName: '박보검', headcount: 4,
+        phoneNumber: '010-9999-1111',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.orange,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 20, minutes: 30)),
+        endTime: tomorrow.add(const Duration(hours: 23)),
+      ),
+      ReservationDisplayData(
+        reserverName: '김태리', headcount: 1,
+        phoneNumber: '010-1111-9999',
+        status: ReservationStatus.cancelled,
+        colorTheme: ReservationCellColorTheme.indigo,
+        isAllDay: false,
+        startTime: tomorrow.add(const Duration(hours: 21)),
+        endTime: tomorrow.add(const Duration(hours: 22, minutes: 30)),
+      ),
+
+      // ── 모레: 단독 셀들 ──────────────────────────────────────────────────────
+
+      // 종일 — 단독
       ReservationDisplayData(
         reserverName: '최수아', headcount: 5,
         phoneNumber: '010-2222-3333',
@@ -107,15 +214,60 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         isAllDay: true,
         date: dayAfter,
       ),
-      // 모레 — 13:00~15:00 (예약 취소, 보라)
+
+      // 10:00~12:00 — 단독 1개
       ReservationDisplayData(
-        reserverName: '정하은', headcount: 2,
-        phoneNumber: '010-8888-4444',
-        status: ReservationStatus.cancelled,
-        colorTheme: ReservationCellColorTheme.purple,
+        reserverName: '한지민', headcount: 3,
+        phoneNumber: '010-1234-5678',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.indigo,
         isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 13)),
-        endTime: dayAfter.add(const Duration(hours: 15)),
+        startTime: dayAfter.add(const Duration(hours: 10)),
+        endTime: dayAfter.add(const Duration(hours: 12)),
+      ),
+
+      // 15:00~16:00 — 단독 1개 (최소 높이 셀 검증)
+      ReservationDisplayData(
+        reserverName: '서동현', headcount: 1,
+        phoneNumber: '010-9876-5432',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.blue,
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 15)),
+        endTime: dayAfter.add(const Duration(hours: 16)),
+      ),
+
+      // 17:00~19:00 — 단독 1개
+      ReservationDisplayData(
+        reserverName: '권나연', headcount: 4,
+        phoneNumber: '010-5678-1234',
+        status: ReservationStatus.cancelled,
+        colorTheme: ReservationCellColorTheme.red,
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 17)),
+        endTime: dayAfter.add(const Duration(hours: 19)),
+      ),
+
+      // ── 모레: N=2, delta=60분 (>30분) → 4px gap stagger (8px 고정) ──────────
+      // 20:00~24:00 (4시간) + 21:00~23:00 (2시간, 내부에 포함됨)
+      // delta=60분 > 30분 → 8px 고정 stagger (foreground strip+gap만 노출)
+      ReservationDisplayData(
+        reserverName: '송민호', headcount: 6,
+        phoneNumber: '010-1111-3333',
+        status: ReservationStatus.confirmed,
+        colorTheme: ReservationCellColorTheme.orange,
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 20)),
+        endTime: dayAfter.add(const Duration(hours: 24)),
+      ),
+      ReservationDisplayData(
+        reserverName: '백지현', headcount: 2,
+        phoneNumber: '010-2222-4444',
+        status: ReservationStatus.pendingPayment,
+        colorTheme: ReservationCellColorTheme.blue,
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 21)),
+        endTime: dayAfter.add(const Duration(hours: 23)),
       ),
     ];
   }
