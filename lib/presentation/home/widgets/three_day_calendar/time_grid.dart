@@ -275,13 +275,15 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         originalStartTime.month,
         originalStartTime.day,
       );
-      ref.read(pendingHighlightIdProvider.notifier).set(item.event.summary.id);
+      // notifier를 await 이전에 캡처 → unmount 후에도 안전하게 clear() 호출 가능
+      final highlightNotifier = ref.read(pendingHighlightIdProvider.notifier);
+      highlightNotifier.set(item.event.summary.id);
       ref
           .read(homeCalendarControllerProvider.notifier)
           .selectDateFromContinuation(originalDate);
       ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime);
       await showReservationDetailModal(context, reservation);
-      ref.read(pendingHighlightIdProvider.notifier).clear();
+      highlightNotifier.clear();
     } else {
       // ① 일반 셀 탭
       setState(() {
