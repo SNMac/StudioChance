@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 
 part 'reservation_model.freezed.dart';
@@ -21,6 +21,7 @@ abstract class ReservationModel with _$ReservationModel {
     required int headCount,
     required String customerPhone,
     required String memo,
+    required bool isAllDay,
     required DateTime startTime,
     required DateTime endTime,
     required String platform,
@@ -36,13 +37,14 @@ abstract class ReservationModel with _$ReservationModel {
   factory ReservationModel.fromEntity(Reservation entity) {
     return ReservationModel(
       id: entity.id,
-      storeId: entity.store.id,
+      storeId: entity.storeSummary.id,
       writerId: entity.writer.user.id,
       status: entity.status,
       customerName: entity.customerName,
       headCount: entity.headCount,
       customerPhone: entity.customerPhone,
       memo: entity.memo,
+      isAllDay: entity.isAllDay,
       startTime: entity.startTime,
       endTime: entity.endTime,
       platform: entity.platform,
@@ -53,16 +55,17 @@ abstract class ReservationModel with _$ReservationModel {
     );
   }
 
-  Reservation toEntity(Store store, StoreMemberInfo writer) {
+  Reservation toEntity(StoreSummary storeSummary, StoreMemberInfo writer) {
     return Reservation(
       id: id,
-      store: store,
+      storeSummary: storeSummary,
       writer: writer,
       status: status,
       customerName: customerName,
       headCount: headCount,
       customerPhone: customerPhone,
       memo: memo,
+      isAllDay: isAllDay,
       startTime: startTime,
       endTime: endTime,
       platform: platform,
