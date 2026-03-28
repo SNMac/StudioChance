@@ -6,8 +6,9 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 
 /// 예약 상세 모달 (플레이스홀더 — 실제 디자인은 별도 Phase에서 구현)
 ///
-/// iOS: CupertinoSheet로 표시, Android: 초기 50% 하프 시트로 시작 후 위로 드래그하면 전체 화면.
-/// 뒤에 캘린더 셀이 보이므로 isHighlighted=true 상태가 유지됨.
+/// 설계: 하프 시트로 시작, 위로 드래그하면 전체 화면을 덮음.
+/// iOS는 SheetDetent API 미지원으로 현재 풀스크린으로 열림 (TODO(#5) 참고).
+/// Android: DraggableScrollableSheet(initialChildSize: 0.5) — 하프 시트 시작.
 class ReservationDetailModal extends StatelessWidget {
   const ReservationDetailModal({
     super.key,
@@ -17,7 +18,8 @@ class ReservationDetailModal extends StatelessWidget {
 
   final Reservation reservation;
 
-  /// Android DraggableScrollableSheet에서 전달받는 ScrollController
+  /// Android DraggableScrollableSheet에서 전달받는 ScrollController.
+  /// TODO(#5): 실제 콘텐츠 구현 시 SingleChildScrollView/ListView에 연결 필요.
   final ScrollController? scrollController;
 
   @override
@@ -63,6 +65,9 @@ class ReservationDetailModal extends StatelessWidget {
 Future<void> showReservationDetailModal(
     BuildContext context, Reservation reservation) {
   if (Platform.isIOS) {
+    // TODO(#5): Flutter 3.38.5에 SheetDetent/detents 파라미터 미존재 → 풀스크린으로 열림.
+    // detents: const [SheetDetent.medium, SheetDetent.large] 추가 예정.
+    // iOS에서 하프 시트 동작 미지원으로 캘린더 셀 하이라이트가 뒤에 보이지 않을 수 있음.
     return showCupertinoSheet<void>(
       context: context,
       builder: (_) => ReservationDetailModal(reservation: reservation),

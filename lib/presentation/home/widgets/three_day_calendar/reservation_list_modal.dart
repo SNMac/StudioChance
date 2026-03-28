@@ -9,6 +9,8 @@ import 'package:studio_chance/presentation/commons/extensions/context_colors.dar
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
+final _timeFormat = DateFormat('HH:mm');
+
 /// N≥4 그룹 이벤트 목록 모달.
 ///
 /// 선택된 [ReservationSummary]를 반환 (취소 시 null).
@@ -19,7 +21,6 @@ class ReservationListModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('HH:mm');
     return Material(
       color: Theme.of(context).colorScheme.surface,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
@@ -61,8 +62,8 @@ class ReservationListModal extends StatelessWidget {
                         ),
                         // 시간 범위
                         Text(
-                          '${timeFormat.format(event.summary.startTime)}~'
-                          '${timeFormat.format(event.summary.endTime)}',
+                          '${_timeFormat.format(event.summary.startTime)}~'
+                          '${_timeFormat.format(event.summary.endTime)}',
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.normal,
@@ -71,12 +72,10 @@ class ReservationListModal extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         // chevron
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 10),
-                          child: Icon(
-                            CupertinoIcons.chevron_forward,
-                            color: context.tertiaryLabel,
-                          ),
+                        Icon(
+                          CupertinoIcons.chevron_forward,
+                          size: 10,
+                          color: context.tertiaryLabel,
                         ),
                       ],
                     ),
