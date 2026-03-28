@@ -7,6 +7,8 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
 /// N=2 겹침에서 시작 시간이 다를 때 (delta > 0) 적용하는 고정 stagger (px).
@@ -238,6 +240,59 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
     return (top: top, height: height);
   }
 
+  Future<void> _onCellTap(_PositionedItem item) async {
+    if (item.groupEvents != null) {
+      // ② N≥4 그룹 셀 탭 — 목록 모달 → 선택 → 상세 모달
+      final selected =
+          await showReservationListModal(context, item.groupEvents!);
+      if (selected == null || !mounted) return;
+      setState(() {
+        _highlightedId = selected.id;
+        _selectedId = selected.id;
+      });
+      final reservation = widget.reservations[selected.id];
+      if (reservation == null || !mounted) return;
+      await showReservationDetailModal(context, reservation);
+      if (!mounted) return;
+      setState(() {
+        _highlightedId = null;
+        _selectedId = null;
+      });
+    } else if (item.event.isContinuation) {
+      // ③ isContinuation 셀 탭 — 원본 날짜로 이동 + cross-widget 하이라이트 + 상세 모달
+      final reservation = widget.reservations[item.event.summary.id];
+      if (reservation == null) return;
+      final originalStartTime = reservation.startTime;
+      final originalDate = DateTime(
+        originalStartTime.year,
+        originalStartTime.month,
+        originalStartTime.day,
+      );
+      ref.read(pendingHighlightIdProvider.notifier).set(item.event.summary.id);
+      ref
+          .read(homeCalendarControllerProvider.notifier)
+          .selectDateFromContinuation(originalDate);
+      ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime);
+      await showReservationDetailModal(context, reservation);
+      if (!mounted) return;
+      ref.read(pendingHighlightIdProvider.notifier).clear();
+    } else {
+      // ① 일반 셀 탭
+      setState(() {
+        _highlightedId = item.event.summary.id;
+        _selectedId = item.event.summary.id;
+      });
+      final reservation = widget.reservations[item.event.summary.id];
+      if (reservation == null || !mounted) return;
+      await showReservationDetailModal(context, reservation);
+      if (!mounted) return;
+      setState(() {
+        _highlightedId = null;
+        _selectedId = null;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hourHeight = ref.watch(
@@ -296,11 +351,14 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
                       left: item.left,
                       right: item.right,
                       height: p.height,
-                      child: ReservationCell(
-                        data: item.event,
-                        clipContent: item.clipContent,
-                        isHighlighted:
-                            effectiveHighlightId == item.event.summary.id,
+                      child: GestureDetector(
+                        onTap: () => _onCellTap(item),
+                        child: ReservationCell(
+                          data: item.event,
+                          clipContent: item.clipContent,
+                          isHighlighted:
+                              effectiveHighlightId == item.event.summary.id,
+                        ),
                       ),
                     );
                   }),
