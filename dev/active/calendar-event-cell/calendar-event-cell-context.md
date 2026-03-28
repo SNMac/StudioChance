@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-28 (15차 — 자정 넘김 셀 코너·여백 제거)
+Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
 
 ---
 
@@ -259,6 +259,16 @@ height = (hourHeight × durationMin/60 − topGap − bottomGap).clamp(1.0, ∞)
 ```
 
 시각 효과: 자정 경계에서 두 셀이 코너·틈새 없이 연결되어 한눈에 이어지는 일정임을 알 수 있음.
+
+### 바운스 시 연결 처리 (`_bounceExtension = 1000.0`)
+
+Stack의 `clipBehavior: Clip.none`을 활용해 셀을 SizedBox(그리드) 경계 밖으로 연장.
+SingleChildScrollView는 뷰포트(화면 영역) 기준으로 클리핑하므로 연장된 부분이 바운스 중 보임.
+
+```
+isContinuation   → top -= 1000, height += 1000  (그리드 위로 연장, top 바운스 시 연결)
+continuesNextDay → height += 1000               (그리드 아래로 연장, bottom 바운스 시 연결)
+```
 
 ---
 

@@ -18,6 +18,11 @@ const double _minCellWidthFor1Char = 31.0;
 /// 비겹침 구간에서 이름이 충분히 노출되므로, 겹침 구간엔 strip만 노출해도 충분.
 const double _differentStartStagger = 8.0;
 
+/// 자정 넘김 셀의 바운스 연장 길이 (px).
+/// Stack(clipBehavior: Clip.none)을 이용해 그리드 경계 밖으로 셀을 연장.
+/// 스크롤 바운스 시 연결된 것처럼 보이도록 충분히 큰 값 사용.
+const double _bounceExtension = 1000.0;
+
 // ── 위치 계산 결과 ─────────────────────────────────────────────────────────────
 
 class _PositionedItem {
@@ -262,16 +267,30 @@ class TimeGrid extends ConsumerWidget {
   /// isContinuation / continuesNextDay 여부에 따라 top·height 계산.
   /// topGap: isContinuation=true → 0.0 (위 코너 없음, 구분선에 밀착)
   /// bottomGap: continuesNextDay=true → 0.0 (아래 코너 없음, 구분선에 밀착)
+  ///
+  /// 바운스 연장:
+  ///   isContinuation   → top을 위로 [_bounceExtension]만큼 연장 (top 바운스 시 연결)
+  ///   continuesNextDay → height를 아래로 [_bounceExtension]만큼 연장 (bottom 바운스 시 연결)
+  ///   Stack(clipBehavior: Clip.none)이므로 SizedBox 외부로 그려져 바운스 시 보임.
   ({double top, double height}) _placementFor(
       ReservationDisplayData event, double hourHeight) {
     final topGap = event.isContinuation ? 0.0 : 0.5;
     final bottomGap = event.continuesNextDay ? 0.0 : 1.5;
     final start = event.startTime!;
     final end = event.endTime!;
-    final top = hourHeight * (start.hour + start.minute / 60) + topGap;
-    final height =
+    var top = hourHeight * (start.hour + start.minute / 60) + topGap;
+    var height =
         (hourHeight * end.difference(start).inMinutes / 60 - topGap - bottomGap)
             .clamp(1.0, double.infinity);
+
+    if (event.isContinuation) {
+      top -= _bounceExtension;
+      height += _bounceExtension;
+    }
+    if (event.continuesNextDay) {
+      height += _bounceExtension;
+    }
+
     return (top: top, height: height);
   }
 

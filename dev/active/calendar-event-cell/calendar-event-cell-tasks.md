@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-28 (15차 — 자정 넘김 셀 코너·여백 제거)
+Last Updated: 2026-03-28 (16차 — 자정 넘김 셀 바운스 연결 처리)
 
 ---
 
@@ -129,6 +129,9 @@ Last Updated: 2026-03-28 (15차 — 자정 넘김 셀 코너·여백 제거)
   - `ReservationCell`: isContinuation=true 시 배경+스트립만 렌더링
   - `ReservationCell`: isContinuation/continuesNextDay에 따라 코너 반경 조건부 적용
   - `time_grid.dart`: `_placementFor()` — isContinuation→topGap=0, continuesNextDay→bottomGap=0
+  - `time_grid.dart`: `_bounceExtension=1000px` — Stack(Clip.none) 이용해 바운스 시 연결
+    - isContinuation: top을 위로 1000px 연장 (top 바운스 시 연속으로 보임)
+    - continuesNextDay: height를 아래로 1000px 연장 (bottom 바운스 시 연속으로 보임)
   - `_eventsForDate`: 자정 넘김 이벤트 분할 (시작일 continuesNextDay=true + 익일 isContinuation=true)
   - 목업 데이터: 오늘 22:00 ~ 내일 02:00 (이도윤, indigo, confirmed) 추가
 
@@ -165,6 +168,7 @@ Last Updated: 2026-03-28 (15차 — 자정 넘김 셀 코너·여백 제거)
 - [ ] **V-14**: 오늘 22:00 → 내일 02:00 자정 넘김:
   - 오늘 22:00~24:00: 정상 셀, 하단 코너 없음·구분선 밀착
   - 내일 00:00~02:00: 배경+스트립만, 상단 코너 없음·구분선 밀착
+  - 바운스 시: 오늘 열 bottom 바운스 → 셀 아래로 이어짐, 내일 열 top 바운스 → 셀 위로 이어짐
 - [ ] **V-8**: 모레 20:00 N=2 delta=60분 → 8px stagger (back 셀 strip+gap만 노출)
 - [ ] **V-9**: 좌측 스트립(Foreground) vs 우측 배경(Background) 확인
 - [ ] **V-10**: 아이콘 셀 왼쪽에서 4px 간격
