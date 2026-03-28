@@ -120,6 +120,27 @@ String? _highlightedId; // 하이라이트 중인 셀 id
 - 좌측 스트립: `foregroundColor` (배경과 동일, 시각적으로 단일 색)
 - 라벨(텍스트·아이콘): `white`
 
+### ScrollToTimeTrigger Provider (신규)
+
+`home_calendar_controller.dart`에 `ScrollToCurrentTimeTrigger`와 동일한 패턴으로 추가.
+
+```dart
+@riverpod
+class ScrollToTimeTrigger extends _$ScrollToTimeTrigger {
+  @override
+  DateTime? build() => null;
+  void trigger(DateTime time) => state = time;
+  void clear() => state = null;
+}
+```
+
+`HomeCalendarController`에 `selectDateFromContinuation(DateTime date)` 메서드 추가:
+- `_threeDayTransition = animate`, `_monthlyTransition = animate`
+- `selectDate(date)` 호출 (selectedStartDate + displayedMonth 업데이트)
+
+`ThreeDayCalendar`: `ref.listen(scrollToTimeTriggerProvider)`로 변경을 감지,
+페이지 이동 완료(`animateToPage.then()`) 후 해당 시간 offset으로 `_syncAllScrollControllers` 호출.
+
 ### 탭 흐름별 동작
 
 **① 일반 셀 탭 (N<4, groupEvents == null):**
@@ -142,13 +163,14 @@ String? _highlightedId; // 하이라이트 중인 셀 id
 
 **③ isContinuation 셀 탭:**
 ```
-1. originalDate = summary.startTime.subtract(Duration(days: 1))
-2. ref.read(homeCalendarControllerProvider.notifier).setSelectedStartDate(originalDate)
-3. await showReservationDetailModal(reservations[event.id])
+1. originalStartTime = reservations[event.id].startTime
+2. ref.read(homeCalendarControllerProvider.notifier).selectDateFromContinuation(originalDate)
+   → selectedStartDate = originalDate (animate 전환)
+3. ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime)
+   → ThreeDayCalendar가 페이지 이동 완료 후 해당 시간대로 수직 스크롤
+4. await showReservationDetailModal(reservations[event.id])
 ```
-※ 하이라이트 없음 — isContinuation 셀의 TimeGrid와 원본 날짜의 TimeGrid는
-   별도 인스턴스이므로 로컬 상태(_highlightedId)로 cross-widget 하이라이트 불가.
-   원본 셀 하이라이트는 스코프 아웃.
+※ 하이라이트 없음 — 모달이 화면을 덮으므로 원본 셀 하이라이트 불필요.
 
 ---
 
@@ -197,8 +219,9 @@ final selected = await showModalBottomSheet<ReservationSummary>(isScrollControll
 |------|---------|
 | `reservation_cell.dart` | `ReservationDisplayData` 재구성, `ReservationCellColorTheme` 제거, 셀 `ReservationStatus` enum 제거, `isHighlighted` 파라미터 추가 |
 | `time_grid.dart` | `ConsumerStatefulWidget` 전환, `_PositionedItem` 변경, stagger 임계값 제거, 탭 핸들러 추가, `reservations` 파라미터 추가 |
-| `three_day_calendar.dart` | `ReservationDisplayData` 생성 로직 수정, mock `Reservation` 맵 추가, `TimeGrid`에 `reservations` 전달 |
+| `three_day_calendar.dart` | `ReservationDisplayData` 생성 로직 수정, mock `Reservation` 맵 추가, `TimeGrid`에 `reservations` 전달, `scrollToTimeTrigger` listen 추가 |
 | `all_day_row.dart` | `ReservationDisplayData` 필드 접근 수정 |
+| `home_calendar_controller.dart` | `ScrollToTimeTrigger` provider 추가, `selectDateFromContinuation()` 메서드 추가 |
 | `overflow_cell.dart` | **삭제** |
 | `reservation_detail_modal.dart` | **신규** |
 | `reservation_list_modal.dart` | **신규** |
@@ -208,7 +231,5 @@ final selected = await showModalBottomSheet<ReservationSummary>(isScrollControll
 ## 스코프 아웃 (추후)
 
 - `ReservationDetailModal` 실제 디자인 구현
-- `isContinuation` 탭 시 원본 셀 하이라이트 (cross-widget 상태 관리 필요)
-- `isContinuation` 탭 시 원본 이벤트 시간대로 수직 스크롤 이동
 - 실제 Firestore 데이터 연결 (mock 제거)
 - build_runner 불필요 — 코드 생성 없음
