@@ -3,6 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/reservation_summary.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_summary.dart';
+import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
@@ -25,268 +33,268 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   // 캘린더 지원 범위의 시작일 (2001.01.01 ~ 2100.12.31)
   static final _referenceDate = DateTime(2001, 1, 1);
 
-  // ── 목업 이벤트 데이터 ────────────────────────────────────────────────────
+  // ── 목업 데이터 ────────────────────────────────────────────────────────────
   // TODO: Riverpod provider에서 실제 예약 데이터 수신으로 교체 예정.
-  static final _mockEvents = _buildMockEvents();
 
-  static List<ReservationDisplayData> _buildMockEvents() {
-    final today = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
+  static final _mockData = _buildMockData();
+  static List<ReservationDisplayData> get _mockEvents => _mockData.$1;
+  static Map<String, Reservation> get _mockReservations => _mockData.$2;
+
+  static StoreSummary _store(StoreColor color) =>
+      StoreSummary(id: 's_${color.name}', name: '점포', color: color);
+
+  static final _mockWriter = StoreMemberInfo(
+    user: User(
+      id: 'u1',
+      name: '관리자',
+      email: 'admin@test.com',
+      nickname: '관리자',
+      authProviders: [],
+      storeInfos: [],
+    ),
+    role: UserRole.admin,
+  );
+
+  static (List<ReservationDisplayData>, Map<String, Reservation>) _buildMockData() {
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final tomorrow = today.add(const Duration(days: 1));
     final dayAfter = today.add(const Duration(days: 2));
 
-    return [
-      // ── 오늘: 단독 1개 + 4개 겹침(오버플로우) ──────────────────────────────
-
-      // 종일 — 단독
-      ReservationDisplayData(
-        reserverName: '유훈자', headcount: 2,
-        phoneNumber: '010-3109-6381',
+    // ── 기본 ReservationSummary 목록 (id → summary) ────────────────────────
+    final summaries = <String, ReservationSummary>{
+      // 오늘: 종일 단독
+      'e01': ReservationSummary(
+        id: 'e01', storeSummary: _store(StoreColor.green),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.green,
+        customerName: '유훈자', headCount: 2, customerPhone: '010-3109-6381',
         isAllDay: true,
-        date: today,
+        startTime: today, endTime: today.add(const Duration(days: 1)),
       ),
-
-      // 07:00~08:30 — 단독 1개 (정상 셀 검증)
-      ReservationDisplayData(
-        reserverName: '유훈자', headcount: 2,
-        phoneNumber: '010-3109-6381',
+      // 오늘: 07:00~08:30 단독
+      'e02': ReservationSummary(
+        id: 'e02', storeSummary: _store(StoreColor.green),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.green,
+        customerName: '유훈자', headCount: 2, customerPhone: '010-3109-6381',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 7)),
         endTime: today.add(const Duration(hours: 8, minutes: 30)),
       ),
-
-      // 10:00~XX — 4개 동시 겹침 → 오버플로우 셀 (N=4, ~26.5px < 31px)
-      ReservationDisplayData(
-        reserverName: '박지원', headcount: 1,
-        phoneNumber: '010-1111-2222',
+      // 오늘: 10:00~ 4개 동시 겹침 (N=4, groupEvents로 처리)
+      'e03': ReservationSummary(
+        id: 'e03', storeSummary: _store(StoreColor.red),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.red,
+        customerName: '박지원', headCount: 1, customerPhone: '010-1111-2222',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 11)),
       ),
-      ReservationDisplayData(
-        reserverName: '최수아', headcount: 2,
-        phoneNumber: '010-3333-4444',
+      'e04': ReservationSummary(
+        id: 'e04', storeSummary: _store(StoreColor.blue),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.blue,
+        customerName: '최수아', headCount: 2, customerPhone: '010-3333-4444',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 12)),
       ),
-      ReservationDisplayData(
-        reserverName: '김민준', headcount: 4,
-        phoneNumber: '010-5555-1234',
-        status: ReservationStatus.cancelled,
-        colorTheme: ReservationCellColorTheme.green,
+      'e05': ReservationSummary(
+        id: 'e05', storeSummary: _store(StoreColor.green),
+        status: ReservationStatus.canceled,
+        customerName: '김민준', headCount: 4, customerPhone: '010-5555-1234',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 13)),
       ),
-      ReservationDisplayData(
-        reserverName: '이서준', headcount: 3,
-        phoneNumber: '010-7777-9999',
-        status: ReservationStatus.pendingPayment,
-        colorTheme: ReservationCellColorTheme.yellow,
+      'e06': ReservationSummary(
+        id: 'e06', storeSummary: _store(StoreColor.yellow),
+        status: ReservationStatus.pending,
+        customerName: '이서준', headCount: 3, customerPhone: '010-7777-9999',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 10)),
         endTime: today.add(const Duration(hours: 14)),
       ),
-
-      // 16:00~17:00 — 단독 1개 (오버플로우 이후 정상 셀 검증)
-      ReservationDisplayData(
-        reserverName: '정하은', headcount: 1,
-        phoneNumber: '010-8888-4444',
-        status: ReservationStatus.cancelled,
-        colorTheme: ReservationCellColorTheme.purple,
+      // 오늘: 16:00~17:00 단독
+      'e07': ReservationSummary(
+        id: 'e07', storeSummary: _store(StoreColor.purple),
+        status: ReservationStatus.canceled,
+        customerName: '정하은', headCount: 1, customerPhone: '010-8888-4444',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 16)),
         endTime: today.add(const Duration(hours: 17)),
       ),
-
-      // 22:00 ~ 익일 02:00 — 자정 넘김 예약 (오늘: 22:00~24:00 / 내일: 00:00~02:00 연속)
-      ReservationDisplayData(
-        reserverName: '이도윤', headcount: 3,
-        phoneNumber: '010-5050-7070',
+      // 오늘 22:00 ~ 내일 02:00 (자정 넘김)
+      'e08': ReservationSummary(
+        id: 'e08', storeSummary: _store(StoreColor.indigo),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.indigo,
+        customerName: '이도윤', headCount: 3, customerPhone: '010-5050-7070',
         isAllDay: false,
         startTime: today.add(const Duration(hours: 22)),
         endTime: tomorrow.add(const Duration(hours: 2)),
       ),
-
-      // ── 내일 ─────────────────────────────────────────────────────────────────
-
-      // 09:00 — N=2, delta=0 (동시 시작) → cellWidth stagger (~53px, 이름 3자)
-      ReservationDisplayData(
-        reserverName: '나현우', headcount: 2,
-        phoneNumber: '010-2222-1111',
+      // 내일: N=2, delta=0 (동시 시작)
+      'e09': ReservationSummary(
+        id: 'e09', storeSummary: _store(StoreColor.orange),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.orange,
+        customerName: '나현우', headCount: 2, customerPhone: '010-2222-1111',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 9)),
         endTime: tomorrow.add(const Duration(hours: 11)),
       ),
-      ReservationDisplayData(
-        reserverName: '임지수', headcount: 5,
-        phoneNumber: '010-4444-3333',
-        status: ReservationStatus.pendingPayment,
-        colorTheme: ReservationCellColorTheme.indigo,
+      'e10': ReservationSummary(
+        id: 'e10', storeSummary: _store(StoreColor.indigo),
+        status: ReservationStatus.pending,
+        customerName: '임지수', headCount: 5, customerPhone: '010-4444-3333',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 9)),
         endTime: tomorrow.add(const Duration(hours: 13)),
       ),
-
-      // 13:00 — N=3, delta=0 → cellWidth stagger (~35px, 이름 1~2자)
-      ReservationDisplayData(
-        reserverName: '강민서', headcount: 3,
-        phoneNumber: '010-6666-5555',
+      // 내일: N=3, delta=0
+      'e11': ReservationSummary(
+        id: 'e11', storeSummary: _store(StoreColor.green),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.green,
+        customerName: '강민서', headCount: 3, customerPhone: '010-6666-5555',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 13)),
         endTime: tomorrow.add(const Duration(hours: 15)),
       ),
-      ReservationDisplayData(
-        reserverName: '오세진', headcount: 2,
-        phoneNumber: '010-8888-7777',
-        status: ReservationStatus.pendingPayment,
-        colorTheme: ReservationCellColorTheme.yellow,
+      'e12': ReservationSummary(
+        id: 'e12', storeSummary: _store(StoreColor.yellow),
+        status: ReservationStatus.pending,
+        customerName: '오세진', headCount: 2, customerPhone: '010-8888-7777',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 13)),
         endTime: tomorrow.add(const Duration(hours: 16)),
       ),
-      ReservationDisplayData(
-        reserverName: '윤채원', headcount: 1,
-        phoneNumber: '010-0000-9999',
-        status: ReservationStatus.cancelled,
-        colorTheme: ReservationCellColorTheme.purple,
+      'e13': ReservationSummary(
+        id: 'e13', storeSummary: _store(StoreColor.purple),
+        status: ReservationStatus.canceled,
+        customerName: '윤채원', headCount: 1, customerPhone: '010-0000-9999',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 13)),
         endTime: tomorrow.add(const Duration(hours: 17)),
       ),
-
-      // 17:00 — N=2, delta=20분 (>0분) → 8px 고정 stagger (strip+gap만 노출)
-      // 전화번호 가려져도 무방; 비겹침 구간에서 이름 충분히 노출됨
-      ReservationDisplayData(
-        reserverName: '한소희', headcount: 2,
-        phoneNumber: '010-1357-2468',
+      // 내일: N=2, delta=20분
+      'e14': ReservationSummary(
+        id: 'e14', storeSummary: _store(StoreColor.red),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.red,
+        customerName: '한소희', headCount: 2, customerPhone: '010-1357-2468',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 17)),
         endTime: tomorrow.add(const Duration(hours: 19, minutes: 30)),
       ),
-      ReservationDisplayData(
-        reserverName: '도경수', headcount: 3,
-        phoneNumber: '010-2468-1357',
-        status: ReservationStatus.pendingPayment,
-        colorTheme: ReservationCellColorTheme.blue,
+      'e15': ReservationSummary(
+        id: 'e15', storeSummary: _store(StoreColor.blue),
+        status: ReservationStatus.pending,
+        customerName: '도경수', headCount: 3, customerPhone: '010-2468-1357',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 17, minutes: 20)),
         endTime: tomorrow.add(const Duration(hours: 19)),
       ),
-
-      // 20:30 — N=2, delta=30분 (>0분) → 8px 고정 stagger
-      ReservationDisplayData(
-        reserverName: '박보검', headcount: 4,
-        phoneNumber: '010-9999-1111',
+      // 내일: N=2, delta=30분
+      'e16': ReservationSummary(
+        id: 'e16', storeSummary: _store(StoreColor.orange),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.orange,
+        customerName: '박보검', headCount: 4, customerPhone: '010-9999-1111',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 20, minutes: 30)),
         endTime: tomorrow.add(const Duration(hours: 23)),
       ),
-      ReservationDisplayData(
-        reserverName: '김태리', headcount: 1,
-        phoneNumber: '010-1111-9999',
-        status: ReservationStatus.cancelled,
-        colorTheme: ReservationCellColorTheme.indigo,
+      'e17': ReservationSummary(
+        id: 'e17', storeSummary: _store(StoreColor.indigo),
+        status: ReservationStatus.canceled,
+        customerName: '김태리', headCount: 1, customerPhone: '010-1111-9999',
         isAllDay: false,
         startTime: tomorrow.add(const Duration(hours: 21)),
         endTime: tomorrow.add(const Duration(hours: 22, minutes: 30)),
       ),
-
-      // ── 모레: 단독 셀들 ──────────────────────────────────────────────────────
-
-      // 종일 — 단독
-      ReservationDisplayData(
-        reserverName: '최수아', headcount: 5,
-        phoneNumber: '010-2222-3333',
-        status: ReservationStatus.pendingPayment,
-        colorTheme: ReservationCellColorTheme.orange,
+      // 모레: 종일 단독
+      'e18': ReservationSummary(
+        id: 'e18', storeSummary: _store(StoreColor.orange),
+        status: ReservationStatus.pending,
+        customerName: '최수아', headCount: 5, customerPhone: '010-2222-3333',
         isAllDay: true,
-        date: dayAfter,
+        startTime: dayAfter, endTime: dayAfter.add(const Duration(days: 1)),
       ),
-
-      // 10:00~12:00 — 단독 1개
-      ReservationDisplayData(
-        reserverName: '한지민', headcount: 3,
-        phoneNumber: '010-1234-5678',
+      // 모레: 시간대 단독들
+      'e19': ReservationSummary(
+        id: 'e19', storeSummary: _store(StoreColor.indigo),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.indigo,
+        customerName: '한지민', headCount: 3, customerPhone: '010-1234-5678',
         isAllDay: false,
         startTime: dayAfter.add(const Duration(hours: 10)),
         endTime: dayAfter.add(const Duration(hours: 12)),
       ),
-
-      // 15:00~16:00 — 단독 1개 (최소 높이 셀 검증)
-      ReservationDisplayData(
-        reserverName: '서동현', headcount: 1,
-        phoneNumber: '010-9876-5432',
+      'e20': ReservationSummary(
+        id: 'e20', storeSummary: _store(StoreColor.blue),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.blue,
+        customerName: '서동현', headCount: 1, customerPhone: '010-9876-5432',
         isAllDay: false,
         startTime: dayAfter.add(const Duration(hours: 15)),
         endTime: dayAfter.add(const Duration(hours: 16)),
       ),
-
-      // 17:00~19:00 — 단독 1개
-      ReservationDisplayData(
-        reserverName: '권나연', headcount: 4,
-        phoneNumber: '010-5678-1234',
-        status: ReservationStatus.cancelled,
-        colorTheme: ReservationCellColorTheme.red,
+      'e21': ReservationSummary(
+        id: 'e21', storeSummary: _store(StoreColor.red),
+        status: ReservationStatus.canceled,
+        customerName: '권나연', headCount: 4, customerPhone: '010-5678-1234',
         isAllDay: false,
         startTime: dayAfter.add(const Duration(hours: 17)),
         endTime: dayAfter.add(const Duration(hours: 19)),
       ),
-
-      // ── 모레: N=2, delta=60분 (>30분) → 4px gap stagger (8px 고정) ──────────
-      // 20:00~24:00 (4시간) + 21:00~23:00 (2시간, 내부에 포함됨)
-      // delta=60분 > 30분 → 8px 고정 stagger (foreground strip+gap만 노출)
-      ReservationDisplayData(
-        reserverName: '송민호', headcount: 6,
-        phoneNumber: '010-1111-3333',
+      // 모레: N=2, delta=60분
+      'e22': ReservationSummary(
+        id: 'e22', storeSummary: _store(StoreColor.orange),
         status: ReservationStatus.confirmed,
-        colorTheme: ReservationCellColorTheme.orange,
+        customerName: '송민호', headCount: 6, customerPhone: '010-1111-3333',
         isAllDay: false,
         startTime: dayAfter.add(const Duration(hours: 20)),
         endTime: dayAfter.add(const Duration(hours: 24)),
       ),
-      ReservationDisplayData(
-        reserverName: '백지현', headcount: 2,
-        phoneNumber: '010-2222-4444',
-        status: ReservationStatus.pendingPayment,
-        colorTheme: ReservationCellColorTheme.blue,
+      'e23': ReservationSummary(
+        id: 'e23', storeSummary: _store(StoreColor.blue),
+        status: ReservationStatus.pending,
+        customerName: '백지현', headCount: 2, customerPhone: '010-2222-4444',
         isAllDay: false,
         startTime: dayAfter.add(const Duration(hours: 21)),
         endTime: dayAfter.add(const Duration(hours: 23)),
       ),
-    ];
+    };
+
+    // ── ReservationDisplayData 목록 ────────────────────────────────────────
+    final events = summaries.values
+        .map((s) => ReservationDisplayData(summary: s))
+        .toList();
+
+    // ── Reservation 맵 (탭 시 상세 모달에 전달) ──────────────────────────────
+    final reservations = summaries.map(
+      (id, s) => MapEntry(
+        id,
+        Reservation(
+          id: id,
+          storeSummary: s.storeSummary,
+          writer: _mockWriter,
+          status: s.status,
+          customerName: s.customerName,
+          headCount: s.headCount,
+          customerPhone: s.customerPhone,
+          memo: '',
+          isAllDay: s.isAllDay,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          platform: '',
+          paymentMethod: '',
+          calculatedPrice: 0,
+          priceAdjustment: 0,
+          totalPrice: 0,
+        ),
+      ),
+    );
+
+    return (events, reservations);
   }
 
   /// 특정 날짜의 이벤트 목록 반환.
   /// 자정을 넘기는 시간대 이벤트는 두 날짜에 각각 분할:
-  ///   - 시작일: endTime을 자정(00:00)으로 제한 (정상 셀)
-  ///   - 익일: startTime=자정, isContinuation=true (배경+스트립만 표시)
+  ///   - 시작일: endTime을 자정으로 제한 (summary.copyWith), continuesNextDay=true
+  ///   - 익일: startTime=자정 (summary.copyWith), isContinuation=true
   static List<ReservationDisplayData> _eventsForDate(
       DateTime date, {required bool allDay}) {
     final dateStart = DateTime(date.year, date.month, date.day);
@@ -294,34 +302,26 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final result = <ReservationDisplayData>[];
 
     for (final e in _mockEvents) {
-      if (e.isAllDay != allDay) continue;
+      if (e.summary.isAllDay != allDay) continue;
 
       if (allDay) {
-        final d = e.date!;
-        if (d.year == date.year && d.month == date.month && d.day == date.day) {
+        final s = e.summary.startTime;
+        if (s.year == date.year && s.month == date.month && s.day == date.day) {
           result.add(e);
         }
         continue;
       }
 
-      final start = e.startTime!;
-      final end = e.endTime!;
+      final start = e.summary.startTime;
+      final end = e.summary.endTime;
 
       // 이 날짜에 시작하는 이벤트
       if (start.year == date.year &&
           start.month == date.month &&
           start.day == date.day) {
-        // 자정을 넘기는 경우: endTime을 자정으로 제한, 하단 코너·여백 없음
         if (end.isAfter(dateMidnight)) {
           result.add(ReservationDisplayData(
-            reserverName: e.reserverName,
-            headcount: e.headcount,
-            phoneNumber: e.phoneNumber,
-            status: e.status,
-            colorTheme: e.colorTheme,
-            isAllDay: false,
-            startTime: start,
-            endTime: dateMidnight,
+            summary: e.summary.copyWith(endTime: dateMidnight),
             continuesNextDay: true,
           ));
         } else {
@@ -330,17 +330,10 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         continue;
       }
 
-      // 이전 날에 시작해서 이 날짜 자정 이후까지 이어지는 이벤트 → 연속 셀
+      // 이전 날에 시작해서 이 날짜까지 이어지는 이벤트 → 연속 셀
       if (start.isBefore(dateStart) && end.isAfter(dateStart)) {
         result.add(ReservationDisplayData(
-          reserverName: e.reserverName,
-          headcount: e.headcount,
-          phoneNumber: e.phoneNumber,
-          status: e.status,
-          colorTheme: e.colorTheme,
-          isAllDay: false,
-          startTime: dateStart,
-          endTime: end,
+          summary: e.summary.copyWith(startTime: dateStart),
           isContinuation: true,
         ));
       }
@@ -780,6 +773,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                               scrollController: _controllerForPage(index),
                               isToday: _isToday(date),
                               events: _eventsForDate(date, allDay: false),
+                              reservations: _mockReservations,
                             ),
                           ),
                         ],

@@ -3,62 +3,37 @@ import 'dart:math' show max;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
-import 'package:studio_chance/presentation/home/widgets/three_day_calendar/overflow_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
-/// 이벤트 1글자를 표시하기 위한 셀 최소 너비 (px)
-/// 계산: SizedBox(8) + 아이콘(10) + 간격(2.5) + 한글 1자(≈10) ≈ 31
-const double _minCellWidthFor1Char = 31.0;
-
 /// N=2 겹침에서 시작 시간이 다를 때 (delta > 0) 적용하는 고정 stagger (px).
 /// back 셀의 foreground strip(4px) + gap(4px) = 8px.
-/// 비겹침 구간에서 이름이 충분히 노출되므로, 겹침 구간엔 strip만 노출해도 충분.
 const double _differentStartStagger = 8.0;
 
 /// 자정 넘김 셀의 바운스 연장 길이 (px).
-/// Stack(clipBehavior: Clip.none)을 이용해 그리드 경계 밖으로 셀을 연장.
-/// 스크롤 바운스 시 연결된 것처럼 보이도록 충분히 큰 값 사용.
 const double _bounceExtension = 1000.0;
 
 // ── 위치 계산 결과 ─────────────────────────────────────────────────────────────
 
 class _PositionedItem {
-  _PositionedItem.normal({
+  _PositionedItem({
     required this.event,
     required this.left,
     required this.right,
     required this.clipContent,
-  })  : overflowEvents = null,
-        overflowStart = null,
-        overflowEnd = null;
+    this.groupEvents,
+  });
 
-  _PositionedItem.overflow({
-    required List<ReservationDisplayData> events,
-    required this.left,
-    required this.right,
-    required DateTime start,
-    required DateTime end,
-  })  : event = null,
-        clipContent = false,
-        overflowEvents = events,
-        overflowStart = start,
-        overflowEnd = end;
-
-  /// null이면 오버플로우 셀
-  final ReservationDisplayData? event;
+  final ReservationDisplayData event;
   final double left;
   final double right;
   final bool clipContent;
 
-  /// 오버플로우 셀 전용
-  final List<ReservationDisplayData>? overflowEvents;
-  final DateTime? overflowStart;
-  final DateTime? overflowEnd;
-
-  bool get isOverflow => event == null;
+  /// N≥4 그룹: non-null이면 탭 시 이벤트 목록 모달 표시
+  final List<ReservationDisplayData>? groupEvents;
 }
 
 // ── 위치 계산 알고리즘 ─────────────────────────────────────────────────────────
@@ -73,49 +48,47 @@ class _PositionedItem {
 ///   3. Union-Find: 겹치는 이벤트들을 연결 컴포넌트로 묶음
 ///   4. 컴포넌트별 N = max(col) + 1
 ///   5a. N=2 전용 — 시작 시간 차이(delta)에 따른 stagger 결정:
-///       - delta == 0 (동시 시작): cellWidth(= usableWidth/2) stagger → 이름 ~3자 표시
-///       - delta > 0 (시작 시간 다름): [_differentStartStagger](8px 고정) → strip+gap만 노출
+///       - delta == 0 (동시 시작): cellWidth(= usableWidth/2) stagger
+///       - delta > 0 (시작 시간 다름): [_differentStartStagger](8px 고정)
 ///   5b. 위치 계산: left = 1 + col × stagger, right = 8 고정
-///       - cellWidth(= usableWidth/N) ≥ 31px → 스택 배치
-///       - cellWidth < 31px → 오버플로우 셀 (N개 이벤트를 1개로 대체)
+///       - N≥4 컴포넌트: groupEvents 채우기 (탭 시 목록 모달)
 List<_PositionedItem> _computePositions(
     List<ReservationDisplayData> events, double columnWidth) {
   final usableWidth = columnWidth - 9.0; // 1(left) + 8(right)
 
   final timeEvents = events
-      .where((e) => !e.isAllDay && e.startTime != null && e.endTime != null)
+      .where((e) => !e.summary.isAllDay)
       .toList();
 
   if (timeEvents.isEmpty) return [];
 
   // Step 1: z 순서 정렬
   timeEvents.sort((a, b) {
-    final startCmp = a.startTime!.compareTo(b.startTime!);
+    final startCmp = a.summary.startTime.compareTo(b.summary.startTime);
     if (startCmp != 0) return startCmp;
-    return a.endTime!.difference(a.startTime!).compareTo(
-        b.endTime!.difference(b.startTime!));
+    return a.summary.endTime
+        .difference(a.summary.startTime)
+        .compareTo(b.summary.endTime.difference(b.summary.startTime));
   });
 
   final n = timeEvents.length;
 
   // Step 2: 그리디 인터벌 컬러링 → 열 인덱스 배정
-  // 각 열의 마지막 이벤트 종료 시간을 추적
-  // 새 이벤트 시작 ≥ 열 종료 시간 → 해당 열 재사용 가능 (겹치지 않음)
   final columnEndTimes = <DateTime>[];
   final colOf = <int>[];
 
   for (final event in timeEvents) {
     int col = -1;
     for (int c = 0; c < columnEndTimes.length; c++) {
-      if (!columnEndTimes[c].isAfter(event.startTime!)) {
+      if (!columnEndTimes[c].isAfter(event.summary.startTime)) {
         col = c;
-        columnEndTimes[c] = event.endTime!;
+        columnEndTimes[c] = event.summary.endTime;
         break;
       }
     }
     if (col == -1) {
       col = columnEndTimes.length;
-      columnEndTimes.add(event.endTime!);
+      columnEndTimes.add(event.summary.endTime);
     }
     colOf.add(col);
   }
@@ -125,7 +98,7 @@ List<_PositionedItem> _computePositions(
 
   int findRoot(int x) {
     while (parent[x] != x) {
-      parent[x] = parent[parent[x]]; // 경로 반분
+      parent[x] = parent[parent[x]];
       x = parent[x];
     }
     return x;
@@ -133,15 +106,15 @@ List<_PositionedItem> _computePositions(
 
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
-      if (timeEvents[i].startTime!.isBefore(timeEvents[j].endTime!) &&
-          timeEvents[j].startTime!.isBefore(timeEvents[i].endTime!)) {
+      if (timeEvents[i].summary.startTime.isBefore(timeEvents[j].summary.endTime) &&
+          timeEvents[j].summary.startTime.isBefore(timeEvents[i].summary.endTime)) {
         final pi = findRoot(i), pj = findRoot(j);
         if (pi != pj) parent[pi] = pj;
       }
     }
   }
 
-  // Step 4: 컴포넌트별 최대 열 인덱스 → N (동시 최대 겹침 수)
+  // Step 4: 컴포넌트별 최대 열 인덱스 → N
   final compMaxCol = <int, int>{};
   for (int i = 0; i < n; i++) {
     final root = findRoot(i);
@@ -149,10 +122,6 @@ List<_PositionedItem> _computePositions(
   }
 
   // Step 5a: N=2 컴포넌트 전용 — 시작 시간 차이에 따른 stagger 결정
-  // delta == 0 (동시 시작): 겹침 구간에서 이름이 가려지므로
-  //                         → cellWidth stagger (이름 ~3자 표시, 반절 방식)
-  // delta > 0 (시작 시간 다름): 비겹침 구간에서 이름이 충분히 노출됨
-  //                             → 8px 고정 stagger (foreground strip 4px + gap 4px만 노출)
   final compStagger = <int, double>{};
   for (final root in compMaxCol.keys) {
     if (compMaxCol[root]! + 1 != 2) continue;
@@ -163,15 +132,14 @@ List<_PositionedItem> _computePositions(
       (colOf[k] == 0 ? col0 : col1).add(k);
     }
 
-    // 직접 겹치는 (col0, col1) 쌍의 최소 시작 시간 차이(분)
     var minDeltaMin = double.infinity;
     for (final a in col0) {
       for (final b in col1) {
-        if (timeEvents[a].startTime!.isBefore(timeEvents[b].endTime!) &&
-            timeEvents[b].startTime!.isBefore(timeEvents[a].endTime!)) {
+        if (timeEvents[a].summary.startTime.isBefore(timeEvents[b].summary.endTime) &&
+            timeEvents[b].summary.startTime.isBefore(timeEvents[a].summary.endTime)) {
           final delta = timeEvents[b]
-              .startTime!
-              .difference(timeEvents[a].startTime!)
+              .summary.startTime
+              .difference(timeEvents[a].summary.startTime)
               .inMinutes
               .abs()
               .toDouble();
@@ -185,53 +153,31 @@ List<_PositionedItem> _computePositions(
   }
 
   // Step 5b: 위치 계산
-  // left = 1 + col × stagger, right = 8 고정 → 뒤 셀을 덮는 스택 구조
-  // col > 0 (front/middle) → clipContent=true (단일행 clip)
-  // col == 0 (back) → clipContent=false (FittedBox 정상 레이아웃)
   final result = <_PositionedItem>[];
-  final overflowHandled = <int>{};
 
   for (int i = 0; i < n; i++) {
     final root = findRoot(i);
     final numCols = (compMaxCol[root] ?? 0) + 1;
-    // cellWidth: 오버플로우 임계값 계산 및 N≥3 stagger에 사용
     final cellWidth = usableWidth / numCols;
+    final col = colOf[i];
+    final stagger = numCols == 2 ? (compStagger[root] ?? cellWidth) : cellWidth;
 
-    if (cellWidth < _minCellWidthFor1Char) {
-      // 오버플로우: 컴포넌트 전체를 1개 OverflowCell로 대체
-      if (!overflowHandled.contains(root)) {
-        overflowHandled.add(root);
-        final compEvents = <ReservationDisplayData>[];
-        for (int k = 0; k < n; k++) {
-          if (findRoot(k) == root) compEvents.add(timeEvents[k]);
-        }
-        final groupStart = compEvents
-            .map((e) => e.startTime!)
-            .reduce((a, b) => a.isBefore(b) ? a : b);
-        final groupEnd = compEvents
-            .map((e) => e.endTime!)
-            .reduce((a, b) => a.isAfter(b) ? a : b);
-        result.add(_PositionedItem.overflow(
-          events: compEvents,
-          left: 1.0,
-          right: 8.0,
-          start: groupStart,
-          end: groupEnd,
-        ));
+    // N≥4: groupEvents 채우기 (탭 시 목록 모달 표시)
+    List<ReservationDisplayData>? groupEvents;
+    if (numCols >= 4) {
+      groupEvents = <ReservationDisplayData>[];
+      for (int k = 0; k < n; k++) {
+        if (findRoot(k) == root) groupEvents.add(timeEvents[k]);
       }
-    } else {
-      final col = colOf[i];
-      // N=2: compStagger 사용 (delta 기준 분기)
-      // N≥3: cellWidth stagger (기존 규칙)
-      final stagger =
-          numCols == 2 ? (compStagger[root] ?? cellWidth) : cellWidth;
-      result.add(_PositionedItem.normal(
-        event: timeEvents[i],
-        left: 1.0 + col * stagger,
-        right: 8.0,
-        clipContent: col > 0,
-      ));
     }
+
+    result.add(_PositionedItem(
+      event: timeEvents[i],
+      left: 1.0 + col * stagger,
+      right: 8.0,
+      clipContent: col > 0,
+      groupEvents: groupEvents,
+    ));
   }
 
   return result;
@@ -240,44 +186,42 @@ List<_PositionedItem> _computePositions(
 // ── TimeGrid 위젯 ──────────────────────────────────────────────────────────────
 
 /// 3일 캘린더 날짜별 이벤트 그리드
-/// 수평 시간 구분선과 현재 시간선을 표시, 수직 스크롤 지원
-/// 핀치 줌은 ThreeDayCalendar에서 처리
-class TimeGrid extends ConsumerWidget {
+class TimeGrid extends ConsumerStatefulWidget {
   const TimeGrid({
     super.key,
     required this.scrollController,
     required this.isToday,
     required this.events,
+    required this.reservations,
   });
 
   final ScrollController scrollController;
 
-  /// 해당 날짜가 오늘인지 여부 (현재 시간선 색상 결정)
+  /// 해당 날짜가 오늘인지 여부
   final bool isToday;
 
   final List<ReservationDisplayData> events;
 
-  double _topOffset(DateTime start, double hourHeight) =>
-      hourHeight * (start.hour + start.minute / 60) + 0.5;
+  /// 탭 시 상세 모달에 전달할 전체 Reservation 맵 (id → Reservation)
+  final Map<String, Reservation> reservations;
 
-  double _cellHeight(DateTime start, DateTime end, double hourHeight) =>
-      (hourHeight * end.difference(start).inMinutes / 60 - 2.0)
-          .clamp(1.0, double.infinity);
+  @override
+  ConsumerState<TimeGrid> createState() => _TimeGridState();
+}
 
-  /// isContinuation / continuesNextDay 여부에 따라 top·height 계산.
-  /// topGap: isContinuation=true → 0.0 (위 코너 없음, 구분선에 밀착)
-  /// bottomGap: continuesNextDay=true → 0.0 (아래 코너 없음, 구분선에 밀착)
-  ///
-  /// 바운스 연장:
-  ///   isContinuation   → top을 위로 [_bounceExtension]만큼 연장 (top 바운스 시 연결)
-  ///   continuesNextDay → height를 아래로 [_bounceExtension]만큼 연장 (bottom 바운스 시 연결)
-  ///   Stack(clipBehavior: Clip.none)이므로 SizedBox 외부로 그려져 바운스 시 보임.
+class _TimeGridState extends ConsumerState<TimeGrid> {
+  /// z-순서 최상단으로 올릴 셀 id
+  String? _selectedId;
+
+  /// 하이라이트 중인 셀 id (로컬)
+  String? _highlightedId;
+
   ({double top, double height}) _placementFor(
       ReservationDisplayData event, double hourHeight) {
     final topGap = event.isContinuation ? 0.0 : 0.5;
     final bottomGap = event.continuesNextDay ? 0.0 : 1.5;
-    final start = event.startTime!;
-    final end = event.endTime!;
+    final start = event.summary.startTime;
+    final end = event.summary.endTime;
     var top = hourHeight * (start.hour + start.minute / 60) + topGap;
     var height =
         (hourHeight * end.difference(start).inMinutes / 60 - topGap - bottomGap)
@@ -295,26 +239,37 @@ class TimeGrid extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final hourHeight = ref.watch(
       homeCalendarControllerProvider.select((s) => s.hourHeight),
     );
+    final externalHighlight = ref.watch(pendingHighlightIdProvider);
+    final effectiveHighlightId = _highlightedId ?? externalHighlight;
     final totalHeight = hourHeight * 24;
 
     return SingleChildScrollView(
-      controller: scrollController,
+      controller: widget.scrollController,
       physics: const BouncingScrollPhysics(),
       child: SizedBox(
         height: totalHeight,
-        // LayoutBuilder로 열 너비를 획득해 오버플로우 임계값 계산에 사용
         child: LayoutBuilder(
           builder: (context, constraints) {
             final positioned =
-                _computePositions(events, constraints.maxWidth);
+                _computePositions(widget.events, constraints.maxWidth);
+
+            // z-순서: _selectedId 셀을 목록 맨 마지막(=맨 앞 z-순서)으로
+            final orderedPositioned = _selectedId == null
+                ? positioned
+                : () {
+                    final idx = positioned.indexWhere(
+                        (p) => p.event.summary.id == _selectedId);
+                    if (idx < 0) return positioned;
+                    final result = List<_PositionedItem>.from(positioned);
+                    result.add(result.removeAt(idx));
+                    return result;
+                  }();
 
             return Stack(
-              // Clip.none: CurrentTimeLine이 left: -currentTimeCapsuleRightInset으로
-              // 시간 열 방향으로 0.25px 넘어가는 것을 허용
               clipBehavior: Clip.none,
               children: [
                 const SizedBox.expand(),
@@ -332,34 +287,26 @@ class TimeGrid extends ConsumerWidget {
                     ),
                   ),
 
-                // 시간대 이벤트 셀 (z 순서대로 렌더링 — 먼저 = 뒤에, 나중 = 앞에)
-                for (final item in positioned)
-                  if (item.isOverflow)
-                    Positioned(
-                      top: _topOffset(item.overflowStart!, hourHeight),
+                // 이벤트 셀 (z 순서 — 먼저 = 뒤에, 나중 = 앞에)
+                for (final item in orderedPositioned)
+                  Builder(builder: (context) {
+                    final p = _placementFor(item.event, hourHeight);
+                    return Positioned(
+                      top: p.top,
                       left: item.left,
                       right: item.right,
-                      height: _cellHeight(
-                          item.overflowStart!, item.overflowEnd!, hourHeight),
-                      child: OverflowCell(events: item.overflowEvents!),
-                    )
-                  else
-                    Builder(builder: (context) {
-                      final p = _placementFor(item.event!, hourHeight);
-                      return Positioned(
-                        top: p.top,
-                        left: item.left,
-                        right: item.right,
-                        height: p.height,
-                        child: ReservationCell(
-                          data: item.event!,
-                          clipContent: item.clipContent,
-                        ),
-                      );
-                    }),
+                      height: p.height,
+                      child: ReservationCell(
+                        data: item.event,
+                        clipContent: item.clipContent,
+                        isHighlighted:
+                            effectiveHighlightId == item.event.summary.id,
+                      ),
+                    );
+                  }),
 
                 // 현재 시간선
-                CurrentTimeLine(hourHeight: hourHeight, isToday: isToday),
+                CurrentTimeLine(hourHeight: hourHeight, isToday: widget.isToday),
               ],
             );
           },
