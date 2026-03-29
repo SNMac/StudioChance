@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 구현 계획
 
-Last Updated: 2026-03-29 (Phase 9 완료 — 모달 UI 후속 수정 필요)
+Last Updated: 2026-03-30 (Phase 10 준비 — Flutter 3.41.6 반영)
 
 ---
 
@@ -482,9 +482,46 @@ lib/
 
 ---
 
+## Phase 10: 모달 UI 버그 수정 (다음 작업)
+
+> **Flutter 3.41.6으로 업그레이드 완료**. `showCupertinoSheet`에 `topGap`, `showDragHandle` 파라미터 사용 가능.
+
+### showCupertinoSheet Flutter 3.41.6 현황
+- `topGap`: 시트 최대 확장 시 상단 여백 (double) ✅ 사용 가능
+- `showDragHandle`: Grabber pill 자동 표시 (bool) ✅ 사용 가능
+- `detents` (medium/large): 여전히 미지원
+
+### ReservationDetailModal 수정
+
+**Android** (`showModalBottomSheet` + `DraggableScrollableSheet`):
+1. `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가 → 너비 채움 버그 수정
+2. `Column` → `SingleChildScrollView(controller: scrollController, child: Column(...))` 감쌈 → 드래그 최대화 활성화
+3. `DraggableScrollableSheet`: `initialChildSize: 0.5, minChildSize: 0.5, maxChildSize: 1.0, expand: false` 유지
+
+**iOS** (`showCupertinoSheet`):
+1. `showDragHandle: true` 추가
+2. `topGap`: 현재 플레이스홀더이므로 기본값 유지, 추후 입력폼 Phase에서 피그마 537px 기준 계산
+
+**초기 높이 (미결 — 추후 입력폼 Phase에서 결정)**:
+- 피그마 기준: safeArea 제외 537px (특정 입력칸이 보이는 지점)
+- 현재: 50% 임시
+- 추후 결정: 옵션 A(하드코딩 537px), 옵션 B(GlobalKey 동적 계산)
+
+### ReservationListModal 수정
+
+**Android** (`showModalBottomSheet` + `DraggableScrollableSheet`):
+1. `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가
+2. `DraggableScrollableSheet(initialChildSize: 0.5, minChildSize: 0.3, maxChildSize: 1.0, expand: false)` 적용
+3. `ScrollController? scrollController` 파라미터 추가 후 스크롤 위젯에 연결
+
+**iOS** (`showCupertinoSheet`):
+1. `showDragHandle: true` 추가
+2. `topGap`: 화면 높이의 50% 기준 (`MediaQuery.of(context).size.height * 0.5`)
+
+---
+
 ## 미구현 (추후 작업)
 
-- **모달 UI 버그 수정** (Phase 10) — `reservation_detail_modal.dart`, `reservation_list_modal.dart` Android/iOS 수정
-- `ReservationDetailModal` 실제 디자인 구현 (예약 상세 편집 폼)
+- `ReservationDetailModal` 실제 디자인 구현 (예약 상세 편집 폼) — 입력폼 Phase에서
 - 실제 Firestore 데이터 연결 (mock 제거)
 - Reservation 도메인 엔티티 + Riverpod 연결

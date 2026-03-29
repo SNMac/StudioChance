@@ -1,19 +1,56 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-29 (Phase 9 완료 — 모달 UI 후속 수정 필요)
+Last Updated: 2026-03-30 (Phase 10 준비 — Flutter 3.41.6 업그레이드 반영)
 
 ---
 
 ## 현재 구현 상태
 
 **Phase 1~9 구현 완료. 최종 코드 리뷰 APPROVED.**
-**후속 수정: Android/iOS 테스트에서 모달 UI 버그 발견 — 수정 미완료.**
+**후속 수정: Android/iOS 테스트에서 모달 UI 버그 발견 — Phase 10에서 수정 예정.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
 > Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료**
->
-> 미결: 모달 UI 버그 수정 (`reservation_detail_modal.dart`, `reservation_list_modal.dart`)
+> Phase 10: 모달 UI 버그 수정 — **미착수 (다음 작업)**
+
+---
+
+## Phase 10 준비: Flutter 3.41.6 업그레이드 및 버그 분석 (2026-03-30)
+
+### Flutter 버전 업그레이드
+
+- 3.38.5 → **3.41.6**으로 업그레이드 완료
+- `showCupertinoSheet`에 신규 파라미터 추가됨:
+  - `topGap`: 시트 최대 확장 시 상단 여백 (화면 상단~시트 상단 거리, double)
+  - `showDragHandle`: Grabber pill 표시 여부 (bool, true 시 자동으로 상단에 렌더링)
+
+### 발견된 버그 목록
+
+#### ReservationDetailModal (Android)
+1. **화면 너비 미채움**: 시트가 화면 너비보다 좁게 표시됨
+   - **원인**: `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 미설정
+   - `DraggableScrollableSheet`의 기본 배경이 `Material`과 겹쳐 너비가 제한됨
+2. **드래그 최대화 불가**: 위로 드래그해도 시트 높이가 늘어나지 않음
+   - **원인**: `DraggableScrollableSheet`의 `scrollController`가 `ReservationDetailModal` 내부에 전달되고 있으나, 현재 위젯이 `Column`(스크롤 없음)이라 드래그 이벤트가 전파되지 않음
+   - **해결**: `Column` → `SingleChildScrollView(controller: scrollController)` 로 감싸야 함
+
+#### ReservationListModal (Android/iOS)
+1. **최대 높이로 표시됨**: 모달이 전체화면으로 열림
+   - Android: `DraggableScrollableSheet` 미적용, `showModalBottomSheet`만 단순 사용
+   - iOS: `showCupertinoSheet` 기본 동작이 거의 전체화면
+2. **Grabber 미표시**: Pill 핸들이 보이지 않음
+   - `ReservationListModal` 위젯 내 pill Container가 없음 (현재 `Padding`으로 시작)
+   - iOS: `showDragHandle: true` 미설정
+
+### ReservationDetailModal 초기 높이 결정 미완료
+
+- **피그마 스펙**: safeArea 제외 537px (특정 입력칸이 보이는 지점까지)
+- **현재 결정**: 플레이스홀더 단계이므로 50%(`initialChildSize: 0.5`)로 임시 설정
+- **추후 결정 필요**: 실제 입력폼 구현 시 아래 두 방식 중 선택
+  - 옵션 A: 537px 하드코딩 → `topGap = screenHeight - safeArea.top - 537` (iOS), `initialChildSize = 537 / availableHeight` (Android)
+  - 옵션 B: `GlobalKey`로 특정 입력칸 위치 파악 → 동적 계산
+  - **현재 권장**: 입력폼이 없는 지금은 0.5 유지, 입력폼 Phase에서 GlobalKey 방식 검토
 
 ---
 
