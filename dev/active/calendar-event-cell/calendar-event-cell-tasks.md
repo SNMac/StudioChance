@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-30 (Phase 10 구현 계획 확정 — Flutter 3.41.6 반영)
+Last Updated: 2026-03-30 (Phase 10 완료 — topGap 비율 버그 수정)
 
 ---
 
@@ -176,42 +176,60 @@ Last Updated: 2026-03-30 (Phase 10 구현 계획 확정 — Flutter 3.41.6 반�
 
 ---
 
-## Phase 10: 모달 UI 버그 수정 ⬜ (미착수 — 다음 작업)
+## Phase 10: 모달 UI 버그 수정 ✅ (완료 — Android 너비 이슈 미결)
 
 **파일:** `reservation_detail_modal.dart`, `reservation_list_modal.dart`
 
 > Flutter 3.41.6 업그레이드로 `showCupertinoSheet`에 `topGap`, `showDragHandle` 파라미터 사용 가능.
 
-### 10-1: ReservationDetailModal
+### 10-1: ReservationDetailModal ✅
 
 **Android** (`showModalBottomSheet` + `DraggableScrollableSheet`):
-- [ ] `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가 → 너비 채움 버그 수정
-- [ ] `DraggableScrollableSheet` 파라미터: `initialChildSize: 0.5, minChildSize: 0.5, maxChildSize: 1.0, expand: false` 유지
-- [ ] `ReservationDetailModal` 내부: `Column` → `SingleChildScrollView(controller: scrollController, child: Column(...))` 로 감쌈 → 드래그 최대화 활성화
+- [x] `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가
+- [x] `DraggableScrollableSheet`: `snap: true`, `snapSizes: [0.5, 1.0]`, `minChildSize: 0.3` → 스냅백/dismiss 분리
+- [x] `Column` → `SingleChildScrollView(controller: scrollController)` 래핑 → 드래그 확장 활성화
+- [x] 위젯 내부 `if (Platform.isAndroid)` 수동 pill 추가
+  - (showModalBottomSheet의 showDragHandle은 DraggableScrollableSheet 밖에 렌더링되어 사용 불가)
 
 **iOS** (`showCupertinoSheet`):
-- [ ] `showDragHandle: true` 추가 → Grabber 자동 표시 (수동 pill 코드 제거 가능)
-- [ ] `topGap` 파라미터: 현재 플레이스홀더이므로 기본값 유지, 향후 입력폼 Phase에서 537px 기준으로 계산
-- [ ] TODO 주석 업데이트 (Flutter 3.41.6에서 topGap/showDragHandle 사용 가능, detents는 여전히 미지원)
+- [x] `showDragHandle: true` 추가 → Grabber 자동 표시 (CupertinoSheet는 정상 위치에 렌더링)
+- [ ] `topGap` 미설정 → 추후 입력폼 Phase에서 피그마 537px 기준으로 설정 (미결)
 
-**초기 높이 주의사항**:
-- 현재 플레이스홀더 단계 → 0.5(50%) 임시 사용
-- 추후 입력폼 구현 Phase에서 피그마 537px 기준으로 옵션 A(하드코딩) vs 옵션 B(GlobalKey 동적) 결정
+> **설계 메모**: "절반(0.5)"은 임시값 — 실제로는 예약 입력폼의 특정 필드까지 보이는 높이
 
-### 10-2: ReservationListModal
+### 10-2: ReservationListModal ✅
 
 **Android** (`showModalBottomSheet` + `DraggableScrollableSheet`):
-- [ ] `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가
-- [ ] `DraggableScrollableSheet(initialChildSize: 0.5, minChildSize: 0.3, maxChildSize: 1.0, expand: false)` 적용
-- [ ] `ScrollController? scrollController` 파라미터를 `ReservationListModal`에 추가
-- [ ] `ReservationListModal` 내부 스크롤 가능 구조로 변경 (SingleChildScrollView 또는 ListView)
+- [x] `showModalBottomSheet`에 `backgroundColor: Colors.transparent` 추가 (showDragHandle 미사용)
+- [x] `DraggableScrollableSheet(initial: 0.5, min: 0.3, max: 1.0, snap: true, snapSizes: [0.5, 1.0])` 적용
+- [x] `ScrollController? scrollController` 파라미터 추가 + `SingleChildScrollView`에 연결
+- [x] 위젯 내부 `if (Platform.isAndroid)` 수동 pill 추가
 
 **iOS** (`showCupertinoSheet`):
-- [ ] `showDragHandle: true` 추가 → Grabber 자동 표시
-- [ ] `topGap`으로 초기 절반 높이 설정 (화면 높이의 절반 기준: `topGap = MediaQuery.of(context).size.height * 0.5`)
+- [x] `showDragHandle: true` 추가
+- [x] `topGap: 0.5` → 화면 하단 50% 차지 (비율값, 0.0~0.9)
 
-**공통**:
-- [ ] `ReservationListModal` 위젯 내 수동 Grabber pill 제거 (iOS `showDragHandle`로 대체, Android는 `showDragHandle` 미지원이므로 위젯 내 pill 유지하거나 Material `showDragHandle` 확인)
+### 10-3: Android/iOS 공통 구조 정리 ✅
+
+- [x] `backgroundColor: Colors.transparent` 제거 — `showModalBottomSheet` 자체 Material 배경 사용
+- [x] 수동 Grabber pill 제거 — `showDragHandle: true` 사용
+- [x] `Material` 래퍼 제거 — 불필요
+- [x] `SizedBox(width: double.infinity)` 루트 위젯으로 추가 — 전체 너비 보장
+
+### 10-4: iOS topGap 비율 버그 수정 ✅
+
+- **원인**: `topGap: MediaQuery.of(context).size.height * 0.5` (≈406) → Flutter assert 범위(0.0~0.9) 초과
+  - `showCupertinoSheet` 내부 `assert(topGap == null || (topGap >= 0.0 && topGap <= 0.9))`
+  - debug 모드에서 assertion 오류 → 모달 미표시 ("아예 보이지도 않아")
+- **수정**: `topGap: 0.5` (비율: 화면 상단 50% gap = 시트가 하단 50% 차지)
+- [x] `reservation_list_modal.dart` 수정 완료
+
+### 10-5: iOS 투명 배경 수정 ✅
+
+- **원인**: `showCupertinoSheet` 자체 배경 미제공. `CupertinoSheetRoute.buildContent`는 `ClipRSuperellipse`로 클리핑만 하며 배경색 없음. 콘텐츠 위젯이 배경을 직접 제공해야 함.
+- **수정**: 두 모달 위젯 빌드 루트에 `Material` 추가 → 테마 surface 색상으로 배경 제공
+- [x] `reservation_detail_modal.dart` 수정 완료
+- [x] `reservation_list_modal.dart` 수정 완료
 
 ---
 

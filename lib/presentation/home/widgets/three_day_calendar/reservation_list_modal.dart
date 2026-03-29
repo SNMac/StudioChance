@@ -14,6 +14,7 @@ final _timeFormat = DateFormat('HH:mm');
 /// N≥4 그룹 이벤트 목록 모달.
 ///
 /// 선택된 [ReservationSummary]를 반환 (취소 시 null).
+/// 배경/shape/DragHandle은 show 함수의 showModalBottomSheet/showCupertinoSheet가 제공.
 class ReservationListModal extends StatelessWidget {
   const ReservationListModal({
     super.key,
@@ -30,88 +31,82 @@ class ReservationListModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SafeArea(
-            top: false,
-            child: SingleChildScrollView(
-              controller: scrollController,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: GroupedFormContainer(
-                  children: [
-                    for (final event in events)
-                      SizedBox(
-                        height: inputFormComponentHeight,
-                        child: CupertinoButton(
-                          padding: const EdgeInsetsDirectional.symmetric(
-                            horizontal: horizontalPadding,
+      child: SizedBox(
+        width: double.infinity,
+        child: SingleChildScrollView(
+        controller: scrollController,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: GroupedFormContainer(
+              children: [
+                for (final event in events)
+                  SizedBox(
+                    height: inputFormComponentHeight,
+                    child: CupertinoButton(
+                      padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      onPressed: () => Navigator.pop(context, event.summary),
+                      child: Row(
+                        children: [
+                          // 색상 도트
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(event.summary.storeSummary.color
+                                  .foregroundColorValue),
+                            ),
                           ),
-                          onPressed: () =>
-                              Navigator.pop(context, event.summary),
-                          child: Row(
-                            children: [
-                              // 색상 도트
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(event.summary.storeSummary.color
-                                      .foregroundColorValue),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // 고객명
-                              Expanded(
-                                child: Text(
-                                  event.summary.customerName,
-                                  style: Theme.of(context).textTheme.bodyLarge,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              // 시간 범위
-                              Text(
-                                '${_timeFormat.format(event.summary.startTime)}~'
-                                '${_timeFormat.format(event.summary.endTime)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
+                          const SizedBox(width: 8),
+                          // 고객명
+                          Expanded(
+                            child: Text(
+                              event.summary.customerName,
+                              style: Theme.of(context).textTheme.bodyLarge,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // 시간 범위
+                          Text(
+                            '${_timeFormat.format(event.summary.startTime)}~'
+                            '${_timeFormat.format(event.summary.endTime)}',
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
                                       fontWeight: FontWeight.normal,
                                       color: context.secondaryLabel,
                                     ),
-                              ),
-                              const SizedBox(width: 12),
-                              // chevron
-                              Icon(
-                                CupertinoIcons.chevron_forward,
-                                size: 10,
-                                color: context.tertiaryLabel,
-                              ),
-                            ],
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          // chevron
+                          Icon(
+                            CupertinoIcons.chevron_forward,
+                            size: 10,
+                            color: context.tertiaryLabel,
+                          ),
+                        ],
                       ),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
-    );
+    ),
+  );
   }
 }
 
 /// 이벤트 목록 모달 표시 (플랫폼 적응형).
 ///
 /// iOS: [showCupertinoSheet] + showDragHandle + topGap 절반 높이
-/// Android: [showModalBottomSheet] + [DraggableScrollableSheet] (초기/최소 50%, 최대 전체)
+/// Android: [showModalBottomSheet] + [DraggableScrollableSheet]
+///   - snap: [0.5, 1.0] — 살짝 내리면 0.5로 스냅백, 세게 내리면 minChildSize(0.3) 도달 → dismiss
 ///
 /// 선택된 [ReservationSummary]를 반환 (취소 시 null).
 Future<ReservationSummary?> showReservationListModal(
@@ -120,7 +115,7 @@ Future<ReservationSummary?> showReservationListModal(
     return showCupertinoSheet<ReservationSummary>(
       context: context,
       showDragHandle: true,
-      topGap: MediaQuery.of(context).size.height * 0.5,
+      topGap: 0.5,
       builder: (_) => ReservationListModal(events: events),
     );
   }
@@ -129,12 +124,13 @@ Future<ReservationSummary?> showReservationListModal(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => DraggableScrollableSheet(
       initialChildSize: 0.5,
       minChildSize: 0.3,
       maxChildSize: 1.0,
       expand: false,
+      snap: true,
+      snapSizes: const [0.5, 1.0],
       builder: (_, controller) => ReservationListModal(
         events: events,
         scrollController: controller,
