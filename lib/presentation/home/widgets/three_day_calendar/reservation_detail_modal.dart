@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/presentation/colors.dart';
 
 /// 예약 상세 모달 (플레이스홀더 — 실제 디자인은 별도 Phase에서 구현)
 ///
@@ -26,14 +28,29 @@ class ReservationDetailModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      child: SizedBox(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          controller: scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: modalGrabberColor,
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 16),
               // 플레이스홀더 내용
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -43,9 +60,11 @@ class ReservationDetailModal extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -74,7 +93,12 @@ Future<void> showReservationDetailModal(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: true,
+    barrierColor: modalBarrierColor,
+    clipBehavior: Clip.antiAlias,
+    shape: const RoundedRectangleBorder(
+      borderRadius:
+          BorderRadius.vertical(top: Radius.circular(modalTopCornerRadius)),
+    ),
     builder: (_) => DraggableScrollableSheet(
       initialChildSize: 0.5,
       minChildSize: 0.3,

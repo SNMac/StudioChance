@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-30 (Phase 10 완료 — topGap 비율 버그 수정)
+Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_address_input_screen 통합)
 
 ---
 
@@ -31,37 +31,83 @@ Last Updated: 2026-03-30 (Phase 10 완료 — topGap 비율 버그 수정)
 
 **파일**: `reservation_detail_modal.dart`, `reservation_list_modal.dart`
 
-#### 공통 패턴
-- 위젯 루트: `SizedBox(width: double.infinity)` → 전체 너비 보장
-- `backgroundColor: Colors.transparent` 없음 — `showModalBottomSheet`가 자체 Material 배경 제공
-- `Material` 래퍼 없음 — 불필요 (각 플랫폼 함수가 배경 제공)
-- 수동 Grabber pill 없음 — Flutter 제공 `showDragHandle: true` 사용
+#### 공통 모달 스타일 상수 (`colors.dart`, `ui_constants.dart`)
 
-#### ReservationDetailModal
+| 상수 | 위치 | 값 |
+|------|------|----|
+| `modalGrabberColor` | `presentation/colors.dart` | `Color(0xFFB5B5BB)` |
+| `modalBarrierColor` | `presentation/colors.dart` | `Color(0x33000000)` — 20% 검정 |
+| `modalTopCornerRadius` | `constants/ui_constants.dart` | `10.0` |
+
+#### iOS 스타일 커스텀 Grabber
+
+`showDragHandle: true` 대신 위젯 내부에 직접 렌더링:
+```dart
+Padding(
+  padding: const EdgeInsets.only(top: 6),
+  child: Center(
+    child: Container(
+      width: 36, height: 5,
+      decoration: BoxDecoration(
+        color: modalGrabberColor,
+        borderRadius: BorderRadius.circular(2.5),
+      ),
+    ),
+  ),
+),
+```
+
+#### showModalBottomSheet 공통 파라미터
+
+```dart
+showModalBottomSheet(
+  isScrollControlled: true,
+  useSafeArea: true,
+  barrierColor: modalBarrierColor,
+  clipBehavior: Clip.antiAlias,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(modalTopCornerRadius)),
+  ),
+  ...
+)
+```
+
+#### ReservationDetailModal (현재 상태)
+
 **Android**:
-- `showModalBottomSheet(isScrollControlled: true, useSafeArea: true, showDragHandle: true)`
+- `showModalBottomSheet(isScrollControlled: true, useSafeArea: true)` + 모달 스타일 상수 적용 (`barrierColor`, `shape`, `clipBehavior`)
 - `DraggableScrollableSheet(initial: 0.5, min: 0.3, max: 1.0, snap: true, snapSizes: [0.5, 1.0], expand: false)`
-  - 살짝 내리면 0.5로 스냅백, 세게 내리면 0.3(min) → dismiss
-- `SingleChildScrollView(controller: scrollController)` → 드래그 확장 활성화
+- 위젯 루트: `Material(Column([커스텀 Grabber, Expanded(SingleChildScrollView)]))`  — `reservation_list_modal`과 동일한 구조
 
 **iOS**:
 - `showCupertinoSheet(showDragHandle: true)` — `topGap` 미설정 (기본값 0.08 ≈ 화면 92% 차지)
 - 추후 입력폼 구현 Phase에서 `topGap` 설정 필요 (피그마 기준 safeArea 제외 537px → 비율 계산)
 
-#### ReservationListModal
-**Android**:
-- 동일한 `showModalBottomSheet` + `DraggableScrollableSheet` 패턴
-- `scrollController` 파라미터 추가 → `SingleChildScrollView`에 연결
+> **분기 유지 결정**: 입력폼 구현 시 높이 조절이 어려울 경우 `showModalBottomSheet`로 통합 검토.
 
-**iOS**:
-- `showCupertinoSheet(showDragHandle: true, topGap: 0.5)` → 화면 하단 50% 차지
+#### ReservationListModal (최종 상태)
+
+iOS/Android 통합 (`showModalBottomSheet` 단일 구현):
+- 커스텀 Grabber (36×5, `modalGrabberColor`, top:6)
+- `barrierColor: modalBarrierColor` (20% 검정 scrim)
+- `shape`: 상단 코너 `modalTopCornerRadius`
+- `DraggableScrollableSheet(initial: 0.5, min: 0.3, max: 1.0, snap: true, snapSizes: [0.5, 1.0], expand: false)`
+- `scrollController` → `SingleChildScrollView` 연결
+
+#### StoreAddressInputScreen 주소 검색 모달 (최종 상태)
+
+iOS/Android 플랫폼 분기 유지:
+- **iOS**: `showCupertinoSheet(enableDrag: false)` — native 시트 그대로 사용
+- **Android**: `showModalBottomSheet(isDismissible: false, enableDrag: false)` + 커스텀 Grabber + `modalBarrierColor` + `modalTopCornerRadius`
+  - `Column([grabber, Expanded(KpostalView)])` 구조
 
 #### 중요 설계 메모
+
 - **"절반(0.5)"은 임시값**: 실제로는 예약 입력폼의 특정 필드까지 보이는 높이. 입력폼 구현 Phase에서 교체.
 - **iOS topGap 버그 이력**: 초기에 `topGap: MediaQuery.of(context).size.height * 0.5` (≈406) 사용 → assert 범위(0.0~0.9) 초과로 debug 모드에서 모달 미표시. 수정: `topGap: 0.5` (비율)
 - **iOS detent**: Flutter는 아직 `UISheetPresentationController.detents` API 미지원. `topGap`은 최대 확장 높이만 제어하며 중간 snap 위치 없음. Flutter 업데이트 후 재검토.
-- **iOS 투명 배경 이슈**: `showCupertinoSheet`의 `buildContent`는 `ClipRSuperellipse`로 클리핑만 하며 배경색을 제공하지 않음. 콘텐츠 위젯이 `Material` 또는 배경 위젯을 직접 제공해야 함. `showModalBottomSheet`는 자체 Material 배경을 제공하므로 Android는 문제 없음.
-- **최종 위젯 루트**: `Material(child: SizedBox(width: double.infinity, child: SingleChildScrollView(...)))` — Material이 배경(iOS)과 테마 색상을 제공, SizedBox가 전체 너비 보장
+- **리스트 모달 scrim**: `showCupertinoSheet`로는 scrim 구현 불가 (`barrierColor` 하드코딩, blocking ModalBarrier가 GestureDetector 차단, `removeRoute`는 exit 애니메이션 없음). `showModalBottomSheet`로 iOS/Android 통합 → 내장 scrim/dismiss/동기화 애니메이션 활용.
+- **iOS 투명 배경 이슈**: `showCupertinoSheet`의 `buildContent`는 `ClipRSuperellipse`로 클리핑만 하며 배경색을 제공하지 않음. 콘텐츠 위젯이 `Material` 또는 배경 위젯을 직접 제공해야 함. `showModalBottomSheet`는 자체 Material 배경을 제공하므로 불필요.
 
 ### ReservationDetailModal 초기 높이 결정 미완료 (추후)
 
@@ -84,8 +130,8 @@ snapSizes: const [0.5, 1.0],  // 50%, 100% 두 단계로 스냅
 
 | 파일 | 변경 내용 |
 |------|----------|
-| `lib/presentation/colors.dart` | 색상 21개 추가 (Background/Foreground/Label × 7) |
-| `lib/constants/ui_constants.dart` | defaultHourHeight 36→40, minHourHeight 18→36 |
+| `lib/presentation/colors.dart` | 색상 21개 추가 (Background/Foreground/Label × 7), `modalGrabberColor`, `modalBarrierColor` 추가 |
+| `lib/constants/ui_constants.dart` | defaultHourHeight 36→40, minHourHeight 18→36, `modalTopCornerRadius` 추가 |
 | `lib/presentation/providers/hour_height_preference_provider.dart` | loadHourHeight에 clamp 추가 |
 | `lib/presentation/providers/home_calendar_controller.dart` | ScrollToTimeTrigger, PendingHighlightId provider 추가, selectDateFromContinuation() 메서드 추가 |
 | `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | ReservationDisplayData 재구성(ReservationSummary 내장), ReservationCellColorTheme/셀 ReservationStatus 제거, isHighlighted 파라미터 추가 |
@@ -93,8 +139,9 @@ snapSizes: const [0.5, 1.0],  // 50%, 100% 두 단계로 스냅
 | `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` | ReservationDisplayData 필드 접근 수정 |
 | `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | ConsumerStatefulWidget 전환, _PositionedItem 변경, stagger 임계값 제거, 탭 핸들러 3종, reservations 파라미터, pendingHighlightIdProvider watch |
 | `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | ReservationDisplayData 생성 로직 수정, mock Reservation 맵, scrollToTimeTrigger listen |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **신규** — 하프 시트 플레이스홀더 (후속 수정 필요) |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart` | **신규** — N≥4 그룹 목록 모달 (후속 수정 필요) |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **신규** — 하프 시트 플레이스홀더, iOS `showCupertinoSheet` / Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용 |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart` | **신규** — N≥4 그룹 목록 모달, iOS/Android 통합 `showModalBottomSheet`, 커스텀 Grabber |
+| `lib/presentation/commons/store_input/screens/store_address_input_screen.dart` | iOS `showCupertinoSheet` 유지, Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용 |
 
 ---
 

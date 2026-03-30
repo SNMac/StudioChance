@@ -8,9 +8,11 @@ import 'package:kpostal/kpostal.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
+import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
@@ -131,18 +133,23 @@ class _StoreAddressInputScreenState
                       );
                     },
                   );
-                } else if (Platform.isAndroid) {
+                } else {
                   result = await showModalBottomSheet<Kpostal>(
+                    context: context,
                     isDismissible: false,
+                    enableDrag: false,
                     isScrollControlled: true,
                     useSafeArea: true,
-                    context: context,
-                    builder: (context) {
-                      return KpostalView(
-                        appBar: commonAppBar,
-                        onLoading: commonOnLoading,
-                      );
-                    },
+                    barrierColor: modalBarrierColor,
+                    clipBehavior: Clip.antiAlias,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(modalTopCornerRadius)),
+                    ),
+                    builder: (context) => KpostalView(
+                      appBar: commonAppBar,
+                      onLoading: commonOnLoading,
+                    ),
                   );
                 }
 

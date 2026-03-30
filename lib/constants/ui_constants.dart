@@ -3,6 +3,9 @@ const double verticalPadding = 32.0;
 const double horizontalPadding = 16.0;
 const double formBorderRadius = 12.0;
 
+// 모달
+const double modalTopCornerRadius = 10.0;
+
 // 홈 화면 - 네비게이션 바
 const double homeNavBarHeight = 44.0;
 

@@ -27,6 +27,10 @@ const Color blueLabel = Color(0xFF004999);
 const Color indigoLabel = Color(0xFF1F1E7B);
 const Color purpleLabel = Color(0xFF5E1980);
 
+// ── 모달 ─────────────────────────────────────────────────────────────────────
+const Color modalGrabberColor = Color(0xFFB5B5BB);
+const Color modalBarrierColor = Color(0x33000000);
+
 const googleSignInBackgroundColor = Color(0xFFFFFFFF);
 const googleSignInBackgroundDarkColor = Color(0xFF131314);
 const googleSignInBorderColor = Color(0xFF747775);

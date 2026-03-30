@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-30 (Phase 10 완료 — topGap 비율 버그 수정)
+Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_address_input_screen 정리)
 
 ---
 
@@ -230,6 +230,40 @@ Last Updated: 2026-03-30 (Phase 10 완료 — topGap 비율 버그 수정)
 - **수정**: 두 모달 위젯 빌드 루트에 `Material` 추가 → 테마 surface 색상으로 배경 제공
 - [x] `reservation_detail_modal.dart` 수정 완료
 - [x] `reservation_list_modal.dart` 수정 완료
+
+### 10-6: 리스트 모달 scrim + 탭 dismiss + 동시 애니메이션 ✅
+
+**시도 이력 및 최종 결론 — `showCupertinoSheet`로 scrim 구현 불가**:
+1. `OverlayEntry(ModalBarrier)` 직접 삽입 → Navigator.rearrange 후 최상단에 남아 모달 위를 덮음
+2. `PageRouteBuilder` scrim route (below sheet) + `GestureDetector` → `CupertinoSheetRoute`가 투명하지만 blocking인 `ModalBarrier(dismissible:false, behavior:opaque)`를 렌더링하여 scrim의 GestureDetector에 터치 미전달
+3. `navigator.removeRoute(scrimRoute)` → exit 애니메이션 없이 즉시 제거 (페이드아웃 불가)
+4. `PageRouteBuilder` scrim + sheet 동시 애니메이션 → 별도 route이므로 animation controller 동기화 구조적 불가
+
+**최종 해결**: `showModalBottomSheet`로 iOS/Android 통합 (플랫폼 분기 제거)
+- `showModalBottomSheet`의 내장 기능: scrim 애니메이션 ✓, `isDismissible: true` 탭 dismiss ✓, sheet 슬라이드와 동기화된 fade ✓
+- `DraggableScrollableSheet(snap: true, snapSizes: [0.5, 1.0])` → iOS/Android 공통 detent 동작
+- `showCupertinoSheet` 포기: 배경 scale-down 효과·spring 물리 애니메이션 소실이나 기능 우선
+- [x] `reservation_list_modal.dart` — iOS 분기 제거, `showModalBottomSheet` 단일 구현으로 교체
+
+### 10-7: iOS 스타일 커스텀 Grabber + 모달 스타일 상수화 ✅
+
+- [x] `colors.dart`에 `modalGrabberColor` (`0xFFB5B5BB`), `modalBarrierColor` (`0x33000000`) 추가
+- [x] `ui_constants.dart`에 `modalTopCornerRadius` (`10.0`) 추가
+- [x] `reservation_list_modal.dart` — `showDragHandle: true` 제거, 커스텀 Grabber(36×5, top:6, radius:2.5) 적용, 상수 참조로 교체
+- [x] `store_address_input_screen.dart` (Android) — 동일 Grabber + 상수 적용
+
+### 10-8: ReservationDetailModal Android Grabber + 모달 스타일 적용 ✅
+
+- [x] `showDragHandle: true` 제거
+- [x] `barrierColor: modalBarrierColor`, `shape`, `clipBehavior` 적용
+- [x] 위젯 루트를 `Material(Column([커스텀 Grabber, Expanded(SingleChildScrollView)]))` 구조로 변경 — `reservation_list_modal`과 동일
+- **결정 근거**: 입력폼 구현 시 `topGap` 기반 높이 조절로 해결 시도. 어려울 경우 `showModalBottomSheet` 통합 검토.
+- **미결**: `topGap` 최종값 설정 (피그마 safeArea 제외 537px → 비율 계산) → 예약 입력폼 Phase에서 처리
+
+### 10-9: StoreAddressInputScreen iOS showCupertinoSheet 유지 결정 ✅ (결정 사항)
+
+- [x] iOS: `showCupertinoSheet(enableDrag: false)` 복원 — native 시트 그대로 사용
+- [x] Android: `showModalBottomSheet` + 커스텀 Grabber + 모달 스타일 상수 유지
 
 ---
 
