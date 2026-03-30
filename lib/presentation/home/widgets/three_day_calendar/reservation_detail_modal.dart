@@ -27,6 +27,8 @@ class ReservationDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -38,7 +40,7 @@ class ReservationDetailModal extends StatelessWidget {
                 width: 36,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: modalGrabberColor,
+                  color: isDarkMode ? modalGrabberDarkColor : modalGrabberColor,
                   borderRadius: BorderRadius.circular(2.5),
                 ),
               ),
@@ -51,15 +53,15 @@ class ReservationDetailModal extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 16),
-              // 플레이스홀더 내용
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  reservation.customerName,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              const SizedBox(height: 24),
+                  // 플레이스홀더 내용
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      reservation.customerName,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -81,7 +83,9 @@ class ReservationDetailModal extends StatelessWidget {
 ///   - snap: [0.5, 1.0] — 살짝 내리면 0.5로 스냅백, 세게 내리면 minChildSize(0.3) 도달 → dismiss
 ///   - TODO(#5): initialChildSize — 현재 0.5 임시, 실제 입력폼 높이 기준으로 교체
 Future<void> showReservationDetailModal(
-    BuildContext context, Reservation reservation) {
+  BuildContext context,
+  Reservation reservation,
+) {
   if (Platform.isIOS) {
     return showCupertinoSheet<void>(
       context: context,
@@ -96,8 +100,9 @@ Future<void> showReservationDetailModal(
     barrierColor: modalBarrierColor,
     clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(modalTopCornerRadius)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(modalTopCornerRadius),
+      ),
     ),
     builder: (_) => DraggableScrollableSheet(
       initialChildSize: 0.5,

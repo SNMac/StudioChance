@@ -247,7 +247,7 @@ Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_a
 
 ### 10-7: iOS 스타일 커스텀 Grabber + 모달 스타일 상수화 ✅
 
-- [x] `colors.dart`에 `modalGrabberColor` (`0xFFB5B5BB`), `modalBarrierColor` (`0x33000000`) 추가
+- [x] `colors.dart`에 `modalGrabberColor` (`0xFFB5B5BB`), `modalGrabberDarkColor` (`oxFF585858`), `modalBarrierColor` (`0x33000000`) 추가
 - [x] `ui_constants.dart`에 `modalTopCornerRadius` (`10.0`) 추가
 - [x] `reservation_list_modal.dart` — `showDragHandle: true` 제거, 커스텀 Grabber(36×5, top:6, radius:2.5) 적용, 상수 참조로 교체
 - [x] `store_address_input_screen.dart` (Android) — 동일 Grabber + 상수 적용

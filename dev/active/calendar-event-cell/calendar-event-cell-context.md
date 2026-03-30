@@ -33,23 +33,26 @@ Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_a
 
 #### 공통 모달 스타일 상수 (`colors.dart`, `ui_constants.dart`)
 
-| 상수 | 위치 | 값 |
-|------|------|----|
-| `modalGrabberColor` | `presentation/colors.dart` | `Color(0xFFB5B5BB)` |
-| `modalBarrierColor` | `presentation/colors.dart` | `Color(0x33000000)` — 20% 검정 |
-| `modalTopCornerRadius` | `constants/ui_constants.dart` | `10.0` |
+| 상수                      | 위치                            | 값                            |
+| ----------------------- | ----------------------------- | ---------------------------- |
+| `modalGrabberColor`     | `presentation/colors.dart`    | `Color(0xFFB5B5BB)`          |
+| `modalGrabberDarkColor` | `presentation/colors.dart`    | `Color(0xFF585858)`          |
+| `modalBarrierColor`     | `presentation/colors.dart`    | `Color(0x33000000)` — 20% 검정 |
+| `modalTopCornerRadius`  | `constants/ui_constants.dart` | `10.0`                       |
 
 #### iOS 스타일 커스텀 Grabber
 
 `showDragHandle: true` 대신 위젯 내부에 직접 렌더링:
 ```dart
+final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
 Padding(
   padding: const EdgeInsets.only(top: 6),
   child: Center(
     child: Container(
       width: 36, height: 5,
       decoration: BoxDecoration(
-        color: modalGrabberColor,
+        color: isDarkMode ? modalGrabberDarkColor : modalGrabberColor,
         borderRadius: BorderRadius.circular(2.5),
       ),
     ),
@@ -88,7 +91,7 @@ showModalBottomSheet(
 #### ReservationListModal (최종 상태)
 
 iOS/Android 통합 (`showModalBottomSheet` 단일 구현):
-- 커스텀 Grabber (36×5, `modalGrabberColor`, top:6)
+- 커스텀 Grabber (36×5, `modalGrabberColor`, `modalGrabberDarkColor`, top:6)
 - `barrierColor: modalBarrierColor` (20% 검정 scrim)
 - `shape`: 상단 코너 `modalTopCornerRadius`
 - `DraggableScrollableSheet(initial: 0.5, min: 0.3, max: 1.0, snap: true, snapSizes: [0.5, 1.0], expand: false)`
@@ -128,20 +131,20 @@ snapSizes: const [0.5, 1.0],  // 50%, 100% 두 단계로 스냅
 
 ## 수정된 파일 목록
 
-| 파일 | 변경 내용 |
-|------|----------|
-| `lib/presentation/colors.dart` | 색상 21개 추가 (Background/Foreground/Label × 7), `modalGrabberColor`, `modalBarrierColor` 추가 |
-| `lib/constants/ui_constants.dart` | defaultHourHeight 36→40, minHourHeight 18→36, `modalTopCornerRadius` 추가 |
-| `lib/presentation/providers/hour_height_preference_provider.dart` | loadHourHeight에 clamp 추가 |
-| `lib/presentation/providers/home_calendar_controller.dart` | ScrollToTimeTrigger, PendingHighlightId provider 추가, selectDateFromContinuation() 메서드 추가 |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart` | ReservationDisplayData 재구성(ReservationSummary 내장), ReservationCellColorTheme/셀 ReservationStatus 제거, isHighlighted 파라미터 추가 |
-| `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart` | **삭제** (Phase 9에서 제거) |
-| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart` | ReservationDisplayData 필드 접근 수정 |
-| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart` | ConsumerStatefulWidget 전환, _PositionedItem 변경, stagger 임계값 제거, 탭 핸들러 3종, reservations 파라미터, pendingHighlightIdProvider watch |
-| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart` | ReservationDisplayData 생성 로직 수정, mock Reservation 맵, scrollToTimeTrigger listen |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **신규** — 하프 시트 플레이스홀더, iOS `showCupertinoSheet` / Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용 |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart` | **신규** — N≥4 그룹 목록 모달, iOS/Android 통합 `showModalBottomSheet`, 커스텀 Grabber |
-| `lib/presentation/commons/store_input/screens/store_address_input_screen.dart` | iOS `showCupertinoSheet` 유지, Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용 |
+| 파일                                                                               | 변경 내용                                                                                                                        |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `lib/presentation/colors.dart`                                                   | 색상 21개 추가 (Background/Foreground/Label × 7), `modalGrabberColor`, `modalGrabberDarkColor`,`modalBarrierColor` 추가             |
+| `lib/constants/ui_constants.dart`                                                | defaultHourHeight 36→40, minHourHeight 18→36, `modalTopCornerRadius` 추가                                                      |
+| `lib/presentation/providers/hour_height_preference_provider.dart`                | loadHourHeight에 clamp 추가                                                                                                     |
+| `lib/presentation/providers/home_calendar_controller.dart`                       | ScrollToTimeTrigger, PendingHighlightId provider 추가, selectDateFromContinuation() 메서드 추가                                     |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart`         | ReservationDisplayData 재구성(ReservationSummary 내장), ReservationCellColorTheme/셀 ReservationStatus 제거, isHighlighted 파라미터 추가   |
+| `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart`            | **삭제** (Phase 9에서 제거)                                                                                                        |
+| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart`              | ReservationDisplayData 필드 접근 수정                                                                                              |
+| `lib/presentation/home/widgets/three_day_calendar/time_grid.dart`                | ConsumerStatefulWidget 전환, _PositionedItem 변경, stagger 임계값 제거, 탭 핸들러 3종, reservations 파라미터, pendingHighlightIdProvider watch |
+| `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart`       | ReservationDisplayData 생성 로직 수정, mock Reservation 맵, scrollToTimeTrigger listen                                              |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **신규** — 하프 시트 플레이스홀더, iOS `showCupertinoSheet` / Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용                    |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart`   | **신규** — N≥4 그룹 목록 모달, iOS/Android 통합 `showModalBottomSheet`, 커스텀 Grabber                                                    |
+| `lib/presentation/commons/store_input/screens/store_address_input_screen.dart`   | iOS `showCupertinoSheet` 유지, Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용                                         |
 
 ---
 

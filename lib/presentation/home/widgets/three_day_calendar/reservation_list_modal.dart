@@ -30,6 +30,8 @@ class ReservationListModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -41,7 +43,7 @@ class ReservationListModal extends StatelessWidget {
               width: 36,
               height: 5,
               decoration: BoxDecoration(
-                color: modalGrabberColor,
+                color: isDarkMode ? modalGrabberDarkColor : modalGrabberColor,
                 borderRadius: BorderRadius.circular(2.5),
               ),
             ),
@@ -73,8 +75,13 @@ class ReservationListModal extends StatelessWidget {
                                 height: 8,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(event.summary.storeSummary.color
-                                      .foregroundColorValue),
+                                  color: Color(
+                                    event
+                                        .summary
+                                        .storeSummary
+                                        .color
+                                        .foregroundColorValue,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -91,9 +98,7 @@ class ReservationListModal extends StatelessWidget {
                               Text(
                                 '${_timeFormat.format(event.summary.startTime)}~'
                                 '${_timeFormat.format(event.summary.endTime)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       fontWeight: FontWeight.normal,
                                       color: context.secondaryLabel,
@@ -131,7 +136,9 @@ class ReservationListModal extends StatelessWidget {
 ///
 /// 선택된 [ReservationSummary]를 반환 (취소 시 null).
 Future<ReservationSummary?> showReservationListModal(
-    BuildContext context, List<ReservationDisplayData> events) {
+  BuildContext context,
+  List<ReservationDisplayData> events,
+) {
   return showModalBottomSheet<ReservationSummary>(
     context: context,
     isScrollControlled: true,
@@ -139,8 +146,9 @@ Future<ReservationSummary?> showReservationListModal(
     barrierColor: modalBarrierColor,
     clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(modalTopCornerRadius)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(modalTopCornerRadius),
+      ),
     ),
     builder: (_) => DraggableScrollableSheet(
       initialChildSize: 0.5,
@@ -149,10 +157,8 @@ Future<ReservationSummary?> showReservationListModal(
       expand: false,
       snap: true,
       snapSizes: const [0.5, 1.0],
-      builder: (_, controller) => ReservationListModal(
-        events: events,
-        scrollController: controller,
-      ),
+      builder: (_, controller) =>
+          ReservationListModal(events: events, scrollController: controller),
     ),
   );
 }

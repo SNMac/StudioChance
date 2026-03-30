@@ -29,6 +29,7 @@ const Color purpleLabel = Color(0xFF5E1980);
 
 // ── 모달 ─────────────────────────────────────────────────────────────────────
 const Color modalGrabberColor = Color(0xFFB5B5BB);
+const Color modalGrabberDarkColor = Color(0xFF585858);
 const Color modalBarrierColor = Color(0x33000000);
 
 const googleSignInBackgroundColor = Color(0xFFFFFFFF);
