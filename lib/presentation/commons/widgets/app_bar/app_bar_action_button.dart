@@ -7,11 +7,15 @@ class AppBarActionButton extends StatelessWidget {
   final TextStyle? style;
   final VoidCallback? onPressed;
 
+  /// true: FontWeight.normal (regular), false: FontWeight.w600 (semibold)
+  final bool isRegularWeight;
+
   const AppBarActionButton({
     super.key,
     required this.label,
     this.style,
     this.onPressed,
+    this.isRegularWeight = false,
   });
 
   @override
@@ -25,7 +29,10 @@ class AppBarActionButton extends StatelessWidget {
         ? colorScheme.primary
         : context.quaternaryLabel;
 
-    final effectiveStyle = baseStyle?.copyWith(color: color);
+    final effectiveStyle = baseStyle?.copyWith(
+      color: color,
+      fontWeight: isRegularWeight ? FontWeight.normal : FontWeight.w600,
+    );
 
     return TextButton(
       onPressed: onPressed,

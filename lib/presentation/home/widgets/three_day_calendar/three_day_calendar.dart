@@ -257,6 +257,41 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         startTime: dayAfter.add(const Duration(hours: 21)),
         endTime: dayAfter.add(const Duration(hours: 23)),
       ),
+      // 모레: N=4 오버플로우, 다른 시작 시간 (20분 간격 stagger)
+      // — e19(10:00~12:00)와 겹치지 않고 e20(15:00~16:00)과도 겹치지 않는 12:00~15:00 슬롯
+      // — 12:00, 12:20, 12:40, 13:00 시작. 13:00에 4개 동시 활성 → max_col=3, N=4, overflow
+      'e24': ReservationSummary(
+        id: 'e24', storeSummary: _store(StoreColor.red),
+        status: ReservationStatus.confirmed,
+        customerName: '강예린', headCount: 2, customerPhone: '010-1122-3344',
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 12)),
+        endTime: dayAfter.add(const Duration(hours: 14)),
+      ),
+      'e25': ReservationSummary(
+        id: 'e25', storeSummary: _store(StoreColor.orange),
+        status: ReservationStatus.pending,
+        customerName: '조현우', headCount: 3, customerPhone: '010-2233-4455',
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 12, minutes: 20)),
+        endTime: dayAfter.add(const Duration(hours: 14, minutes: 20)),
+      ),
+      'e26': ReservationSummary(
+        id: 'e26', storeSummary: _store(StoreColor.yellow),
+        status: ReservationStatus.confirmed,
+        customerName: '문소리', headCount: 1, customerPhone: '010-3344-5566',
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 12, minutes: 40)),
+        endTime: dayAfter.add(const Duration(hours: 14, minutes: 40)),
+      ),
+      'e27': ReservationSummary(
+        id: 'e27', storeSummary: _store(StoreColor.green),
+        status: ReservationStatus.canceled,
+        customerName: '변요한', headCount: 4, customerPhone: '010-4455-6677',
+        isAllDay: false,
+        startTime: dayAfter.add(const Duration(hours: 13)),
+        endTime: dayAfter.add(const Duration(hours: 15)),
+      ),
     };
 
     // ── ReservationDisplayData 목록 ────────────────────────────────────────

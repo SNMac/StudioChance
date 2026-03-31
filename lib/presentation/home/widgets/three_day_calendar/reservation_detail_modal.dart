@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/presentation/colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 
 /// 예약 상세 모달 (플레이스홀더 — 실제 디자인은 별도 Phase에서 구현)
 ///
@@ -30,11 +33,13 @@ class ReservationDetailModal extends StatelessWidget {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
+      color: context.systemGroupedBackground,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
+          // Grabber + 모달 상단 간격 (총 14px, pill 중앙 정렬)
+          SizedBox(
+            height: 14,
             child: Center(
               child: Container(
                 width: 36,
@@ -44,6 +49,31 @@ class ReservationDetailModal extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2.5),
                 ),
               ),
+            ),
+          ),
+          Theme(
+            data: Theme.of(context).copyWith(
+              appBarTheme: Theme.of(context).appBarTheme.copyWith(
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+              ),
+            ),
+            child: CustomAppBar(
+              title: '예약 정보',
+              leading: AppBarActionButton(
+                label: '취소',
+                isRegularWeight: true,
+                onPressed: () => Navigator.pop(context),
+              ),
+              actions: [
+                AppBarActionButton(
+                  label: '편집',
+                  onPressed: () {
+                    // TODO(#5): 예약 편집 화면으로 이동
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -89,7 +119,6 @@ Future<void> showReservationDetailModal(
   if (Platform.isIOS) {
     return showCupertinoSheet<void>(
       context: context,
-      showDragHandle: true,
       builder: (_) => ReservationDetailModal(reservation: reservation),
     );
   }

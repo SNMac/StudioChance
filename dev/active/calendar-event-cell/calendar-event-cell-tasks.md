@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_address_input_screen 정리)
+Last Updated: 2026-03-31 (Phase 19 완료 — AppBarActionButton isRegularWeight + 모달 취소 버튼 통합)
 
 ---
 
@@ -267,25 +267,125 @@ Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_a
 
 ---
 
+## Phase 19: AppBarActionButton isRegularWeight + 모달 취소 버튼 통합 ✅
+
+**파일:** `app_bar_action_button.dart`, `app_bar_back_button.dart`, `reservation_detail_modal.dart`
+
+- [x] **19-1**: `AppBarActionButton`에 `isRegularWeight` bool 파라미터 추가
+  - `false`(기본): `FontWeight.w600` (semibold)
+  - `true`: `FontWeight.normal` (regular)
+- [x] **19-2**: `AppBarModalBackButton` — Phase 16~18 변경사항 롤백, xmark 아이콘 전용으로 복원
+- [x] **19-3**: `reservation_detail_modal.dart` — leading을 `AppBarActionButton(label: '취소', isRegularWeight: true)`로 변경, `app_bar_back_button.dart` import 제거
+
+---
+
+## Phase 18: AppBarModalBackButton OverflowBox 적용 ← 롤백 (Phase 19)
+
+---
+
+## Phase 17: CustomAppBar leadingWidth 파라미터 추가 ← 롤백 (Phase 18)
+
+---
+
+## Phase 16: AppBarModalBackButton label 파라미터 추가 ✅
+
+**파일:** `lib/presentation/commons/widgets/app_bar/app_bar_back_button.dart`, `reservation_detail_modal.dart`
+
+- [x] **16-1**: `AppBarModalBackButton`에 `final String? label` 파라미터 추가
+  - `label != null` → `TextButton(Text(label!, style: titleLarge + normal weight))` 렌더링
+  - `label == null` → 기존 xmark 아이콘 동작 유지
+  - 스타일: `textTheme.titleLarge?.copyWith(fontWeight: FontWeight.normal, color: colorScheme.primary)`
+- [x] **16-2**: `reservation_detail_modal.dart` — `leading: AppBarActionButton('취소')` → `AppBarModalBackButton(label: '취소')`로 교체
+
+---
+
+## Phase 15: ModalBodyPadding 컴포넌트화 ✅
+
+**파일:** `lib/presentation/commons/widgets/modal_body_padding.dart` (신규), `reservation_list_modal.dart`
+
+- [x] **15-1**: `ModalBodyPadding` 위젯 신규 생성
+  - 위치: `lib/presentation/commons/widgets/modal_body_padding.dart`
+  - `SafeArea(top: false) + Padding(fromLTRB(16, 16, 16, 8))` 패턴 캡슐화
+  - 기본값: `EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 8)`
+  - `padding` 파라미터로 커스터마이징 가능
+- [x] **15-2**: `ReservationListModal` — `SafeArea + Padding` → `ModalBodyPadding` 교체
+
+---
+
+## Phase 14: 모달 AppBar 투명 배경 + 14px 간격 + 취소 버튼 ✅
+
+**파일:** `reservation_list_modal.dart`, `reservation_detail_modal.dart`
+
+- [x] **14-1**: 두 모달 — Grabber `Padding(top:6)` → `SizedBox(height:14, child: Center(pill))` 교체
+  - 모달 상단~AppBar 거리 = 14px (pill은 그 안에서 수직 중앙)
+- [x] **14-2**: 두 모달 — CustomAppBar를 `Theme` 래퍼로 감싸 투명 배경 적용
+  - `appBarTheme.backgroundColor = Colors.transparent`
+  - `appBarTheme.surfaceTintColor = Colors.transparent`
+  - `appBarTheme.shadowColor = Colors.transparent`
+- [x] **14-3**: 리스트 모달 — `showModalBottomSheet`의 `backgroundColor: systemGroupedBackground` 유지 (시트 전체 배경), AppBar 투명 → AppBar가 systemGroupedBackground로 보임
+- [x] **14-4**: 세부 모달 — `Material()` → `Material(color: context.systemGroupedBackground)` (iOS showCupertinoSheet 배경 제공)
+- [x] **14-5**: 세부 모달 — `leading: AppBarActionButton(label: '취소', ...)` 추가 (→ Phase 16에서 `AppBarModalBackButton(label: '취소')`로 교체)
+- [x] **14-6**: `context_colors.dart` import 추가 (detail modal)
+
+---
+
+## Phase 13: AppBarActionButton + 리스트 모달 배경색 분리 ✅
+
+**파일:** `reservation_detail_modal.dart`, `reservation_list_modal.dart`
+
+- [x] **13-1**: `ReservationDetailModal` — `TextButton('편집')` → `AppBarActionButton(label: '편집')` 교체
+- [x] **13-2**: `ReservationListModal` — Grabber+AppBar 영역은 시트 기본 surface 색, 콘텐츠 영역은 `ColoredBox(systemGroupedBackground)` 분리
+  - **원인**: `showModalBottomSheet`의 `backgroundColor: systemGroupedBackground`가 Grabber 포함 전체 시트에 적용 → AppBar 위에 회색 노출
+  - **해결**: `backgroundColor` 제거 → `Expanded`를 `ColoredBox(systemGroupedBackground)`로 감쌈
+  - **구조**: Grabber(surface) + AppBar(surface) + `Expanded(ColoredBox(systemGroupedBackground, ...))`
+
+---
+
+## Phase 12: 모달 AppBar + 인원 수 표시 + stagger overflow 목데이터 ✅
+
+**파일:** `reservation_list_modal.dart`, `reservation_detail_modal.dart`, `three_day_calendar.dart`
+
+- [x] **12-1**: `ReservationListModal` — `CustomAppBar(title: '예약 목록', leading: SizedBox.shrink())` Grabber 아래에 추가
+- [x] **12-2**: `ReservationListModal` — 고객명을 `'고객명 · N인'` 형식으로 변경
+- [x] **12-3**: `ReservationDetailModal` — `CustomAppBar(title: '예약 정보', leading: SizedBox.shrink(), actions: ['편집' TextButton])` 추가
+- [x] **12-4**: `ReservationDetailModal` — iOS `showCupertinoSheet`에서 `showDragHandle: true` 제거 (위젯 내 Grabber와 중복 방지)
+- [x] **12-5**: 목데이터 e24~e27 추가 (모레 12:00~15:00, 20분 stagger, N=4 overflow)
+  - e24: 12:00~14:00 (red, 강예린, 2인)
+  - e25: 12:20~14:20 (orange, 조현우, 3인)
+  - e26: 12:40~14:40 (yellow, 문소리, 1인)
+  - e27: 13:00~15:00 (green, 변요한, 4인)
+  - 13:00에 4개 동시 활성 → max_col=3, N=4, overflow ✅
+
+---
+
+## Phase 11: StoreColor 통합 + 리스트 모달 배경색 ✅
+
+**파일:** `lib/presentation/colors.dart`, `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart`
+
+- [x] **11-1**: `colors.dart` 예약 색상 상수 21개 삭제 (StoreColor enum으로 통합)
+- [x] **11-2**: `showReservationListModal` → `backgroundColor: context.systemGroupedBackground` 추가
+
+---
+
 ## 시각적 검증 항목
 
-- [ ] **V-1**: 오늘 종일 행 - 초록 확정 셀
-- [ ] **V-2**: 오늘 07:00~08:30 - 초록 확정 (1.5시간)
-- [ ] **V-3**: 오늘 10:00 N=4 → 오버플로우 셀, 멀티컬러 스트립 표시
-- [ ] **V-4**: 내일 09:00 N=2 delta=0 → cellWidth stagger, 이름 3자 노출
-- [ ] **V-5**: 내일 13:00 N=3 delta=0 → cellWidth stagger, 이름 1~2자 노출
-- [ ] **V-6**: 내일 17:00 N=2 delta=20분 → 8px stagger (delta>0 규칙)
-- [ ] **V-7**: 내일 20:30 N=2 delta=30분 → 8px stagger (delta>0 규칙)
-- [ ] **V-14**: 오늘 22:00 → 내일 02:00 자정 넘김:
+- [x] **V-1**: 오늘 종일 행 - 초록 확정 셀
+- [x] **V-2**: 오늘 07:00~08:30 - 초록 확정 (1.5시간)
+- [x] **V-3**: 오늘 10:00 N=4 → 오버플로우 셀, 멀티컬러 스트립 표시
+- [x] **V-4**: 내일 09:00 N=2 delta=0 → cellWidth stagger, 이름 3자 노출
+- [x] **V-5**: 내일 13:00 N=3 delta=0 → cellWidth stagger, 이름 1~2자 노출
+- [x] **V-6**: 내일 17:00 N=2 delta=20분 → 8px stagger (delta>0 규칙)
+- [x] **V-7**: 내일 20:30 N=2 delta=30분 → 8px stagger (delta>0 규칙)
+- [x] **V-14**: 오늘 22:00 → 내일 02:00 자정 넘김:
   - 오늘 22:00~24:00: 정상 셀, 하단 코너 없음·구분선 밀착
   - 내일 00:00~02:00: 배경+스트립만, 상단 코너 없음·구분선 밀착
   - 바운스 시: 오늘 열 bottom 바운스 → 셀 아래로 이어짐, 내일 열 top 바운스 → 셀 위로 이어짐
-- [ ] **V-8**: 모레 20:00 N=2 delta=60분 → 8px stagger (back 셀 strip+gap만 노출)
-- [ ] **V-9**: 좌측 스트립(Foreground) vs 우측 배경(Background) 확인
-- [ ] **V-10**: 아이콘 셀 왼쪽에서 4px 간격
-- [ ] **V-11**: 셀 외곽선 0.5px
-- [ ] **V-12**: 다크 모드 외곽선 자동 적응
-- [ ] **V-13**: 핀치 줌 아웃 → hourHeight=36 이하 제한 확인
+- [x] **V-8**: 모레 20:00 N=2 delta=60분 → 8px stagger (back 셀 strip+gap만 노출)
+- [x] **V-9**: 좌측 스트립(Foreground) vs 우측 배경(Background) 확인
+- [x] **V-10**: 아이콘 셀 왼쪽에서 4px 간격
+- [x] **V-11**: 셀 외곽선 0.5px
+- [x] **V-12**: 다크 모드 외곽선 자동 적응
+- [x] **V-13**: 핀치 줌 아웃 → hourHeight=36 이하 제한 확인
 
 ---
 

@@ -5,7 +5,9 @@ import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/modal_body_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
 final _timeFormat = DateFormat('HH:mm');
@@ -35,9 +37,9 @@ class ReservationListModal extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // iOS 스타일 Grabber (36×5, #B5B5BB, top: 6)
-        Padding(
-          padding: const EdgeInsets.only(top: 6),
+        // Grabber + 모달 상단 간격 (총 14px, pill 중앙 정렬)
+        SizedBox(
+          height: 14,
           child: Center(
             child: Container(
               width: 36,
@@ -49,14 +51,21 @@ class ReservationListModal extends StatelessWidget {
             ),
           ),
         ),
+        Theme(
+          data: Theme.of(context).copyWith(
+            appBarTheme: Theme.of(context).appBarTheme.copyWith(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+            ),
+          ),
+          child: CustomAppBar(title: '예약 목록', leading: const SizedBox.shrink()),
+        ),
         Expanded(
           child: SingleChildScrollView(
             controller: scrollController,
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: GroupedFormContainer(
+            child: ModalBodyPadding(
+              child: GroupedFormContainer(
                   children: [
                     for (final event in events)
                       SizedBox(
@@ -85,10 +94,10 @@ class ReservationListModal extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // 고객명
+                              // 고객명 · 인원
                               Expanded(
                                 child: Text(
-                                  event.summary.customerName,
+                                  '${event.summary.customerName} · ${event.summary.headCount}인',
                                   style: Theme.of(context).textTheme.bodyLarge,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -115,8 +124,7 @@ class ReservationListModal extends StatelessWidget {
                           ),
                         ),
                       ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
@@ -143,6 +151,7 @@ Future<ReservationSummary?> showReservationListModal(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    backgroundColor: context.systemGroupedBackground,
     barrierColor: modalBarrierColor,
     clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(

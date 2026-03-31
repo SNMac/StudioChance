@@ -1,18 +1,387 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-30 (Phase 10 완료 + 모달 스타일 상수화 + store_address_input_screen 통합)
+Last Updated: 2026-03-31 (Phase 19 완료 — AppBarActionButton isRegularWeight 파라미터 추가, 모달 취소 버튼 통합)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~9 구현 완료. 최종 코드 리뷰 APPROVED.**
-**후속 수정: Android/iOS 테스트에서 모달 UI 버그 발견 — Phase 10에서 수정 예정.**
+**Phase 1~19 구현 완료.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
 > Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료**
-> Phase 10: 모달 UI 버그 수정 — **미착수 (다음 작업)**
+> Phase 10: 모달 UI 버그 수정 — **완료**
+> Phase 11: StoreColor 통합 + 리스트 모달 배경색 — **완료**
+
+---
+
+## Phase 19: AppBarActionButton isRegularWeight + 모달 취소 버튼 통합 (2026-03-31)
+
+### 변경 사항
+
+**`app_bar_action_button.dart`**:
+- `final bool isRegularWeight` 파라미터 추가 (기본값 `false`)
+  - `false`: `FontWeight.w600` (semibold)
+  - `true`: `FontWeight.normal` (regular)
+
+**`app_bar_back_button.dart`**:
+- `AppBarModalBackButton`을 원래 상태(xmark 아이콘 전용)로 롤백
+  - Phase 16~18에서 추가한 `label`, `OverflowBox` 관련 코드 전부 제거
+  - `AppBarModalBackButton`은 xmark 아이콘 버튼으로만 사용
+
+**`reservation_detail_modal.dart`**:
+- `import app_bar_back_button.dart` 제거
+- `leading: AppBarModalBackButton(label: '취소')` → `leading: AppBarActionButton(label: '취소', isRegularWeight: true)`
+
+### AppBarActionButton 사용 패턴
+
+```dart
+// semibold (기본) — '편집', '저장' 등 주요 액션
+AppBarActionButton(label: '편집', onPressed: () {})
+
+// regular — '취소' 등 보조 액션
+AppBarActionButton(label: '취소', isRegularWeight: true, onPressed: () => Navigator.pop(context))
+```
+
+### 최종 구조 비교 (업데이트)
+
+| 요소 | 리스트 모달 | 세부 모달 |
+|------|------------|---------|
+| 좌측 버튼 | 없음 | `AppBarActionButton('취소', isRegularWeight: true)` |
+| 우측 버튼 | 없음 | `AppBarActionButton('편집')` (semibold) |
+
+### AppBarModalBackButton 용도 확정
+
+xmark 아이콘 닫기 버튼 전용. 텍스트 취소 버튼은 `AppBarActionButton(isRegularWeight: true)` 사용.
+
+---
+
+## Phase 18: AppBarModalBackButton — OverflowBox로 tight 제약 탈출 (2026-03-31) ← 롤백됨 (Phase 19)
+
+### 문제
+
+`AppBar.leading`은 내부적으로 `_AppBarLayout.performLayout()`에서 `BoxConstraints.tightFor(width: leadingWidth, height: toolbarHeight)`를 child에 강제 적용.
+
+- `leadingWidth: 56`(기본): `TextButton` ripple = 56dp (너무 작음)
+- `leadingWidth: 88`(Phase 17 시도): `TextButton` ripple = 88dp (너무 큼, button이 우측으로 치우침)
+
+어떤 `leadingWidth` 값을 써도 `TextButton`이 그 폭으로 강제됨.
+
+### 해결책: OverflowBox
+
+`OverflowBox`는 부모의 tight 제약을 무시하고 자식에게 별도의 제약을 제공. `maxWidth: double.infinity`로 unconstrained를 주면 `TextButton`이 자연 크기로 렌더링됨.
+
+```dart
+OverflowBox(
+  maxWidth: double.infinity,
+  alignment: Alignment.centerLeft,
+  child: TextButton(...),
+)
+```
+
+- `TextButton` 자연 크기 ≈ `AppBarActionButton("편집")`과 동일 → ripple 크기 일치 ✅
+- `Alignment.centerLeft`: leading 영역(x=0)에 left-aligned로 배치 → 좌측 여백 자연스럽게 유지 ✅
+- 자연 크기(~68dp)가 leadingWidth(56dp)보다 크면 title 방향으로 ~12dp overflow — `_AppBarLayout`이 clip하지 않아 시각적으로 정상 표시
+
+### 변경 사항
+
+**`app_bar_back_button.dart`**:
+- label 분기: `TextButton` → `OverflowBox(maxWidth: infinity, alignment: centerLeft, child: TextButton(...))`
+
+**`reservation_detail_modal.dart`**:
+- `CustomAppBar(leadingWidth: 88, ...)` → `leadingWidth` 제거
+
+**`custom_app_bar.dart`**:
+- Phase 17에서 추가한 `leadingWidth` 파라미터 제거 (해결책이 잘못된 방향이었음)
+
+### 영향 범위
+
+- `AppBarNaviBackButton` (일반 뒤로 가기): `OverflowBox` 미적용, 변경 없음 ✅
+- `AppBarModalBackButton(label: null)` (xmark 아이콘): 변경 없음 ✅
+- iOS: `OverflowBox`는 플랫폼 무관한 Flutter 위젯 — 동일 동작 ✅
+
+---
+
+## Phase 17: CustomAppBar leadingWidth 파라미터 추가 (2026-03-31) ← 롤백됨
+
+Phase 18에서 롤백. `leadingWidth`를 조절해도 TextButton이 강제 폭으로 렌더링되어 근본 문제 미해결.
+
+---
+
+## Phase 16: AppBarModalBackButton label 파라미터 추가 (2026-03-31)
+
+### 변경 사항
+
+**`lib/presentation/commons/widgets/app_bar/app_bar_back_button.dart`**:
+- `AppBarModalBackButton`에 `final String? label` 파라미터 추가
+- `label != null`이면 xmark 아이콘 대신 `TextButton`으로 렌더링
+  - 스타일: `textTheme.titleLarge?.copyWith(fontWeight: FontWeight.normal, color: colorScheme.primary)`
+  - `isEnabled = false`이면 color를 `quaternaryLabel`로 변경
+- 기존 xmark 아이콘 동작은 `label == null`일 때 그대로 유지
+
+```dart
+// label 있을 때
+TextButton(
+  onPressed: isEnabled ? onPressed : null,
+  child: Text(
+    label!,
+    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+      fontWeight: FontWeight.normal,
+      color: isEnabled ? colorScheme.primary : context.quaternaryLabel,
+    ),
+  ),
+)
+```
+
+> ⚠️ **textStyle 결정**: 초기 `bodyMedium`으로 구현했으나 사용자가 `titleLarge`로 직접 수정. `titleLarge + FontWeight.normal`이 모달 AppBar '취소' 버튼의 확정 스타일.
+
+**`lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart`**:
+- `leading: AppBarActionButton(label: '취소', ...)` → `leading: AppBarModalBackButton(label: '취소', ...)`로 교체
+- `import app_bar_back_button.dart` 추가
+- `import app_bar_action_button.dart`는 유지 ('편집' 버튼에 여전히 사용)
+
+### 최종 구조 비교 (업데이트)
+
+| 요소 | 리스트 모달 | 세부 모달 |
+|------|------------|---------|
+| 시트 기본 배경 | `showModalBottomSheet(backgroundColor: systemGroupedBackground)` | `Material(color: systemGroupedBackground)` |
+| AppBar 배경 | transparent (systemGroupedBackground 투과) | transparent (systemGroupedBackground 투과) |
+| 좌측 버튼 | 없음 (`SizedBox.shrink()`) | `AppBarModalBackButton(label: '취소')` |
+| 우측 버튼 | 없음 | `AppBarActionButton('편집')` |
+
+### AppBarModalBackButton 사용 패턴
+
+```dart
+// 텍스트 취소 버튼 (모달 좌측)
+AppBarModalBackButton(
+  label: '취소',
+  onPressed: () => Navigator.pop(context),
+)
+
+// 기존 xmark 아이콘 버튼 (label 미지정 시 기본 동작)
+AppBarModalBackButton(
+  onPressed: () => Navigator.pop(context),
+)
+```
+
+---
+
+## Phase 15: ModalBodyPadding 컴포넌트화 (2026-03-31)
+
+### 신규 파일
+
+**`lib/presentation/commons/widgets/modal_body_padding.dart`**:
+```dart
+class ModalBodyPadding extends StatelessWidget {
+  const ModalBodyPadding({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.fromLTRB(
+      horizontalPadding, 16, horizontalPadding, 8,
+    ),
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(padding: padding, child: child),
+    );
+  }
+}
+```
+
+### 설계 의도
+
+- `SafeArea(top: false)`: 모달에서 상단 safe area는 AppBar가 담당하므로 하단/측면만 처리
+- 기본 padding `fromLTRB(16, 16, 16, 8)`: 리스트형 모달의 표준 여백
+  - 좌우: `horizontalPadding`(16) — 앱 전체 수평 패딩 상수
+  - 상단: 16 — AppBar 아래 첫 콘텐츠와의 간격
+  - 하단: 8 — 리스트 마지막 항목과 홈 인디케이터 사이 최소 여백
+- `padding` 파라미터로 모달별 커스터마이징 가능
+
+### 사용법
+
+```dart
+// 기본값 사용 (리스트 모달)
+ModalBodyPadding(
+  child: GroupedFormContainer(children: [...]),
+)
+
+// 커스텀 padding
+ModalBodyPadding(
+  padding: EdgeInsets.all(24),
+  child: ...,
+)
+```
+
+---
+
+## Phase 14: 모달 AppBar 투명 배경 + 14px 간격 + 취소 버튼 (2026-03-31)
+
+### 변경 사항
+
+**두 모달 공통**:
+- Grabber 구조: `Padding(only(top:6), Center(pill))` → `SizedBox(height:14, Center(pill))`
+  - 이전: 6px top padding + 5px pill + 약간의 하단 여백 = ~17px
+  - 이후: 14px SizedBox, pill은 수직 중앙 (y=4.5~9.5)
+- AppBar 투명화: `CustomAppBar`를 `Theme` 래퍼로 감싸 `appBarTheme.backgroundColor/surfaceTintColor/shadowColor = transparent` 적용
+
+**리스트 모달**:
+- `showModalBottomSheet(backgroundColor: systemGroupedBackground)` 유지
+- `ColoredBox` 제거 (시트 전체가 이미 systemGroupedBackground이므로 불필요)
+- AppBar 투명 → systemGroupedBackground가 배경으로 투과
+
+**세부 모달**:
+- `Material()` → `Material(color: context.systemGroupedBackground)`
+  - iOS `showCupertinoSheet`는 자체 배경을 제공하지 않으므로 Material이 배경 담당
+  - Android `showModalBottomSheet`는 자체 Material이 있지만 inner Material로 덮음
+- `leading: AppBarActionButton(label: '취소', onPressed: () => Navigator.pop(context))` 추가 (→ Phase 16에서 `AppBarModalBackButton(label: '취소')`로 교체됨)
+
+### 모달 AppBar 투명화 패턴
+
+```dart
+Theme(
+  data: Theme.of(context).copyWith(
+    appBarTheme: Theme.of(context).appBarTheme.copyWith(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+    ),
+  ),
+  child: CustomAppBar(title: '...', leading: ..., actions: [...]),
+)
+```
+
+`CustomAppBar`가 `backgroundColor`를 직접 노출하지 않으므로 Theme 오버라이드 방식 사용.
+`CustomAppBar` 자체의 `surfaceTintColor: Platform.isIOS ? transparent : null` 설정은 Theme 오버라이드와 독립적으로 적용됨.
+
+### 최종 구조 비교
+
+| 요소 | 리스트 모달 | 세부 모달 |
+|------|------------|---------|
+| 시트 기본 배경 | `showModalBottomSheet(backgroundColor: systemGroupedBackground)` | `Material(color: systemGroupedBackground)` |
+| AppBar 배경 | transparent (systemGroupedBackground 투과) | transparent (systemGroupedBackground 투과) |
+| 좌측 버튼 | 없음 (`SizedBox.shrink()`) | `AppBarModalBackButton(label: '취소')` |
+| 우측 버튼 | 없음 | `AppBarActionButton('편집')` |
+
+---
+
+## Phase 13: AppBarActionButton + 리스트 모달 배경색 분리 (2026-03-31)
+
+### 변경 사항
+
+**`reservation_detail_modal.dart`**:
+- `TextButton(child: Text('편집'))` → `AppBarActionButton(label: '편집', onPressed: () {})`
+- `import app_bar_action_button.dart` 추가
+
+**`reservation_list_modal.dart`**:
+- `showModalBottomSheet`에서 `backgroundColor: context.systemGroupedBackground` 제거
+- `Expanded` 자식을 `ColoredBox(color: context.systemGroupedBackground, child: ...)` 로 감쌈
+
+### 배경색 분리 구조 (확정)
+
+```
+showModalBottomSheet (backgroundColor: 기본 surface)
+└─ Column
+   ├─ Grabber           → surface 색 (AppBar와 동일)
+   ├─ CustomAppBar      → surface 색
+   └─ Expanded
+      └─ ColoredBox(systemGroupedBackground)
+         └─ ScrollView → SafeArea → Padding → GroupedFormContainer
+```
+
+**왜 이렇게 해야 하나**:
+- `showModalBottomSheet`의 `backgroundColor`는 DraggableScrollableSheet 전체(Grabber 포함)에 적용됨
+- Grabber 영역까지 systemGroupedBackground가 되면 AppBar 위에 회색 띠가 생김
+- ColoredBox로 Expanded 영역만 색상 지정 → Grabber+AppBar는 surface, 콘텐츠는 systemGroupedBackground
+
+### AppBarActionButton 사용법
+
+```dart
+AppBarActionButton(
+  label: '편집',
+  onPressed: () { /* TODO */ },  // null이면 비활성(quaternaryLabel 색)
+)
+```
+
+---
+
+## Phase 12: 모달 AppBar + 인원 수 + stagger overflow 목데이터 (2026-03-31)
+
+### 변경 사항
+
+**`reservation_list_modal.dart`**:
+- `CustomAppBar(title: '예약 목록', leading: const SizedBox.shrink())` 추가 (Grabber 아래, content 위)
+- 고객명 표시: `'${customerName}'` → `'${customerName} · ${headCount}인'` (예약 셀과 동일 형식)
+- `import custom_app_bar.dart` 추가
+
+**`reservation_detail_modal.dart`**:
+- `CustomAppBar(title: '예약 정보', leading: SizedBox.shrink(), actions: [TextButton('편집')])` 추가
+- iOS `showCupertinoSheet`에서 `showDragHandle: true` 제거 — 위젯 내 Grabber와 겹치지 않도록
+- `import custom_app_bar.dart` 추가
+
+**`three_day_calendar.dart`**:
+- e24~e27 목데이터 추가 (모레 12:00~15:00 슬롯, 20분 stagger)
+- 설계 의도: 시작 시간이 다른 이벤트들이 순차적으로 겹쳐서 N=4 overflow가 되는 시나리오
+  - 기존 e03~e06 (오늘 10:00, 모두 동시 시작 delta=0)과의 차이를 보여줌
+  - 13:00에 4개 동시 활성 → max_col=3, N=4, cellWidth≈26px < 31px → overflow ✅
+
+### stagger overflow 알고리즘 동작 설명
+
+```
+e24: 12:00~14:00 → col 0
+e25: 12:20~14:20 → [e24 겹침] → col 1
+e26: 12:40~14:40 → [e24, e25 겹침] → col 2
+e27: 13:00~15:00 → [e24, e25, e26 겹침] → col 3
+N = max_col+1 = 4, cellWidth = usableWidth/4 ≈ 26.5px < 31px → overflow
+```
+
+### CustomAppBar 모달 사용 패턴
+
+`CustomAppBar`는 `PreferredSizeWidget` + `AppBar` 래퍼이지만, `Column` 안에서도 직접 사용 가능.
+- `leading: const SizedBox.shrink()` → Navigator back button 자동 추가 방지 (autoImplyLeading은 AppBar 내부에서 leading이 non-null이면 무시)
+- 모달에서는 Scaffold 없이 Column([Grabber, CustomAppBar, Expanded(content)]) 구조 사용
+
+### 모달 헤더 구조 (공통)
+
+```
+Column(
+  Padding(top:6) → Grabber 36×5
+  CustomAppBar(title, leading: SizedBox.shrink(), [actions])
+  Expanded(ScrollView → content)
+)
+```
+
+---
+
+## Phase 11: StoreColor 통합 + 리스트 모달 배경색 (2026-03-31)
+
+### 변경 사항
+
+**`lib/presentation/colors.dart`**:
+- 예약 셀 색상 상수 21개 (`redBackground` ~ `purpleLabel`) **전면 삭제**
+- `ReservationCell`이 이미 `StoreColor` enum의 `backgroundColorValue`/`foregroundColorValue`/`labelColorValue`를 사용하고 있어 상수가 불필요했음 (아무 곳에서도 참조 없음 확인)
+
+**`lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart`**:
+- `showModalBottomSheet`에 `backgroundColor: context.systemGroupedBackground` 추가
+- `GroupedFormContainer`는 이미 사용 중 (`secondarySystemGroupedBackground` 배경의 카드 컨테이너)
+- 모달 배경(systemGroupedBackground) + 카드 배경(secondarySystemGroupedBackground) 계층 구조로 iOS 설정 앱 스타일 구현
+
+### 색상 구조 (확정)
+
+예약 색상의 진원지는 `lib/domain/enums/store_color.dart`의 `StoreColor` enum:
+```dart
+// 색상값 접근
+Color(storeColor.backgroundColorValue)  // 연한 배경 (셀 나머지 배경)
+Color(storeColor.foregroundColorValue)  // 진한 색 (좌측 4px 스트립)
+Color(storeColor.labelColorValue)       // 어두운 라벨 (텍스트/아이콘)
+```
+`colors.dart`에는 모달/소셜로그인 관련 상수만 남음.
 
 ---
 
