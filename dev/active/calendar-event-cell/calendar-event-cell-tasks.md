@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-04-01 (Phase 21 완료 — ModalAppBar 컴포넌트화 + 하단 구분선 제거)
+Last Updated: 2026-04-01 (Phase 22 완료 — 리스트 모달 chevron 크기 수정)
 
 ---
 
@@ -386,6 +386,17 @@ Last Updated: 2026-04-01 (Phase 21 완료 — ModalAppBar 컴포넌트화 + 하�
 - [x] **V-11**: 셀 외곽선 0.5px
 - [x] **V-12**: 다크 모드 외곽선 자동 적응
 - [x] **V-13**: 핀치 줌 아웃 → hourHeight=36 이하 제한 확인
+
+---
+
+## Phase 22: 리스트 모달 chevron 크기 수정 ✅
+
+**파일:** `reservation_list_modal.dart`
+
+- [x] **22-1**: chevron `Icon(size: 10)` → `ConstrainedBox(maxWidth: 10) + Icon()` 패턴으로 교체
+  - `TitleNavigationButton`과 동일한 방식
+  - `size: 10` → 아이콘 글리프 자체 10pt (너무 가늘고 작게 보임)
+  - `ConstrainedBox(maxWidth: 10)` → 아이콘은 기본 24pt로 렌더링, 너비만 10px 제한 → 적절한 굵기
 
 ---
 

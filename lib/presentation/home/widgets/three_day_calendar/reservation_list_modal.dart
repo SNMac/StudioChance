@@ -92,10 +92,12 @@ class ReservationListModal extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               // chevron
-                              Icon(
-                                CupertinoIcons.chevron_forward,
-                                size: 10,
-                                color: context.tertiaryLabel,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 10),
+                                child: Icon(
+                                  CupertinoIcons.chevron_forward,
+                                  color: context.tertiaryLabel,
+                                ),
                               ),
                             ],
                           ),
