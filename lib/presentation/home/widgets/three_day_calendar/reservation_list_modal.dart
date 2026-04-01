@@ -7,7 +7,7 @@ import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/modal_body_padding.dart';
+import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
@@ -41,7 +41,14 @@ class ReservationListModal extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             controller: scrollController,
-            child: ModalBodyPadding(
+            child: SafeAreaWithPadding(
+              top: false,
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                horizontalPadding,
+                16,
+                horizontalPadding,
+                8,
+              ),
               child: GroupedFormContainer(
                   children: [
                     for (final event in events)
