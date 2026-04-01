@@ -5,7 +5,7 @@ import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_body_padding.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
@@ -37,16 +37,7 @@ class ReservationListModal extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const ModalGrabber(),
-        Theme(
-          data: Theme.of(context).copyWith(
-            appBarTheme: Theme.of(context).appBarTheme.copyWith(
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-            ),
-          ),
-          child: CustomAppBar(title: '예약 목록', leading: const SizedBox.shrink()),
-        ),
+        const ModalAppBar(title: '예약 목록'),
         Expanded(
           child: SingleChildScrollView(
             controller: scrollController,

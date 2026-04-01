@@ -7,7 +7,7 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 
 /// 예약 상세 모달 (플레이스홀더 — 실제 디자인은 별도 Phase에서 구현)
@@ -37,30 +37,21 @@ class ReservationDetailModal extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const ModalGrabber(),
-          Theme(
-            data: Theme.of(context).copyWith(
-              appBarTheme: Theme.of(context).appBarTheme.copyWith(
-                backgroundColor: Colors.transparent,
-                surfaceTintColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-              ),
+          ModalAppBar(
+            title: '예약 정보',
+            leading: AppBarActionButton(
+              label: '취소',
+              isRegularWeight: true,
+              onPressed: () => Navigator.pop(context),
             ),
-            child: CustomAppBar(
-              title: '예약 정보',
-              leading: AppBarActionButton(
-                label: '취소',
-                isRegularWeight: true,
-                onPressed: () => Navigator.pop(context),
+            actions: [
+              AppBarActionButton(
+                label: '편집',
+                onPressed: () {
+                  // TODO(#5): 예약 편집 화면으로 이동
+                },
               ),
-              actions: [
-                AppBarActionButton(
-                  label: '편집',
-                  onPressed: () {
-                    // TODO(#5): 예약 편집 화면으로 이동
-                  },
-                ),
-              ],
-            ),
+            ],
           ),
           Expanded(
             child: SingleChildScrollView(

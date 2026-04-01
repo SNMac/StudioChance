@@ -1,18 +1,50 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-04-01 (Phase 20 완료 — ModalGrabber 컴포넌트화)
+Last Updated: 2026-04-01 (Phase 21 완료 — ModalAppBar 컴포넌트화 + 하단 구분선 제거)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~20 구현 완료.**
+**Phase 1~21 구현 완료.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
 > Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료**
 > Phase 10: 모달 UI 버그 수정 — **완료**
 > Phase 11: StoreColor 통합 + 리스트 모달 배경색 — **완료**
+
+---
+
+## Phase 21: ModalAppBar 컴포넌트화 + 하단 구분선 제거 (2026-04-01)
+
+### 문제
+
+`my_app.dart` AppBarTheme에 `shape: Border(bottom: BorderSide(...))` 로 앱 전역 하단 구분선이 정의됨.
+기존 모달의 Theme 오버라이드가 `shape`를 덮지 않아 구분선이 모달에서도 노출됨.
+
+### 해결
+
+**`lib/presentation/commons/widgets/app_bar/modal_app_bar.dart`** (신규):
+- `ModalAppBar` — `CustomAppBar` 래퍼 + 모달용 Theme 오버라이드 캡슐화
+- `shape: const RoundedRectangleBorder()` → 테두리 없는 shape로 앱 테마 구분선 제거
+- 투명 배경(`backgroundColor`, `surfaceTintColor`, `shadowColor`)도 포함
+- `leading` 기본값 `SizedBox.shrink()` (Navigator 자동 back button 방지)
+- `PreferredSizeWidget` 구현 (Scaffold.appBar에도 사용 가능)
+
+```dart
+// 사용법
+ModalAppBar(title: '예약 목록')  // leading 없음
+
+ModalAppBar(
+  title: '예약 정보',
+  leading: AppBarActionButton(label: '취소', isRegularWeight: true, onPressed: ...),
+  actions: [AppBarActionButton(label: '편집', onPressed: ...)],
+)
+```
+
+**`reservation_detail_modal.dart`**, **`reservation_list_modal.dart`**:
+- `Theme(...)` + `CustomAppBar(...)` 중복 패턴 → `ModalAppBar(...)` 1줄로 교체
 
 ---
 

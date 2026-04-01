@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-04-01 (Phase 20 완료 — ModalGrabber 컴포넌트화)
+Last Updated: 2026-04-01 (Phase 21 완료 — ModalAppBar 컴포넌트화 + 하단 구분선 제거)
 
 ---
 
@@ -386,6 +386,24 @@ Last Updated: 2026-04-01 (Phase 20 완료 — ModalGrabber 컴포넌트화)
 - [x] **V-11**: 셀 외곽선 0.5px
 - [x] **V-12**: 다크 모드 외곽선 자동 적응
 - [x] **V-13**: 핀치 줌 아웃 → hourHeight=36 이하 제한 확인
+
+---
+
+## Phase 21: ModalAppBar 컴포넌트화 + 하단 구분선 제거 ✅
+
+**파일:** `lib/presentation/commons/widgets/app_bar/modal_app_bar.dart` (신규), `reservation_detail_modal.dart`, `reservation_list_modal.dart`
+
+- [x] **21-1**: `ModalAppBar` 위젯 신규 생성
+  - 위치: `lib/presentation/commons/widgets/app_bar/modal_app_bar.dart`
+  - `CustomAppBar` 래퍼 + Theme 오버라이드 캡슐화
+  - `shape: RoundedRectangleBorder()` → 앱 테마 `Border(bottom: ...)` 구분선 제거
+  - 배경/surfaceTint/shadow 투명 처리 포함
+  - `leading` 기본값: `SizedBox.shrink()` (Navigator back button 방지)
+- [x] **21-2**: `ReservationDetailModal` — `Theme(...)` + `CustomAppBar(...)` → `ModalAppBar(...)` 교체
+- [x] **21-3**: `ReservationListModal` — 동일하게 교체
+
+> **구분선 원인**: `my_app.dart` AppBarTheme의 `shape: Border(bottom: BorderSide(...))`.
+> `ModalAppBar`에서 `shape: RoundedRectangleBorder()` (테두리 없음)로 오버라이드하여 해결.
 
 ---
 
