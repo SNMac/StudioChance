@@ -259,7 +259,13 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         return;
       }
       if (!mounted) return;
-      await showReservationDetailModal(context, reservation);
+      await showReservationDetailModal(
+        context,
+        reservation,
+        onSaved: (_) {
+          // TODO: 예약 저장 Use Case 연결
+        },
+      );
       if (!mounted) return;
       setState(() {
         _highlightedId = null;
@@ -282,7 +288,13 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
           .read(homeCalendarControllerProvider.notifier)
           .selectDateFromContinuation(originalDate);
       ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime);
-      await showReservationDetailModal(context, reservation);
+      await showReservationDetailModal(
+        context,
+        reservation,
+        onSaved: (_) {
+          // TODO: 예약 저장 Use Case 연결
+        },
+      );
       // Provider 조작은 mounted와 무관하게 안전 (notifier는 위젯 생명주기 독립적)
       highlightNotifier.clear();
     } else {
@@ -300,7 +312,13 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         return;
       }
       if (!mounted) return;
-      await showReservationDetailModal(context, reservation);
+      await showReservationDetailModal(
+        context,
+        reservation,
+        onSaved: (_) {
+          // TODO: 예약 저장 Use Case 연결
+        },
+      );
       if (!mounted) return;
       setState(() {
         _highlightedId = null;
