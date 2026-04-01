@@ -8,6 +8,7 @@ import 'package:studio_chance/presentation/commons/extensions/context_colors.dar
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_body_padding.dart';
+import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
 final _timeFormat = DateFormat('HH:mm');
@@ -16,7 +17,7 @@ final _timeFormat = DateFormat('HH:mm');
 ///
 /// 선택된 [ReservationSummary]를 반환 (취소 시 null).
 /// 배경/shape/barrierColor는 [showReservationListModal]의 showModalBottomSheet가 제공.
-/// Grabber는 위젯 내부에서 직접 렌더링 (iOS 스타일: 36×5, #B5B5BB, top offset 6).
+/// Grabber는 [ModalGrabber] 컴포넌트 사용.
 class ReservationListModal extends StatelessWidget {
   const ReservationListModal({
     super.key,
@@ -32,25 +33,10 @@ class ReservationListModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Grabber + 모달 상단 간격 (총 14px, pill 중앙 정렬)
-        SizedBox(
-          height: 14,
-          child: Center(
-            child: Container(
-              width: 36,
-              height: 5,
-              decoration: BoxDecoration(
-                color: isDarkMode ? modalGrabberDarkColor : modalGrabberColor,
-                borderRadius: BorderRadius.circular(2.5),
-              ),
-            ),
-          ),
-        ),
+        const ModalGrabber(),
         Theme(
           data: Theme.of(context).copyWith(
             appBarTheme: Theme.of(context).appBarTheme.copyWith(

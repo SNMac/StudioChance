@@ -1,18 +1,47 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-03-31 (Phase 19 완료 — AppBarActionButton isRegularWeight 파라미터 추가, 모달 취소 버튼 통합)
+Last Updated: 2026-04-01 (Phase 20 완료 — ModalGrabber 컴포넌트화)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~19 구현 완료.**
+**Phase 1~20 구현 완료.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
 > Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료**
 > Phase 10: 모달 UI 버그 수정 — **완료**
 > Phase 11: StoreColor 통합 + 리스트 모달 배경색 — **완료**
+
+---
+
+## Phase 20: ModalGrabber 컴포넌트화 (2026-04-01)
+
+### 변경 사항
+
+**`lib/presentation/commons/widgets/modal_grabber.dart`** (신규):
+- `ModalGrabber` StatelessWidget 생성
+- 높이 14px SizedBox 안에 36×5 pill (코너 반지름 2.5)
+- 다크 모드 자동 대응: `modalGrabberDarkColor` / `modalGrabberColor`
+- `isDarkMode` 판단을 위젯 내부에서 처리
+
+**`reservation_detail_modal.dart`**, **`reservation_list_modal.dart`**:
+- 인라인 Grabber 코드 (SizedBox+Center+Container 13줄) → `const ModalGrabber()` 1줄 교체
+- `isDarkMode` 로컬 변수 제거
+
+### ModalGrabber 사용법
+
+```dart
+// 모달 Column 최상단에 배치
+Column(
+  children: [
+    const ModalGrabber(),
+    CustomAppBar(...),
+    Expanded(content),
+  ],
+)
+```
 
 ---
 

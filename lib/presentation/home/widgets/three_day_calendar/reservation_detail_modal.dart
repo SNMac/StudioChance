@@ -8,6 +8,7 @@ import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 
 /// 예약 상세 모달 (플레이스홀더 — 실제 디자인은 별도 Phase에서 구현)
 ///
@@ -30,27 +31,12 @@ class ReservationDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Material(
       color: context.systemGroupedBackground,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Grabber + 모달 상단 간격 (총 14px, pill 중앙 정렬)
-          SizedBox(
-            height: 14,
-            child: Center(
-              child: Container(
-                width: 36,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? modalGrabberDarkColor : modalGrabberColor,
-                  borderRadius: BorderRadius.circular(2.5),
-                ),
-              ),
-            ),
-          ),
+          const ModalGrabber(),
           Theme(
             data: Theme.of(context).copyWith(
               appBarTheme: Theme.of(context).appBarTheme.copyWith(

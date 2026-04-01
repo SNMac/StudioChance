@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-03-31 (Phase 19 완료 — AppBarActionButton isRegularWeight + 모달 취소 버튼 통합)
+Last Updated: 2026-04-01 (Phase 20 완료 — ModalGrabber 컴포넌트화)
 
 ---
 
@@ -386,6 +386,19 @@ Last Updated: 2026-03-31 (Phase 19 완료 — AppBarActionButton isRegularWeight
 - [x] **V-11**: 셀 외곽선 0.5px
 - [x] **V-12**: 다크 모드 외곽선 자동 적응
 - [x] **V-13**: 핀치 줌 아웃 → hourHeight=36 이하 제한 확인
+
+---
+
+## Phase 20: ModalGrabber 컴포넌트화 ✅
+
+**파일:** `lib/presentation/commons/widgets/modal_grabber.dart` (신규), `reservation_detail_modal.dart`, `reservation_list_modal.dart`
+
+- [x] **20-1**: `ModalGrabber` 위젯 신규 생성
+  - 위치: `lib/presentation/commons/widgets/modal_grabber.dart`
+  - 높이 14px SizedBox, 36×5 pill, 코너 반지름 2.5
+  - 다크 모드 자동 대응 (`modalGrabberDarkColor` / `modalGrabberColor`)
+- [x] **20-2**: `ReservationDetailModal` — 인라인 Grabber 코드 → `const ModalGrabber()` 교체, `isDarkMode` 변수 제거
+- [x] **20-3**: `ReservationListModal` — 인라인 Grabber 코드 → `const ModalGrabber()` 교체, `isDarkMode` 변수 제거
 
 ---
 
