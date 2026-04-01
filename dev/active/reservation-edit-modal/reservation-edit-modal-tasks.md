@@ -139,4 +139,12 @@ Last Updated: 2026-04-01 (Phase 0~9 구현 완료)
 - [ ] `n번째` 실제 계산 로직
 - [ ] 입금/확정 안내문 화면 구현
 - [ ] `onSaved` → 실제 Firestore 저장 (Repository 구현 후)
-- [ ] `reservation_detail_modal.dart` 편집 버튼에서 `showReservationEditModal` 호출
+
+---
+
+## ⚠️ 설계 변경으로 인한 파기 항목
+
+- [x] ~~`reservation_detail_modal.dart` 편집 버튼에서 `showReservationEditModal` 호출~~
+  - **이유**: `reservation_detail_modal.dart`가 인라인 모드 전환 방식으로 재구현됨
+  - `showReservationEditModal`은 더 이상 detail modal에서 호출하지 않음
+  - `reservation_edit_modal.dart` 파일 자체를 **삭제 검토** (독립 진입점 불필요 시)
