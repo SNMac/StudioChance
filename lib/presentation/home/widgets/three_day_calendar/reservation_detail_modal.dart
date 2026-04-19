@@ -254,8 +254,8 @@ class _ReservationDetailModalState
           ModalAppBar(
             title: _isEditing ? '예약 수정' : '예약 정보',
             leading: AppBarActionButton(
-              label: '취소',
-              isRegularWeight: !_isEditing,
+              label: _isEditing ? '취소' : '닫기',
+              isRegularWeight: true,
               onPressed: _onCancelPressed,
             ),
             actions: [

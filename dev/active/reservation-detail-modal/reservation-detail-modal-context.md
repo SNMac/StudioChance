@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-19 (Phase 9~14 완료 — 인라인 편집 모드 전환 재구현 완료, dart analyze 통과)
+Last Updated: 2026-04-19 (ModalAppBar leading/actions 간격 통일 — 4px 좌측 패딩 + leadingWidth:60)
 
 ---
 
@@ -58,19 +58,23 @@ late final TextEditingController _adjustmentController;
 
 ### AppBar 전환
 ```dart
-// 읽기 전용 모드
+// 읽기 전용 모드: leading='닫기'(일반굵기), actions=['편집']
 ModalAppBar(
   title: '예약 정보',
-  leading: AppBarActionButton(label: '취소', onPressed: () => Navigator.pop(context)),
-  actions: [AppBarActionButton(label: '편집', onPressed: _enterEditMode)],
+  leading: AppBarActionButton(label: '닫기', isRegularWeight: true, onPressed: _onCancelPressed),
+  actions: [AppBarActionButton(label: '편집', onPressed: () => setState(() => _isEditing = true))],
 )
 
-// 편집 모드
+// 편집 모드: leading='취소'(일반굵기), actions=['완료'(유효할 때만 활성)]
 ModalAppBar(
   title: '예약 수정',
-  leading: AppBarActionButton(label: '취소', onPressed: _cancelEdit),
+  leading: AppBarActionButton(label: '취소', isRegularWeight: true, onPressed: _onCancelPressed),
   actions: [AppBarActionButton(label: '완료', onPressed: _isValid ? _onComplete : null)],
 )
+```
+> **결정**: leading 버튼은 모드 무관하게 항상 `isRegularWeight: true`.
+> 읽기 전용='닫기'(모달 닫기), 편집='취소'(변경 폐기 + 읽기 전용 복귀).
+> 실제 코드에서 `_onCancelPressed()`가 `_isEditing` 여부로 분기.
 ```
 
 ### 취소 동작 분기
@@ -110,10 +114,8 @@ Widget _buildSection2() {
 ## ReservationEditModal 처리
 
 `reservation_edit_modal.dart`는 더 이상 `ReservationDetailModal`에서 호출하지 않음.
-→ `showReservationEditModal` 호출처가 없어짐 (기존 detail modal의 `_onEdit` 제거)
-→ `reservation_edit_modal.dart` 파일 **삭제 검토** (또는 향후 독립 진입점으로 유지)
-
-현재로서는 파일을 남겨두되, `dev/active/reservation-edit-modal`을 스코프 아웃으로 닫을 수 있음.
+→ `showReservationEditModal` 호출처 없음 (기존 detail modal의 `_onEdit` 제거됨)
+→ **2026-04-19 파일 삭제 완료** — 독립 진입점 불필요, 편집 로직은 `ReservationDetailModal` 내부로 통합됨.
 
 ---
 
@@ -183,4 +185,4 @@ Future<void> showReservationDetailModal(
 | `availableStores` 공급 | Home Provider에서 사용자 가입 점포 목록 fetch 후 전달 |
 | 숫자 콤마 포맷 | `calculatedPrice.toString()` → `"50,000"` style (스코프 아웃) |
 | `_formatDateTime` 공통화 | 현재 편집/확인 모달 각각 private 선언 (스코프 아웃) |
-| `ReservationEditModal` 삭제 | 재구현 후 더 이상 사용하지 않으면 삭제 |
+| ~~`ReservationEditModal` 삭제~~ | 2026-04-19 삭제 완료 ✅ |

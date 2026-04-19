@@ -147,4 +147,5 @@ Last Updated: 2026-04-01 (Phase 0~9 구현 완료)
 - [x] ~~`reservation_detail_modal.dart` 편집 버튼에서 `showReservationEditModal` 호출~~
   - **이유**: `reservation_detail_modal.dart`가 인라인 모드 전환 방식으로 재구현됨
   - `showReservationEditModal`은 더 이상 detail modal에서 호출하지 않음
-  - `reservation_edit_modal.dart` 파일 자체를 **삭제 검토** (독립 진입점 불필요 시)
+- [x] ~~`reservation_edit_modal.dart` 파일 삭제~~ — **2026-04-19 삭제 완료**
+  - 독립 진입점 불필요. `ReservationDetailModal`이 편집 모드를 인라인으로 포함함.

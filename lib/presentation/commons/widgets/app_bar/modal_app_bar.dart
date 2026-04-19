@@ -33,7 +33,16 @@ class ModalAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: CustomAppBar(
         title: title,
-        leading: leading,
+        // TextButton은 Alignment.center로 렌더되며, leading(56px)과 action(64px)의
+        // 콘텐츠 영역 차이(32 vs 40px)로 인해 왼쪽 gap이 4px 작게 보임.
+        // 4px 좌측 padding + leadingWidth 60으로 양쪽 gap을 통일.
+        leading: leading != null
+            ? Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4.0),
+                child: leading!,
+              )
+            : null,
+        leadingWidth: 60.0,
         actions: actions,
       ),
     );

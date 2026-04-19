@@ -8,12 +8,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final Widget? leading;
   final List<Widget>? actions;
+  final double? leadingWidth;
 
   const CustomAppBar({
     super.key,
     required this.title,
     this.leading = const AppBarNaviBackButton(),
     this.actions,
+    this.leadingWidth,
   });
 
   @override
@@ -26,6 +28,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       title: Text(title),
       leading: leading,
+      leadingWidth: leadingWidth,
       actions: actions,
     );
   }

@@ -1,15 +1,19 @@
 # 예약 수정 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-19 (상수 수정 반영 — reservationPlatforms, paymentMethods 업데이트)
+Last Updated: 2026-04-19 (파기 확정 — reservation_edit_modal.dart 삭제 완료, 편집 로직은 ReservationDetailModal 내부 통합)
 
 ---
 
 ## 관련 파일 경로
 
-### 생성/수정 파일
+### ⚠️ 파기된 파일 (2026-04-19 삭제)
+| 파일 | 사유 |
+|------|------|
+| ~~`lib/presentation/home/widgets/three_day_calendar/reservation_edit_modal.dart`~~ | ReservationDetailModal 인라인 편집 모드 통합으로 독립 파일 불필요, 삭제 완료 |
+
+### 생성/수정 파일 (Phase 0 정리 작업)
 | 파일 | 역할 |
 |------|------|
-| `lib/presentation/home/widgets/three_day_calendar/reservation_edit_modal.dart` | 모달 위젯 + show 함수 (신규) |
 | `lib/constants/data_constants.dart` | 플랫폼/결제수단 상수 추가 (수정) |
 | `lib/presentation/commons/widgets/safe_area_with_padding.dart` | `top` 파라미터 추가 (수정) |
 | `lib/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart` | ModalBodyPadding → SafeAreaWithPadding 교체 (수정) |
