@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-19 (AppBar leading 버튼 수정 — 읽기 전용='닫기', 편집='취소' 일반 굵기)
+Last Updated: 2026-04-19 (platform/paymentMethod String → enum 전환)
 
 ---
 
@@ -31,7 +31,7 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - [x] `late ReservationStatus _status`
 - [x] `late bool _isAllDay`
 - [x] `late DateTime _startTime, _endTime`
-- [x] `late String _platform, _paymentMethod`
+- [x] `late ReservationPlatform _platform, late PaymentMethod _paymentMethod` (String → enum 전환됨)
 - [x] `bool _isStartPickerOpen = false`
 - [x] `bool _isEndPickerOpen = false`
 - [x] `TextEditingController` 6개 (name, headCount, phone, memo, price, adjustment)

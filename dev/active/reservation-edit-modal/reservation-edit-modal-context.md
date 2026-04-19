@@ -221,24 +221,41 @@ Future<void> showReservationEditModal(
 
 ---
 
-## 상수 (data_constants.dart) — 현행
+## ⚠️ Enum 전환 (2026-04-19)
+
+`reservationPlatforms` / `paymentMethods` const List&lt;String&gt;은 **삭제됨**.
+enum으로 대체:
 
 ```dart
-/// 예약 플랫폼 목록
-const List<String> reservationPlatforms = [
-  '네이버 예약',
-  '스페이스클라우드',
-  '야놀자',
-  '기타',
-];
+// lib/domain/enums/reservation_platform.dart
+enum ReservationPlatform {
+  @JsonValue('NAVER') naver,
+  @JsonValue('SPACECLOUD') spaceCloud,
+  @JsonValue('YANOLJA') yanolja,
+  @JsonValue('OTHER') other;
+  String get displayName => ...;
+}
 
-/// 결제 방식 목록
-const List<String> paymentMethods = [
-  '현장결제',
-  '계좌이체',
-  '기타',
-];
+// lib/domain/enums/payment_method.dart
+enum PaymentMethod {
+  @JsonValue('ON_SITE') onSite,
+  @JsonValue('BANK_TRANSFER') bankTransfer,
+  @JsonValue('OTHER') other;
+  String get displayName => ...;
+}
 ```
+
+모달에서 사용:
+```dart
+TitlePopupButton<ReservationPlatform>(
+  items: ReservationPlatform.values,
+  itemLabelBuilder: (p) => p.displayName,
+  ...
+)
+```
+
+`Reservation.platform: String` → `ReservationPlatform`,
+`Reservation.paymentMethod: String` → `PaymentMethod`
 
 ---
 

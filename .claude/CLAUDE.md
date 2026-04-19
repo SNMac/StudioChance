@@ -64,5 +64,22 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - `build()` 내 루프에서 `DateTime.now()` 등 반복 호출 금지 → 루프 밖 `final` 변수로 1회만
 - 복수 `ScrollController`를 Map으로 관리 시: `hasClients = false` 감지 → dispose 후 재생성
 
+## Reservation 도메인 구조
+
+- **Firestore 경로**: `stores/{storeId}/reservations/{reservationId}` (서브컬렉션)
+- `platform: ReservationPlatform` enum (`lib/domain/enums/reservation_platform.dart`)
+- `paymentMethod: PaymentMethod` enum (`lib/domain/enums/payment_method.dart`)
+- Repository 조회 시 `currentUid` 필요 — StoreSummary의 color를 user의 `storeById[storeId].color`에서 조회
+- color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
+
 ## 중요 사항
 - API Key 관련 문자열은 gitignore 처리되어있는 별도 파일로 분리하고 import하여 사용
+- `Future.wait([f1, f2])` — f1, f2의 **반환 타입이 다르면** `List<Object?>`로 추론됨 → 타입별 별도 Future 변수로 분리할 것
+  ```dart
+  // ❌ Future.wait([StoreModel?, UserModel?]) → List<Object?>
+  // ✅ 별도 Future 변수로 시작 후 순차 await (실제로는 병렬 실행)
+  final storeF = _storeDataSource.getStore(id);
+  final userF = _userDataSource.getUser(uid);
+  final store = await storeF;
+  final user = await userF;
+  ```

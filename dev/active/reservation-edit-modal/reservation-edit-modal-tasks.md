@@ -30,12 +30,14 @@ Last Updated: 2026-04-01 (Phase 0~9 구현 완료)
 
 ---
 
-## Phase 1: 상수 추가
+## ✅ Phase 1: 플랫폼/결제 방식 enum 전환 (2026-04-19 변경)
 
-**파일:** `lib/constants/data_constants.dart`
+~~`data_constants.dart`의 const List&lt;String&gt;~~  → **enum으로 대체됨**
 
-- [x] **1-1**: `reservationPlatforms: List<String>` 상수 추가
-- [x] **1-2**: `paymentMethods: List<String>` 상수 추가
+- [x] **1-1**: `lib/domain/enums/reservation_platform.dart` 생성 (ReservationPlatform)
+- [x] **1-2**: `lib/domain/enums/payment_method.dart` 생성 (PaymentMethod)
+- [x] **1-3**: `Reservation` 엔티티 / `ReservationModel` 필드 타입 변경
+- [x] **1-4**: `data_constants.dart` const List 제거, 모달 import 교체
 
 ---
 

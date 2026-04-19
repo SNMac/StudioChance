@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-19 (ModalAppBar leading/actions 간격 통일 — 4px 좌측 패딩 + leadingWidth:60)
+Last Updated: 2026-04-19 (platform/paymentMethod String → enum 전환, Reservation Data Layer 신규 구현)
 
 ---
 
@@ -19,9 +19,22 @@ Last Updated: 2026-04-19 (ModalAppBar leading/actions 간격 통일 — 4px 좌�
 
 ### 이번 세션 주요 변경
 - `_ReadOnlyMemo` 최소 높이: `inputFormComponentHeight(48)` → `memoMinHeight(96)`, bottom padding 12 → 32 (MemoTextField 편집 모드와 높이 일치)
-- `reservationPlatforms` 상수 수정: `['네이버 예약', '스페이스클라우드', '야놀자', '기타']`
-- `paymentMethods` 상수 수정: `['현장결제', '계좌이체', '기타']`
 - `ui_constants.dart`에 `memoMinHeight = 96.0` 상수 추가
+- **`reservationPlatforms`, `paymentMethods` const List → enum 전환** (2026-04-19)
+  - `lib/domain/enums/reservation_platform.dart` (ReservationPlatform: naver/spaceCloud/yanolja/other)
+  - `lib/domain/enums/payment_method.dart` (PaymentMethod: onSite/bankTransfer/other)
+  - `Reservation.platform: String` → `ReservationPlatform`, `paymentMethod: String` → `PaymentMethod`
+  - `ReservationModel` 동일하게 변경
+  - 모달 상태 필드: `late String _platform/_paymentMethod` → `late ReservationPlatform/PaymentMethod`
+  - `TitlePopupButton<String>` → `TitlePopupButton<ReservationPlatform/PaymentMethod>`, `itemLabelBuilder: (p) => p.displayName`
+  - 읽기 전용 표시: `reservation.platform` → `reservation.platform.displayName`
+  - `data_constants.dart`에서 두 const List 제거 (import는 `maxMemoCharCount` 때문에 유지)
+- **Reservation Data Layer 신규 구현** (2026-04-19)
+  - `lib/common/exceptions/reservation_exceptions.dart`
+  - `lib/data/data_sources/reservation_data_source.dart` (Firestore 서브컬렉션: `stores/{storeId}/reservations/`)
+  - `lib/domain/repository_interfaces/reservation_repository.dart`
+  - `lib/data/repositories/reservation_repository_impl.dart`
+  - `lib/domain/use_cases/reservation_use_case.dart`
 
 ---
 
@@ -125,7 +138,9 @@ Widget _buildSection2() {
 |------|------|
 | `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **재작성 대상** |
 | `lib/presentation/home/widgets/three_day_calendar/reservation_edit_modal.dart` | 편집 로직 참조 (이후 삭제 검토) |
-| `lib/constants/data_constants.dart` | `reservationPlatforms`, `paymentMethods` 상수 |
+| `lib/domain/enums/reservation_platform.dart` | `ReservationPlatform` enum (naver/spaceCloud/yanolja/other) |
+| `lib/domain/enums/payment_method.dart` | `PaymentMethod` enum (onSite/bankTransfer/other) |
+| `lib/constants/data_constants.dart` | `maxMemoCharCount` 등 공통 상수 (플랫폼/결제 목록은 enum으로 이전) |
 | `lib/domain/entities/reservation.dart` | `Reservation` freezed 엔티티 |
 | `lib/presentation/commons/widgets/input_form/` | 폼 컴포넌트 모음 |
 
@@ -148,8 +163,8 @@ abstract class Reservation with _$Reservation {
     required bool isAllDay,
     required DateTime startTime,
     required DateTime endTime,
-    required String platform,
-    required String paymentMethod,
+    required ReservationPlatform platform,   // ← String에서 변경
+    required PaymentMethod paymentMethod,    // ← String에서 변경
     required int calculatedPrice,
     required int priceAdjustment,
     required int totalPrice,

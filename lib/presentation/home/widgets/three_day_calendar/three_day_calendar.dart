@@ -8,6 +8,8 @@ import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/enums/payment_method.dart';
+import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
@@ -315,8 +317,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
           isAllDay: s.isAllDay,
           startTime: s.startTime,
           endTime: s.endTime,
-          platform: '',
-          paymentMethod: '',
+          platform: ReservationPlatform.other,
+          paymentMethod: PaymentMethod.other,
           calculatedPrice: 0,
           priceAdjustment: 0,
           totalPrice: 0,

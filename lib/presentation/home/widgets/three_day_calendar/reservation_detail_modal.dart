@@ -8,6 +8,8 @@ import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
+import 'package:studio_chance/domain/enums/payment_method.dart';
+import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
@@ -66,8 +68,8 @@ class _ReservationDetailModalState
   late bool _isAllDay;
   late DateTime _startTime;
   late DateTime _endTime;
-  late String _platform;
-  late String _paymentMethod;
+  late ReservationPlatform _platform;
+  late PaymentMethod _paymentMethod;
 
   bool _isStartPickerOpen = false;
   bool _isEndPickerOpen = false;
@@ -116,12 +118,8 @@ class _ReservationDetailModalState
     _isAllDay = r.isAllDay;
     _startTime = r.startTime;
     _endTime = r.endTime;
-    _platform = reservationPlatforms.contains(r.platform)
-        ? r.platform
-        : reservationPlatforms.first;
-    _paymentMethod = paymentMethods.contains(r.paymentMethod)
-        ? r.paymentMethod
-        : paymentMethods.first;
+    _platform = r.platform;
+    _paymentMethod = r.paymentMethod;
 
     _nameController = TextEditingController(text: r.customerName);
     _headCountController = TextEditingController(
@@ -144,12 +142,8 @@ class _ReservationDetailModalState
     _isAllDay = r.isAllDay;
     _startTime = r.startTime;
     _endTime = r.endTime;
-    _platform = reservationPlatforms.contains(r.platform)
-        ? r.platform
-        : reservationPlatforms.first;
-    _paymentMethod = paymentMethods.contains(r.paymentMethod)
-        ? r.paymentMethod
-        : paymentMethods.first;
+    _platform = r.platform;
+    _paymentMethod = r.paymentMethod;
 
     _nameController.text = r.customerName;
     _headCountController.text = r.headCount > 0 ? r.headCount.toString() : '';
@@ -505,24 +499,24 @@ class _ReservationDetailModalState
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
-            child: TitlePopupButton<String>(
+            child: TitlePopupButton<ReservationPlatform>(
               title: '예약 플랫폼',
               selectedValue: _platform,
-              items: reservationPlatforms,
-              itemLabelBuilder: (s) => s,
-              onSelected: (s) => setState(() => _platform = s),
+              items: ReservationPlatform.values,
+              itemLabelBuilder: (p) => p.displayName,
+              onSelected: (p) => setState(() => _platform = p),
             ),
           ),
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
-            child: TitlePopupButton<String>(
+            child: TitlePopupButton<PaymentMethod>(
               title: '결제 방식',
               selectedValue: _paymentMethod,
-              items: paymentMethods,
-              itemLabelBuilder: (s) => s,
-              onSelected: (s) => setState(() => _paymentMethod = s),
+              items: PaymentMethod.values,
+              itemLabelBuilder: (m) => m.displayName,
+              onSelected: (m) => setState(() => _paymentMethod = m),
             ),
           ),
           TitleTextField(
@@ -547,11 +541,11 @@ class _ReservationDetailModalState
       children: [
         TitleTextLabel(
           title: '예약 플랫폼',
-          content: widget.reservation.platform,
+          content: widget.reservation.platform.displayName,
         ),
         TitleTextLabel(
           title: '결제 방식',
-          content: widget.reservation.paymentMethod,
+          content: widget.reservation.paymentMethod.displayName,
         ),
         TitleTextLabel(
           title: '요금',

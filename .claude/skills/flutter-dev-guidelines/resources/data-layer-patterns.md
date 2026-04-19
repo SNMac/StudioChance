@@ -269,6 +269,7 @@ abstract class UserModel with _$UserModel {
 | 중첩 맵 업데이트 | `'storeById.$storeId.$key': value` |
 | 배치 작업 | `_firestore.batch()` → `batch.commit()` |
 | 타임스탬프 변환 | `@TimestampConverter()` 어노테이션 |
+| 서브컬렉션 | `collection('stores').doc(id).collection('reservations')` |
 
 ### TimestampConverter
 
@@ -325,3 +326,32 @@ enum UserRole {
 - `@JsonEnum()` + `@JsonValue()`: Firestore 저장용
 - `displayName` getter: UI 표시용
 - 추가 getter 자유 정의 (`displayDescription`, `colorValue` 등)
+- **const List&lt;String&gt; 상수 대신 enum 선호** — Firestore 저장값과 UI 표시 텍스트 분리, 타입 안전성 확보
+
+---
+
+## Future.wait 타입 주의
+
+```dart
+// ❌ 반환 타입이 다른 Future를 Future.wait에 넣으면 List<Object?>로 추론
+final results = await Future.wait([
+  _storeDataSource.getStore(id),   // Future<StoreModel?>
+  _userDataSource.getUser(uid),    // Future<UserModel?>
+]);
+// results[0]은 Object? → .name, .memberById 등 접근 불가
+
+// ✅ 별도 Future 변수로 병렬 실행
+final storeF = _storeDataSource.getStore(id);
+final userF = _userDataSource.getUser(uid);
+final store = await storeF;   // StoreModel?
+final user = await userF;     // UserModel?
+// 두 Future는 동시에 시작되어 병렬 실행됨
+```
+
+같은 타입의 Future라면 `Future.wait` 사용 가능:
+```dart
+// ✅ 같은 타입이므로 OK
+final userModels = await Future.wait(
+  writerIds.map((uid) => _userDataSource.getUser(uid)),
+); // List<UserModel?>
+```

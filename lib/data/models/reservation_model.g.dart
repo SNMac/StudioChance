@@ -19,8 +19,8 @@ _ReservationModel _$ReservationModelFromJson(Map<String, dynamic> json) =>
       isAllDay: json['isAllDay'] as bool,
       startTime: DateTime.parse(json['startTime'] as String),
       endTime: DateTime.parse(json['endTime'] as String),
-      platform: json['platform'] as String,
-      paymentMethod: json['paymentMethod'] as String,
+      platform: $enumDecode(_$ReservationPlatformEnumMap, json['platform']),
+      paymentMethod: $enumDecode(_$PaymentMethodEnumMap, json['paymentMethod']),
       calculatedPrice: (json['calculatedPrice'] as num).toInt(),
       priceAdjustment: (json['priceAdjustment'] as num).toInt(),
       totalPrice: (json['totalPrice'] as num).toInt(),
@@ -38,8 +38,8 @@ Map<String, dynamic> _$ReservationModelToJson(_ReservationModel instance) =>
       'isAllDay': instance.isAllDay,
       'startTime': instance.startTime.toIso8601String(),
       'endTime': instance.endTime.toIso8601String(),
-      'platform': instance.platform,
-      'paymentMethod': instance.paymentMethod,
+      'platform': _$ReservationPlatformEnumMap[instance.platform]!,
+      'paymentMethod': _$PaymentMethodEnumMap[instance.paymentMethod]!,
       'calculatedPrice': instance.calculatedPrice,
       'priceAdjustment': instance.priceAdjustment,
       'totalPrice': instance.totalPrice,
@@ -49,4 +49,17 @@ const _$ReservationStatusEnumMap = {
   ReservationStatus.pending: 'PENDING',
   ReservationStatus.confirmed: 'CONFIRMED',
   ReservationStatus.canceled: 'CANCELED',
+};
+
+const _$ReservationPlatformEnumMap = {
+  ReservationPlatform.naver: 'NAVER',
+  ReservationPlatform.spaceCloud: 'SPACECLOUD',
+  ReservationPlatform.yanolja: 'YANOLJA',
+  ReservationPlatform.other: 'OTHER',
+};
+
+const _$PaymentMethodEnumMap = {
+  PaymentMethod.onSite: 'ON_SITE',
+  PaymentMethod.bankTransfer: 'BANK_TRANSFER',
+  PaymentMethod.other: 'OTHER',
 };

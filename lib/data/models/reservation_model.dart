@@ -3,6 +3,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
+import 'package:studio_chance/domain/enums/payment_method.dart';
+import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 
 part 'reservation_model.freezed.dart';
@@ -24,8 +26,8 @@ abstract class ReservationModel with _$ReservationModel {
     required bool isAllDay,
     required DateTime startTime,
     required DateTime endTime,
-    required String platform,
-    required String paymentMethod,
+    required ReservationPlatform platform,
+    required PaymentMethod paymentMethod,
     required int calculatedPrice,
     required int priceAdjustment,
     required int totalPrice,

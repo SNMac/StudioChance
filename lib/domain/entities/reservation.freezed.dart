@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Reservation {
 
- String get id; StoreSummary get storeSummary; StoreMemberInfo get writer; ReservationStatus get status; String get customerName; int get headCount; String get customerPhone; String get memo; bool get isAllDay; DateTime get startTime; DateTime get endTime; String get platform; String get paymentMethod; int get calculatedPrice; int get priceAdjustment; int get totalPrice;
+ String get id; StoreSummary get storeSummary; StoreMemberInfo get writer; ReservationStatus get status; String get customerName; int get headCount; String get customerPhone; String get memo; bool get isAllDay; DateTime get startTime; DateTime get endTime; ReservationPlatform get platform; PaymentMethod get paymentMethod; int get calculatedPrice; int get priceAdjustment; int get totalPrice;
 /// Create a copy of Reservation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $ReservationCopyWith<$Res>  {
   factory $ReservationCopyWith(Reservation value, $Res Function(Reservation) _then) = _$ReservationCopyWithImpl;
 @useResult
 $Res call({
- String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, String platform, String paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice
+ String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, ReservationPlatform platform, PaymentMethod paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice
 });
 
 
@@ -76,8 +76,8 @@ as String,isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast
 as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as DateTime,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as DateTime,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
-as String,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
-as String,calculatedPrice: null == calculatedPrice ? _self.calculatedPrice : calculatedPrice // ignore: cast_nullable_to_non_nullable
+as ReservationPlatform,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
+as PaymentMethod,calculatedPrice: null == calculatedPrice ? _self.calculatedPrice : calculatedPrice // ignore: cast_nullable_to_non_nullable
 as int,priceAdjustment: null == priceAdjustment ? _self.priceAdjustment : priceAdjustment // ignore: cast_nullable_to_non_nullable
 as int,totalPrice: null == totalPrice ? _self.totalPrice : totalPrice // ignore: cast_nullable_to_non_nullable
 as int,
@@ -183,7 +183,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  String platform,  String paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Reservation() when $default != null:
 return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice);case _:
@@ -204,7 +204,7 @@ return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.cust
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  String platform,  String paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice)  $default,) {final _that = this;
 switch (_that) {
 case _Reservation():
 return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice);case _:
@@ -224,7 +224,7 @@ return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.cust
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  String platform,  String paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice)?  $default,) {final _that = this;
 switch (_that) {
 case _Reservation() when $default != null:
 return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice);case _:
@@ -253,8 +253,8 @@ class _Reservation implements Reservation {
 @override final  bool isAllDay;
 @override final  DateTime startTime;
 @override final  DateTime endTime;
-@override final  String platform;
-@override final  String paymentMethod;
+@override final  ReservationPlatform platform;
+@override final  PaymentMethod paymentMethod;
 @override final  int calculatedPrice;
 @override final  int priceAdjustment;
 @override final  int totalPrice;
@@ -289,7 +289,7 @@ abstract mixin class _$ReservationCopyWith<$Res> implements $ReservationCopyWith
   factory _$ReservationCopyWith(_Reservation value, $Res Function(_Reservation) _then) = __$ReservationCopyWithImpl;
 @override @useResult
 $Res call({
- String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, String platform, String paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice
+ String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, ReservationPlatform platform, PaymentMethod paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice
 });
 
 
@@ -320,8 +320,8 @@ as String,isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast
 as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as DateTime,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as DateTime,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
-as String,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
-as String,calculatedPrice: null == calculatedPrice ? _self.calculatedPrice : calculatedPrice // ignore: cast_nullable_to_non_nullable
+as ReservationPlatform,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
+as PaymentMethod,calculatedPrice: null == calculatedPrice ? _self.calculatedPrice : calculatedPrice // ignore: cast_nullable_to_non_nullable
 as int,priceAdjustment: null == priceAdjustment ? _self.priceAdjustment : priceAdjustment // ignore: cast_nullable_to_non_nullable
 as int,totalPrice: null == totalPrice ? _self.totalPrice : totalPrice // ignore: cast_nullable_to_non_nullable
 as int,
