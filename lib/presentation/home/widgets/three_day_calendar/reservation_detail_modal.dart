@@ -616,13 +616,13 @@ class _ReadOnlyMemo extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEmpty = text.isEmpty;
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: inputFormComponentHeight),
+      constraints: const BoxConstraints(minHeight: memoMinHeight),
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(
           horizontalPadding,
           12,
           horizontalPadding,
-          12,
+          32,
         ),
         child: Align(
           alignment: AlignmentDirectional.topStart,

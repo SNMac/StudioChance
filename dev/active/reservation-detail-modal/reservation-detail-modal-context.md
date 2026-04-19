@@ -1,28 +1,27 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-01 (Phase 1~8 완료 → **설계 변경: 인라인 편집 모드 전환 방식으로 재구현 필요**)
+Last Updated: 2026-04-19 (Phase 9~14 완료 — 인라인 편집 모드 전환 재구현 완료, dart analyze 통과)
 
 ---
 
-## ⚠️ 설계 변경 (최우선 반영 필요)
+## ✅ 구현 완료 (Phase 9~14)
 
-### 기존 설계 (폐기)
-- `ReservationDetailModal` (읽기 전용) → '편집' 버튼 → `showReservationEditModal` 호출 → **새 모달 열림**
-
-### 새로운 설계
+### 설계
 - **단일 모달**에서 읽기 전용 ↔ 편집 모드를 **인라인으로 전환**
 - '편집' 버튼 → 같은 모달에서 필드가 편집 가능하게 변환
 - '완료' 버튼 → 저장 후 읽기 전용 모드로 복귀 (모달 닫힘 아님)
-- '취소' 버튼 → 모달 닫힘 (편집 중 취소 시 변경 내용 폐기)
+- '취소' 버튼 → 읽기 전용 중이면 모달 닫기, 편집 중이면 변경 내용 폐기 + 읽기 전용 복귀
 
----
+### 현재 구현 상태
 
-## 현재 구현 상태
+`ReservationDetailModal extends ConsumerStatefulWidget` — 인라인 편집 모드 전환 완료.
+`dart analyze` 통과 (firebase_options.dart 제외).
 
-`reservation_detail_modal.dart` 는 **읽기 전용 전용 위젯**으로 구현되어 있음.
-`ReservationDetailModal extends StatelessWidget` — 인라인 편집 불가.
-
-이 파일을 **전면 재작성**해야 함.
+### 이번 세션 주요 변경
+- `_ReadOnlyMemo` 최소 높이: `inputFormComponentHeight(48)` → `memoMinHeight(96)`, bottom padding 12 → 32 (MemoTextField 편집 모드와 높이 일치)
+- `reservationPlatforms` 상수 수정: `['네이버 예약', '스페이스클라우드', '야놀자', '기타']`
+- `paymentMethods` 상수 수정: `['현장결제', '계좌이체', '기타']`
+- `ui_constants.dart`에 `memoMinHeight = 96.0` 상수 추가
 
 ---
 

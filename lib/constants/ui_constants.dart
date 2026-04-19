@@ -1,4 +1,7 @@
 const double inputFormComponentHeight = 48.0;
+
+/// 메모 필드 최소 높이 (MemoTextField minLines=3 + 패딩 기준)
+const double memoMinHeight = 96.0;
 const double verticalPadding = 32.0;
 const double horizontalPadding = 16.0;
 const double formBorderRadius = 12.0;

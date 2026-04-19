@@ -19,16 +19,14 @@ const int emptyValue = -1;
 /// 예약 플랫폼 목록
 const List<String> reservationPlatforms = [
   '네이버 예약',
-  '카카오 예약',
-  '전화',
-  '직접 방문',
+  '스페이스클라우드',
+  '야놀자',
   '기타',
 ];
 
 /// 결제 방식 목록
 const List<String> paymentMethods = [
-  '현금',
+  '현장결제',
   '계좌이체',
-  '카드',
   '기타',
 ];

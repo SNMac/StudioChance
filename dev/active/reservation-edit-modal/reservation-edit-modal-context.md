@@ -1,6 +1,6 @@
 # 예약 수정 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-01 (Phase 0~9 구현 완료 — dart analyze 통과)
+Last Updated: 2026-04-19 (상수 수정 반영 — reservationPlatforms, paymentMethods 업데이트)
 
 ---
 
@@ -217,23 +217,21 @@ Future<void> showReservationEditModal(
 
 ---
 
-## 상수 추가 예정 (data_constants.dart)
+## 상수 (data_constants.dart) — 현행
 
 ```dart
 /// 예약 플랫폼 목록
 const List<String> reservationPlatforms = [
   '네이버 예약',
-  '카카오 예약',
-  '전화',
-  '직접 방문',
+  '스페이스클라우드',
+  '야놀자',
   '기타',
 ];
 
 /// 결제 방식 목록
 const List<String> paymentMethods = [
-  '현금',
+  '현장결제',
   '계좌이체',
-  '카드',
   '기타',
 ];
 ```
