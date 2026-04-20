@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
-import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
 import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
@@ -11,8 +10,6 @@ import '../../helpers/fake_data.dart';
 
 class MockReservationDataSource extends Mock implements ReservationDataSource {}
 
-class MockStoreDataSource extends Mock implements StoreDataSource {}
-
 class MockUserDataSource extends Mock implements UserDataSource {}
 
 class FakeReservationModel extends Fake implements ReservationModel {}
@@ -20,7 +17,6 @@ class FakeReservationModel extends Fake implements ReservationModel {}
 void main() {
   late ReservationRepositoryImpl repository;
   late MockReservationDataSource mockReservationDs;
-  late MockStoreDataSource mockStoreDs;
   late MockUserDataSource mockUserDs;
 
   setUpAll(() {
@@ -29,11 +25,9 @@ void main() {
 
   setUp(() {
     mockReservationDs = MockReservationDataSource();
-    mockStoreDs = MockStoreDataSource();
     mockUserDs = MockUserDataSource();
     repository = ReservationRepositoryImpl(
       reservationDataSource: mockReservationDs,
-      storeDataSource: mockStoreDs,
       userDataSource: mockUserDs,
     );
   });
@@ -93,17 +87,13 @@ void main() {
 
       expect(result.isRight(), true);
       expect(result.getRight().toNullable(), isEmpty);
-      verifyNever(() => mockStoreDs.getStore(any()));
       verifyNever(() => mockUserDs.getUser(any()));
     });
 
-    test('정상 조회 시 엔티티 목록을 반환하고 StoreSummary에 currentUid 색상을 반영한다', () async {
+    test('정상 조회 시 엔티티 목록을 반환하고 StoreSummary와 writerRole을 올바르게 반영한다', () async {
       when(
         () => mockReservationDs.getReservationsByDateRange(any(), any(), any()),
       ).thenAnswer((_) async => [fakeReservationModel]);
-      when(
-        () => mockStoreDs.getStore('store-123'),
-      ).thenAnswer((_) async => fakeStoreModel);
       when(
         () => mockUserDs.getUser('user-123'),
       ).thenAnswer((_) async => fakeUserModel);
@@ -123,28 +113,7 @@ void main() {
         reservations.first.storeSummary.color,
         fakeUserModel.storeById['store-123']!.color,
       );
-      expect(reservations.first.writer.role, fakeStoreModel.memberById['user-123']!.role);
-    });
-
-    test('StoreDataSource가 null을 반환하면 left(exception)를 반환한다', () async {
-      when(
-        () => mockReservationDs.getReservationsByDateRange(any(), any(), any()),
-      ).thenAnswer((_) async => [fakeReservationModel]);
-      when(
-        () => mockStoreDs.getStore(any()),
-      ).thenAnswer((_) async => null);
-      when(
-        () => mockUserDs.getUser(any()),
-      ).thenAnswer((_) async => fakeUserModel);
-
-      final result = await repository.getReservationsByDateRange(
-        storeId: 'store-123',
-        currentUid: 'user-123',
-        start: start,
-        end: end,
-      );
-
-      expect(result.isLeft(), true);
+      expect(reservations.first.writer.role, fakeReservationModel.writerRole);
     });
 
     test('ReservationDataSource 실패 시 left(exception)를 반환한다', () async {

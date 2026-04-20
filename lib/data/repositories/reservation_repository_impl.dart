@@ -4,10 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
-import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
-import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
@@ -23,15 +21,12 @@ class ReservationRepositoryImpl implements ReservationRepository {
   final Logger _logger = Logger();
 
   final ReservationDataSource _reservationDataSource;
-  final StoreDataSource _storeDataSource;
   final UserDataSource _userDataSource;
 
   ReservationRepositoryImpl({
     required ReservationDataSource reservationDataSource,
-    required StoreDataSource storeDataSource,
     required UserDataSource userDataSource,
   }) : _reservationDataSource = reservationDataSource,
-       _storeDataSource = storeDataSource,
        _userDataSource = userDataSource;
 
   @override
@@ -103,13 +98,6 @@ class ReservationRepositoryImpl implements ReservationRepository {
         currentUserModel: currentUserModel,
       );
 
-      // writerRole이 없는 구버전 document가 있으면 store document fallback 조회
-      final needsLegacyFallback = models.any((m) => m.writerRole == null);
-      StoreModel? storeModel;
-      if (needsLegacyFallback) {
-        storeModel = await _storeDataSource.getStore(storeId);
-      }
-
       // 고유 작성자 ID 목록 수집 후 병렬 조회
       final writerIds = models.map((m) => m.writerId).toSet().toList();
       final writerModels = await Future.wait(
@@ -130,19 +118,9 @@ class ReservationRepositoryImpl implements ReservationRepository {
           );
         }
 
-        final writerRole = model.writerRole ??
-            storeModel?.memberById[model.writerId]?.role ??
-            storeModel?.waitingMemberById[model.writerId]?.role;
-
-        if (writerRole == null) {
-          throw ReservationNotFoundException(
-            message: '작성자의 역할 정보를 찾을 수 없습니다. writerId: ${model.writerId}',
-          );
-        }
-
         return model.toEntity(
           storeSummary,
-          _buildWriter(writerUserModel: writerUserModel, writerRole: writerRole),
+          _buildWriter(writerUserModel: writerUserModel, writerRole: model.writerRole),
         );
       }).toList();
 
@@ -222,30 +200,16 @@ class ReservationRepositoryImpl implements ReservationRepository {
   }) async {
     final currentUserModelFuture = _userDataSource.getUser(currentUid);
     final writerUserModelFuture = _userDataSource.getUser(model.writerId);
-    // writerRole이 없는 구버전 document면 store fallback 병렬 조회
-    final storeModelFuture = model.writerRole == null
-        ? _storeDataSource.getStore(storeId)
-        : Future<StoreModel?>.value(null);
-
     final currentUserModel = await currentUserModelFuture;
     final writerUserModel = await writerUserModelFuture;
-    final storeModel = await storeModelFuture;
 
     if (writerUserModel == null) {
       throw ReservationNotFoundException(message: '작성자 정보를 찾을 수 없습니다.');
     }
 
-    final writerRole = model.writerRole ??
-        storeModel?.memberById[writerUserModel.id]?.role ??
-        storeModel?.waitingMemberById[writerUserModel.id]?.role;
-
-    if (writerRole == null) {
-      throw ReservationNotFoundException(message: '작성자의 역할 정보를 찾을 수 없습니다.');
-    }
-
     return model.toEntity(
       _buildStoreSummary(storeId: storeId, currentUserModel: currentUserModel),
-      _buildWriter(writerUserModel: writerUserModel, writerRole: writerRole),
+      _buildWriter(writerUserModel: writerUserModel, writerRole: model.writerRole),
     );
   }
 
@@ -275,12 +239,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
 @Riverpod(keepAlive: true)
 ReservationRepository reservationRepository(Ref ref) {
   final reservationDataSource = ref.watch(reservationDataSourceProvider);
-  final storeDataSource = ref.watch(storeDataSourceProvider);
   final userDataSource = ref.watch(userDataSourceProvider);
 
   return ReservationRepositoryImpl(
     reservationDataSource: reservationDataSource,
-    storeDataSource: storeDataSource,
     userDataSource: userDataSource,
   );
 }

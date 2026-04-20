@@ -33,7 +33,7 @@ abstract class ReservationModel with _$ReservationModel {
     required int calculatedPrice,
     required int priceAdjustment,
     required int totalPrice,
-    UserRole? writerRole,
+    required UserRole writerRole,
   }) = _ReservationModel;
 
   factory ReservationModel.fromJson(Map<String, dynamic> json) =>

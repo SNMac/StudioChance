@@ -106,6 +106,7 @@ final fakeReservationModel = ReservationModel(
   calculatedPrice: 50000,
   priceAdjustment: -5000,
   totalPrice: 45000,
+  writerRole: UserRole.admin,
 );
 
 final fakeStoreModel = StoreModel(
