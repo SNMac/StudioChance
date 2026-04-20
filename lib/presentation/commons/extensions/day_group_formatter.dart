@@ -1,20 +1,30 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/domain/enums/weekday.dart';
 
 extension DayGroupFormatter on DayGroup {
   String get formattedDays {
-    final bool hasHoliday = days.contains(8);
+    final bool hasHoliday = days.contains(Weekday.holiday);
 
-    final logicDays = days.where((d) => d != 8).toList()..sort();
+    final logicDays = days
+        .where((d) => d != Weekday.holiday)
+        .toList()
+      ..sort((a, b) => a.index.compareTo(b.index));
 
     if (logicDays.isEmpty) {
       return hasHoliday ? '공휴일' : '요일 선택';
     }
 
-    final weekdays = [1, 2, 3, 4, 5];
-    final weekends = [6, 7];
-    final allDays = [1, 2, 3, 4, 5, 6, 7];
+    final weekdays = [
+      Weekday.monday,
+      Weekday.tuesday,
+      Weekday.wednesday,
+      Weekday.thursday,
+      Weekday.friday,
+    ];
+    final weekends = [Weekday.saturday, Weekday.sunday];
+    final allDays = [...weekdays, ...weekends];
 
     String mainText = '';
 
@@ -25,28 +35,24 @@ extension DayGroupFormatter on DayGroup {
     } else if (listEquals(logicDays, weekends)) {
       mainText = '주말';
     } else {
-      final displayOrder = [7, 1, 2, 3, 4, 5, 6];
+      final displayOrder = [
+        Weekday.sunday,
+        Weekday.monday,
+        Weekday.tuesday,
+        Weekday.wednesday,
+        Weekday.thursday,
+        Weekday.friday,
+        Weekday.saturday,
+      ];
 
       final sortedForDisplay = displayOrder
           .where((d) => logicDays.contains(d))
           .toList();
 
-      final dayNames = {
-        7: '일',
-        1: '월',
-        2: '화',
-        3: '수',
-        4: '목',
-        5: '금',
-        6: '토'
-      };
-
       if (sortedForDisplay.length == 1) {
-        // 하나만 선택된 경우: "월요일"
-        mainText = '${dayNames[sortedForDisplay.first]}요일';
+        mainText = sortedForDisplay.first.displayName;
       } else {
-        // 여러 개 섞인 경우: "월, 수, 금"
-        mainText = sortedForDisplay.map((d) => dayNames[d]).join(', ');
+        mainText = sortedForDisplay.map((d) => d.shortName).join(', ');
       }
     }
 

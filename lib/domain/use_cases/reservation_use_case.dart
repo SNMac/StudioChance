@@ -3,11 +3,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
+import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
+import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
 part 'reservation_use_case.g.dart';
@@ -57,20 +59,25 @@ abstract interface class ReservationUseCase {
 class ReservationUseCaseImpl implements ReservationUseCase {
   final ReservationRepository _reservationRepository;
   final UserRepository _userRepository;
+  final StoreRepository _storeRepository;
 
   const ReservationUseCaseImpl({
     required ReservationRepository reservationRepository,
     required UserRepository userRepository,
+    required StoreRepository storeRepository,
   }) : _reservationRepository = reservationRepository,
-       _userRepository = userRepository;
+       _userRepository = userRepository,
+       _storeRepository = storeRepository;
 
   @override
   Future<Either<Exception, Reservation>> createReservation({
     required Reservation reservation,
-  }) {
+  }) async {
+    final priced = await _applyCalculatedPrice(reservation);
+
     return _getCurrentUser().flatMap((currentUser) {
-      final reservationWithWriter = reservation.copyWith(
-        writer: reservation.writer.copyWith(user: currentUser),
+      final reservationWithWriter = priced.copyWith(
+        writer: priced.writer.copyWith(user: currentUser),
       );
 
       return TaskEither(
@@ -118,10 +125,9 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   @override
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
-  }) {
-    return _reservationRepository.updateReservation(
-      reservation: reservation,
-    );
+  }) async {
+    final priced = await _applyCalculatedPrice(reservation);
+    return _reservationRepository.updateReservation(reservation: priced);
   }
 
   @override
@@ -164,15 +170,41 @@ class ReservationUseCaseImpl implements ReservationUseCase {
       });
     }, (error, stackTrace) => error is Exception ? error : Exception(error));
   }
+
+  /// Store의 PriceSetting으로 calculatedPrice, totalPrice를 계산하여 반영한 예약 반환.
+  ///
+  /// Store 조회 실패 또는 PriceSetting 매칭 실패 시 기존 값을 유지한다.
+  Future<Reservation> _applyCalculatedPrice(Reservation reservation) async {
+    final storeResult = await _storeRepository.getStore(
+      reservation.storeSummary.id,
+    );
+
+    final store = storeResult.toOption().toNullable();
+    if (store == null) return reservation;
+
+    final calculatedPrice = store.priceSettings.calculatePrice(
+      start: reservation.startTime,
+      end: reservation.endTime,
+      headCount: reservation.headCount,
+      isAllDay: reservation.isAllDay,
+    );
+
+    return reservation.copyWith(
+      calculatedPrice: calculatedPrice,
+      totalPrice: calculatedPrice + reservation.priceAdjustment,
+    );
+  }
 }
 
 @riverpod
 ReservationUseCase reservationUseCase(Ref ref) {
   final reservationRepository = ref.watch(reservationRepositoryProvider);
   final userRepository = ref.watch(userRepositoryProvider);
+  final storeRepository = ref.watch(storeRepositoryProvider);
 
   return ReservationUseCaseImpl(
     reservationRepository: reservationRepository,
     userRepository: userRepository,
+    storeRepository: storeRepository,
   );
 }

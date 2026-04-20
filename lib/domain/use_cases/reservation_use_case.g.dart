@@ -55,4 +55,4 @@ final class ReservationUseCaseProvider
 }
 
 String _$reservationUseCaseHash() =>
-    r'83f65066bd9b6ed981c4372d113b3f70debe6683';
+    r'912d37326cdcf60011c49195615d7e07ef86060e';

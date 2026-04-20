@@ -5,6 +5,7 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
+import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 
@@ -14,12 +15,15 @@ class MockReservationRepository extends Mock implements ReservationRepository {}
 
 class MockUserRepository extends Mock implements UserRepository {}
 
+class MockStoreRepository extends Mock implements StoreRepository {}
+
 class FakeReservation extends Fake implements Reservation {}
 
 void main() {
   late ReservationUseCaseImpl useCase;
   late MockReservationRepository mockReservationRepo;
   late MockUserRepository mockUserRepo;
+  late MockStoreRepository mockStoreRepo;
 
   setUpAll(() {
     registerFallbackValue(FakeReservation());
@@ -29,9 +33,15 @@ void main() {
   setUp(() {
     mockReservationRepo = MockReservationRepository();
     mockUserRepo = MockUserRepository();
+    mockStoreRepo = MockStoreRepository();
+    // 기본값: store 없음 → 가격 계산 스킵, 기존 값 유지
+    when(
+      () => mockStoreRepo.getStore(any()),
+    ).thenAnswer((_) async => right(null));
     useCase = ReservationUseCaseImpl(
       reservationRepository: mockReservationRepo,
       userRepository: mockUserRepo,
+      storeRepository: mockStoreRepo,
     );
   });
 

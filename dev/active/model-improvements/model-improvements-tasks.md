@@ -49,6 +49,15 @@ Last Updated: 2026-04-20 (완료)
 
 - [x] `weekday.g.dart`, `day_group_model.g.dart` 정상 생성 확인
 
+### 2-5. Presentation 레이어 영향 수정 ✅
+
+- [x] `lib/presentation/commons/extensions/day_group_formatter.dart`
+  - `int` 기반 비교 → `Weekday` enum 기반으로 변경
+  - `contains(8)` → `contains(Weekday.holiday)`
+  - `d != 8` → `d != Weekday.holiday`
+  - 요일 이름 Map 제거 → `Weekday.displayName`, `Weekday.shortName` getter 사용
+  - `dart analyze` 경고 3건 해소
+
 ---
 
 ## Phase 3: StoreCustomerModel DataSource 원칙 문서화 ✅
