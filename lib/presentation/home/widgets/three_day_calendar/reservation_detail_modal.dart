@@ -488,7 +488,7 @@ class _ReservationDetailModalState
             top: 8,
           ),
           child: Text(
-            '할인인 경우 -[값]을 입력해주세요',
+            '할인인 경우 -[값]을 입력해주세요 (예: -2000)',
             style: textTheme.labelMedium?.copyWith(
               color: context.secondaryLabel,
             ),
