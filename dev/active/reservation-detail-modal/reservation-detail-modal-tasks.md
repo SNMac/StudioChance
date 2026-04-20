@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-19 (platform/paymentMethod String → enum 전환)
+Last Updated: 2026-04-20 (Reservation Data Layer 테스트 코드 추가)
 
 ---
 
@@ -133,6 +133,24 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - [x] **V-5**: 하루종일 ON/OFF 동작 확인 (편집 모드)
 - [x] **V-6**: 예약 플랫폼/결제 방식 팝업 선택 → 반영
 - [x] **V-7**: 다크 모드 양쪽 모드 정상 표시
+
+---
+
+---
+
+## ✅ Phase 16: Reservation Data Layer 단위 테스트 (2026-04-20)
+
+- [x] **16-1**: `test/helpers/fake_data.dart` — 예약 관련 fake 데이터 추가
+  - `fakeStoreSummary`, `fakeWriterMemberInfo`, `fakeReservation` (도메인 엔티티)
+  - `fakeReservationModel`, `fakeStoreModel`, `fakeUserModel` (데이터 모델)
+- [x] **16-2**: `test/data/repositories/reservation_repository_test.dart` 작성 (12개 테스트)
+  - MockReservationDataSource, MockStoreDataSource, MockUserDataSource, FakeReservationModel
+  - createReservation / getReservationsByDateRange / updateReservation / deleteReservation / updateReservationStatus
+- [x] **16-3**: `test/domain/use_cases/reservation_use_case_test.dart` 작성 (14개 테스트)
+  - MockReservationRepository, MockUserRepository, FakeReservation
+  - writer.user 교체 검증 / currentUid 자동 획득 검증 / repo 위임 검증
+- [x] **16-4**: `flutter test` 실행 — 26개 전체 통과 확인
+- [x] **16-5**: 테스트 파일 커밋 (commit: `test: #5 - 예약 Repository, UseCase 단위 테스트 추가`)
 
 ---
 

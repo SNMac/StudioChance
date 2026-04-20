@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-19 (platform/paymentMethod String → enum 전환, Reservation Data Layer 신규 구현)
+Last Updated: 2026-04-20 (Reservation Data Layer 테스트 코드 추가)
 
 ---
 
@@ -35,6 +35,46 @@ Last Updated: 2026-04-19 (platform/paymentMethod String → enum 전환, Reserva
   - `lib/domain/repository_interfaces/reservation_repository.dart`
   - `lib/data/repositories/reservation_repository_impl.dart`
   - `lib/domain/use_cases/reservation_use_case.dart`
+- **Reservation 테스트 코드 추가** (2026-04-20)
+  - `test/helpers/fake_data.dart` — 예약 관련 fake 데이터 추가 (fakeStoreSummary, fakeWriterMemberInfo, fakeReservation, fakeReservationModel, fakeStoreModel, fakeUserModel)
+  - `test/data/repositories/reservation_repository_test.dart` — Repository 단위 테스트 12개 (전체 통과)
+  - `test/domain/use_cases/reservation_use_case_test.dart` — UseCase 단위 테스트 14개 (전체 통과)
+  - `flutter test` 26개 전체 통과 확인 후 커밋 완료
+
+---
+
+## 테스트 구조 (Reservation Data Layer)
+
+### fake_data.dart 추가 항목
+```dart
+// 도메인 엔티티 fakes
+final fakeStoreSummary = StoreSummary(id: 'store-123', name: '테스트 점포', color: StoreColor.blue);
+final fakeWriterMemberInfo = StoreMemberInfo(user: fakeUser, role: UserRole.admin);
+final fakeReservation = Reservation(id: 'res-001', storeSummary: fakeStoreSummary, ...);
+
+// 데이터 모델 fakes (Repository 테스트용)
+final fakeReservationModel = ReservationModel(id: 'res-001', storeId: 'store-123', writerId: 'user-123', ...);
+final fakeStoreModel = StoreModel(..., memberById: {'user-123': StoreMemberInfoModel(role: UserRole.admin)});
+final fakeUserModel = UserModel(..., storeById: {'store-123': UserStoreInfoModel(color: StoreColor.blue, ...)});
+```
+
+### reservation_repository_test.dart — 12개 테스트
+| group | 테스트 내용 |
+|-------|------------|
+| createReservation | DataSource 반환 모델로 엔티티 변환 right 반환 / DataSource 실패 시 left |
+| getReservationsByDateRange | 빈 목록 → 추가 조회 없음 / StoreSummary color, writer.role 검증 / StoreDataSource null → left / DS 실패 → left |
+| updateReservation | 올바른 storeId/reservationId로 DS 호출 / DS 실패 → left |
+| deleteReservation | 올바른 파라미터로 DS 호출 / DS 실패 → left |
+| updateReservationStatus | status.name 포함 데이터로 DS 호출 / DS 실패 → left |
+
+### reservation_use_case_test.dart — 14개 테스트
+| group | 테스트 내용 |
+|-------|------------|
+| createReservation | writer.user를 현재 로그인 유저로 교체 / writer.role 원본 유지 / 유저 조회 실패 → left + repo 미호출 / 현재 유저 null → left / repo 실패 → left |
+| getReservationsByDateRange | currentUid 자동 획득 후 repo 호출 / 유저 조회 실패 → left / repo 실패 → left |
+| updateReservation | repo 위임 / repo 실패 → left |
+| deleteReservation | 올바른 파라미터 repo 호출 / repo 실패 → left |
+| updateReservationStatus | 올바른 파라미터 repo 호출 / repo 실패 → left |
 
 ---
 
