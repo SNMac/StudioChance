@@ -40,17 +40,15 @@ class UserRepositoryImpl implements UserRepository {
 
       var userModel = await _userDataSource.getUser(authInfo.uid);
       if (userModel != null) {
-        // 기존 유저 — addFcmToken과 updateUser를 병렬로 실행하여 지연 최소화
-        final futures = <Future<void>>[
-          _userDataSource.updateUser(userModel.id, {
-            'authProviders': authInfo.authProviders,
-            'lastLoginAt': true, // DataSource가 FieldValue.serverTimestamp()로 교체
-          }),
-        ];
+        // 기존 유저 — 단일 updateUser 호출로 통합
+        final updates = <String, dynamic>{
+          'authProviders': authInfo.authProviders,
+          'lastLoginAt': true, // DataSource가 FieldValue.serverTimestamp()로 교체
+        };
         if (fcmToken != null) {
-          futures.add(_userDataSource.addFcmToken(userModel.id, fcmToken));
+          updates['fcmTokens'] = [fcmToken]; // DataSource가 FieldValue.arrayUnion으로 교체
         }
-        await Future.wait(futures);
+        await _userDataSource.updateUser(userModel.id, updates);
       } else {
         // 신규 유저
         final newUserModel = UserModel(

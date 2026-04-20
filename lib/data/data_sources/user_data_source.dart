@@ -132,6 +132,10 @@ class UserFirestoreDataSource implements UserDataSource {
         updates['lastLoginAt'] = FieldValue.serverTimestamp();
       }
 
+      if (updates.containsKey('fcmTokens') && updates['fcmTokens'] is List) {
+        updates['fcmTokens'] = FieldValue.arrayUnion(updates['fcmTokens'] as List);
+      }
+
       await _userDocRef(uid).update(updates);
     } catch (e) {
       throw _handleFirestoreError(e);

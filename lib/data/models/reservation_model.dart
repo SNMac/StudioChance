@@ -58,6 +58,14 @@ abstract class ReservationModel with _$ReservationModel {
     );
   }
 
+  /// 예약 수정 가능 필드만 반환 (storeId, writerId 불변 필드 제외)
+  Map<String, dynamic> toUpdateJson() {
+    final json = toJson();
+    json.remove('storeId');
+    json.remove('writerId');
+    return json;
+  }
+
   Reservation toEntity(StoreSummary storeSummary, StoreMemberInfo writer) {
     return Reservation(
       id: id,

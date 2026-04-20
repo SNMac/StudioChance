@@ -149,7 +149,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
   }) async {
     try {
       final model = ReservationModel.fromEntity(reservation);
-      final json = model.toJson();
+      final json = model.toUpdateJson();
 
       await _reservationDataSource.updateReservation(
         reservation.storeSummary.id,
