@@ -15,7 +15,7 @@ abstract interface class NotificationDataSource {
   Future<NotificationSettings> requestPermission();
 
   /// 현재 기기의 FCM 토큰 가져오기
-  Future<String?> getFcmToken();
+  Future<String> getFcmToken();
 
   /// 로그아웃 시 SDK 캐시 정리
   Future<void> deleteToken();
@@ -42,7 +42,7 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
   }
 
   @override
-  Future<String?> getFcmToken() async {
+  Future<String> getFcmToken() async {
     try {
       final token = await _messaging.getToken();
       if (token == null) {

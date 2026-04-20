@@ -45,17 +45,19 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
 
   ReservationFirestoreDataSource(this._firestore);
 
+  CollectionReference<Map<String, dynamic>> _reservationsRef(String storeId) {
+    return _firestore
+        .collection('stores')
+        .doc(storeId)
+        .collection('reservations');
+  }
+
   @override
   Future<ReservationModel> createReservation(
     ReservationModel reservation,
   ) async {
     try {
-      final collectionRef = _firestore
-          .collection('stores')
-          .doc(reservation.storeId)
-          .collection('reservations');
-
-      final docRef = collectionRef.doc();
+      final docRef = _reservationsRef(reservation.storeId).doc();
 
       final json = reservation.toJson();
       json['createdAt'] = FieldValue.serverTimestamp();
@@ -75,12 +77,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
     String reservationId,
   ) async {
     try {
-      final docSnapshot = await _firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('reservations')
-          .doc(reservationId)
-          .get();
+      final docSnapshot = await _reservationsRef(storeId).doc(reservationId).get();
 
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
@@ -100,10 +97,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
     DateTime end,
   ) async {
     try {
-      final querySnapshot = await _firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('reservations')
+      final querySnapshot = await _reservationsRef(storeId)
           .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
           .where('startTime', isLessThan: Timestamp.fromDate(end))
           .orderBy('startTime')
@@ -129,12 +123,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
       final updates = Map<String, dynamic>.from(data);
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
-      await _firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('reservations')
-          .doc(reservationId)
-          .update(updates);
+      await _reservationsRef(storeId).doc(reservationId).update(updates);
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -146,12 +135,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
     String reservationId,
   ) async {
     try {
-      await _firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('reservations')
-          .doc(reservationId)
-          .delete();
+      await _reservationsRef(storeId).doc(reservationId).delete();
     } catch (e) {
       throw _handleFirestoreError(e);
     }

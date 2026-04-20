@@ -58,10 +58,14 @@ class UserFirestoreDataSource implements UserDataSource {
 
   UserFirestoreDataSource(this._firestore);
 
+  DocumentReference<Map<String, dynamic>> _userDocRef(String uid) {
+    return _firestore.collection('users').doc(uid);
+  }
+
   @override
   Future<UserModel?> getUser(String uid) async {
     try {
-      final docSnapshot = await _firestore.collection('users').doc(uid).get();
+      final docSnapshot = await _userDocRef(uid).get();
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
         data['id'] = docSnapshot.id;
@@ -81,7 +85,7 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<UserModel?> fetchUserWithRestoration(String uid) async {
     try {
-      final docSnapshot = await _firestore.collection('users').doc(uid).get();
+      final docSnapshot = await _userDocRef(uid).get();
 
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
@@ -112,7 +116,7 @@ class UserFirestoreDataSource implements UserDataSource {
       json['updatedAt'] = FieldValue.serverTimestamp();
       json['lastLoginAt'] = FieldValue.serverTimestamp();
 
-      await _firestore.collection('users').doc(userModel.id).set(json);
+      await _userDocRef(userModel.id).set(json);
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -128,7 +132,7 @@ class UserFirestoreDataSource implements UserDataSource {
         updates['lastLoginAt'] = FieldValue.serverTimestamp();
       }
 
-      await _firestore.collection('users').doc(uid).update(updates);
+      await _userDocRef(uid).update(updates);
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -148,7 +152,7 @@ class UserFirestoreDataSource implements UserDataSource {
 
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
-      await _firestore.collection('users').doc(uid).update(updates);
+      await _userDocRef(uid).update(updates);
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -157,7 +161,7 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<void> removeStoreInfo(String uid, String storeId) async {
     try {
-      await _firestore.collection('users').doc(uid).update({
+      await _userDocRef(uid).update({
         'storeById.$storeId': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -169,7 +173,7 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<void> addFcmToken(String uid, String token) async {
     try {
-      await _firestore.collection('users').doc(uid).update({
+      await _userDocRef(uid).update({
         'fcmTokens': FieldValue.arrayUnion([token]),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -185,19 +189,20 @@ class UserFirestoreDataSource implements UserDataSource {
     String newToken,
   ) async {
     try {
-      final batch = _firestore.batch();
-      final docRef = _firestore.collection('users').doc(uid);
+      final docRef = _userDocRef(uid);
 
-      batch.update(docRef, {
-        'fcmTokens': FieldValue.arrayRemove([oldToken]),
+      // arrayRemove + arrayUnion을 동일 필드에 적용하므로 Transaction으로 원자성 보장
+      await _firestore.runTransaction((tx) async {
+        final doc = await tx.get(docRef);
+        final tokens = List<String>.from(doc.data()?['fcmTokens'] ?? []);
+        tokens.remove(oldToken);
+        if (!tokens.contains(newToken)) tokens.add(newToken);
+
+        tx.update(docRef, {
+          'fcmTokens': tokens,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       });
-
-      batch.update(docRef, {
-        'fcmTokens': FieldValue.arrayUnion([newToken]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      await batch.commit();
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -206,7 +211,7 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<void> removeFcmToken(String uid, String token) async {
     try {
-      await _firestore.collection('users').doc(uid).update({
+      await _userDocRef(uid).update({
         'fcmTokens': FieldValue.arrayRemove([token]),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -218,8 +223,11 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<void> softDeleteUser(String uid) async {
     try {
+      // expiresAt은 클라이언트 시각 기준으로 계산됩니다.
+      // deletedAt(서버 타임스탬프)과 미세한 차이가 있을 수 있으나,
+      // 7일 만료 기준에서 실질적인 문제가 없으므로 허용합니다.
       final hardDeleteDate = DateTime.now().add(const Duration(days: userSoftDeleteDays));
-      await _firestore.collection('users').doc(uid).update({
+      await _userDocRef(uid).update({
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'fcmTokens': [], // FCM 토큰 초기화
@@ -233,7 +241,7 @@ class UserFirestoreDataSource implements UserDataSource {
   @override
   Future<void> restoreUser(String uid) async {
     try {
-      await _firestore.collection('users').doc(uid).update({
+      await _userDocRef(uid).update({
         'deletedAt': FieldValue.delete(),
         'expiresAt': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),

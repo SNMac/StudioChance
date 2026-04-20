@@ -154,11 +154,6 @@ class UserRepositoryImpl implements UserRepository {
     try {
       final token = await _notificationDataSource.getFcmToken();
 
-      if (token == null) {
-        _logger.w('삭제할 FCM 토큰 없음');
-        return;
-      }
-
       await _userDataSource.removeFcmToken(uid, token);
 
       _logger.i('기기 FCM 토큰 삭제 완료 (로그아웃)\nuid: $uid\ntoken: $token');

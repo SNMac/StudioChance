@@ -66,8 +66,13 @@ abstract interface class StoreDataSource {
 class StoreFirestoreDataSource implements StoreDataSource {
   final Logger _logger = Logger();
   final FirebaseFirestore _firestore;
+  final _rnd = Random();
 
   StoreFirestoreDataSource(this._firestore);
+
+  DocumentReference<Map<String, dynamic>> _storeDocRef(String storeId) {
+    return _firestore.collection('stores').doc(storeId);
+  }
 
   @override
   Future<StoreModel> createStore(
@@ -102,10 +107,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
   @override
   Future<StoreModel?> getStore(String storeId) async {
     try {
-      final docSnapshot = await _firestore
-          .collection('stores')
-          .doc(storeId)
-          .get();
+      final docSnapshot = await _storeDocRef(storeId).get();
 
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
@@ -127,7 +129,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final updates = Map<String, dynamic>.from(data);
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
-      await _firestore.collection('stores').doc(storeId).update(updates);
+      await _storeDocRef(storeId).update(updates);
     } catch (e) {
       throw _handleFirestoreError(e);
     }
@@ -138,7 +140,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
     try {
       final batch = _firestore.batch();
 
-      final storeRef = _firestore.collection('stores').doc(storeId);
+      final storeRef = _storeDocRef(storeId);
       batch.update(storeRef, {
         'memberById.$uid.role': role,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -161,7 +163,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
     try {
       final batch = _firestore.batch();
 
-      final storeRef = _firestore.collection('stores').doc(storeId);
+      final storeRef = _storeDocRef(storeId);
       batch.update(storeRef, {
         'memberById.$uid': FieldValue.delete(),
         'waitingMemberById.$uid': FieldValue.delete(),
@@ -189,7 +191,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
   ) async {
     try {
       final batch = _firestore.batch();
-      final storeRef = _firestore.collection('stores').doc(storeId);
+      final storeRef = _storeDocRef(storeId);
       final userRef = _firestore.collection('users').doc(uid);
 
       batch.update(storeRef, {
@@ -215,7 +217,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
     StoreMemberInfoModel memberInfo,
   ) async {
     try {
-      await _firestore.collection('stores').doc(storeId).update({
+      await _storeDocRef(storeId).update({
         'waitingMemberById.$uid': FieldValue.delete(),
         'memberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -231,7 +233,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final hardDeleteDate = DateTime.now().add(
         const Duration(days: storeSoftDeleteDays),
       );
-      await _firestore.collection('stores').doc(storeId).update({
+      await _storeDocRef(storeId).update({
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -249,10 +251,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
   }) async {
     try {
       if (!forceRegenerate) {
-        final docSnapshot = await _firestore
-            .collection('stores')
-            .doc(storeId)
-            .get();
+        final docSnapshot = await _storeDocRef(storeId).get();
 
         if (!docSnapshot.exists) {
           throw StoreNotFoundException(message: '점포를 찾을 수 없습니다.');
@@ -279,7 +278,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final json = inviteInfoModel.toJson();
       json['createdAt'] = FieldValue.serverTimestamp();
 
-      await _firestore.collection('stores').doc(storeId).update({
+      await _storeDocRef(storeId).update({
         'inviteInfo': json,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -315,10 +314,10 @@ class StoreFirestoreDataSource implements StoreDataSource {
         );
 
         if (DateTime.now().isAfter(expiresAt)) {
-          throw StoreNotFoundException(message: '유효하지 않은 초대 코드입니다.');
+          throw StoreValidationException(message: '만료된 초대 코드입니다.');
         }
       } else {
-        throw StoreNotFoundException(message: '유효하지 않은 초대 코드입니다.');
+        throw StoreValidationException(message: '유효하지 않은 초대 코드입니다.');
       }
 
       data['id'] = docSnapshot.id;
@@ -334,11 +333,10 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
   String _generateRandomCode(int length) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final rnd = Random();
     return String.fromCharCodes(
       Iterable.generate(
         length,
-        (_) => chars.codeUnitAt(rnd.nextInt(chars.length)),
+        (_) => chars.codeUnitAt(_rnd.nextInt(chars.length)),
       ),
     );
   }
