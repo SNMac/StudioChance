@@ -72,21 +72,12 @@ class UserUseCaseImpl implements UserUseCase {
     String? name,
     StoreColor? color,
   }) {
-    // ⚠️ 주의: UserRepository 인터페이스에 updateStoreInfo 메서드를 추가해야 합니다.
-    // UserDataSource.updateStoreInfo를 호출하는 레포지토리 메서드입니다.
-
-    // 예시 구현 (UserRepository 수정 필요):
-    /*
     return _repository.updateStoreInfo(
       uid: uid,
       storeId: storeId,
       name: name,
       color: color,
     );
-    */
-
-    // 우선 임시로 예외 반환 처리 (구현 시 주석 해제)
-    return Future.value(left(Exception('UserRepository 업데이트 필요')));
   }
 }
 

@@ -158,24 +158,13 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String targetUid,
     required UserRole newRole,
   }) {
-    // Repository에 updateMemberRole이 없어서 추가해야 한다면 여기서 호출
-    // 현재 RepositoryImpl에는 updateStore나 approveMember만 있고
-    // 역할 '수정' 메서드는 인터페이스에 명시되어 있지 않았습니다.
-    // 만약 Repository에 updateMemberRole 메서드를 추가했다면 아래와 같이 호출합니다.
-
-    // (임시) Repository에 해당 메서드를 추가했다고 가정하고 작성
-    /*
     return TaskEither(
       () => _storeRepository.updateMemberRole(
         storeId: storeId,
         uid: targetUid,
-        role: newRole,
+        newRole: newRole,
       ),
     ).run();
-    */
-
-    // 우선 구현되지 않은 상태라면 예외 처리 혹은 TODO
-    return TaskEither.left(Exception('기능 구현 예정')).run();
   }
 
   @override
