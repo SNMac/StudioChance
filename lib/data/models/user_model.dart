@@ -16,7 +16,7 @@ abstract class UserModel with _$UserModel {
     required String name,
     String? nickname,
     @Default([]) List<String> authProviders,
-    @Default([]) List<String> fcmTokens,
+    @JsonKey(includeToJson: false) @Default([]) List<String> fcmTokens,
     @Default({}) Map<String, UserStoreInfoModel> storeById,
   }) = _UserModel;
 

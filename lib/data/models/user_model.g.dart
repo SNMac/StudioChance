@@ -33,6 +33,5 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'name': instance.name,
       'nickname': instance.nickname,
       'authProviders': instance.authProviders,
-      'fcmTokens': instance.fcmTokens,
       'storeById': instance.storeById.map((k, e) => MapEntry(k, e.toJson())),
     };

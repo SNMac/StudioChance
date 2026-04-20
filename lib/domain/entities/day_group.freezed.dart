@@ -14,8 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DayGroup {
 
- List<int> get days;// 1~7: 요일, 8: 공휴일
- HeadcountRule get headcountRule; List<TimeSlot> get timeSlots;
+ List<Weekday> get days; HeadcountRule get headcountRule; List<TimeSlot> get timeSlots;
 /// Create a copy of DayGroup
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -46,7 +45,7 @@ abstract mixin class $DayGroupCopyWith<$Res>  {
   factory $DayGroupCopyWith(DayGroup value, $Res Function(DayGroup) _then) = _$DayGroupCopyWithImpl;
 @useResult
 $Res call({
- List<int> days, HeadcountRule headcountRule, List<TimeSlot> timeSlots
+ List<Weekday> days, HeadcountRule headcountRule, List<TimeSlot> timeSlots
 });
 
 
@@ -66,7 +65,7 @@ class _$DayGroupCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? days = null,Object? headcountRule = null,Object? timeSlots = null,}) {
   return _then(_self.copyWith(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
-as List<int>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
+as List<Weekday>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
 as HeadcountRule,timeSlots: null == timeSlots ? _self.timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
 as List<TimeSlot>,
   ));
@@ -162,7 +161,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRule headcountRule,  List<TimeSlot> timeSlots)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Weekday> days,  HeadcountRule headcountRule,  List<TimeSlot> timeSlots)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DayGroup() when $default != null:
 return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
@@ -183,7 +182,7 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRule headcountRule,  List<TimeSlot> timeSlots)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Weekday> days,  HeadcountRule headcountRule,  List<TimeSlot> timeSlots)  $default,) {final _that = this;
 switch (_that) {
 case _DayGroup():
 return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
@@ -203,7 +202,7 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<int> days,  HeadcountRule headcountRule,  List<TimeSlot> timeSlots)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Weekday> days,  HeadcountRule headcountRule,  List<TimeSlot> timeSlots)?  $default,) {final _that = this;
 switch (_that) {
 case _DayGroup() when $default != null:
 return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
@@ -218,17 +217,16 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 
 
 class _DayGroup implements DayGroup {
-  const _DayGroup({required final  List<int> days, required this.headcountRule, required final  List<TimeSlot> timeSlots}): _days = days,_timeSlots = timeSlots;
+  const _DayGroup({required final  List<Weekday> days, required this.headcountRule, required final  List<TimeSlot> timeSlots}): _days = days,_timeSlots = timeSlots;
   
 
- final  List<int> _days;
-@override List<int> get days {
+ final  List<Weekday> _days;
+@override List<Weekday> get days {
   if (_days is EqualUnmodifiableListView) return _days;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_days);
 }
 
-// 1~7: 요일, 8: 공휴일
 @override final  HeadcountRule headcountRule;
  final  List<TimeSlot> _timeSlots;
 @override List<TimeSlot> get timeSlots {
@@ -268,7 +266,7 @@ abstract mixin class _$DayGroupCopyWith<$Res> implements $DayGroupCopyWith<$Res>
   factory _$DayGroupCopyWith(_DayGroup value, $Res Function(_DayGroup) _then) = __$DayGroupCopyWithImpl;
 @override @useResult
 $Res call({
- List<int> days, HeadcountRule headcountRule, List<TimeSlot> timeSlots
+ List<Weekday> days, HeadcountRule headcountRule, List<TimeSlot> timeSlots
 });
 
 
@@ -288,7 +286,7 @@ class __$DayGroupCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? days = null,Object? headcountRule = null,Object? timeSlots = null,}) {
   return _then(_DayGroup(
 days: null == days ? _self._days : days // ignore: cast_nullable_to_non_nullable
-as List<int>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
+as List<Weekday>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
 as HeadcountRule,timeSlots: null == timeSlots ? _self._timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
 as List<TimeSlot>,
   ));

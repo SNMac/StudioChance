@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
@@ -24,8 +25,8 @@ abstract class ReservationModel with _$ReservationModel {
     required String customerPhone,
     required String memo,
     required bool isAllDay,
-    required DateTime startTime,
-    required DateTime endTime,
+    @TimestampConverter() required DateTime startTime,
+    @TimestampConverter() required DateTime endTime,
     required ReservationPlatform platform,
     required PaymentMethod paymentMethod,
     required int calculatedPrice,
