@@ -49,12 +49,12 @@
   - 참고: `UserDataSource.updateUser`의 `lastLoginAt` 특별 처리 로직 확인 필요 (line 131-133)
   - 크기: S
 
-- [ ] **[PERF-1]** `getReservationsByDateRange` — store full document 읽기 최소화 검토
+- [x] **[PERF-1]** `getReservationsByDateRange` — store full document 읽기 최소화 검토
   - 현행 유지 결정 시: 이 항목 닫기
   - 변경 결정 시: 예약 document에 `writerRole` 비정규화 또는 `storeName` 별도 저장 설계
   - 크기: XL (데이터 모델 변경 포함)
 
-- [ ] **[PERF-2]** `_fetchMembersWithRoles` — `whereIn` 쿼리로 N+1 해소
+- [x] **[PERF-2]** `_fetchMembersWithRoles` — `whereIn` 쿼리로 N+1 해소
   - 현행 유지 결정 시: 이 항목 닫기 (소규모 팀 앱에서 영향 미미)
   - 변경 결정 시: `whereIn` 최대 30개 제한 감안하여 청크 분할 구현
   - 크기: L

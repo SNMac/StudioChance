@@ -7,6 +7,7 @@ import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
 import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 
 part 'reservation_model.freezed.dart';
 part 'reservation_model.g.dart';
@@ -32,6 +33,7 @@ abstract class ReservationModel with _$ReservationModel {
     required int calculatedPrice,
     required int priceAdjustment,
     required int totalPrice,
+    UserRole? writerRole,
   }) = _ReservationModel;
 
   factory ReservationModel.fromJson(Map<String, dynamic> json) =>
@@ -55,14 +57,16 @@ abstract class ReservationModel with _$ReservationModel {
       calculatedPrice: entity.calculatedPrice,
       priceAdjustment: entity.priceAdjustment,
       totalPrice: entity.totalPrice,
+      writerRole: entity.writer.role,
     );
   }
 
-  /// 예약 수정 가능 필드만 반환 (storeId, writerId 불변 필드 제외)
+  /// 예약 수정 가능 필드만 반환 (storeId, writerId, writerRole 불변 필드 제외)
   Map<String, dynamic> toUpdateJson() {
     final json = toJson();
     json.remove('storeId');
     json.remove('writerId');
+    json.remove('writerRole');
     return json;
   }
 
