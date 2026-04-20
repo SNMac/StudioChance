@@ -7,6 +7,8 @@ import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
+import 'package:studio_chance/data/models/store_model.dart';
+import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
@@ -102,14 +104,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
         throw ReservationNotFoundException(message: '점포를 찾을 수 없습니다.');
       }
 
-      // 현재 사용자의 해당 점포 색상 조회
-      final color =
-          currentUserModel?.storeById[storeId]?.color ?? StoreColor.blue;
-
-      final storeSummary = StoreSummary(
-        id: storeId,
-        name: storeModel.name,
-        color: color,
+      final storeSummary = _buildStoreSummary(
+        storeModel: storeModel,
+        storeId: storeId,
+        currentUserModel: currentUserModel,
       );
 
       // 고유 작성자 ID 목록 수집 후 병렬 조회
@@ -132,22 +130,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
           );
         }
 
-        final writerRole =
-            storeModel.memberById[model.writerId]?.role ??
-            storeModel.waitingMemberById[model.writerId]?.role;
-
-        if (writerRole == null) {
-          throw ReservationNotFoundException(
-            message: '작성자의 역할 정보를 찾을 수 없습니다. writerId: ${model.writerId}',
-          );
-        }
-
-        final writer = StoreMemberInfo(
-          user: writerUserModel.toEntity(),
-          role: writerRole,
+        return model.toEntity(
+          storeSummary,
+          _buildWriter(writerUserModel: writerUserModel, storeModel: storeModel),
         );
-
-        return model.toEntity(storeSummary, writer);
       }).toList();
 
       return right(reservations);
@@ -240,31 +226,44 @@ class ReservationRepositoryImpl implements ReservationRepository {
       );
     }
 
+    return model.toEntity(
+      _buildStoreSummary(
+        storeModel: storeModel,
+        storeId: storeId,
+        currentUserModel: currentUserModel,
+      ),
+      _buildWriter(writerUserModel: writerUserModel, storeModel: storeModel),
+    );
+  }
+
+  /// StoreSummary 구성
+  /// - 현재 사용자의 해당 점포 색상 사용, 없으면 [StoreColor.red] 폴백
+  StoreSummary _buildStoreSummary({
+    required StoreModel storeModel,
+    required String storeId,
+    required UserModel? currentUserModel,
+  }) {
     final color =
         currentUserModel?.storeById[storeId]?.color ?? StoreColor.red;
+    return StoreSummary(id: storeId, name: storeModel.name, color: color);
+  }
 
-    final storeSummary = StoreSummary(
-      id: storeId,
-      name: storeModel.name,
-      color: color,
-    );
-
+  /// StoreMemberInfo(writer) 구성
+  StoreMemberInfo _buildWriter({
+    required UserModel writerUserModel,
+    required StoreModel storeModel,
+  }) {
     final writerRole =
-        storeModel.memberById[model.writerId]?.role ??
-        storeModel.waitingMemberById[model.writerId]?.role;
+        storeModel.memberById[writerUserModel.id]?.role ??
+        storeModel.waitingMemberById[writerUserModel.id]?.role;
 
     if (writerRole == null) {
       throw ReservationNotFoundException(
-        message: '작성자의 역할 정보를 찾을 수 없습니다.',
+        message: '작성자의 역할 정보를 찾을 수 없습니다. writerId: ${writerUserModel.id}',
       );
     }
 
-    final writer = StoreMemberInfo(
-      user: writerUserModel.toEntity(),
-      role: writerRole,
-    );
-
-    return model.toEntity(storeSummary, writer);
+    return StoreMemberInfo(user: writerUserModel.toEntity(), role: writerRole);
   }
 }
 

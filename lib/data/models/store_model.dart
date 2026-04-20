@@ -30,6 +30,15 @@ abstract class StoreModel with _$StoreModel {
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
       _$StoreModelFromJson(json);
 
+  /// 점포 수정 가능 필드만 반환 (memberById, waitingMemberById, inviteInfoModel 제외)
+  Map<String, dynamic> toEditableJson() => {
+    'name': name,
+    'address': address,
+    'addressDetail': addressDetail,
+    'addressGuide': addressGuide,
+    'priceSettingsModel': priceSettingsModel.toJson(),
+  };
+
   factory StoreModel.fromEntity(Store entity) {
     return StoreModel(
       id: entity.id,

@@ -40,14 +40,17 @@ class UserRepositoryImpl implements UserRepository {
 
       var userModel = await _userDataSource.getUser(authInfo.uid);
       if (userModel != null) {
-        // 기존 유저
+        // 기존 유저 — addFcmToken과 updateUser를 병렬로 실행하여 지연 최소화
+        final futures = <Future<void>>[
+          _userDataSource.updateUser(userModel.id, {
+            'authProviders': authInfo.authProviders,
+            'lastLoginAt': true, // DataSource가 FieldValue.serverTimestamp()로 교체
+          }),
+        ];
         if (fcmToken != null) {
-          await _userDataSource.addFcmToken(userModel.id, fcmToken);
+          futures.add(_userDataSource.addFcmToken(userModel.id, fcmToken));
         }
-
-        await _userDataSource.updateUser(userModel.id, {
-          'authProviders': authInfo.authProviders,
-        });
+        await Future.wait(futures);
       } else {
         // 신규 유저
         final newUserModel = UserModel(
@@ -170,6 +173,7 @@ class UserRepositoryImpl implements UserRepository {
       _logger.i('사용자 Soft Delete 완료 (회원 탈퇴)\nuid: $uid');
     } catch (e) {
       _logger.e('사용자 Soft Delete 실패');
+      // 탈퇴 실패는 호출부(UseCase)까지 예외를 전파하여 사용자에게 알림 (의도적 throw)
       throw e is Exception ? e : Exception(e.toString());
     }
   }

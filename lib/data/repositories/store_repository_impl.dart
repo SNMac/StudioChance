@@ -105,15 +105,8 @@ class StoreRepositoryImpl implements StoreRepository {
   }) async {
     try {
       final storeModel = StoreModel.fromEntity(store);
-      final storeJson = storeModel.toJson();
 
-      await _storeDataSource.updateStore(store.id, {
-        'name': storeJson['name'],
-        'address': storeJson['address'],
-        'addressDetail': storeJson['addressDetail'],
-        'addressGuide': storeJson['addressGuide'],
-        'priceSettingsModel': storeJson['priceSettingsModel'],
-      });
+      await _storeDataSource.updateStore(store.id, storeModel.toEditableJson());
 
       await _userDataSource.updateStoreInfo(uid, store.id, {
         'color': color.name,
