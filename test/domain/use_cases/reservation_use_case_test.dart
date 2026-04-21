@@ -9,7 +9,7 @@ import 'package:studio_chance/domain/repository_interfaces/store_repository.dart
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 
-import '../../helpers/fake_data.dart';
+import '../../helpers/fake_entities.dart';
 
 class MockReservationRepository extends Mock implements ReservationRepository {}
 
@@ -26,6 +26,7 @@ void main() {
   late MockStoreRepository mockStoreRepo;
 
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
     registerFallbackValue(FakeReservation());
     registerFallbackValue(ReservationStatus.pending);
   });

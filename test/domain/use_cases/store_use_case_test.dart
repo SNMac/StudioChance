@@ -8,7 +8,7 @@ import 'package:studio_chance/domain/repository_interfaces/store_repository.dart
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
-import '../../helpers/fake_data.dart';
+import '../../helpers/fake_entities.dart';
 
 class MockStoreRepository extends Mock implements StoreRepository {}
 

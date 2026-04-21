@@ -5,7 +5,7 @@ import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/user_use_case.dart';
 
-import '../../helpers/fake_data.dart';
+import '../../helpers/fake_entities.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
 

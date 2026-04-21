@@ -7,7 +7,7 @@ import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 
-import '../../../../helpers/fake_data.dart';
+import '../../../../helpers/fake_entities.dart';
 
 class MockStoreUseCase extends Mock implements StoreUseCase {}
 

@@ -1,6 +1,6 @@
 # Use Case 개선 — 작업 체크리스트
 
-Last Updated: 2026-04-20
+Last Updated: 2026-04-21
 
 ---
 
@@ -62,4 +62,4 @@ Last Updated: 2026-04-20
 - [x] `createReservation` 저장 데이터에 계산된 `calculatedPrice`, `totalPrice` 포함
 - [x] `updateReservation` 저장 데이터에 재계산된 `calculatedPrice`, `totalPrice` 포함
 - [x] `dart analyze` 에러 없음
-- [ ] `flutter test` 기존 테스트 전체 통과 (Timestamp 이슈는 기존 문제, 신규 실패 없음)
+- [x] `flutter test` 기존 테스트 전체 통과 (66개 전체 통과, Timestamp 이슈 근본 수정 완료)
