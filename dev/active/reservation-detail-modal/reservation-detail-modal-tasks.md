@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-22 (17-E 완료 — Android DraggableScrollableSheet 제거, Stack+Offstage 통일. Android scroll jank 실기기 검증 필요)
+Last Updated: 2026-04-22 (17-E + 컬러 dot 수정 완료, Android scroll jank 실기기 검증은 #6 이슈로 추적)
 
 ---
 
@@ -217,6 +217,16 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - jank 없으면 → 17-E 현 상태 유지, 작업 완료
 - jank 있으면 → `showModalBottomSheet`에 `enableDrag: false` 추가 (gesture 충돌 방지)
   - 닫기: AppBar 버튼, barrier 탭, 백버튼 모두 동작함 (drag-to-dismiss만 제거)
+
+---
+
+## ✅ Phase 18: 읽기 전용 '예약 점포' 컬러 dot 표시 (2026-04-22)
+
+- [x] `TitleTextLabel`에 optional `leading: Widget?` 파라미터 추가
+  - content 텍스트 앞 우측 정렬 영역에 leading 위젯 표시
+  - 기존 `TitleTextLabel` 사용처는 파라미터 없이 그대로 사용 가능
+- [x] `_buildSection1ReadOnly()`: `예약 점포` 행에 `store.color.foregroundColorValue` 기반 8×8 원형 dot 전달
+- [x] `dart analyze` 통과
 
 ---
 
