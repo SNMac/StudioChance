@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-22 (17-E + 컬러 dot 수정 완료, Android scroll jank 실기기 검증은 #6 이슈로 추적)
+Last Updated: 2026-04-22 (Phase 18~19 완료. Android scroll jank 실기기 검증은 #6 이슈로 추적)
 
 ---
 
@@ -217,6 +217,18 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - jank 없으면 → 17-E 현 상태 유지, 작업 완료
 - jank 있으면 → `showModalBottomSheet`에 `enableDrag: false` 추가 (gesture 충돌 방지)
   - 닫기: AppBar 버튼, barrier 탭, 백버튼 모두 동작함 (drag-to-dismiss만 제거)
+
+---
+
+## ✅ Phase 19: 안내문 섹션 읽기 전용 전용 + TextActionButton (2026-04-22)
+
+- [x] `TextActionButton` 신규 컴포넌트 생성 (`lib/presentation/commons/widgets/input_form/text_action_button.dart`)
+  - 투명 배경 + `systemBlue` + `titleMedium`, 텍스트 중앙 정렬
+  - iOS plain text button 스타일
+- [x] 섹션 5 (`n번째 예약입니다.` + 안내문 버튼): 읽기 전용 모드 전용으로 변경
+  - `_buildEditBody()`에서 `_buildSection5()` 제거
+  - `TitleNavigationButton` → `TextActionButton` 교체
+- [x] `dart analyze` 통과
 
 ---
 
