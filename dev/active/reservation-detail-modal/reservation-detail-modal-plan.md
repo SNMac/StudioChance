@@ -1,6 +1,6 @@
 # 예약 확인 모달 구현 계획
 
-Last Updated: 2026-04-01 (설계 변경 반영 — 인라인 편집 모드 전환)
+Last Updated: 2026-04-22 (iOS/Android 스크롤 보존 모두 해결 완료 — 17-E Option A)
 
 ---
 
@@ -135,3 +135,12 @@ lib/presentation/home/widgets/three_day_calendar/
 | TextEditingController 재설정 방식 | `controller.text = ...` 으로 재설정 (new 할당 불필요) |
 | `_isValid` 편집 모드 진입/복귀 시 초기화 | `_resetFields()` 후 `setState` → build에서 재평가 |
 | `showReservationDetailModal` 호출처 누락 | `time_grid.dart` 등 호출처에 `onSaved` 추가 필요 |
+
+---
+
+## 진행 상황 요약 (2026-04-22 기준)
+
+- **Phase 9~16**: 완료. 인라인 편집 모드 전환, Reservation Data Layer, 단위 테스트(26개) 모두 완료.
+- **Phase 17 (iOS)**: ✅ 해결. Stack + Offstage + 독립 ScrollController 방식 (17-C).
+- **Phase 17 (Android)**: ✅ 해결. `DraggableScrollableSheet` 제거 + 고정 90% 높이 `showModalBottomSheet` (17-E Option A).
+  - 플랫폼 공통 Stack+Offstage 구조로 통일됨. snap 기능은 제거됨.

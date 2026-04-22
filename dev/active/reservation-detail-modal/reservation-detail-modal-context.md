@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-20 (Reservation Data Layer 테스트 코드 추가)
+Last Updated: 2026-04-22 (17-E 완료 — Android DraggableScrollableSheet 제거, 플랫폼 공통 Stack+Offstage로 스크롤 보존 해결)
 
 ---
 
@@ -227,6 +227,147 @@ Future<void> showReservationDetailModal(
 ```
 
 호출처인 `time_grid.dart`도 함께 수정 필요.
+
+---
+
+## ✅/🔴 스크롤 위치 보존 — iOS 해결 / Android 미해결
+
+### 증상
+- 읽기 전용 모드에서 스크롤 후 '편집' 버튼 탭 시 스크롤이 맨 위로 초기화됨
+- 반대 방향(편집 → 읽기 전용 복귀)도 동일
+
+### 원인 분석
+`setState`로 `_isEditing`이 바뀌면 섹션 빌드 메서드가 완전히 다른 위젯을 반환하고,
+콘텐츠 높이가 바뀌면서 `ScrollPosition`이 0으로 리셋됨.
+`SingleChildScrollView`의 `ScrollableState`는 재사용되지만, 내용 변경 시 포지션이 초기화되는 것으로 보임.
+정확한 Flutter 내부 원인은 불명확 (iOS `CupertinoSheetRoute` 개입 가능성도 있음).
+
+### 시도한 접근 방법 (모두 실패)
+
+#### 시도 1: 명시적 ScrollController 소유 (효과 없음)
+```dart
+// initState
+_scrollController = widget.scrollController ?? ScrollController();
+// SingleChildScrollView(controller: _scrollController, ...)
+```
+- 이론: 동일 인스턴스를 유지하면 ScrollPosition이 보존될 것
+- 결과: 여전히 0으로 초기화됨
+
+#### 시도 2: postFrameCallback + jumpTo (깜빡임 발생)
+```dart
+void _switchMode(VoidCallback stateChange) {
+  final offset = _scrollController.offset;
+  setState(stateChange);
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _scrollController.jumpTo(offset.clamp(0, maxScrollExtent));
+  });
+}
+```
+- 이론: 프레임 이후 포지션 복원
+- 결과: 포지션은 복원되지만 **1프레임 동안 0 위치가 보여 깜빡임 발생**
+
+#### 시도 3: Opacity(0) + postFrameCallback (배경색 깜빡임)
+```dart
+// _isRestoringScroll = true 동안 Opacity(opacity: 0) 적용
+setState(() { stateChange(); _isRestoringScroll = true; });
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  _scrollController.jumpTo(...);
+  setState(() => _isRestoringScroll = false);
+});
+```
+- 이론: 잘못된 포지션 프레임을 숨김
+- 결과: 스크롤이 0인 프레임은 보이지 않으나 **배경색으로 깜빡임** (방법은 같고 가리는 것만 다름)
+
+#### 시도 4: build()에서 correctPixels 선점 (효과 없음 — 현재 코드 상태)
+```dart
+@override
+Widget build(BuildContext context) {
+  final pending = _pendingScrollOffset;
+  if (pending != null && _scrollController.hasClients) {
+    _scrollController.position.correctPixels(pending);
+    _pendingScrollOffset = null;
+  }
+  // ...
+}
+
+void _switchMode(VoidCallback stateChange) {
+  if (_scrollController.hasClients) _pendingScrollOffset = _scrollController.offset;
+  setState(stateChange);
+}
+```
+- 이론: layout 시작 전에 _pixels를 선점 → 잘못된 프레임 자체가 생성되지 않음
+- 결과: **스크롤 보존 안 됨 (원점)**
+- 분석: `correctPixels`가 build 단계에서 적용되지만, 이후 layout/applyContentDimensions에서 덮어쓰이는 것으로 추정
+
+### 시도 6: IndexedStack (2026-04-22 — 실패)
+
+IndexedStack으로 두 콘텐츠를 항상 트리에 유지했지만 포지션이 여전히 0으로 초기화됨.
+추정 원인: `ModalAppBar`가 모드 전환 시 미세하게 높이가 달라지면 `Expanded > SingleChildScrollView`의
+viewport 높이가 변하고 `applyNewDimensions()` → `goBallistic(0)` 경로로 포지션 초기화될 가능성.
+
+---
+
+### 해결 방법 (2026-04-22 — 17-C: 독립 ScrollController + Stack + Offstage)
+
+**근본 원인**: 6번의 시도 모두 "하나의 ScrollView에서 포지션 보존" 패턴. 이 패턴 자체를 포기.
+
+**해결 전략**: 모드별로 완전히 독립된 `ScrollController`와 `SingleChildScrollView`를 분리.
+- 각 ScrollView가 독립적인 `ScrollPosition`을 유지
+- 전환 전 `_syncScrollPosition()`으로 오프셋 수동 동기화
+- `Offstage(offstage: true)`: layout 유지, paint/hit-test 제외 → 포지션 보존
+
+```dart
+// iOS 전용: Stack + Positioned.fill + Offstage
+Stack(
+  children: [
+    Positioned.fill(child: Offstage(
+      offstage: _isEditing,
+      child: SingleChildScrollView(controller: _readOnlyController, child: _buildReadOnlyBody(...)),
+    )),
+    Positioned.fill(child: Offstage(
+      offstage: !_isEditing,
+      child: SingleChildScrollView(controller: _editController, child: _buildEditBody(...)),
+    )),
+  ],
+)
+
+// 전환 전 오프셋 동기화
+void _syncScrollPosition({required bool toEdit}) {
+  final from = toEdit ? _readOnlyController : _editController;
+  final to = toEdit ? _editController : _readOnlyController;
+  if (from == null || to == null) return;
+  if (!from.hasClients || !to.hasClients) return;
+  if (!from.position.haveDimensions || !to.position.haveDimensions) return;
+  to.jumpTo(from.offset.clamp(0.0, to.position.maxScrollExtent));
+}
+```
+
+- iOS: `_readOnlyController` + `_editController` (모드별 독립)
+- Android: `widget.scrollController` (DraggableScrollableSheet 제공) + IndexedStack (기존 유지)
+
+---
+
+## ✅ Android 스크롤 보존 해결 (17-E Option A — 2026-04-22)
+
+### 해결 방법
+
+`DraggableScrollableSheet`를 완전 제거하고 `showModalBottomSheet`에 `SizedBox(height: 90%)`를 사용.
+`ReservationDetailModal` 자체는 이미 17-D 상태에서 Stack+Offstage 구조로 준비되어 있었으므로
+`showReservationDetailModal` 함수의 Android 경로만 변경.
+
+```dart
+// 변경 후 (Android 경로)
+builder: (ctx) => SizedBox(
+  height: MediaQuery.of(ctx).size.height * 0.9,
+  child: ReservationDetailModal(
+    reservation: reservation,
+    availableStores: availableStores,
+    onSaved: onSaved,
+  ),
+),
+```
+
+**트레이드오프**: snap(60%→100%) 동작 제거됨. 모달은 항상 90% 높이로 열림.
 
 ---
 

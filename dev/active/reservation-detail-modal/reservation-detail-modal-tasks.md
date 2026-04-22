@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-20 (Reservation Data Layer 테스트 코드 추가)
+Last Updated: 2026-04-22 (17-E 완료 — Android DraggableScrollableSheet 제거, 고정 90% 높이로 스크롤 보존 해결)
 
 ---
 
@@ -151,6 +151,61 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
   - writer.user 교체 검증 / currentUid 자동 획득 검증 / repo 위임 검증
 - [x] **16-4**: `flutter test` 실행 — 26개 전체 통과 확인
 - [x] **16-5**: 테스트 파일 커밋 (commit: `test: #5 - 예약 Repository, UseCase 단위 테스트 추가`)
+
+---
+
+---
+
+## Phase 17: 모드 전환 간 스크롤 위치 보존
+
+> **현상**: 읽기↔편집 전환 시 스크롤이 맨 위로 초기화됨
+
+### 실패한 시도 (7가지)
+
+- [x] ~~시도 1: 명시적 ScrollController 소유~~ → 여전히 초기화됨
+- [x] ~~시도 2: postFrameCallback + jumpTo~~ → 1프레임 깜빡임
+- [x] ~~시도 3: Opacity(0) + postFrameCallback~~ → 배경색 깜빡임
+- [x] ~~시도 4: build()에서 correctPixels 선점~~ → 효과 없음
+- [x] ~~**17-A**: ScrollPosition 서브클래스~~ → **실패**
+- [x] ~~**17-B**: IndexedStack~~ → **실패** (이론상 되어야 하나 여전히 초기화됨)
+- [x] ~~**17-C (iOS)**: Stack + Offstage + 독립 컨트롤러~~ → **iOS는 해결됨**
+
+### ✅ 17-C: iOS 해결 (2026-04-22 완료)
+
+- [x] iOS: `_readOnlyController` + `_editController` 두 개의 독립 ScrollController
+- [x] `Stack > [Positioned.fill > Offstage > SingleChildScrollView] x2` 구조
+- [x] `_syncScrollPosition(toEdit:)` — setState() 전 오프셋 수동 동기화
+- [x] '편집' 버튼, `_onCancelPressed()`, `_onComplete()`에서 sync → setState 순서 보장
+- [x] `dart analyze` 통과 확인
+
+### ❌ 17-D: Android — scrollController 파라미터 제거 (2026-04-22 실패)
+
+**시도한 전략**: `scrollController` 파라미터 완전 제거 + iOS와 동일한 Stack+Offstage 구조 통일
+**실패 원인**: `DraggableScrollableSheet`의 컨트롤러를 내부 ScrollView에 연결하지 않으면
+시트가 60% 초기 높이에서 완전히 펼쳐지지 않음.
+`DraggableScrollableSheet`는 내부 ScrollView가 컨트롤러를 사용해야 시트 확장/축소를 조율함.
+
+**현재 코드 상태**: 17-D 변경이 파일에 남아있음 (되돌리지 않고 세션 종료)
+→ **다음 세션 시작 시 먼저 17-D 변경 롤백 필요**
+
+롤백 범위:
+- `ReservationDetailModal`에 `scrollController` 파라미터 복원
+- `initState()`: `widget.scrollController == null`일 때만 컨트롤러 생성
+- `dispose()`: nullable `?.dispose()` 복원
+- `_syncScrollPosition()`: null 체크 복원
+- `_buildScrollArea()`: Android/iOS 분기 복원 (Android: IndexedStack + 외부 컨트롤러)
+- `showReservationDetailModal` Android 경로: `scrollController: controller` 전달 복원
+
+### ✅ 17-E: Android — DraggableScrollableSheet 제거 (2026-04-22 완료)
+
+> 17-D 상태에서 `DraggableScrollableSheet`만 제거하면 됨 — `ReservationDetailModal` 자체는 이미 준비된 상태였음.
+
+- [x] `showReservationDetailModal` Android 경로: `DraggableScrollableSheet` → `SizedBox(height: MediaQuery.of(ctx).size.height * 0.9)`
+- [x] `dart analyze` 통과 (`No issues found!`)
+- [ ] Android 시각적 검증 (다음 기회에 직접 확인 필요)
+
+**트레이드오프 수용**: 시트 snap(60%/100%) 없어짐, 모달이 고정 90% 높이로 열림.
+스크롤 보존 문제는 플랫폼 공통 Stack+Offstage 구조로 해결됨.
 
 ---
 

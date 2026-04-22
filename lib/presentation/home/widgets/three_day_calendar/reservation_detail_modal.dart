@@ -36,7 +36,6 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
     required this.reservation,
     required this.onSaved,
     this.availableStores,
-    this.scrollController,
   });
 
   final Reservation reservation;
@@ -48,9 +47,6 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
   /// null이면 [reservation.storeSummary] 단일 항목으로 fallback.
   /// TODO: 실제 데이터 연결 시 Home Provider에서 전달.
   final List<StoreSummary>? availableStores;
-
-  /// DraggableScrollableSheet에서 전달받는 ScrollController (Android 전용).
-  final ScrollController? scrollController;
 
   @override
   ConsumerState<ReservationDetailModal> createState() =>
@@ -74,6 +70,18 @@ class _ReservationDetailModalState
   bool _isStartPickerOpen = false;
   bool _isEndPickerOpen = false;
 
+  // ── 스크롤 컨트롤러 ──────────────────────────────────────────────────────
+  //
+  // 플랫폼 공통: 모드별 독립 ScrollController + Stack + Offstage
+  //   - 두 ScrollView가 항상 트리에 존재 → 각자의 ScrollPosition 보존
+  //   - Offstage(offstage: true): layout은 유지, paint/hit-test 제외
+  //   - 전환 전 _syncScrollPosition()으로 오프셋 수동 동기화
+  //
+  // Android(DraggableScrollableSheet)도 시트 컨트롤러를 모달에 전달하지 않음.
+  // 시트 snap 동작은 ModalGrabber 드래그로 유지, 내부 스크롤은 독립 컨트롤러 사용.
+  late final ScrollController _readOnlyController;
+  late final ScrollController _editController;
+
   // ── 텍스트 컨트롤러 ──────────────────────────────────────────────────────
   late final TextEditingController _nameController;
   late final TextEditingController _headCountController;
@@ -96,11 +104,15 @@ class _ReservationDetailModalState
   @override
   void initState() {
     super.initState();
+    _readOnlyController = ScrollController();
+    _editController = ScrollController();
     _initFields(widget.reservation);
   }
 
   @override
   void dispose() {
+    _readOnlyController.dispose();
+    _editController.dispose();
     _nameController.dispose();
     _headCountController.dispose();
     _phoneController.dispose();
@@ -155,12 +167,25 @@ class _ReservationDetailModalState
         r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '';
   }
 
+  // ── 스크롤 위치 동기화 (iOS 전용) ─────────────────────────────────────────
+
+  /// 모드 전환 전 비활성 뷰의 오프셋을 활성 뷰에 맞춰 동기화한다.
+  /// setState() 호출 전에 실행해야 한다.
+  void _syncScrollPosition({required bool toEdit}) {
+    final from = toEdit ? _readOnlyController : _editController;
+    final to = toEdit ? _editController : _readOnlyController;
+    if (!from.hasClients || !to.hasClients) return;
+    if (!from.position.haveDimensions || !to.position.haveDimensions) return;
+    to.jumpTo(from.offset.clamp(0.0, to.position.maxScrollExtent));
+  }
+
   // ── 액션 ─────────────────────────────────────────────────────────────────
 
   void _onCancelPressed() {
     if (_isEditing) {
       // 편집 중 취소 → 변경 내용 폐기 + 읽기 전용 복귀
       _resetFields();
+      _syncScrollPosition(toEdit: false);
       setState(() {
         _isEditing = false;
         _isStartPickerOpen = false;
@@ -193,6 +218,7 @@ class _ReservationDetailModalState
       totalPrice: calculatedPrice + priceAdjustment,
     );
     widget.onSaved(updated);
+    _syncScrollPosition(toEdit: false);
     setState(() {
       _isEditing = false;
       _isStartPickerOpen = false;
@@ -261,37 +287,95 @@ class _ReservationDetailModalState
               else
                 AppBarActionButton(
                   label: '편집',
-                  onPressed: () => setState(() => _isEditing = true),
+                  onPressed: () {
+                    _syncScrollPosition(toEdit: true);
+                    setState(() => _isEditing = true);
+                  },
                 ),
             ],
           ),
-          Expanded(
+          Expanded(child: _buildScrollArea(textTheme)),
+        ],
+      ),
+    );
+  }
+
+  // ── 스크롤 영역 ───────────────────────────────────────────────────────────
+
+  // 플랫폼 공통: 독립 ScrollView 두 개 + Stack + Offstage
+  // Offstage(offstage: true)는 layout을 유지하므로 ScrollPosition이 보존된다.
+  Widget _buildScrollArea(TextTheme textTheme) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Offstage(
+            offstage: _isEditing,
             child: SingleChildScrollView(
-              controller: widget.scrollController,
-              keyboardDismissBehavior: _isEditing
-                  ? ScrollViewKeyboardDismissBehavior.onDrag
-                  : ScrollViewKeyboardDismissBehavior.manual,
-              child: SafeAreaWithPadding(
-                top: false,
-                padding: const EdgeInsetsDirectional.fromSTEB(
-                  horizontalPadding,
-                  16,
-                  horizontalPadding,
-                  32,
-                ),
-                child: Column(
-                  spacing: 20,
-                  children: [
-                    _buildSection1(textTheme),
-                    _buildSection2(),
-                    _buildSection3(),
-                    _buildSection4(textTheme),
-                    _buildSection5(textTheme),
-                  ],
-                ),
-              ),
+              controller: _readOnlyController,
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.manual,
+              child: _buildReadOnlyBody(textTheme),
             ),
           ),
+        ),
+        Positioned.fill(
+          child: Offstage(
+            offstage: !_isEditing,
+            child: SingleChildScrollView(
+              controller: _editController,
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              child: _buildEditBody(textTheme),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── 읽기 전용 본문 ────────────────────────────────────────────────────────
+
+  Widget _buildReadOnlyBody(TextTheme textTheme) {
+    return SafeAreaWithPadding(
+      top: false,
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        horizontalPadding,
+        16,
+        horizontalPadding,
+        32,
+      ),
+      child: Column(
+        spacing: 20,
+        children: [
+          _buildSection1ReadOnly(),
+          _buildSection2ReadOnly(),
+          _buildSection3ReadOnly(),
+          _buildSection4ReadOnly(),
+          _buildSection5(textTheme),
+        ],
+      ),
+    );
+  }
+
+  // ── 편집 본문 ─────────────────────────────────────────────────────────────
+
+  Widget _buildEditBody(TextTheme textTheme) {
+    return SafeAreaWithPadding(
+      top: false,
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        horizontalPadding,
+        16,
+        horizontalPadding,
+        32,
+      ),
+      child: Column(
+        spacing: 20,
+        children: [
+          _buildSection1Edit(),
+          _buildSection2Edit(),
+          _buildSection3Edit(),
+          _buildSection4Edit(textTheme),
+          _buildSection5(textTheme),
         ],
       ),
     );
@@ -299,46 +383,7 @@ class _ReservationDetailModalState
 
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
-  Widget _buildSection1(TextTheme textTheme) {
-    if (_isEditing) {
-      return GroupedFormContainer(
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: horizontalPadding,
-            ),
-            child: TitlePopupButton<StoreSummary>(
-              title: '예약 점포',
-              selectedValue: _storeSummary,
-              items: _availableStores,
-              itemLabelBuilder: (s) => s.name,
-              itemLeadingBuilder: (s) => Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Color(s.color.foregroundColorValue),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              onSelected: (s) => setState(() => _storeSummary = s),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: horizontalPadding,
-            ),
-            child: TitlePopupButton<ReservationStatus>(
-              title: '예약 상태',
-              selectedValue: _status,
-              items: ReservationStatus.values,
-              itemLabelBuilder: (s) => s.displayName,
-              onSelected: (s) => setState(() => _status = s),
-            ),
-          ),
-        ],
-      );
-    }
-
+  Widget _buildSection1ReadOnly() {
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
@@ -353,43 +398,48 @@ class _ReservationDetailModalState
     );
   }
 
+  Widget _buildSection1Edit() {
+    return GroupedFormContainer(
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: horizontalPadding,
+          ),
+          child: TitlePopupButton<StoreSummary>(
+            title: '예약 점포',
+            selectedValue: _storeSummary,
+            items: _availableStores,
+            itemLabelBuilder: (s) => s.name,
+            itemLeadingBuilder: (s) => Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: Color(s.color.foregroundColorValue),
+                shape: BoxShape.circle,
+              ),
+            ),
+            onSelected: (s) => setState(() => _storeSummary = s),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: horizontalPadding,
+          ),
+          child: TitlePopupButton<ReservationStatus>(
+            title: '예약 상태',
+            selectedValue: _status,
+            items: ReservationStatus.values,
+            itemLabelBuilder: (s) => s.displayName,
+            onSelected: (s) => setState(() => _status = s),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ── 섹션 2: 예약자 정보 ──────────────────────────────────────────────────
 
-  Widget _buildSection2() {
-    if (_isEditing) {
-      return GroupedFormContainer(
-        children: [
-          TitleTextField(
-            title: '예약자명',
-            controller: _nameController,
-            onChanged: (_) => setState(() {}),
-            keyboardType: TextInputType.name,
-            autocorrect: false,
-          ),
-          TitleTextField(
-            title: '인원',
-            controller: _headCountController,
-            onChanged: (_) => setState(() {}),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          TitleTextField(
-            title: '연락처',
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-          ),
-          MemoTextField(
-            placeholder: '메모',
-            controller: _memoController,
-            maxLength: maxMemoCharCount,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(maxMemoCharCount),
-            ],
-          ),
-        ],
-      );
-    }
-
+  Widget _buildSection2ReadOnly() {
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
@@ -409,49 +459,43 @@ class _ReservationDetailModalState
     );
   }
 
+  Widget _buildSection2Edit() {
+    return GroupedFormContainer(
+      children: [
+        TitleTextField(
+          title: '예약자명',
+          controller: _nameController,
+          onChanged: (_) => setState(() {}),
+          keyboardType: TextInputType.name,
+          autocorrect: false,
+        ),
+        TitleTextField(
+          title: '인원',
+          controller: _headCountController,
+          onChanged: (_) => setState(() {}),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        TitleTextField(
+          title: '연락처',
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+        ),
+        MemoTextField(
+          placeholder: '메모',
+          controller: _memoController,
+          maxLength: maxMemoCharCount,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(maxMemoCharCount),
+          ],
+        ),
+      ],
+    );
+  }
+
   // ── 섹션 3: 일시 정보 ────────────────────────────────────────────────────
 
-  Widget _buildSection3() {
-    if (_isEditing) {
-      return GroupedFormContainer(
-        children: [
-          TitleSwitchButton(
-            title: '하루종일',
-            value: _isAllDay,
-            onChanged: _onAllDayChanged,
-          ),
-          TitleDateTimeButton(
-            title: '입실 일시',
-            content: _formatDateTime(_startTime, dateOnly: _isAllDay),
-            isOpen: _isStartPickerOpen,
-            onPressed: () => setState(() {
-              _isStartPickerOpen = !_isStartPickerOpen;
-              if (_isStartPickerOpen) _isEndPickerOpen = false;
-            }),
-            mode: _isAllDay
-                ? CupertinoDatePickerMode.date
-                : CupertinoDatePickerMode.dateAndTime,
-            initialDateTime: _startTime,
-            onDateTimeChanged: (dt) => setState(() => _startTime = dt),
-          ),
-          TitleDateTimeButton(
-            title: '퇴실 일시',
-            content: _formatDateTime(_endTime, dateOnly: _isAllDay),
-            isOpen: _isEndPickerOpen,
-            onPressed: () => setState(() {
-              _isEndPickerOpen = !_isEndPickerOpen;
-              if (_isEndPickerOpen) _isStartPickerOpen = false;
-            }),
-            mode: _isAllDay
-                ? CupertinoDatePickerMode.date
-                : CupertinoDatePickerMode.dateAndTime,
-            initialDateTime: _endTime,
-            onDateTimeChanged: (dt) => setState(() => _endTime = dt),
-          ),
-        ],
-      );
-    }
-
+  Widget _buildSection3ReadOnly() {
     return GroupedFormContainer(
       children: [
         TitleSwitchButton(
@@ -477,66 +521,49 @@ class _ReservationDetailModalState
     );
   }
 
+  Widget _buildSection3Edit() {
+    return GroupedFormContainer(
+      children: [
+        TitleSwitchButton(
+          title: '하루종일',
+          value: _isAllDay,
+          onChanged: _onAllDayChanged,
+        ),
+        TitleDateTimeButton(
+          title: '입실 일시',
+          content: _formatDateTime(_startTime, dateOnly: _isAllDay),
+          isOpen: _isStartPickerOpen,
+          onPressed: () => setState(() {
+            _isStartPickerOpen = !_isStartPickerOpen;
+            if (_isStartPickerOpen) _isEndPickerOpen = false;
+          }),
+          mode: _isAllDay
+              ? CupertinoDatePickerMode.date
+              : CupertinoDatePickerMode.dateAndTime,
+          initialDateTime: _startTime,
+          onDateTimeChanged: (dt) => setState(() => _startTime = dt),
+        ),
+        TitleDateTimeButton(
+          title: '퇴실 일시',
+          content: _formatDateTime(_endTime, dateOnly: _isAllDay),
+          isOpen: _isEndPickerOpen,
+          onPressed: () => setState(() {
+            _isEndPickerOpen = !_isEndPickerOpen;
+            if (_isEndPickerOpen) _isStartPickerOpen = false;
+          }),
+          mode: _isAllDay
+              ? CupertinoDatePickerMode.date
+              : CupertinoDatePickerMode.dateAndTime,
+          initialDateTime: _endTime,
+          onDateTimeChanged: (dt) => setState(() => _endTime = dt),
+        ),
+      ],
+    );
+  }
+
   // ── 섹션 4: 결제 정보 ────────────────────────────────────────────────────
 
-  Widget _buildSection4(TextTheme textTheme) {
-    if (_isEditing) {
-      return GroupedFormContainer(
-        footer: Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: horizontalPadding,
-            top: 8,
-          ),
-          child: Text(
-            '할인인 경우 -[값]을 입력해주세요 (예: -2000)',
-            style: textTheme.labelMedium?.copyWith(
-              color: context.secondaryLabel,
-            ),
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: horizontalPadding,
-            ),
-            child: TitlePopupButton<ReservationPlatform>(
-              title: '예약 플랫폼',
-              selectedValue: _platform,
-              items: ReservationPlatform.values,
-              itemLabelBuilder: (p) => p.displayName,
-              onSelected: (p) => setState(() => _platform = p),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: horizontalPadding,
-            ),
-            child: TitlePopupButton<PaymentMethod>(
-              title: '결제 방식',
-              selectedValue: _paymentMethod,
-              items: PaymentMethod.values,
-              itemLabelBuilder: (m) => m.displayName,
-              onSelected: (m) => setState(() => _paymentMethod = m),
-            ),
-          ),
-          TitleTextField(
-            title: '요금',
-            controller: _priceController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          TitleTextField(
-            title: '추가 요금/할인',
-            controller: _adjustmentController,
-            keyboardType: const TextInputType.numberWithOptions(signed: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
-            ],
-          ),
-        ],
-      );
-    }
-
+  Widget _buildSection4ReadOnly() {
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
@@ -559,7 +586,64 @@ class _ReservationDetailModalState
     );
   }
 
-  // ── 섹션 5: 안내문 ────────────────────────────────────────────────────────
+  Widget _buildSection4Edit(TextTheme textTheme) {
+    return GroupedFormContainer(
+      footer: Padding(
+        padding: const EdgeInsetsDirectional.only(
+          start: horizontalPadding,
+          top: 8,
+        ),
+        child: Text(
+          '할인인 경우 -[값]을 입력해주세요 (예: -2000)',
+          style: textTheme.labelMedium?.copyWith(
+            color: context.secondaryLabel,
+          ),
+        ),
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: horizontalPadding,
+          ),
+          child: TitlePopupButton<ReservationPlatform>(
+            title: '예약 플랫폼',
+            selectedValue: _platform,
+            items: ReservationPlatform.values,
+            itemLabelBuilder: (p) => p.displayName,
+            onSelected: (p) => setState(() => _platform = p),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: horizontalPadding,
+          ),
+          child: TitlePopupButton<PaymentMethod>(
+            title: '결제 방식',
+            selectedValue: _paymentMethod,
+            items: PaymentMethod.values,
+            itemLabelBuilder: (m) => m.displayName,
+            onSelected: (m) => setState(() => _paymentMethod = m),
+          ),
+        ),
+        TitleTextField(
+          title: '요금',
+          controller: _priceController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        TitleTextField(
+          title: '추가 요금/할인',
+          controller: _adjustmentController,
+          keyboardType: const TextInputType.numberWithOptions(signed: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ── 섹션 5: 안내문 (읽기/편집 공통) ─────────────────────────────────────
 
   Widget _buildSection5(TextTheme textTheme) {
     // TODO: 실제 n번째 계산 로직 연결 (현재 1 하드코딩)
@@ -655,6 +739,8 @@ Future<void> showReservationDetailModal(
       ),
     );
   }
+  // Android: DraggableScrollableSheet로 snap 동작 유지.
+  // 시트 컨트롤러는 모달에 전달하지 않음 — 모달 내부가 독립 ScrollController로 스크롤 관리.
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -666,18 +752,12 @@ Future<void> showReservationDetailModal(
         top: Radius.circular(modalTopCornerRadius),
       ),
     ),
-    builder: (_) => DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.3,
-      maxChildSize: 1.0,
-      expand: false,
-      snap: true,
-      snapSizes: const [0.6, 1.0],
-      builder: (_, controller) => ReservationDetailModal(
+    builder: (ctx) => SizedBox(
+      height: MediaQuery.of(ctx).size.height * 0.9,
+      child: ReservationDetailModal(
         reservation: reservation,
         availableStores: availableStores,
         onSaved: onSaved,
-        scrollController: controller,
       ),
     ),
   );
