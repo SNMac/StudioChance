@@ -384,11 +384,20 @@ class _ReservationDetailModalState
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection1ReadOnly() {
+    final store = widget.reservation.storeSummary;
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
           title: '예약 점포',
-          content: widget.reservation.storeSummary.name,
+          content: store.name,
+          leading: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: Color(store.color.foregroundColorValue),
+              shape: BoxShape.circle,
+            ),
+          ),
         ),
         TitleTextLabel(
           title: '예약 상태',
