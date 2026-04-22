@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-22 (17-E 완료 — Android DraggableScrollableSheet 제거, 플랫폼 공통 Stack+Offstage로 스크롤 보존 해결)
+Last Updated: 2026-04-22 (17-E 완료, Android scroll jank 실기기 검증 대기)
 
 ---
 
@@ -368,6 +368,38 @@ builder: (ctx) => SizedBox(
 ```
 
 **트레이드오프**: snap(60%→100%) 동작 제거됨. 모달은 항상 90% 높이로 열림.
+
+---
+
+## ⚠️ Android scroll jank — 실기기 검증 대기 (17-F)
+
+### 관찰 (2026-04-22 세션)
+
+Android 시뮬레이터에서 모달 내 스크롤 시 프레임 드랍 관찰됨. iOS 시뮬레이터에서는 동일 현상 없음.
+
+### 원인 가설
+
+1. **시뮬레이터 한계** (가능성 높음): Android 에뮬레이터는 GPU 렌더링이 에뮬레이션되어 실기기보다 훨씬 느림. Stack+Offstage의 이중 layout 비용이 시뮬레이터에서만 두드러질 수 있음.
+2. **showModalBottomSheet 제스처 충돌** (실기기에서도 발생 시): `isScrollControlled: true`인 모달의 drag-to-dismiss 제스처와 내부 ScrollView 제스처가 충돌할 수 있음.
+
+### 현재 조치
+
+세션 중 두 가지 수정 시도 후 원래 코드(17-E)로 복원:
+- 시도 1 (단일 ScrollView): scroll jank 해결되나 scroll 위치 보존 깨짐 → 롤백
+- 시도 2 (enableDrag: false): 이론적으로 제스처 충돌 해결 → 복잡성 대비 효과 불확실 → 롤백
+
+### 실기기에서 jank 재현 시 적용할 수정
+
+```dart
+// showReservationDetailModal Android 경로에 enableDrag: false 추가
+return showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  enableDrag: false,  // ← 추가
+  ...
+);
+```
+- `enableDrag: false` 시 닫기 방법: AppBar '닫기' 버튼, barrier 탭, 백버튼 (drag-to-dismiss만 제거)
 
 ---
 

@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-22 (17-E 완료 — Android DraggableScrollableSheet 제거, 고정 90% 높이로 스크롤 보존 해결)
+Last Updated: 2026-04-22 (17-E 완료 — Android DraggableScrollableSheet 제거, Stack+Offstage 통일. Android scroll jank 실기기 검증 필요)
 
 ---
 
@@ -202,10 +202,21 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 
 - [x] `showReservationDetailModal` Android 경로: `DraggableScrollableSheet` → `SizedBox(height: MediaQuery.of(ctx).size.height * 0.9)`
 - [x] `dart analyze` 통과 (`No issues found!`)
-- [ ] Android 시각적 검증 (다음 기회에 직접 확인 필요)
+- [ ] **Android 실기기 검증 필요** — 시뮬레이터에서 scroll jank 관찰됨, 실기기에서 재현 여부 확인 필요
 
 **트레이드오프 수용**: 시트 snap(60%/100%) 없어짐, 모달이 고정 90% 높이로 열림.
 스크롤 보존 문제는 플랫폼 공통 Stack+Offstage 구조로 해결됨.
+
+### ⚠️ 17-F: Android scroll jank — 실기기 검증 대기 (2026-04-22)
+
+시뮬레이터에서 scroll jank 관찰됨. 실기기(Android 기기) 검증 전까지 현재 코드(17-E) 유지.
+
+**현상**: Android 시뮬레이터에서 모달 내 스크롤 시 프레임 드랍
+**가설**: 시뮬레이터 렌더링 한계일 가능성 (iOS는 해당 없음)
+**실기기 검증 후 조치**:
+- jank 없으면 → 17-E 현 상태 유지, 작업 완료
+- jank 있으면 → `showModalBottomSheet`에 `enableDrag: false` 추가 (gesture 충돌 방지)
+  - 닫기: AppBar 버튼, barrier 탭, 백버튼 모두 동작함 (drag-to-dismiss만 제거)
 
 ---
 
