@@ -18,7 +18,7 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_date_time_button.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_popup_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -375,7 +375,6 @@ class _ReservationDetailModalState
           _buildSection2Edit(),
           _buildSection3Edit(),
           _buildSection4Edit(textTheme),
-          _buildSection5(textTheme),
         ],
       ),
     );
@@ -652,7 +651,7 @@ class _ReservationDetailModalState
     );
   }
 
-  // ── 섹션 5: 안내문 (읽기/편집 공통) ─────────────────────────────────────
+  // ── 섹션 5: 안내문 (읽기 전용 전용) ──────────────────────────────────────
 
   Widget _buildSection5(TextTheme textTheme) {
     // TODO: 실제 n번째 계산 로직 연결 (현재 1 하드코딩)
@@ -672,13 +671,13 @@ class _ReservationDetailModalState
         ),
       ),
       children: [
-        TitleNavigationButton(
+        TextActionButton(
           title: '입금 안내문',
           onPressed: () {
             // TODO: 입금 안내문 화면 연결
           },
         ),
-        TitleNavigationButton(
+        TextActionButton(
           title: '확정 안내문',
           onPressed: () {
             // TODO: 확정 안내문 화면 연결
