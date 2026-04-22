@@ -1,18 +1,53 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-04-01 (Phase 21 완료 — ModalAppBar 컴포넌트화 + 하단 구분선 제거)
+Last Updated: 2026-04-22 (Phase 23 완료 — AllDayCell 탭 인터랙션 추가)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~21 구현 완료.**
+**Phase 1~23 구현 완료.**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
-> Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료**
+> Phase 9: 셀 탭 인터랙션 (하이라이트 + 모달) — **완료** (TimeGrid 전용, AllDayCell 빠짐)
 > Phase 10: 모달 UI 버그 수정 — **완료**
 > Phase 11: StoreColor 통합 + 리스트 모달 배경색 — **완료**
+> Phase 23: AllDayCell 탭 인터랙션 추가 — **완료**
+
+---
+
+## Phase 23: AllDayCell 탭 인터랙션 추가 (2026-04-22)
+
+### 문제
+
+Phase 9에서 `TimeGrid`에만 탭 인터랙션을 구현했고 `AllDayCell`은 누락됨.
+종일 이벤트 셀을 눌러도 `GestureDetector`가 없어 `reservation_detail_modal`이 표시되지 않았음.
+
+### 원인 분석
+
+- `AllDayCell`은 `StatelessWidget`으로 `ReservationCell`을 렌더링만 함
+- `reservations` 파라미터(상세 모달에 전달할 `Map<String, Reservation>`) 없음
+- `GestureDetector` 없음
+- `isHighlighted` 상태 관리 없음
+
+### 해결
+
+**`all_day_row.dart`**:
+- `AllDayCell` → `ConsumerStatefulWidget` 전환
+- `reservations: Map<String, Reservation>` 파라미터 추가
+- `_highlightedId` 로컬 상태 + `_onCellTap()` 메서드 추가
+- `ReservationCell`을 `GestureDetector(onTap: _onCellTap)` 으로 감쌈
+- `isHighlighted: _highlightedId == event.summary.id` 전달
+
+**`three_day_calendar.dart`**:
+- `AllDayCell(reservations: _mockReservations)` 파라미터 추가
+
+### 설계 메모
+
+- 종일 이벤트는 `isContinuation` / `continuesNextDay` 케이스 없음 → TimeGrid보다 단순
+- N≥4 그룹 탭 (목록 모달) 미구현 — 종일 행 높이가 고정이라 overflow 처리가 필요한 상황 자체가 드물고 TODO 주석으로 처리됨
+- `ConsumerStatefulWidget`을 사용하나 실제로 ref는 사용하지 않음. 향후 실데이터 연결 시 provider watch 추가 예상.
 
 ---
 
@@ -569,7 +604,7 @@ snapSizes: const [0.5, 1.0],  // 50%, 100% 두 단계로 스냅
 | `lib/presentation/providers/home_calendar_controller.dart`                       | ScrollToTimeTrigger, PendingHighlightId provider 추가, selectDateFromContinuation() 메서드 추가                                     |
 | `lib/presentation/home/widgets/three_day_calendar/reservation_cell.dart`         | ReservationDisplayData 재구성(ReservationSummary 내장), ReservationCellColorTheme/셀 ReservationStatus 제거, isHighlighted 파라미터 추가   |
 | `lib/presentation/home/widgets/three_day_calendar/overflow_cell.dart`            | **삭제** (Phase 9에서 제거)                                                                                                        |
-| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart`              | ReservationDisplayData 필드 접근 수정                                                                                              |
+| `lib/presentation/home/widgets/three_day_calendar/all_day_row.dart`              | ConsumerStatefulWidget 전환, reservations 파라미터 추가, GestureDetector + _onCellTap + _highlightedId 추가 (Phase 23)              |
 | `lib/presentation/home/widgets/three_day_calendar/time_grid.dart`                | ConsumerStatefulWidget 전환, _PositionedItem 변경, stagger 임계값 제거, 탭 핸들러 3종, reservations 파라미터, pendingHighlightIdProvider watch |
 | `lib/presentation/home/widgets/three_day_calendar/three_day_calendar.dart`       | ReservationDisplayData 생성 로직 수정, mock Reservation 맵, scrollToTimeTrigger listen                                              |
 | `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | **신규** — 하프 시트 플레이스홀더, iOS `showCupertinoSheet` / Android `showModalBottomSheet` + 커스텀 Grabber + 모달 상수 적용                    |

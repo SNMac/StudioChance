@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-04-01 (Phase 22 완료 — 리스트 모달 chevron 크기 수정)
+Last Updated: 2026-04-22 (Phase 23 완료 — AllDayCell 탭 인터랙션 추가)
 
 ---
 
@@ -431,7 +431,24 @@ Last Updated: 2026-04-01 (Phase 22 완료 — 리스트 모달 chevron 크기 �
 
 ---
 
+## Phase 23: AllDayCell 탭 인터랙션 추가 ✅
+
+**파일:** `all_day_row.dart`, `three_day_calendar.dart`
+
+- [x] **23-1**: `AllDayCell` → `ConsumerStatefulWidget`으로 전환
+  - `reservations: Map<String, Reservation>` 파라미터 추가
+  - `_highlightedId` 로컬 상태 추가
+  - `_onCellTap()` 메서드 추가: 하이라이트 + `showReservationDetailModal` 호출 + 상태 초기화
+- [x] **23-2**: 각 `ReservationCell`을 `GestureDetector(onTap: _onCellTap)`으로 감쌈
+  - `isHighlighted: _highlightedId == event.summary.id` 전달
+- [x] **23-3**: `three_day_calendar.dart` — `AllDayCell`에 `reservations: _mockReservations` 전달
+
+> isContinuation 케이스 없음 (종일 이벤트는 날짜 분할 없음), 다중 이벤트 겹침 처리는 TODO 유지.
+
+---
+
 ## 스코프 아웃 (추후)
 
 - 실제 데이터 연결 — Reservation 도메인 엔티티 + Riverpod provider
 - 빌드 러너 불필요 — 코드 생성 없음 (freezed/riverpod 미사용)
+- AllDayCell 다중 이벤트 겹침 레이아웃 처리 (현재 단순 Stack 겹침)

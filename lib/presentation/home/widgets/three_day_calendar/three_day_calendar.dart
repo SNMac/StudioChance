@@ -829,6 +829,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                           // 종일 이벤트 셀
                           AllDayCell(
                             events: _eventsForDate(date, allDay: true),
+                            reservations: _mockReservations,
                           ),
                           Container(
                               height: calendarDividerThickness,
