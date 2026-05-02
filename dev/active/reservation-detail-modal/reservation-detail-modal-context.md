@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-04-22 (17-E 완료, Android scroll jank 실기기 검증 대기)
+Last Updated: 2026-05-02 (Phase 20 완료 — 종일 이벤트 입/퇴실 일 표시 수정, _onAllDayChanged 버그 수정, 편집 picker 수정. 전체 Phase 1~20 완료.)
 
 ---
 
@@ -403,14 +403,217 @@ return showModalBottomSheet<void>(
 
 ---
 
+## ✅ Phase 20: 종일 이벤트 일시 표시 수정 (2026-05-02 완료)
+
+> **요청 배경 (2026-04-22)**: 종일 이벤트에서 "퇴실 일시"가 이벤트 다음날로 표시되는 문제.
+> 설계 결정: 두 행(입실/퇴실) 구조는 유지. 대신 타이틀을 "입실 일"/"퇴실 일"로 변경하고,
+> endTime을 표시할 때 -1일 보정하여 하루짜리 종일 이벤트이면 입실 일 = 퇴실 일이 되도록 수정.
+
+### 원인 분석: endTime = startTime + 1일 관례
+
+목업 데이터(`three_day_calendar.dart` L74):
+```dart
+isAllDay: true,
+startTime: today,            // 2026.04.22 00:00
+endTime: today.add(const Duration(days: 1)),  // 2026.04.23 00:00 ← 다음날!
+```
+종일 이벤트는 iCal 관례상 `endTime`을 다음날 자정(exclusive)으로 저장.
+`_formatDateTime(endTime, dateOnly: true)`는 다음날 날짜를 표시하므로 퇴실이 다음날로 보임.
+
+### 읽기 전용 변경 (`_buildSection3ReadOnly()`)
+
+**현재**:
+```dart
+TitleTextLabel(title: '입실 일시', content: _formatDateTime(startTime, dateOnly: isAllDay)),
+TitleTextLabel(title: '퇴실 일시', content: _formatDateTime(endTime, dateOnly: isAllDay)),
+```
+
+**변경 후** (isAllDay=true일 때):
+```dart
+// 타이틀: '입실 일시' → '입실 일', '퇴실 일시' → '퇴실 일'
+// endTime은 exclusive이므로 표시 시 -1일 보정
+final displayEnd = isAllDay
+    ? endTime.subtract(const Duration(days: 1))
+    : endTime;
+TitleTextLabel(title: '입실 일', content: _formatDateTime(startTime, dateOnly: true)),
+TitleTextLabel(title: '퇴실 일', content: _formatDateTime(displayEnd, dateOnly: true)),
+```
+결과: 하루짜리 종일 이벤트 → 입실 일 = 퇴실 일 = `2026. 04. 22. (수)`.
+멀티일 이벤트 → 입실 일 ≠ 퇴실 일 (예: 22일 ~ 24일).
+
+> **데이터는 변경 없음**: Firestore에 저장된 `endTime`은 그대로 next-day midnight 유지.
+> 표시 시에만 -1일 보정.
+
+### Side Effect 분석
+
+#### 1. `_onAllDayChanged(true)` 버그 — 수정 필요
+**현재 코드**:
+```dart
+_endTime = DateTime(_endTime.year, _endTime.month, _endTime.day, 23, 59);
+```
+**문제**: 종일 이벤트의 `endTime = day+1 00:00`인 상태에서 toggle OFF → ON 재적용 시
+`_endTime.day`가 이미 `startDay+1`이므로 `_endTime = startDay+1 23:59`가 됨.
+저장하면 1일짜리 이벤트가 2일짜리로 변경되는 버그.
+
+**수정 방향**:
+```dart
+// isAllDay ON 시 endTime을 startTime 기준으로 맞춤 (iCal 관례: 다음날 자정)
+_endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
+    .add(const Duration(days: 1));
+```
+또는 하루종일 ON 시 항상 startDay의 23:59로 통일하고 저장 시 변환하는 방식도 가능.
+
+#### 2. 편집 모드 퇴실 일 DatePicker — 수정 필요
+`_buildSection3Edit()`의 `mode`는 이미 `_isAllDay ? CupertinoDatePickerMode.date : CupertinoDatePickerMode.dateAndTime`으로 **날짜 전용 피커 모드는 올바름**.
+그러나 `initialDateTime: _endTime`이 next-day 자정 → picker가 다음날 날짜를 초기값으로 표시 ✗
+
+수정 방향:
+- `initialDateTime`: `_isAllDay ? _endTime.subtract(Duration(days:1)) : _endTime`
+- `content`: 동일하게 -1일 보정 후 포맷
+- `onDateTimeChanged`: 선택 날짜 + 1일 저장 (iCal 관례 유지)
+  ```dart
+  onDateTimeChanged: (dt) => setState(() {
+    _endTime = _isAllDay ? dt.add(const Duration(days: 1)) : dt;
+  }),
+  ```
+
+#### 3. 캘린더 날짜 배치 — 영향 없음
+`AllDayCell`이 `isAllDay` 플래그로 분기하므로 `endTime` 값에 의존하지 않음.
+`getReservationsByDateRange` 쿼리는 Firestore 서버 사이드에서 처리 — 별도 확인 필요.
+
+#### 4. `_isValid` 체크 — 영향 없음
+`_isAllDay || startTime.isBefore(endTime)` — all-day면 시간 체크 bypass.
+
+---
+
 ## 미결/후속 작업
 
 | 항목 | 내용 |
 |------|------|
+| ~~**Phase 20**~~ | ~~읽기 전용 종일 이벤트 입/퇴실 일시 통합 + `_onAllDayChanged` 버그 수정~~ → 2026-05-02 완료 ✅ |
+| **🔍 iOS 모달 방식 전환 검토** | `showCupertinoSheet` → `showModalBottomSheet` 전환 여부 결정 필요 (아래 상세) |
+| Android scroll jank (17-F) | 실기기 검증 대기. 재현 시 `enableDrag: false` 추가 |
 | `n번째` 계산 | 실제 데이터 연결 전까지 `1` 하드코딩 유지 |
-| 입금/확정 안내문 | `TitleNavigationButton.onPressed` TODO 유지 |
+| 입금/확정 안내문 | `TextActionButton.onPressed` TODO 유지 |
 | `onSaved` 실제 연결 | 예약 저장 Use Case + Repository 구현 후 연결 |
 | `availableStores` 공급 | Home Provider에서 사용자 가입 점포 목록 fetch 후 전달 |
 | 숫자 콤마 포맷 | `calculatedPrice.toString()` → `"50,000"` style (스코프 아웃) |
 | `_formatDateTime` 공통화 | 현재 편집/확인 모달 각각 private 선언 (스코프 아웃) |
 | ~~`ReservationEditModal` 삭제~~ | 2026-04-19 삭제 완료 ✅ |
+
+---
+
+## 🔍 미결 결정: iOS 모달 방식 전환 검토 (2026-05-02)
+
+### 배경
+
+현재 `showReservationDetailModal` iOS 경로는 `showCupertinoSheet`를 사용한다.
+Android는 Phase 17-E에서 `DraggableScrollableSheet` 제거 후 `showModalBottomSheet + SizedBox(height: 0.9)`로 통일됨.
+
+**이슈**: `showCupertinoSheet`는 iOS 네이티브 시트 동작(전체 높이, 스택 가능)을 제공하지만
+높이를 자유롭게 조정하기 어렵다. `showModalBottomSheet`로 전환하면 Android와 동일하게
+`SizedBox(height: ...)` 비율을 명시적으로 제어할 수 있다.
+
+### 현재 상태 (iOS)
+
+```dart
+// showReservationDetailModal iOS 경로
+return showCupertinoSheet<void>(
+  context: context,
+  builder: (_) => ReservationDetailModal(...),
+);
+```
+
+- `showCupertinoSheet`: Flutter 내장 함수, iOS 스타일 시트 (상단 모서리 둥글기, 반투명 이전 화면)
+- 높이: 전체 화면(safe area 제외) 고정, 개발자가 지정 불가
+- 장점: iOS 네이티브 느낌, 여러 시트 스택 가능
+- 단점: 높이 고정, 모달 콘텐츠가 짧아도 전체 화면 점유
+
+### 전환 시 변경 방향 (`showModalBottomSheet` 통일)
+
+```dart
+// iOS 경로도 Android와 동일하게 변경
+return showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  barrierColor: modalBarrierColor,
+  clipBehavior: Clip.antiAlias,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(modalTopCornerRadius)),
+  ),
+  builder: (ctx) => SizedBox(
+    height: MediaQuery.of(ctx).size.height * 0.9,  // 또는 원하는 비율
+    child: ReservationDetailModal(...),
+  ),
+);
+```
+
+- `Platform.isIOS` 분기 완전 제거 → 플랫폼 공통 코드
+- `dart:io` import 제거 가능
+
+### 트레이드오프
+
+| 항목 | `showCupertinoSheet` (현재) | `showModalBottomSheet` (전환 후) |
+|------|----------------------------|----------------------------------|
+| iOS 네이티브 느낌 | ✅ 완전한 iOS 시트 | ⚠️ Material 스타일 (커스터마이징 가능) |
+| 높이 제어 | ❌ 불가 (전체 화면) | ✅ 자유롭게 지정 |
+| 플랫폼 코드 분기 | ❌ iOS/Android 분기 필요 | ✅ 단일 코드 |
+| ModalGrabber 표시 | ✅ 표시됨 | ✅ 표시됨 (동일) |
+| 이전 화면 스택 | ✅ 지원 | ⚠️ barrier로 구현 |
+| scroll 보존 | ✅ Stack+Offstage로 해결됨 | ✅ 동일 (모달 내부 구조 변경 없음) |
+
+### 결정 필요 사항
+
+- [ ] `showCupertinoSheet` → `showModalBottomSheet` 전환 여부 결정
+- [ ] 전환 시 원하는 높이 비율 결정 (현재 Android: 0.9)
+- [ ] 전환 시 `dart:io` import 제거 (`Platform.isIOS` 분기 불필요)
+
+---
+
+## Phase 20 구현 상세 (2026-05-02)
+
+### 변경 파일
+
+`lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart`
+
+### 변경 내용
+
+#### 1. `_buildSection3ReadOnly()` — 읽기 전용 종일 이벤트 표시
+
+```dart
+final displayEnd = isAllDay
+    ? widget.reservation.endTime.subtract(const Duration(days: 1))
+    : widget.reservation.endTime;
+
+TitleTextLabel(title: isAllDay ? '입실 일' : '입실 일시', ...),
+TitleTextLabel(title: isAllDay ? '퇴실 일' : '퇴실 일시', content: _formatDateTime(displayEnd, ...)),
+```
+
+#### 2. `_onAllDayChanged(true)` 버그 수정
+
+- **버그**: `_endTime.day` 기준 설정 → endTime이 이미 day+1이면 2일짜리 이벤트로 늘어남
+- **수정**: `_startTime` 기준 다음날 자정으로 설정
+
+```dart
+_endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
+    .add(const Duration(days: 1));
+```
+
+#### 3. `_buildSection3Edit()` — 편집 모드 picker 수정
+
+- `displayEndTime` 로컬 변수 도입 (`_isAllDay ? _endTime - 1일 : _endTime`)
+- `initialDateTime`, `content`에 `displayEndTime` 사용
+- `onDateTimeChanged`: 종일이면 선택값 +1일 저장 (iCal exclusive 관례 유지)
+
+```dart
+onDateTimeChanged: (dt) => setState(
+  () => _endTime = _isAllDay ? dt.add(const Duration(days: 1)) : dt,
+),
+```
+
+### 핵심 불변식
+
+- **데이터 저장**: `endTime`은 항상 iCal 관례(다음날 자정, exclusive) 유지
+- **UI 표시**: `isAllDay`일 때만 -1일 보정하여 표시
+- `dart analyze` → `No issues found!`

@@ -235,13 +235,10 @@ class _ReservationDetailModalState
           _startTime.month,
           _startTime.day,
         );
-        _endTime = DateTime(
-          _endTime.year,
-          _endTime.month,
-          _endTime.day,
-          23,
-          59,
-        );
+        // iCal 관례: 종일 이벤트 endTime = 다음날 자정(exclusive).
+        // _endTime.day 기준으로 설정하면 endTime이 이미 day+1일 때 2일짜리로 늘어나는 버그 발생.
+        _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
+            .add(const Duration(days: 1));
       }
       _isStartPickerOpen = false;
       _isEndPickerOpen = false;
@@ -504,32 +501,37 @@ class _ReservationDetailModalState
   // ── 섹션 3: 일시 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection3ReadOnly() {
+    final isAllDay = widget.reservation.isAllDay;
+    final startTime = widget.reservation.startTime;
+    // 종일 이벤트는 iCal 관례상 endTime = 다음날 자정(exclusive) → 표시 시 -1일 보정
+    final displayEnd = isAllDay
+        ? widget.reservation.endTime.subtract(const Duration(days: 1))
+        : widget.reservation.endTime;
+
     return GroupedFormContainer(
       children: [
         TitleSwitchButton(
           title: '하루종일',
-          value: widget.reservation.isAllDay,
+          value: isAllDay,
           onChanged: null,
         ),
         TitleTextLabel(
-          title: '입실 일시',
-          content: _formatDateTime(
-            widget.reservation.startTime,
-            dateOnly: widget.reservation.isAllDay,
-          ),
+          title: isAllDay ? '입실 일' : '입실 일시',
+          content: _formatDateTime(startTime, dateOnly: isAllDay),
         ),
         TitleTextLabel(
-          title: '퇴실 일시',
-          content: _formatDateTime(
-            widget.reservation.endTime,
-            dateOnly: widget.reservation.isAllDay,
-          ),
+          title: isAllDay ? '퇴실 일' : '퇴실 일시',
+          content: _formatDateTime(displayEnd, dateOnly: isAllDay),
         ),
       ],
     );
   }
 
   Widget _buildSection3Edit() {
+    // 종일 이벤트 picker 표시용: endTime은 다음날 자정(exclusive)이므로 -1일 보정
+    final displayEndTime =
+        _isAllDay ? _endTime.subtract(const Duration(days: 1)) : _endTime;
+
     return GroupedFormContainer(
       children: [
         TitleSwitchButton(
@@ -538,7 +540,7 @@ class _ReservationDetailModalState
           onChanged: _onAllDayChanged,
         ),
         TitleDateTimeButton(
-          title: '입실 일시',
+          title: _isAllDay ? '입실 일' : '입실 일시',
           content: _formatDateTime(_startTime, dateOnly: _isAllDay),
           isOpen: _isStartPickerOpen,
           onPressed: () => setState(() {
@@ -552,8 +554,8 @@ class _ReservationDetailModalState
           onDateTimeChanged: (dt) => setState(() => _startTime = dt),
         ),
         TitleDateTimeButton(
-          title: '퇴실 일시',
-          content: _formatDateTime(_endTime, dateOnly: _isAllDay),
+          title: _isAllDay ? '퇴실 일' : '퇴실 일시',
+          content: _formatDateTime(displayEndTime, dateOnly: _isAllDay),
           isOpen: _isEndPickerOpen,
           onPressed: () => setState(() {
             _isEndPickerOpen = !_isEndPickerOpen;
@@ -562,8 +564,12 @@ class _ReservationDetailModalState
           mode: _isAllDay
               ? CupertinoDatePickerMode.date
               : CupertinoDatePickerMode.dateAndTime,
-          initialDateTime: _endTime,
-          onDateTimeChanged: (dt) => setState(() => _endTime = dt),
+          initialDateTime: displayEndTime,
+          // 종일 이벤트: 사용자가 선택한 날짜에 +1일하여 iCal 관례(exclusive) 유지
+          onDateTimeChanged: (dt) => setState(
+            () => _endTime =
+                _isAllDay ? dt.add(const Duration(days: 1)) : dt,
+          ),
         ),
       ],
     );

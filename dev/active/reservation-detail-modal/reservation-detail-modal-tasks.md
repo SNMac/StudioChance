@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-04-22 (Phase 18~19 완료. Android scroll jank 실기기 검증은 #6 이슈로 추적)
+Last Updated: 2026-05-02 (Phase 20 완료 — 종일 이벤트 입/퇴실 일 표시 수정 + _onAllDayChanged 버그 수정 + 편집 picker 수정)
 
 ---
 
@@ -239,6 +239,66 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
   - 기존 `TitleTextLabel` 사용처는 파라미터 없이 그대로 사용 가능
 - [x] `_buildSection1ReadOnly()`: `예약 점포` 행에 `store.color.foregroundColorValue` 기반 8×8 원형 dot 전달
 - [x] `dart analyze` 통과
+
+---
+
+---
+
+## ✅ Phase 20: 종일 이벤트 일시 표시 수정 (2026-05-02)
+
+> **배경**: 종일 이벤트의 endTime이 iCal 관례상 다음날 자정 → "퇴실 일시: 다음날"로 표시되는 문제.
+> **설계 결정**: 행 구조 유지 (입실/퇴실 분리). 타이틀을 "입실 일"/"퇴실 일"로 변경 + endTime 표시 시 -1일 보정.
+> 하루짜리 종일 이벤트 → 입실 일 = 퇴실 일 = 이벤트 당일.
+
+### 20-1: `_buildSection3ReadOnly()` — 타이틀 + endTime 표시 수정
+
+- [x] `isAllDay = true`일 때 타이틀: `'입실 일시'` → `'입실 일'`, `'퇴실 일시'` → `'퇴실 일'`
+- [x] `퇴실 일` content: `endTime.subtract(const Duration(days: 1))`로 -1일 보정 후 `dateOnly: true` 포맷
+- [x] `입실 일` content: 기존과 동일 (`startTime`, `dateOnly: true`)
+- [x] 데이터 저장값(`endTime`)은 변경 없음 — 표시 시에만 보정
+
+### 20-2: `_onAllDayChanged(true)` 버그 수정
+
+- [x] 수정: `_endTime`을 `_startTime` 기준으로 설정 (iCal 관례 — 다음날 자정)
+  ```dart
+  _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
+      .add(const Duration(days: 1));
+  ```
+
+### 20-3: 편집 모드 `_buildSection3Edit()` — 종일 이벤트 picker 수정
+
+- [x] 타이틀: `isAllDay`일 때 `'입실 일시'` → `'입실 일'`, `'퇴실 일시'` → `'퇴실 일'` (읽기 전용과 일치)
+- [x] `displayEndTime = _isAllDay ? _endTime.subtract(Duration(days:1)) : _endTime` 로컬 변수 도입
+- [x] `퇴실 일` `content`/`initialDateTime`: `displayEndTime` 사용
+- [x] `퇴실 일` `onDateTimeChanged`: `isAllDay`면 선택된 날짜에 +1일하여 `_endTime` 저장 (iCal 관례 유지)
+
+### 20-4: `dart analyze` 통과
+
+- [x] `dart analyze lib/.../reservation_detail_modal.dart` → `No issues found!`
+
+---
+
+---
+
+## Phase 21: iOS 모달 방식 전환 (미결 결정)
+
+> **목적**: `showCupertinoSheet`(높이 고정) → `showModalBottomSheet`(높이 자유 조정)로 전환.
+> **조건**: 전환 여부 및 높이 비율을 먼저 결정해야 구현 진행 가능.
+
+### 21-0: 전환 여부 결정
+
+- [ ] `showCupertinoSheet` → `showModalBottomSheet` 전환 여부 확정
+- [ ] 전환 확정 시 원하는 모달 높이 비율 결정 (현재 Android: 0.9)
+
+### 21-1: `showReservationDetailModal` 수정 (전환 결정 시)
+
+- [ ] iOS 경로: `showCupertinoSheet` → `showModalBottomSheet + SizedBox(height: ...)` 변경
+- [ ] `Platform.isIOS` 분기 제거 → 단일 `showModalBottomSheet` 코드
+- [ ] `dart:io` import 제거
+
+### 21-2: `dart analyze` 통과
+
+- [ ] 변경 후 `dart analyze` 오류 없음 확인
 
 ---
 
