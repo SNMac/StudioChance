@@ -75,6 +75,17 @@ Last Updated: 2026-05-19 (Phase 6 추가 — 유효성 강화 + 요금 자동 �
   - `store_use_case_provider.dart` + `price_setting.dart` import 추가
 - [x] `HomeReservationActionsController.deleteReservation(Reservation) -> Future<bool>` (별도 Phase)
 
+## ✅ Phase 7: 요금 필드 읽기 전용 전환 (2026-05-19)
+
+- [x] `_priceController: TextEditingController` 제거 → `int _calculatedPrice = 0` 상태 변수로 교체
+- [x] `_initFields()`: `_priceController = TextEditingController(...)` 라인 제거
+- [x] `dispose()`: `_priceController.dispose()` 제거
+- [x] `_recalculatePrice()`: `_priceController.text = ...` → `setState(() => _calculatedPrice = price)`
+- [x] `_onSavePressed()`: `int.tryParse(_priceController.text) ?? 0` → `_calculatedPrice`
+- [x] `_buildSection4()`: `TitleTextField` → `TitleTextLabel(title: '요금', content: _calculatedPrice.toString())`
+- [x] import `title_text_label.dart` 추가
+- [x] `dart analyze` — No issues found!
+
 ---
 
 ## 미완료/후속 작업

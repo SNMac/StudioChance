@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-19 (Phase 25 완료 — 삭제 버튼 위치 수정, AllDayCell onDeleted 누락 수정, 유효성/요금 계산 강화)
+Last Updated: 2026-05-19 (Phase 26 완료 — 요금 필드 읽기 전용 전환)
 
 ---
 
@@ -386,6 +386,21 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - [x] **25-5** `dart analyze` — No issues found!
 
 **참고**: `_buildSection3Edit()` 내 `_onAllDayChanged`에서도 `_recalculatePrice()` 호출됨 (setState 외부에서 호출 — 상태 갱신 후 계산 보장)
+
+---
+
+## ✅ Phase 26: 요금 필드 읽기 전용 전환 (2026-05-19)
+
+- [x] **26-1** `_priceController: TextEditingController` 제거 → `int _calculatedPrice = 0` 상태 변수로 교체
+  - `dispose()`에서 `_priceController.dispose()` 제거
+- [x] **26-2** `_initFields()`: `_priceController = TextEditingController(...)` → `_calculatedPrice = r.calculatedPrice`
+- [x] **26-3** `_resetFields()`: `_priceController.text = ...` → `_calculatedPrice = r.calculatedPrice`
+- [x] **26-4** `_recalculatePrice()`: `_priceController.text = ...` → `setState(() => _calculatedPrice = price)`
+- [x] **26-5** `_onComplete()`: `int.tryParse(_priceController.text) ?? 0` → `_calculatedPrice`
+- [x] **26-6** `_buildSection4Edit()`: `TitleTextField(title: '요금', controller: _priceController, ...)` → `TitleTextLabel(title: '요금', content: _calculatedPrice.toString())`
+- [x] **26-7** `dart analyze` — No issues found!
+
+**적용 파일**: `reservation_detail_modal.dart`, `reservation_create_modal.dart` (동일 패턴)
 
 ---
 

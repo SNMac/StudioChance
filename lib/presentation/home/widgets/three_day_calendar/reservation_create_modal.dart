@@ -20,6 +20,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_date
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_popup_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
@@ -68,7 +69,6 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   late final TextEditingController _headCountController;
   late final TextEditingController _phoneController;
   late final TextEditingController _memoController;
-  late final TextEditingController _priceController;
   late final TextEditingController _adjustmentController;
 
   // ── 스크롤 컨트롤러 ──────────────────────────────────────────────────────
@@ -76,6 +76,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
 
   // ── 가격 설정 ─────────────────────────────────────────────────────────────
   PriceSetting? _priceSetting;
+  int _calculatedPrice = 0;
 
   // ── 유효성 ───────────────────────────────────────────────────────────────
   bool get _isValid {
@@ -104,7 +105,6 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     _headCountController.dispose();
     _phoneController.dispose();
     _memoController.dispose();
-    _priceController.dispose();
     _adjustmentController.dispose();
     super.dispose();
   }
@@ -124,9 +124,6 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     );
     _phoneController = TextEditingController(text: r.customerPhone);
     _memoController = TextEditingController(text: r.memo);
-    _priceController = TextEditingController(
-      text: r.calculatedPrice > 0 ? r.calculatedPrice.toString() : '',
-    );
     _adjustmentController = TextEditingController(
       text: r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '',
     );
@@ -155,7 +152,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       headCount: headCount,
       isAllDay: _isAllDay,
     );
-    _priceController.text = price > 0 ? price.toString() : '';
+    setState(() => _calculatedPrice = price);
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
@@ -163,7 +160,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   void _onCancelPressed() => Navigator.pop(context);
 
   void _onSavePressed() {
-    final calculatedPrice = int.tryParse(_priceController.text) ?? 0;
+    final calculatedPrice = _calculatedPrice;
     final priceAdjustment = int.tryParse(_adjustmentController.text) ?? 0;
 
     final newReservation = widget.initialReservation.copyWith(
@@ -459,11 +456,9 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextField(
+        TitleTextLabel(
           title: '요금',
-          controller: _priceController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          content: _calculatedPrice.toString(),
         ),
         TitleTextField(
           title: '추가 요금/할인',

@@ -100,11 +100,11 @@ class _ReservationDetailModalState
   late final TextEditingController _headCountController;
   late final TextEditingController _phoneController;
   late final TextEditingController _memoController;
-  late final TextEditingController _priceController;
   late final TextEditingController _adjustmentController;
 
   // ── 가격 설정 ─────────────────────────────────────────────────────────────
   PriceSetting? _priceSetting;
+  int _calculatedPrice = 0;
 
   // ── 유효성 ───────────────────────────────────────────────────────────────
   bool get _isValid {
@@ -153,7 +153,6 @@ class _ReservationDetailModalState
     _headCountController.dispose();
     _phoneController.dispose();
     _memoController.dispose();
-    _priceController.dispose();
     _adjustmentController.dispose();
     super.dispose();
   }
@@ -175,9 +174,7 @@ class _ReservationDetailModalState
     );
     _phoneController = TextEditingController(text: r.customerPhone);
     _memoController = TextEditingController(text: r.memo);
-    _priceController = TextEditingController(
-      text: r.calculatedPrice > 0 ? r.calculatedPrice.toString() : '',
-    );
+    _calculatedPrice = r.calculatedPrice;
     _adjustmentController = TextEditingController(
       text: r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '',
     );
@@ -197,8 +194,7 @@ class _ReservationDetailModalState
     _headCountController.text = r.headCount > 0 ? r.headCount.toString() : '';
     _phoneController.text = r.customerPhone;
     _memoController.text = r.memo;
-    _priceController.text =
-        r.calculatedPrice > 0 ? r.calculatedPrice.toString() : '';
+    _calculatedPrice = r.calculatedPrice;
     _adjustmentController.text =
         r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '';
   }
@@ -238,7 +234,7 @@ class _ReservationDetailModalState
       headCount: headCount,
       isAllDay: _isAllDay,
     );
-    _priceController.text = price > 0 ? price.toString() : '';
+    setState(() => _calculatedPrice = price);
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
@@ -264,7 +260,7 @@ class _ReservationDetailModalState
   }
 
   void _onComplete() {
-    final calculatedPrice = int.tryParse(_priceController.text) ?? 0;
+    final calculatedPrice = _calculatedPrice;
     final priceAdjustment = int.tryParse(_adjustmentController.text) ?? 0;
 
     final updated = widget.reservation.copyWith(
@@ -834,11 +830,9 @@ class _ReservationDetailModalState
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextField(
+        TitleTextLabel(
           title: '요금',
-          controller: _priceController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          content: _calculatedPrice.toString(),
         ),
         TitleTextField(
           title: '추가 요금/할인',
