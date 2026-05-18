@@ -28,6 +28,15 @@ abstract interface class ReservationDataSource {
     DateTime end,
   );
 
+  /// 날짜 범위 예약 실시간 구독
+  ///
+  /// Firestore 변경 시 즉시 방출됩니다.
+  Stream<List<ReservationModel>> watchReservationsByDateRange(
+    String storeId,
+    DateTime start,
+    DateTime end,
+  );
+
   /// 예약 정보 수정
   Future<void> updateReservation(
     String storeId,
@@ -137,6 +146,25 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
     } catch (e) {
       throw handleFirestoreError(e);
     }
+  }
+
+  @override
+  Stream<List<ReservationModel>> watchReservationsByDateRange(
+    String storeId,
+    DateTime start,
+    DateTime end,
+  ) {
+    return _reservationsRef(storeId)
+        .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('startTime', isLessThan: Timestamp.fromDate(end))
+        .orderBy('startTime')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return ReservationModel.fromJson(data);
+            }).toList())
+        .handleError((Object e) => throw handleFirestoreError(e));
   }
 
   @override

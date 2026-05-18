@@ -29,6 +29,15 @@ abstract interface class ReservationUseCase {
     required DateTime end,
   });
 
+  /// 날짜 범위 예약 실시간 구독
+  ///
+  /// 에러는 스트림 에러로 전파됩니다.
+  Stream<List<Reservation>> watchReservationsByDateRange({
+    required String storeId,
+    required DateTime start,
+    required DateTime end,
+  });
+
   /// 예약 정보 수정
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
@@ -112,6 +121,26 @@ class ReservationUseCaseImpl implements ReservationUseCase {
         ),
       );
     }).run();
+  }
+
+  @override
+  Stream<List<Reservation>> watchReservationsByDateRange({
+    required String storeId,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return Stream.fromFuture(getCurrentUserOrThrow(_userRepository).run())
+        .asyncExpand(
+          (result) => result.fold(
+            (error) => Stream.error(error),
+            (user) => _reservationRepository.watchReservationsByDateRange(
+              storeId: storeId,
+              currentUid: user.id,
+              start: start,
+              end: end,
+            ),
+          ),
+        );
   }
 
   @override

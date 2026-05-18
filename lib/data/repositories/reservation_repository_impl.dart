@@ -133,6 +133,51 @@ class ReservationRepositoryImpl implements ReservationRepository {
   }
 
   @override
+  Stream<List<Reservation>> watchReservationsByDateRange({
+    required String storeId,
+    required String currentUid,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _reservationDataSource
+        .watchReservationsByDateRange(storeId, start, end)
+        .asyncMap((models) async {
+          if (models.isEmpty) return <Reservation>[];
+
+          final currentUserModel = await _userDataSource.getUser(currentUid);
+          final storeSummary = _buildStoreSummary(
+            storeId: storeId,
+            currentUserModel: currentUserModel,
+          );
+
+          final writerIds = models.map((m) => m.writerId).toSet().toList();
+          final writerModels = await Future.wait(
+            writerIds.map((uid) => _userDataSource.getUser(uid)),
+          );
+          final writerById = {
+            for (var i = 0; i < writerIds.length; i++)
+              if (writerModels[i] != null) writerIds[i]: writerModels[i]!,
+          };
+
+          return models.map((model) {
+            final writerModel = writerById[model.writerId];
+            if (writerModel == null) {
+              throw ReservationNotFoundException(
+                message: '작성자 정보를 찾을 수 없습니다. writerId: ${model.writerId}',
+              );
+            }
+            return model.toEntity(
+              storeSummary,
+              _buildWriter(
+                writerUserModel: writerModel,
+                writerRole: model.writerRole,
+              ),
+            );
+          }).toList();
+        });
+  }
+
+  @override
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
   }) async {

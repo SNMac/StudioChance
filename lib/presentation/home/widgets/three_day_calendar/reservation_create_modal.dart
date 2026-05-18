@@ -18,6 +18,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_date
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_popup_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
+import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
 /// 예약 생성 모달 (편집 모드 전용, 완료 시 [onSaved] 콜백 후 닫힘).
@@ -196,6 +197,7 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Opacity(opacity: 0.0, child: ModalGrabber()),
             ModalAppBar(
               title: '예약 등록',
               leading: AppBarActionButton(

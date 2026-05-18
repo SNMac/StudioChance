@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
-import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
 
 part 'home_reservation_actions_controller.g.dart';
 
@@ -21,7 +20,7 @@ class HomeReservationActionsController
         .updateReservation(reservation: reservation);
     result.fold(
       (e) => _logger.e('예약 수정 실패', error: e),
-      (_) => ref.invalidate(homeReservationsProvider),
+      (_) {},
     );
   }
 
@@ -34,10 +33,7 @@ class HomeReservationActionsController
         _logger.e('예약 생성 실패', error: e);
         return false;
       },
-      (_) {
-        ref.invalidate(homeReservationsProvider);
-        return true;
-      },
+      (_) => true,
     );
   }
 }
