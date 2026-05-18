@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:studio_chance/common/utils/exception_utils.dart';
 import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
@@ -40,15 +41,11 @@ class UserRepositoryImpl implements UserRepository {
 
       var userModel = await _userDataSource.getUser(authInfo.uid);
       if (userModel != null) {
-        // 기존 유저 — 단일 updateUser 호출로 통합
-        final updates = <String, dynamic>{
-          'authProviders': authInfo.authProviders,
-          'lastLoginAt': true, // DataSource가 FieldValue.serverTimestamp()로 교체
-        };
-        if (fcmToken != null) {
-          updates['fcmTokens'] = [fcmToken]; // DataSource가 FieldValue.arrayUnion으로 교체
-        }
-        await _userDataSource.updateUser(userModel.id, updates);
+        await _userDataSource.recordLogin(
+          userModel.id,
+          authProviders: authInfo.authProviders,
+          fcmToken: fcmToken,
+        );
       } else {
         // 신규 유저
         final newUserModel = UserModel(
@@ -69,7 +66,7 @@ class UserRepositoryImpl implements UserRepository {
       return right(userModel.toEntity());
     } catch (e) {
       _logger.e('fetchOrCreateUser 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -85,7 +82,7 @@ class UserRepositoryImpl implements UserRepository {
       return right(userModel.toEntity());
     } catch (e) {
       _logger.e('getCurrentUser 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -98,7 +95,7 @@ class UserRepositoryImpl implements UserRepository {
       return right(userModel.toEntity());
     } catch (e) {
       _logger.e('getUser 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -121,7 +118,7 @@ class UserRepositoryImpl implements UserRepository {
       return right(null);
     } catch (e) {
       _logger.e('사용자 업데이트 실패\nuid: $uid');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -146,7 +143,7 @@ class UserRepositoryImpl implements UserRepository {
       return right(null);
     } catch (e) {
       _logger.e('사용자 점포 설정 변경 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -172,7 +169,7 @@ class UserRepositoryImpl implements UserRepository {
     } catch (e) {
       _logger.e('사용자 Soft Delete 실패');
       // 탈퇴 실패는 호출부(UseCase)까지 예외를 전파하여 사용자에게 알림 (의도적 throw)
-      throw e is Exception ? e : Exception(e.toString());
+      throw toException(e);
     }
   }
 }

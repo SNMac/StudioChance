@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
+import 'package:studio_chance/data/data_sources/firestore_data_source_base.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
 
 part 'reservation_data_source.g.dart';
@@ -39,11 +39,37 @@ abstract interface class ReservationDataSource {
   Future<void> deleteReservation(String storeId, String reservationId);
 }
 
-class ReservationFirestoreDataSource implements ReservationDataSource {
-  final Logger _logger = Logger();
+class ReservationFirestoreDataSource extends FirestoreDataSourceBase
+    implements ReservationDataSource {
   final FirebaseFirestore _firestore;
 
   ReservationFirestoreDataSource(this._firestore);
+
+  @override
+  String get errorLogTag => 'Reservation Firestore Error';
+
+  @override
+  bool isDomainException(Object e) => e is ReservationException;
+
+  @override
+  Exception buildParsingException(String message) =>
+      ReservationDataParsingException(message: message);
+
+  @override
+  Exception mapFirebaseCode(String code, String message) => switch (code) {
+    'permission-denied' || 'unauthenticated' =>
+      ReservationPermissionDeniedException(message: message, code: code),
+    'not-found' => ReservationNotFoundException(message: message, code: code),
+    'resource-exhausted' =>
+      ReservationResourceExhaustedException(message: message, code: code),
+    'unavailable' || 'deadline-exceeded' =>
+      ReservationNetworkException(message: message, code: code),
+    'aborted' || 'failed-precondition' =>
+      ReservationTransactionException(message: message, code: code),
+    'cancelled' =>
+      ReservationCancelledException(message: message, code: code),
+    _ => ReservationUnknownException(message: message, code: code),
+  };
 
   CollectionReference<Map<String, dynamic>> _reservationsRef(String storeId) {
     return _firestore
@@ -67,7 +93,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
 
       return reservation.copyWith(id: docRef.id);
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -86,7 +112,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
       }
       return null;
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -109,7 +135,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
         return ReservationModel.fromJson(data);
       }).toList();
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -125,7 +151,7 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
 
       await _reservationsRef(storeId).doc(reservationId).update(updates);
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -137,58 +163,10 @@ class ReservationFirestoreDataSource implements ReservationDataSource {
     try {
       await _reservationsRef(storeId).doc(reservationId).delete();
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
-  // ===========================================================================
-  // Error Handling
-  // ===========================================================================
-
-  Exception _handleFirestoreError(Object e) {
-    _logger.e('Reservation Firestore Error', error: e);
-
-    if (e is ReservationException) return e;
-
-    if (e is TypeError || e is FormatException) {
-      return ReservationDataParsingException(
-        message: '데이터 파싱에 실패했습니다.\n${e.toString()}',
-      );
-    }
-
-    if (e is FirebaseException) {
-      final msg = e.message ?? 'Cloud Firestore Error';
-      final code = e.code;
-
-      switch (code) {
-        case 'permission-denied':
-        case 'unauthenticated':
-          return ReservationPermissionDeniedException(
-            message: msg,
-            code: code,
-          );
-        case 'not-found':
-          return ReservationNotFoundException(message: msg, code: code);
-        case 'resource-exhausted':
-          return ReservationResourceExhaustedException(
-            message: msg,
-            code: code,
-          );
-        case 'unavailable':
-        case 'deadline-exceeded':
-          return ReservationNetworkException(message: msg, code: code);
-        case 'aborted':
-        case 'failed-precondition':
-          return ReservationTransactionException(message: msg, code: code);
-        case 'cancelled':
-          return ReservationCancelledException(message: msg, code: code);
-        default:
-          return ReservationUnknownException(message: msg, code: code);
-      }
-    }
-
-    return ReservationUnknownException(message: e.toString());
-  }
 }
 
 @Riverpod(keepAlive: true)
