@@ -45,6 +45,30 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - `fpdart`의 `Either<Exception, T>` 패턴 사용 (Use Case 반환 타입)
 - `left()` = 실패, `right()` = 성공
 
+## 아키텍처 설계 결정
+
+### 권한 검증 위치 (D2)
+Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현재 미구현.
+- `approveMember`, `updateMemberRole` 등 관리자 전용 작업: Firestore Rules에서 검증
+- UseCase 레벨 검증은 UX 향상(더 나은 에러 메시지) 목적으로 필요 시 추가 가능
+- 보안 경계는 Firestore Rules, 도메인 규칙 명시는 UseCase
+
+### ReservationUseCase → StoreRepository 의존성 (D3)
+현행 유지: `ReservationUseCaseImpl`이 `StoreRepository`를 주입받아 가격 계산에 사용.
+- `_applyCalculatedPrice`: 예약 생성/수정 전 점포 요금 설정 기반 계산 (필수 비즈니스 로직)
+- PricingService 분리는 과도한 추상화 — 현재 규모에서 허용
+
+### Common Exceptions 레이어 배치 (D4)
+`common/exceptions/` 를 모든 레이어 공유 위치로 유지.
+- Firebase 에러 코드 기반이지만 도메인 의미를 가진 경계 예외
+- Domain Entity가 직접 참조하지 않는 한 Data→Domain 의존 발생하지 않음
+- 예외 추가 시 도메인별 파일 분리 유지 (`auth_exceptions.dart`, `store_exceptions.dart` 등)
+
+### UseCase-Provider 파일 분리 (D5)
+`lib/domain/use_cases/*_use_case_provider.dart`: DI 배선 파일로 data layer import 허용.
+- `*_use_case.dart`: 순수 Domain (interface + impl), data import 금지
+- `*_use_case_provider.dart`: `@riverpod` 팩토리만 포함, data import 허용
+
 ## Either / TaskEither 패턴
 
 - 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)
