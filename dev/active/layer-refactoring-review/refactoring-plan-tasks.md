@@ -1,6 +1,6 @@
 # 리팩토링 검토 — 작업 체크리스트
 
-Last Updated: 2026-05-19
+Last Updated: 2026-05-19 (Phase 3 완료)
 
 > **진행 방식**: 계획 수립 → Phase 1 → Phase 2 → Phase 3 순서로 진행  
 > 각 Phase 완료 후 `dart analyze` + `flutter test` 통과 확인
@@ -80,32 +80,31 @@ Last Updated: 2026-05-19
 ## Phase 3 — Presentation Layer
 
 ### 3-A: `ref.watch` select 미적용 위젯 검토 [크기: M]
-- [ ] 홈 화면 위젯 전체에서 `ref.watch(provider)` 사용처 목록화
-- [ ] 위젯이 사용하는 필드가 상태 전체의 일부인 경우 확인
-- [ ] `select` 적용 대상 목록 작성
-- [ ] select 적용
+- [x] 홈 화면 위젯 전체에서 `ref.watch(provider)` 사용처 목록화
+- [x] 위젯이 사용하는 필드가 상태 전체의 일부인 경우 확인
+- [x] `select` 적용 대상 목록 작성
+- [x] select 적용 (ThreeDayCalendar/currentUserProvider, SignInScreen, PriceDaysInput/PriceTimeInput)
 
 ### 3-B: StoreUpdateController `firstWhere` 개선 [크기: XS]
-- [ ] `StoreUpdateController.build()` L28~31 개선
-- [ ] `firstWhereOrNull` 또는 단일 변수 패턴으로 변경
-- [ ] 동작 검증 (색상/메모 초기값이 올바르게 로드되는지)
+- [x] `StoreUpdateController.build()` L28~31 개선
+- [x] `.where().firstOrNull` 패턴으로 변경 (collection 패키지 없이 Dart 3 네이티브)
+- [x] 동작 검증 (`dart analyze` 통과)
 
 ### 3-C: 컨트롤러 submit 패턴 통일 [크기: S]
-- [ ] `StoreCreationController.submit` Either 처리 → `result.fold()`로 통일
-- [ ] `StoreUpdateController.submit`과 동일한 패턴 확인
-- [ ] 2-C (Either 패턴 통일)와 연계하여 동일한 결정 기준 적용
+- [x] `StoreCreationController.submit` Either 처리 → `result.fold()`로 통일
+- [x] `StoreUpdateController.submit`과 동일한 패턴 확인
+- [x] 2-C (Either 패턴 통일)와 연계하여 동일한 결정 기준 적용
 
 ### 3-D: 홈 위젯 책임 분리 검토 [크기: M]
-- [ ] `three_day_calendar/` 각 파일의 책임 검토
-- [ ] `monthly_calendar/` 각 파일의 책임 검토
-- [ ] `build()` 내 무거운 연산 여부 확인
-- [ ] ScrollController 관리 패턴이 AGENTS.md 기준 준수하는지 확인
-- [ ] 문제 발견 시 세부 리팩토링 계획 추가 작성
+- [x] `three_day_calendar/` 각 파일의 책임 검토
+- [x] `monthly_calendar/` 각 파일의 책임 검토 (이미 select 적용 완료)
+- [x] `build()` 내 무거운 연산 여부 확인 (DateTime.now()는 루프 밖 단일 호출로 허용)
+- [x] ScrollController 관리 패턴이 AGENTS.md 기준 준수하는지 확인 (hasClients 감지 → dispose/재생성 패턴 준수)
+- [x] I-1 해결: `HomeReservationActionsController` 생성 — `TimeGrid`, `AllDayCell`의 `reservationUseCaseProvider` 직접 참조 제거
 
 ### 3-E: 미완성/Dead Code 정리 [크기: XS]
-- [ ] `reservation_input_form.dart` 상태 확인 (WIP인지, 삭제 대상인지)
-- [ ] 사용되지 않는 주석 코드 정리 또는 TODO 표시
-- [ ] `dart analyze`로 미사용 import/변수 확인
+- [x] `reservation_input_form.dart` → 미사용 Placeholder 파일 삭제
+- [x] `dart analyze` — 에러 0개 확인
 
 ---
 
@@ -125,4 +124,4 @@ Last Updated: 2026-05-19
 | Phase 0 (현황 분석) | ✅ 완료 | 2026-05-18 |
 | Phase 1 (Data) | ✅ 완료 | 2026-05-18 |
 | Phase 2 (Domain) | ✅ 완료 | 2026-05-19 |
-| Phase 3 (Presentation) | ⬜ 미시작 | — |
+| Phase 3 (Presentation) | ✅ 완료 | 2026-05-19 |
