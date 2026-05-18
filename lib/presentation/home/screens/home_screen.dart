@@ -124,7 +124,7 @@ class HomeScreen extends ConsumerWidget {
       ),
       status: ReservationStatus.confirmed,
       customerName: '',
-      headCount: 1,
+      headCount: 0,
       customerPhone: '',
       memo: '',
       isAllDay: false,

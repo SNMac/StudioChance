@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
@@ -20,9 +22,10 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_swit
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
 /// 예약 생성 모달 (편집 모드 전용, 완료 시 [onSaved] 콜백 후 닫힘).
-class ReservationCreateModal extends StatefulWidget {
+class ReservationCreateModal extends ConsumerStatefulWidget {
   const ReservationCreateModal({
     super.key,
     required this.initialReservation,
@@ -43,10 +46,11 @@ class ReservationCreateModal extends StatefulWidget {
   final List<StoreSummary>? availableStores;
 
   @override
-  State<ReservationCreateModal> createState() => _ReservationCreateModalState();
+  ConsumerState<ReservationCreateModal> createState() =>
+      _ReservationCreateModalState();
 }
 
-class _ReservationCreateModalState extends State<ReservationCreateModal> {
+class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal> {
   // ── 편집 상태 ─────────────────────────────────────────────────────────────
   late StoreSummary _storeSummary;
   late ReservationStatus _status;
@@ -70,11 +74,15 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
   // ── 스크롤 컨트롤러 ──────────────────────────────────────────────────────
   late final ScrollController _scrollController;
 
+  // ── 가격 설정 ─────────────────────────────────────────────────────────────
+  PriceSetting? _priceSetting;
+
   // ── 유효성 ───────────────────────────────────────────────────────────────
   bool get _isValid {
     final headCount = int.tryParse(_headCountController.text) ?? 0;
     return _nameController.text.trim().isNotEmpty &&
         headCount > 0 &&
+        _phoneController.text.trim().isNotEmpty &&
         (_isAllDay || _startTime.isBefore(_endTime));
   }
 
@@ -86,6 +94,7 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
     super.initState();
     _scrollController = ScrollController();
     _initFields(widget.initialReservation);
+    _loadPriceSetting(widget.initialReservation.storeSummary.id);
   }
 
   @override
@@ -121,6 +130,32 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
     _adjustmentController = TextEditingController(
       text: r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '',
     );
+  }
+
+  // ── 가격 계산 ─────────────────────────────────────────────────────────────
+
+  void _loadPriceSetting(String storeId) {
+    ref
+        .read(homeReservationActionsControllerProvider.notifier)
+        .getStorePriceSetting(storeId)
+        .then((ps) {
+          if (!mounted) return;
+          setState(() => _priceSetting = ps);
+          _recalculatePrice();
+        });
+  }
+
+  void _recalculatePrice() {
+    final ps = _priceSetting;
+    if (ps == null) return;
+    final headCount = int.tryParse(_headCountController.text) ?? 0;
+    final price = ps.calculatePrice(
+      start: _startTime,
+      end: _endTime,
+      headCount: headCount,
+      isAllDay: _isAllDay,
+    );
+    _priceController.text = price > 0 ? price.toString() : '';
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
@@ -167,6 +202,7 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
       _isStartPickerOpen = false;
       _isEndPickerOpen = false;
     });
+    _recalculatePrice();
   }
 
   // ── 날짜/시간 포맷 헬퍼 ──────────────────────────────────────────────────
@@ -269,7 +305,10 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
                 shape: BoxShape.circle,
               ),
             ),
-            onSelected: (s) => setState(() => _storeSummary = s),
+            onSelected: (s) {
+              setState(() => _storeSummary = s);
+              _loadPriceSetting(s.id);
+            },
           ),
         ),
         Padding(
@@ -303,13 +342,17 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
         TitleTextField(
           title: '인원',
           controller: _headCountController,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) {
+            setState(() {});
+            _recalculatePrice();
+          },
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         TitleTextField(
           title: '연락처',
           controller: _phoneController,
+          onChanged: (_) => setState(() {}),
           keyboardType: TextInputType.phone,
         ),
         MemoTextField(
@@ -349,7 +392,10 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
               ? CupertinoDatePickerMode.date
               : CupertinoDatePickerMode.dateAndTime,
           initialDateTime: _startTime,
-          onDateTimeChanged: (dt) => setState(() => _startTime = dt),
+          onDateTimeChanged: (dt) {
+            setState(() => _startTime = dt);
+            _recalculatePrice();
+          },
         ),
         TitleDateTimeButton(
           title: _isAllDay ? '퇴실 일' : '퇴실 일시',
@@ -363,10 +409,10 @@ class _ReservationCreateModalState extends State<ReservationCreateModal> {
               ? CupertinoDatePickerMode.date
               : CupertinoDatePickerMode.dateAndTime,
           initialDateTime: displayEndTime,
-          onDateTimeChanged: (dt) => setState(
-            () => _endTime =
-                _isAllDay ? dt.add(const Duration(days: 1)) : dt,
-          ),
+          onDateTimeChanged: (dt) {
+            setState(() => _endTime = _isAllDay ? dt.add(const Duration(days: 1)) : dt);
+            _recalculatePrice();
+          },
         ),
       ],
     );
