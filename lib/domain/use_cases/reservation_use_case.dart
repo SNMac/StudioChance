@@ -1,18 +1,10 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
-import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
-import 'package:studio_chance/data/repositories/store_repository_impl.dart';
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-
-part 'reservation_use_case.g.dart';
 
 abstract interface class ReservationUseCase {
   /// 예약 생성
@@ -75,7 +67,7 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   }) async {
     final priced = await _applyCalculatedPrice(reservation);
 
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       final reservationWithWriter = priced.copyWith(
         writer: priced.writer.copyWith(user: currentUser),
       );
@@ -93,7 +85,7 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required String storeId,
     required String reservationId,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _reservationRepository.getReservation(
           storeId: storeId,
@@ -110,7 +102,7 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required DateTime start,
     required DateTime end,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _reservationRepository.getReservationsByDateRange(
           storeId: storeId,
@@ -158,19 +150,6 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   // Private Helpers
   // ===========================================================================
 
-  /// 현재 로그인한 유저를 가져오는 `TaskEither`
-  TaskEither<Exception, User> _getCurrentUser() {
-    return TaskEither.tryCatch(() async {
-      final result = await _userRepository.getCurrentUser();
-      return result.fold((left) => throw left, (right) {
-        if (right == null) {
-          throw AuthUserNotFoundException(message: '로그인 정보를 찾을 수 없습니다.');
-        }
-        return right;
-      });
-    }, (error, stackTrace) => error is Exception ? error : Exception(error));
-  }
-
   /// Store의 PriceSetting으로 calculatedPrice, totalPrice를 계산하여 반영한 예약 반환.
   ///
   /// Store 조회 실패 또는 PriceSetting 매칭 실패 시 기존 값을 유지한다.
@@ -194,17 +173,4 @@ class ReservationUseCaseImpl implements ReservationUseCase {
       totalPrice: calculatedPrice + reservation.priceAdjustment,
     );
   }
-}
-
-@riverpod
-ReservationUseCase reservationUseCase(Ref ref) {
-  final reservationRepository = ref.watch(reservationRepositoryProvider);
-  final userRepository = ref.watch(userRepositoryProvider);
-  final storeRepository = ref.watch(storeRepositoryProvider);
-
-  return ReservationUseCaseImpl(
-    reservationRepository: reservationRepository,
-    userRepository: userRepository,
-    storeRepository: storeRepository,
-  );
 }

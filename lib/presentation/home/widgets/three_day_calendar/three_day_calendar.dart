@@ -282,9 +282,11 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       error: (_, _) => const <Reservation>[],
     );
     final (allEvents, reservationsMap) = buildEventsFromReservations(reservationsList);
-    final currentUser = ref.watch(currentUserProvider).asData?.value;
-    final availableStores = currentUser?.storeInfos
-        .map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+    final storeInfos = ref.watch(
+      currentUserProvider.select((async) => async.asData?.value?.storeInfos),
+    );
+    final availableStores = storeInfos
+        ?.map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
         .toList();
 
     // 오늘 버튼 → 현재 시간 스크롤

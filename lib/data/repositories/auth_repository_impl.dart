@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:studio_chance/common/utils/exception_utils.dart';
 import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
@@ -30,7 +31,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return right(authModel.toEntity());
     } catch (e) {
       _logger.e('Google 로그인 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -41,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return right(authModel.toEntity());
     } catch (e) {
       _logger.e('Apple 로그인 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -62,7 +63,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return right(null);
     } catch (e) {
       _logger.e('탈퇴 수행 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -73,7 +74,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return right(null);
     } catch (e) {
       _logger.e('재인증 수행 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 }

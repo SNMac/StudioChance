@@ -14,6 +14,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 
 ## 아키텍처
 - `/lib/common`: 모든 계층에서 사용되는 로직
+  - `/utils/exception_utils.dart`: `toException()` — catch 블록 Object → Exception 변환 헬퍼
 - `/lib/constants`: 모든 계층에서 사용되는 상수값
 - `/lib/data`: Data 계층
   - `/data_sources`: DB 연결 로직
@@ -24,12 +25,13 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   - `/enums`: Domain 관련 enum
   - `/repository_interfaces`: Domain에서 필요로 하는 Data 로직 인터페이스
   - `/use_cases`: 비즈니스 로직 단위
+    - `use_case_helpers.dart`: `getCurrentUserOrThrow(UserRepository)` 공통 헬퍼
 - `/lib/presentation`: UI 계층
   - `/commons`: 여러 곳에서 사용되는 UI
   - `/home`: 홈 화면
   - `/my_page`: 마이페이지 화면
   - `/onboarding`: 온보딩 화면
-  - `/providers`: UI 상태 관리
+  - `/providers`: UI 상태 관리 (위젯 액션이 UseCase 호출을 필요로 하면 여기에 전용 Controller 생성)
   - `/sign_in`: 로그인 화면
   - `/splash`: 스플래시 화면
 - `/lib/router`: 화면 전환 로직
@@ -44,6 +46,37 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 ## 에러 핸들링
 - `fpdart`의 `Either<Exception, T>` 패턴 사용 (Use Case 반환 타입)
 - `left()` = 실패, `right()` = 성공
+
+## 아키텍처 설계 결정
+
+### 권한 검증 위치 (D2)
+Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현재 미구현.
+- `approveMember`, `updateMemberRole` 등 관리자 전용 작업: Firestore Rules에서 검증
+- UseCase 레벨 검증은 UX 향상(더 나은 에러 메시지) 목적으로 필요 시 추가 가능
+- 보안 경계는 Firestore Rules, 도메인 규칙 명시는 UseCase
+
+### ReservationUseCase → StoreRepository 의존성 (D3)
+현행 유지: `ReservationUseCaseImpl`이 `StoreRepository`를 주입받아 가격 계산에 사용.
+- `_applyCalculatedPrice`: 예약 생성/수정 전 점포 요금 설정 기반 계산 (필수 비즈니스 로직)
+- PricingService 분리는 과도한 추상화 — 현재 규모에서 허용
+
+### Common Exceptions 레이어 배치 (D4)
+`common/exceptions/` 를 모든 레이어 공유 위치로 유지.
+- Firebase 에러 코드 기반이지만 도메인 의미를 가진 경계 예외
+- Domain Entity가 직접 참조하지 않는 한 Data→Domain 의존 발생하지 않음
+- 예외 추가 시 도메인별 파일 분리 유지 (`auth_exceptions.dart`, `store_exceptions.dart` 등)
+
+### UseCase-Provider 파일 분리 (D5)
+`lib/domain/use_cases/*_use_case_provider.dart`: DI 배선 파일로 data layer import 허용.
+- `*_use_case.dart`: 순수 Domain (interface + impl), data import 금지
+- `*_use_case_provider.dart`: `@riverpod` 팩토리만 포함, data import 허용
+
+## Either / TaskEither 패턴
+
+- 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)
+- `isLeft()` / `isRight()` + `getLeft().toNullable()!` 명령형 스타일 사용 금지
+- `TaskEither` 체이닝: `.flatMap()` → `.run()` 순서
+- 불가피한 예외 (FCM 토큰 제거처럼 실패를 허용해야 하는 경우): `fold` 내에서 try-catch 허용
 
 ## Git 컨벤션
 - 브랜치: `feat/#<이슈번호>-<설명>`, `fix/#<이슈번호>-<설명>`
@@ -96,6 +129,12 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   - `lowerBound`는 반드시 `initialSize`로 설정 — `0.0`이면 dismiss 중 Column overflow 발생
 - 모드 전환 간 스크롤 위치 보존: `Stack + Positioned.fill + Offstage` × 2 + 모드별 독립 `ScrollController`
   - 전환 전 `_syncScrollPosition()` 호출 필수 (setState 이전에)
+
+## Presentation → Domain 접근 규칙
+
+- 위젯(`ConsumerWidget`, `ConsumerStatefulWidget`)에서 `*_use_case_provider.dart` 직접 `ref.read/watch` 금지
+- 위젯 액션이 UseCase 호출을 필요로 하면 `lib/presentation/providers/`에 전용 `@riverpod` Controller(Notifier) 생성하여 위임
+- 예: `HomeReservationActionsController` — `TimeGrid`/`AllDayCell`의 예약 수정 액션을 위임
 
 ## Agent Working Rules
 

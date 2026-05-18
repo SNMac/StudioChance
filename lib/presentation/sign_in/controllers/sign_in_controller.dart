@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
+import 'package:studio_chance/domain/use_cases/auth_use_case_provider.dart';
 
 part 'sign_in_controller.g.dart';
 

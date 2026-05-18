@@ -1,13 +1,8 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-
-part 'user_use_case.g.dart';
 
 abstract interface class UserUseCase {
   /// 인증 정보를 바탕으로 유저 조회/생성
@@ -79,10 +74,4 @@ class UserUseCaseImpl implements UserUseCase {
       color: color,
     );
   }
-}
-
-@riverpod
-UserUseCase userUseCase(Ref ref) {
-  final repository = ref.watch(userRepositoryProvider);
-  return UserUseCaseImpl(repository);
 }

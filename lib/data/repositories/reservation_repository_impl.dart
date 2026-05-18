@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
+import 'package:studio_chance/common/utils/exception_utils.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
@@ -45,7 +46,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       );
     } catch (e) {
       _logger.e('예약 생성 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -70,7 +71,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       return right(entity);
     } catch (e) {
       _logger.e('예약 조회 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -127,7 +128,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       return right(reservations);
     } catch (e) {
       _logger.e('예약 목록 조회 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -149,7 +150,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       return right(null);
     } catch (e) {
       _logger.e('예약 수정 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -164,7 +165,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       return right(null);
     } catch (e) {
       _logger.e('예약 삭제 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -184,7 +185,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       return right(null);
     } catch (e) {
       _logger.e('예약 상태 변경 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 

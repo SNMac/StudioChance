@@ -3,6 +3,8 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/common/utils/exception_utils.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
@@ -66,7 +68,7 @@ class StoreRepositoryImpl implements StoreRepository {
       );
     } catch (e) {
       _logger.e('createStore 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -92,7 +94,7 @@ class StoreRepositoryImpl implements StoreRepository {
       );
     } catch (e) {
       _logger.e('getStore 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -116,7 +118,7 @@ class StoreRepositoryImpl implements StoreRepository {
       return right(null);
     } catch (e) {
       _logger.e('점포 업데이트 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -128,7 +130,7 @@ class StoreRepositoryImpl implements StoreRepository {
       return right(null);
     } catch (e) {
       _logger.e('점포 삭제 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -138,15 +140,24 @@ class StoreRepositoryImpl implements StoreRepository {
     bool forceRegenerate = false,
   }) async {
     try {
-      final inviteModel = await _storeDataSource.createInviteCode(
-        storeId,
-        forceRegenerate: forceRegenerate,
-      );
+      if (!forceRegenerate) {
+        final existing = await _storeDataSource.getInviteInfo(storeId);
+        if (existing != null && existing.createdAt != null) {
+          final expiresAt = existing.createdAt!
+              .add(const Duration(minutes: storeInviteCodeAvailableMin));
+          if (DateTime.now().isBefore(expiresAt)) {
+            _logger.i('유효한 초대 코드 재사용\nstoreId: $storeId');
+            return right(existing.toEntity());
+          }
+        }
+      }
+
+      final inviteModel = await _storeDataSource.createInviteCode(storeId);
       _logger.i('초대 코드 생성 완료\nstoreId: $storeId');
       return right(inviteModel.toEntity());
     } catch (e) {
       _logger.e('초대 코드 생성 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -155,28 +166,34 @@ class StoreRepositoryImpl implements StoreRepository {
     String inviteCode,
   ) async {
     try {
-      final storeModel = await _storeDataSource.getStoreByInviteCode(
-        inviteCode,
-      );
+      final storeModel = await _storeDataSource.getStoreByInviteCode(inviteCode);
+      if (storeModel == null) return right(null);
 
-      if (storeModel == null) {
-        return right(null);
+      // 만료 검증 (DataSource에서 이동)
+      final inviteData = storeModel.inviteInfoModel;
+      if (inviteData == null || inviteData.createdAt == null) {
+        return left(StoreValidationException(message: '유효하지 않은 초대 코드입니다.'));
+      }
+      final expiresAt = inviteData.createdAt!
+          .add(const Duration(minutes: storeInviteCodeAvailableMin));
+      if (DateTime.now().isAfter(expiresAt)) {
+        return left(StoreValidationException(message: '만료된 초대 코드입니다.'));
       }
 
-      final results = await Future.wait([
-        _fetchMembersWithRoles(storeModel.memberById),
-        _fetchMembersWithRoles(storeModel.waitingMemberById),
-      ]);
+      final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
+      final waitingInfosFuture = _fetchMembersWithRoles(storeModel.waitingMemberById);
+      final memberInfos = await memberInfosFuture;
+      final waitingInfos = await waitingInfosFuture;
 
       return right(
         storeModel.toEntity(
-          memberInfos: results[0],
-          waitingMemberInfos: results[1],
+          memberInfos: memberInfos,
+          waitingMemberInfos: waitingInfos,
         ),
       );
     } catch (e) {
       _logger.e('초대 코드로 점포 조회 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -212,7 +229,7 @@ class StoreRepositoryImpl implements StoreRepository {
       return right(null);
     } catch (e) {
       _logger.e('점포 가입 신청 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -231,7 +248,7 @@ class StoreRepositoryImpl implements StoreRepository {
       return right(null);
     } catch (e) {
       _logger.e('멤버 승인 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
@@ -250,7 +267,7 @@ class StoreRepositoryImpl implements StoreRepository {
       return right(null);
     } catch (e) {
       _logger.e('멤버 권한 변경 실패');
-      return left(e is Exception ? e : Exception(e.toString()));
+      return left(toException(e));
     }
   }
 
