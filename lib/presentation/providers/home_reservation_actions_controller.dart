@@ -36,4 +36,20 @@ class HomeReservationActionsController
       (_) => true,
     );
   }
+
+  Future<bool> deleteReservation(Reservation reservation) async {
+    final result = await ref
+        .read(reservationUseCaseProvider)
+        .deleteReservation(
+          storeId: reservation.storeSummary.id,
+          reservationId: reservation.id,
+        );
+    return result.fold(
+      (e) {
+        _logger.e('예약 삭제 실패', error: e);
+        return false;
+      },
+      (_) => true,
+    );
+  }
 }

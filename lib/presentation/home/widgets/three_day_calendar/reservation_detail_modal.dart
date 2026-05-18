@@ -35,6 +35,7 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
     super.key,
     required this.reservation,
     required this.onSaved,
+    required this.onDeleted,
     required this.maxAvailableHeight,
     this.availableStores,
   });
@@ -43,6 +44,9 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
 
   /// 완료 탭 시 수정된 Reservation을 전달하는 콜백.
   final void Function(Reservation) onSaved;
+
+  /// 삭제 확인 시 호출되는 콜백.
+  final VoidCallback onDeleted;
 
   final double maxAvailableHeight;
 
@@ -253,6 +257,31 @@ class _ReservationDetailModalState
       _isStartPickerOpen = false;
       _isEndPickerOpen = false;
     });
+  }
+
+  void _onDeletePressed() {
+    showCupertinoDialog(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('예약 삭제'),
+        content: const Text('이 예약을 삭제하시겠습니까?\n삭제된 예약은 복구할 수 없습니다.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('취소'),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('삭제'),
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.onDeleted();
+              _dismissModal();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   void _onAllDayChanged(bool value) {
@@ -485,6 +514,11 @@ class _ReservationDetailModalState
           _buildSection2Edit(),
           _buildSection3Edit(),
           _buildSection4Edit(textTheme),
+          TextActionButton(
+            title: '예약 삭제',
+            isDestructive: true,
+            onPressed: _onDeletePressed,
+          ),
         ],
       ),
     );
@@ -862,6 +896,7 @@ Future<void> showReservationDetailModal(
   Reservation reservation, {
   List<StoreSummary>? availableStores,
   required void Function(Reservation) onSaved,
+  required VoidCallback onDeleted,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -875,6 +910,7 @@ Future<void> showReservationDetailModal(
         reservation: reservation,
         availableStores: availableStores,
         onSaved: onSaved,
+        onDeleted: onDeleted,
         maxAvailableHeight: constraints.maxHeight,
       ),
     ),

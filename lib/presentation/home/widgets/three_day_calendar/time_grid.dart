@@ -230,6 +230,12 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         .updateReservation(updated);
   }
 
+  void _onReservationDeleted(Reservation reservation) {
+    ref
+        .read(homeReservationActionsControllerProvider.notifier)
+        .deleteReservation(reservation);
+  }
+
   ({double top, double height}) _placementFor(
       ReservationDisplayData event, double hourHeight) {
     final topGap = event.isContinuation ? 0.0 : 0.5;
@@ -276,6 +282,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         reservation,
         availableStores: widget.availableStores,
         onSaved: _onReservationSaved,
+        onDeleted: () => _onReservationDeleted(reservation),
       );
       if (!mounted) return;
       setState(() {
@@ -304,6 +311,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         reservation,
         availableStores: widget.availableStores,
         onSaved: _onReservationSaved,
+        onDeleted: () => _onReservationDeleted(reservation),
       );
       // Provider 조작은 mounted와 무관하게 안전 (notifier는 위젯 생명주기 독립적)
       highlightNotifier.clear();
@@ -327,6 +335,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         reservation,
         availableStores: widget.availableStores,
         onSaved: _onReservationSaved,
+        onDeleted: () => _onReservationDeleted(reservation),
       );
       if (!mounted) return;
       setState(() {

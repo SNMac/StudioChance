@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-18 (Phase 21 완료 — DraggableScrollableSheet 제거 + AnimationController 기반 두 detent 구현, 편집 모드 드래그 잠금)
+Last Updated: 2026-05-19 (Phase 23 완료 — 편집 모드 예약 삭제 버튼 추가)
 
 ---
 
@@ -345,6 +345,22 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
   - `else AppBarActionButton(label: '편집')` → `else if (_canEdit) AppBarActionButton(label: '편집')`
   - viewer 역할 점포 예약 열람 시 '편집' 버튼 미표시
 - [x] **22-4** `dart analyze` — No issues found
+
+## ✅ Phase 23: 편집 모드 예약 삭제 버튼 추가 (2026-05-19)
+
+- [x] **23-1** `TextActionButton` — `isDestructive: bool` 파라미터 추가 (기본값 false)
+  - `true`이면 `systemRed`, 아니면 기존 `systemBlue`
+- [x] **23-2** `HomeReservationActionsController` — `deleteReservation(Reservation)` 메서드 추가
+  - `ReservationUseCase.deleteReservation(storeId:, reservationId:)` 위임
+- [x] **23-3** `ReservationDetailModal` — `onDeleted: VoidCallback` 파라미터 추가 (required)
+  - `_onDeletePressed()`: `CupertinoAlertDialog` 확인 → `onDeleted()` + `_dismissModal()` 호출
+  - `_buildEditBody()` 섹션4 하단(spacing 20)에 `TextActionButton(isDestructive: true)` 추가
+- [x] **23-4** `showReservationDetailModal` — `onDeleted` 파라미터 추가, 위젯으로 전달
+- [x] **23-5** `time_grid.dart` — 3곳 호출에 `onDeleted: () => _onReservationDeleted(reservation)` 추가
+  - `_onReservationDeleted()` 신규 메서드: Controller에 위임 (fire-and-forget, stream 자동 반영)
+- [x] **23-6** `dart analyze` — No issues found!
+
+---
 
 ## 스코프 아웃
 
