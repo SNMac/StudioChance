@@ -24,4 +24,20 @@ class HomeReservationActionsController
       (_) => ref.invalidate(homeReservationsProvider),
     );
   }
+
+  Future<bool> createReservation(Reservation reservation) async {
+    final result = await ref
+        .read(reservationUseCaseProvider)
+        .createReservation(reservation: reservation);
+    return result.fold(
+      (e) {
+        _logger.e('예약 생성 실패', error: e);
+        return false;
+      },
+      (_) {
+        ref.invalidate(homeReservationsProvider);
+        return true;
+      },
+    );
+  }
 }

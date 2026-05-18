@@ -1,12 +1,25 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_summary.dart';
+import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/entities/user_store_info.dart';
+import 'package:studio_chance/domain/enums/payment_method.dart';
+import 'package:studio_chance/domain/enums/reservation_platform.dart';
+import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/home_nav_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/monthly_calendar/monthly_calendar.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/three_day_calendar.dart';
+import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
+import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -15,6 +28,17 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isMonthlyCalendarVisible = ref.watch(
       homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+    );
+    final storeInfos = ref.watch(
+      currentUserProvider.select((u) => u.asData?.value?.storeInfos ?? []),
+    );
+    final selectedStartDate = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.selectedStartDate),
+    );
+
+    // admin·staff만 예약 생성 가능
+    final canCreateReservation = storeInfos.any(
+      (info) => info.role == UserRole.admin || info.role == UserRole.staff,
     );
 
     return Scaffold(
@@ -42,7 +66,120 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: canCreateReservation
+          ? _AddReservationFab(
+              onPressed: () => _onAddReservation(
+                context,
+                ref,
+                storeInfos,
+                selectedStartDate,
+              ),
+            )
+          : null,
       bottomNavigationBar: const HomeTabBar(),
+    );
+  }
+
+  Future<void> _onAddReservation(
+    BuildContext context,
+    WidgetRef ref,
+    List<UserStoreInfo> storeInfos,
+    DateTime selectedStartDate,
+  ) async {
+    // 예약 생성 가능한 점포만 선택 목록에 포함
+    final creatableInfos = storeInfos
+        .where((info) => info.role == UserRole.admin || info.role == UserRole.staff)
+        .toList();
+    final defaultInfo = creatableInfos.first;
+    final defaultStoreSummary = StoreSummary(
+      id: defaultInfo.id,
+      name: defaultInfo.name,
+      color: defaultInfo.color,
+    );
+    final availableStores = creatableInfos
+        .map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+        .toList();
+
+    final start = DateTime(
+      selectedStartDate.year,
+      selectedStartDate.month,
+      selectedStartDate.day,
+      10,
+      0,
+    );
+    final initialReservation = Reservation(
+      id: '',
+      storeSummary: defaultStoreSummary,
+      writer: StoreMemberInfo(
+        user: const User(
+          id: '',
+          name: '',
+          email: '',
+          nickname: null,
+          authProviders: [],
+          storeInfos: [],
+        ),
+        role: defaultInfo.role,
+      ),
+      status: ReservationStatus.confirmed,
+      customerName: '',
+      headCount: 1,
+      customerPhone: '',
+      memo: '',
+      isAllDay: false,
+      startTime: start,
+      endTime: start.add(const Duration(hours: 1)),
+      platform: ReservationPlatform.other,
+      paymentMethod: PaymentMethod.bankTransfer,
+      calculatedPrice: 0,
+      priceAdjustment: 0,
+      totalPrice: 0,
+    );
+
+    if (!context.mounted) return;
+    await showReservationCreateModal(
+      context,
+      initialReservation,
+      availableStores: availableStores,
+      onSaved: (reservation) {
+        ref
+            .read(homeReservationActionsControllerProvider.notifier)
+            .createReservation(reservation);
+      },
+    );
+  }
+}
+
+// ── FAB 위젯 ──────────────────────────────────────────────────────────────────
+
+/// 예약 등록 버튼 (44×44 원형, systemBlue 배경, plus 아이콘)
+class _AddReservationFab extends StatelessWidget {
+  const _AddReservationFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: context.systemBlue,
+          shape: BoxShape.circle,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: const Icon(CupertinoIcons.plus, size: 20, color: Colors.white),
+      ),
     );
   }
 }
