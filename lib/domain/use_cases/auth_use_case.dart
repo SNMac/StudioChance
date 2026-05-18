@@ -83,7 +83,7 @@ class AuthUseCaseImpl implements AuthUseCase {
     final currentUserResult = await _userRepository.getCurrentUser();
 
     return currentUserResult.fold(
-      (error) => left(error),
+      (error) async => left(error),
       (currentUser) async {
         if (currentUser == null) {
           return left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'));
