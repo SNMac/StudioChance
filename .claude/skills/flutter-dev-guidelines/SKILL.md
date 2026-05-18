@@ -30,6 +30,30 @@ Presentation → Domain ← Data
 
 **핵심 규칙**: Domain 레이어는 Data/Presentation에 의존하지 않음.
 
+### UseCase 파일 분리 패턴
+
+UseCase는 두 파일로 분리한다:
+
+| 파일 | 역할 | data import |
+|------|------|-------------|
+| `*_use_case.dart` | interface + impl (순수 Domain) | ❌ 금지 |
+| `*_use_case_provider.dart` | `@riverpod` 팩토리 (DI 배선) | ✅ 허용 |
+
+```dart
+// auth_use_case.dart — data import 없음
+import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
+class AuthUseCaseImpl implements AuthUseCase { ... }
+
+// auth_use_case_provider.dart — DI 배선 파일
+import 'package:studio_chance/data/repositories/auth_repository_impl.dart';
+import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
+
+@riverpod
+AuthUseCase authUseCase(Ref ref) { ... }
+```
+
+Presentation에서는 `*_use_case_provider.dart`를 import해야 `authUseCaseProvider`에 접근 가능.
+
 ---
 
 ## Riverpod 프로바이더 패턴
@@ -155,11 +179,37 @@ ref.listen(controllerProvider, (previous, next) {
 // Repository / Use Case 반환 타입
 Future<Either<Exception, User>> signInWithGoogle();
 
-// Controller에서 소비
+// ✅ 기본 패턴: fold (함수형)
+result.fold(
+  (error) => left(error),   // UseCase 체이닝
+  (value) => right(value),
+);
+
+// ✅ Controller에서 소비
 result.fold(
   (exception) => state = AsyncError(exception, StackTrace.current),
   (user) => state = AsyncData(user),
 );
+
+// ❌ 금지 패턴: 명령형 isLeft/isRight
+if (result.isLeft()) return left(result.getLeft().toNullable()!); // null-force-unwrap 위험
+```
+
+**fold 비동기 처리**: 양쪽 람다 반환 타입을 `async`로 통일하면 `FutureOr` 추론 혼동 방지:
+
+```dart
+return result.fold(
+  (error) async => left(error),     // ✅ 둘 다 async로 명시
+  (value) async { ... return ...; },
+);
+```
+
+**TaskEither 체이닝** (여러 단계 UseCase):
+
+```dart
+return _getCurrentUser().flatMap((user) {
+  return TaskEither(() => _repository.someAction(user.id));
+}).run();
 ```
 
 ### Exception 계층
@@ -176,9 +226,25 @@ AppException (abstract) → title/content 추상 getter, isSilentable 기본값 
 ```
 
 - DataSource: Firebase 에러 → 타입된 Exception으로 변환 (switch)
-- Repository: try-catch → `left(exception)` 반환, 절대 예외 전파 금지
-- Use Case: Either 체이닝 (fold, flatMap, TaskEither)
-- Controller: `fold`로 상태 갱신 + `isSilentable` 체크 (`AppException` 타입 체크만으로 충분)
+- Repository: try-catch → `left(exception)` 반환, 절대 예외 전파 금지 / `toException()` 헬퍼(`common/utils/exception_utils.dart`) 활용
+- Use Case: `result.fold()` 함수형 / `TaskEither.flatMap().run()` 체이닝 / `isLeft()/isRight()` 명령형 금지
+- Controller: `result.fold()`로 상태 갱신 + `isSilentable` 체크 (`AppException` 타입 체크만으로 충분)
+
+### UseCase 공통 헬퍼
+
+현재 로그인 유저가 필요한 UseCase에서 반복 구현 대신 헬퍼 사용:
+
+```dart
+// lib/domain/use_cases/use_case_helpers.dart
+TaskEither<Exception, User> getCurrentUserOrThrow(UserRepository userRepository)
+```
+
+```dart
+// 사용 예 (StoreUseCaseImpl, ReservationUseCaseImpl)
+return getCurrentUserOrThrow(_userRepository).flatMap((user) {
+  return TaskEither(() => _repository.someAction(user.id));
+}).run();
+```
 
 자세한 내용: [error-handling.md](resources/error-handling.md)
 
