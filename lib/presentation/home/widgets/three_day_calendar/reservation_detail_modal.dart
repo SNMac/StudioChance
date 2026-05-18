@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,6 +33,7 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
     super.key,
     required this.reservation,
     required this.onSaved,
+    required this.maxAvailableHeight,
     this.availableStores,
   });
 
@@ -42,6 +41,8 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
 
   /// 완료 탭 시 수정된 Reservation을 전달하는 콜백.
   final void Function(Reservation) onSaved;
+
+  final double maxAvailableHeight;
 
   /// 예약 점포 선택 팝업에 표시할 점포 목록.
   /// null이면 [reservation.storeSummary] 단일 항목으로 fallback.
@@ -54,9 +55,15 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
 }
 
 class _ReservationDetailModalState
-    extends ConsumerState<ReservationDetailModal> {
+    extends ConsumerState<ReservationDetailModal>
+    with SingleTickerProviderStateMixin {
   // ── 모드 상태 ─────────────────────────────────────────────────────────────
   bool _isEditing = false;
+
+  // ── 시트 애니메이션 ───────────────────────────────────────────────────────
+  late final AnimationController _sheetController;
+  double _grabberDragStartSize = _kModalInitialSize;
+  double _grabberDragStartY = 0;
 
   // ── 편집 상태 ─────────────────────────────────────────────────────────────
   late StoreSummary _storeSummary;
@@ -72,14 +79,12 @@ class _ReservationDetailModalState
 
   // ── 스크롤 컨트롤러 ──────────────────────────────────────────────────────
   //
-  // 플랫폼 공통: 모드별 독립 ScrollController + Stack + Offstage
+  // 모드별 독립 ScrollController + Stack + Offstage
   //   - 두 ScrollView가 항상 트리에 존재 → 각자의 ScrollPosition 보존
   //   - Offstage(offstage: true): layout은 유지, paint/hit-test 제외
   //   - 전환 전 _syncScrollPosition()으로 오프셋 수동 동기화
-  //
-  // Android(DraggableScrollableSheet)도 시트 컨트롤러를 모달에 전달하지 않음.
-  // 시트 snap 동작은 ModalGrabber 드래그로 유지, 내부 스크롤은 독립 컨트롤러 사용.
-  late final ScrollController _readOnlyController;
+  late final ScrollController _ownReadOnlyController;
+  ScrollController get _readOnlyController => _ownReadOnlyController;
   late final ScrollController _editController;
 
   // ── 텍스트 컨트롤러 ──────────────────────────────────────────────────────
@@ -104,14 +109,21 @@ class _ReservationDetailModalState
   @override
   void initState() {
     super.initState();
-    _readOnlyController = ScrollController();
+    _sheetController = AnimationController(
+      vsync: this,
+      value: _kModalInitialSize,
+      lowerBound: _kModalInitialSize,
+      upperBound: _kModalMaxSize,
+    );
+    _ownReadOnlyController = ScrollController();
     _editController = ScrollController();
     _initFields(widget.reservation);
   }
 
   @override
   void dispose() {
-    _readOnlyController.dispose();
+    _sheetController.dispose();
+    _ownReadOnlyController.dispose();
     _editController.dispose();
     _nameController.dispose();
     _headCountController.dispose();
@@ -167,7 +179,7 @@ class _ReservationDetailModalState
         r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '';
   }
 
-  // ── 스크롤 위치 동기화 (iOS 전용) ─────────────────────────────────────────
+  // ── 스크롤 위치 동기화 ────────────────────────────────────────────────────
 
   /// 모드 전환 전 비활성 뷰의 오프셋을 활성 뷰에 맞춰 동기화한다.
   /// setState() 호출 전에 실행해야 한다.
@@ -181,6 +193,10 @@ class _ReservationDetailModalState
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
 
+  void _dismissModal() {
+    Navigator.pop(context);
+  }
+
   void _onCancelPressed() {
     if (_isEditing) {
       // 편집 중 취소 → 변경 내용 폐기 + 읽기 전용 복귀
@@ -193,7 +209,7 @@ class _ReservationDetailModalState
       });
     } else {
       // 읽기 전용 중 취소 → 모달 닫기
-      Navigator.pop(context);
+      _dismissModal();
     }
   }
 
@@ -262,37 +278,121 @@ class _ReservationDetailModalState
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Material(
-      color: context.systemGroupedBackground,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const ModalGrabber(),
-          ModalAppBar(
-            title: _isEditing ? '예약 수정' : '예약 정보',
-            leading: AppBarActionButton(
-              label: _isEditing ? '취소' : '닫기',
-              isRegularWeight: true,
-              onPressed: _onCancelPressed,
+    return AnimatedBuilder(
+      animation: _sheetController,
+      builder: (ctx, child) => SizedBox(
+        height: widget.maxAvailableHeight * _sheetController.value,
+        child: child,
+      ),
+      child: Material(
+        color: context.systemGroupedBackground,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(modalTopCornerRadius),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 그라버·앱바 영역 드래그 → 시트 높이 직접 제어.
+            // Listener(raw pointer)로 제스처 아레나 완전 우회.
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) {
+                _grabberDragStartSize = _sheetController.value;
+                _grabberDragStartY = event.position.dy;
+              },
+              onPointerMove: (event) {
+                if (_isEditing) return;
+                final delta =
+                    -event.delta.dy / widget.maxAvailableHeight;
+                _sheetController.value =
+                    (_sheetController.value + delta)
+                        .clamp(_kModalInitialSize, _kModalMaxSize);
+              },
+              onPointerUp: (event) {
+                if (_isEditing) return;
+                final totalDy = event.position.dy - _grabberDragStartY;
+                if (totalDy.abs() < 10) return;
+                if (totalDy > 30) {
+                  if (_grabberDragStartSize <= _kModalInitialSize + 0.05) {
+                    _dismissModal();
+                  } else {
+                    _sheetController.animateTo(
+                      _kModalInitialSize,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                } else if (totalDy < -30) {
+                  _sheetController.animateTo(
+                    _kModalMaxSize,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                } else {
+                  const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
+                  _sheetController.animateTo(
+                    _sheetController.value >= mid
+                        ? _kModalMaxSize
+                        : _kModalInitialSize,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
+              },
+              onPointerCancel: (_) {
+                if (_isEditing) return;
+                const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
+                _sheetController.animateTo(
+                  _sheetController.value >= mid
+                      ? _kModalMaxSize
+                      : _kModalInitialSize,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Opacity(
+                    opacity: _isEditing ? 0.0 : 1.0,
+                    child: const ModalGrabber(),
+                  ),
+                  ModalAppBar(
+                    title: _isEditing ? '예약 수정' : '예약 정보',
+                    leading: AppBarActionButton(
+                      label: _isEditing ? '취소' : '닫기',
+                      isRegularWeight: true,
+                      onPressed: _onCancelPressed,
+                    ),
+                    actions: [
+                      if (_isEditing)
+                        AppBarActionButton(
+                          label: '완료',
+                          onPressed: _isValid ? _onComplete : null,
+                        )
+                      else
+                        AppBarActionButton(
+                          label: '편집',
+                          onPressed: () {
+                            _sheetController.animateTo(
+                              _kModalMaxSize,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            );
+                            _syncScrollPosition(toEdit: true);
+                            setState(() => _isEditing = true);
+                          },
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            actions: [
-              if (_isEditing)
-                AppBarActionButton(
-                  label: '완료',
-                  onPressed: _isValid ? _onComplete : null,
-                )
-              else
-                AppBarActionButton(
-                  label: '편집',
-                  onPressed: () {
-                    _syncScrollPosition(toEdit: true);
-                    setState(() => _isEditing = true);
-                  },
-                ),
-            ],
-          ),
-          Expanded(child: _buildScrollArea(textTheme)),
-        ],
+            Expanded(child: _buildScrollArea(textTheme)),
+          ],
+        ),
       ),
     );
   }
@@ -733,45 +833,36 @@ class _ReadOnlyMemo extends StatelessWidget {
 
 // ── show 함수 ──────────────────────────────────────────────────────────────
 
-/// 예약 확인 모달 표시 (플랫폼 적응형).
+const double _kModalInitialSize = 0.62;
+const double _kModalMaxSize = 1.0;
+
+/// 예약 확인 모달 표시.
 ///
 /// 읽기 전용으로 시작하며, 편집 버튼으로 인라인 편집 모드 전환 가능.
 /// [onSaved]는 편집 완료 탭 시 수정된 [Reservation]을 전달받는 콜백.
+///
+/// 두 개의 snap 위치:
+/// - 소(초기): 메모 섹션이 보이는 높이 + 하루종일 row peek
+/// - 대: 전체 높이 (편집 모드 진입 시 자동 확장)
 Future<void> showReservationDetailModal(
   BuildContext context,
   Reservation reservation, {
   List<StoreSummary>? availableStores,
   required void Function(Reservation) onSaved,
 }) {
-  if (Platform.isIOS) {
-    return showCupertinoSheet<void>(
-      context: context,
-      builder: (_) => ReservationDetailModal(
-        reservation: reservation,
-        availableStores: availableStores,
-        onSaved: onSaved,
-      ),
-    );
-  }
-  // Android: DraggableScrollableSheet로 snap 동작 유지.
-  // 시트 컨트롤러는 모달에 전달하지 않음 — 모달 내부가 독립 ScrollController로 스크롤 관리.
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    enableDrag: false,
+    backgroundColor: Colors.transparent,
     barrierColor: modalBarrierColor,
-    clipBehavior: Clip.antiAlias,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(modalTopCornerRadius),
-      ),
-    ),
-    builder: (ctx) => SizedBox(
-      height: MediaQuery.of(ctx).size.height * 0.9,
-      child: ReservationDetailModal(
+    builder: (ctx) => LayoutBuilder(
+      builder: (_, constraints) => ReservationDetailModal(
         reservation: reservation,
         availableStores: availableStores,
         onSaved: onSaved,
+        maxAvailableHeight: constraints.maxHeight,
       ),
     ),
   );

@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-02 (Phase 20 완료 — 종일 이벤트 입/퇴실 일 표시 수정 + _onAllDayChanged 버그 수정 + 편집 picker 수정)
+Last Updated: 2026-05-18 (Phase 21 완료 — DraggableScrollableSheet 제거 + AnimationController 기반 두 detent 구현, 편집 모드 드래그 잠금)
 
 ---
 
@@ -280,25 +280,53 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 
 ---
 
-## Phase 21: iOS 모달 방식 전환 (미결 결정)
+## ✅ Phase 21: iOS/Android 통합 — DraggableScrollableSheet 제거 + AnimationController 기반 구현 (2026-05-18)
 
-> **목적**: `showCupertinoSheet`(높이 고정) → `showModalBottomSheet`(높이 자유 조정)로 전환.
-> **조건**: 전환 여부 및 높이 비율을 먼저 결정해야 구현 진행 가능.
+> **목적**: `showCupertinoSheet`(iOS) + `DraggableScrollableSheet`(Android) 제거.
+> 플랫폼 공통 `showModalBottomSheet` + 내부 `AnimationController`로 두 detent 동작 직접 구현.
 
-### 21-0: 전환 여부 결정
+### 21-0: 근본 원인 규명
 
-- [ ] `showCupertinoSheet` → `showModalBottomSheet` 전환 여부 확정
-- [ ] 전환 확정 시 원하는 모달 높이 비율 결정 (현재 Android: 0.9)
+- [x] `GestureDetector` 실패 원인: DSS scroll recognizer가 제스처 아레나에서 승리 → 콜백 미실행
+- [x] `Listener` 실패 원인: DSS가 전체 시트 영역에 자체 gesture tracking을 갖고 있어 `BottomSheet.onClosing → Navigator.pop`을 독립 호출
+- [x] `snap: false`도 실패: DSS scroll physics가 minChildSize 도달 + 잔여 포인터 이동 시 dismiss 트리거
+- [x] **결론**: DSS 자체가 문제, 완전 제거 필요
 
-### 21-1: `showReservationDetailModal` 수정 (전환 결정 시)
+### 21-1: `ReservationDetailModal` 재구성
 
-- [ ] iOS 경로: `showCupertinoSheet` → `showModalBottomSheet + SizedBox(height: ...)` 변경
-- [ ] `Platform.isIOS` 분기 제거 → 단일 `showModalBottomSheet` 코드
-- [ ] `dart:io` import 제거
+- [x] `scrollController`, `draggableController` 파라미터 제거
+- [x] `required double maxAvailableHeight` 파라미터 추가
+- [x] `SingleTickerProviderStateMixin` 추가
+- [x] `AnimationController _sheetController` 추가 (value: 0.62, lowerBound: 0.62, upperBound: 1.0)
+- [x] `_ownReadOnlyController` non-nullable `late final`로 변경 (항상 생성)
+- [x] `_dismissModal()` = `Navigator.pop(context)` 직접 호출 (route 기본 슬라이드다운 exit 활용)
+- [x] `build()`: `AnimatedBuilder` → `SizedBox(height: maxAvailableHeight * value)` → `Material(borderRadius: ...)` 구조
+- [x] `Listener`: `_sheetController.value` 직접 조작 (DSS 없이 완전 독립)
+- [x] 편집 모드 진입: `_sheetController.animateTo(_kModalMaxSize)`
 
-### 21-2: `dart analyze` 통과
+### 21-2: 편집 모드 드래그 잠금 + 그라버 숨김
 
-- [ ] 변경 후 `dart analyze` 오류 없음 확인
+- [x] `onPointerMove/Up/Cancel`: `if (_isEditing) return;` 추가 → 편집 모드에서 드래그 불가
+- [x] `ModalGrabber` → `Opacity(opacity: _isEditing ? 0.0 : 1.0, ...)` → 공간 유지하며 시각만 숨김
+
+### 21-3: `showReservationDetailModal` 재구성
+
+- [x] `DraggableScrollableController` 제거
+- [x] `DraggableScrollableSheet` 제거
+- [x] `backgroundColor: Colors.transparent` 적용
+- [x] `LayoutBuilder`로 `constraints.maxHeight` → `maxAvailableHeight` 전달
+- [x] `Platform.isIOS` 분기 완전 제거 (플랫폼 공통 단일 코드)
+- [x] `dart:io` import 제거됨
+
+### 21-4: Overflow 수정
+
+- [x] `lowerBound: 0.0` → `lowerBound: _kModalInitialSize` 변경
+  - **원인**: 이전 dismiss 애니메이션(`animateTo(0.0)`) 중 Column overflow (h=51.5)
+  - **해결**: `lowerBound = 0.62`로 height가 0에 도달하지 않게 차단
+
+### 21-5: `dart analyze` 통과
+
+- [x] `dart analyze` → `No issues found!`
 
 ---
 

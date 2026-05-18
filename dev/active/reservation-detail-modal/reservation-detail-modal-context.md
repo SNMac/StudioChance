@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-05-02 (Phase 20 완료 — 종일 이벤트 입/퇴실 일 표시 수정, _onAllDayChanged 버그 수정, 편집 picker 수정. 전체 Phase 1~20 완료.)
+Last Updated: 2026-05-18 (Phase 21 완료 — DraggableScrollableSheet 완전 제거, AnimationController 기반 두 detent 구현, 플랫폼 코드 통합. 전체 Phase 1~21 완료.)
 
 ---
 
@@ -491,8 +491,7 @@ _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
 | 항목 | 내용 |
 |------|------|
 | ~~**Phase 20**~~ | ~~읽기 전용 종일 이벤트 입/퇴실 일시 통합 + `_onAllDayChanged` 버그 수정~~ → 2026-05-02 완료 ✅ |
-| **🔍 iOS 모달 방식 전환 검토** | `showCupertinoSheet` → `showModalBottomSheet` 전환 여부 결정 필요 (아래 상세) |
-| Android scroll jank (17-F) | 실기기 검증 대기. 재현 시 `enableDrag: false` 추가 |
+| ~~**Phase 21**~~ | ~~iOS/Android 통합 모달, DraggableScrollableSheet 제거~~ → 2026-05-18 완료 ✅ |
 | `n번째` 계산 | 실제 데이터 연결 전까지 `1` 하드코딩 유지 |
 | 입금/확정 안내문 | `TextActionButton.onPressed` TODO 유지 |
 | `onSaved` 실제 연결 | 예약 저장 Use Case + Repository 구현 후 연결 |
@@ -503,71 +502,84 @@ _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
 
 ---
 
-## 🔍 미결 결정: iOS 모달 방식 전환 검토 (2026-05-02)
+## ✅ Phase 21 구현 상세 (2026-05-18)
 
-### 배경
+### 핵심 문제: DraggableScrollableSheet dismiss 버그
 
-현재 `showReservationDetailModal` iOS 경로는 `showCupertinoSheet`를 사용한다.
-Android는 Phase 17-E에서 `DraggableScrollableSheet` 제거 후 `showModalBottomSheet + SizedBox(height: 0.9)`로 통일됨.
+DSS + `showModalBottomSheet` 조합에서 그라버 드래그 시 모달이 의도치 않게 dismiss되는 버그.
+**시도한 우회책이 모두 실패한 이유**:
+- `GestureDetector`: DSS scroll recognizer가 제스처 아레나 승리 → 콜백 미실행
+- `Listener` (raw pointer): DSS가 전체 시트 영역에 자체 gesture tracking → `BottomSheet.onClosing` 독립 호출
+- `snap: false`: DSS scroll physics가 minChildSize 도달 + 잔여 이동 시 여전히 dismiss 트리거
 
-**이슈**: `showCupertinoSheet`는 iOS 네이티브 시트 동작(전체 높이, 스택 가능)을 제공하지만
-높이를 자유롭게 조정하기 어렵다. `showModalBottomSheet`로 전환하면 Android와 동일하게
-`SizedBox(height: ...)` 비율을 명시적으로 제어할 수 있다.
+**해결**: DSS 완전 제거. 내부 `AnimationController`로 시트 높이를 직접 제어.
 
-### 현재 상태 (iOS)
+### 최종 구조
 
-```dart
-// showReservationDetailModal iOS 경로
-return showCupertinoSheet<void>(
-  context: context,
-  builder: (_) => ReservationDetailModal(...),
-);
+```
+showModalBottomSheet(
+  isScrollControlled: true, useSafeArea: true,
+  enableDrag: false, backgroundColor: transparent
+)
+  └── LayoutBuilder → constraints.maxHeight → maxAvailableHeight
+      └── ReservationDetailModal(maxAvailableHeight: ...)
+          └── AnimatedBuilder(animation: _sheetController)
+              └── SizedBox(height: maxAvailableHeight * _sheetController.value)
+                  └── Material(borderRadius: top-rounded)
+                      └── Column
+                          ├── Listener(grabber + appbar) ← 직접 _sheetController.value 조작
+                          └── Expanded(Stack+Offstage ScrollViews)
 ```
 
-- `showCupertinoSheet`: Flutter 내장 함수, iOS 스타일 시트 (상단 모서리 둥글기, 반투명 이전 화면)
-- 높이: 전체 화면(safe area 제외) 고정, 개발자가 지정 불가
-- 장점: iOS 네이티브 느낌, 여러 시트 스택 가능
-- 단점: 높이 고정, 모달 콘텐츠가 짧아도 전체 화면 점유
+### `ReservationDetailModal` 파라미터 변경
 
-### 전환 시 변경 방향 (`showModalBottomSheet` 통일)
+| 제거 | 추가 |
+|------|------|
+| `ScrollController? scrollController` | `required double maxAvailableHeight` |
+| `DraggableScrollableController? draggableController` | — |
+
+### `_sheetController` 설정
 
 ```dart
-// iOS 경로도 Android와 동일하게 변경
-return showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  barrierColor: modalBarrierColor,
-  clipBehavior: Clip.antiAlias,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(modalTopCornerRadius)),
-  ),
-  builder: (ctx) => SizedBox(
-    height: MediaQuery.of(ctx).size.height * 0.9,  // 또는 원하는 비율
-    child: ReservationDetailModal(...),
-  ),
-);
+AnimationController(
+  vsync: this,  // SingleTickerProviderStateMixin 추가
+  value: _kModalInitialSize,      // 0.62 (초기 열림 높이)
+  lowerBound: _kModalInitialSize, // 0.62 (최솟값 — overflow 방지)
+  upperBound: _kModalMaxSize,     // 1.0
+)
 ```
 
-- `Platform.isIOS` 분기 완전 제거 → 플랫폼 공통 코드
-- `dart:io` import 제거 가능
+> ⚠️ `lowerBound: 0.0`으로 설정하면 dismiss 애니메이션 도중 Column overflow(h=51.5) 발생.
+> `lowerBound: _kModalInitialSize`로 설정하고 dismiss는 `Navigator.pop()` 직접 호출.
 
-### 트레이드오프
+### 그라버 드래그 로직
 
-| 항목 | `showCupertinoSheet` (현재) | `showModalBottomSheet` (전환 후) |
-|------|----------------------------|----------------------------------|
-| iOS 네이티브 느낌 | ✅ 완전한 iOS 시트 | ⚠️ Material 스타일 (커스터마이징 가능) |
-| 높이 제어 | ❌ 불가 (전체 화면) | ✅ 자유롭게 지정 |
-| 플랫폼 코드 분기 | ❌ iOS/Android 분기 필요 | ✅ 단일 코드 |
-| ModalGrabber 표시 | ✅ 표시됨 | ✅ 표시됨 (동일) |
-| 이전 화면 스택 | ✅ 지원 | ⚠️ barrier로 구현 |
-| scroll 보존 | ✅ Stack+Offstage로 해결됨 | ✅ 동일 (모달 내부 구조 변경 없음) |
+```dart
+onPointerMove: (event) {
+  if (_isEditing) return;  // 편집 모드: 드래그 잠금
+  final delta = -event.delta.dy / widget.maxAvailableHeight;
+  _sheetController.value = (_sheetController.value + delta).clamp(0.62, 1.0);
+},
+onPointerUp: (event) {
+  if (_isEditing) return;
+  final totalDy = event.position.dy - _grabberDragStartY;
+  if (totalDy.abs() < 10) return; // 탭 → 무시
+  if (totalDy > 30) {
+    if (_grabberDragStartSize <= 0.67) _dismissModal(); // 소 detent → dismiss
+    else _sheetController.animateTo(0.62, ...);         // 대 detent → 소 detent 스냅
+  } else if (totalDy < -30) {
+    _sheetController.animateTo(1.0, ...);               // 위로 → 대 detent 스냅
+  } else {
+    // 중간 → 가까운 detent로 스냅
+  }
+},
+```
 
-### 결정 필요 사항
+### 편집 모드 동작
 
-- [ ] `showCupertinoSheet` → `showModalBottomSheet` 전환 여부 결정
-- [ ] 전환 시 원하는 높이 비율 결정 (현재 Android: 0.9)
-- [ ] 전환 시 `dart:io` import 제거 (`Platform.isIOS` 분기 불필요)
+- 그라버: `Opacity(opacity: _isEditing ? 0.0 : 1.0)` — 공간 유지, 시각만 숨김 (layout shift 없음)
+- 드래그: `onPointerMove/Up/Cancel`에서 `_isEditing` 시 early return
+- 편집 진입: `_sheetController.animateTo(1.0)` → 자동 전체 높이 확장
 
 ---
 
