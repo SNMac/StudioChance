@@ -45,6 +45,13 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - `fpdart`의 `Either<Exception, T>` 패턴 사용 (Use Case 반환 타입)
 - `left()` = 실패, `right()` = 성공
 
+## Either / TaskEither 패턴
+
+- 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)
+- `isLeft()` / `isRight()` + `getLeft().toNullable()!` 명령형 스타일 사용 금지
+- `TaskEither` 체이닝: `.flatMap()` → `.run()` 순서
+- 불가피한 예외 (FCM 토큰 제거처럼 실패를 허용해야 하는 경우): `fold` 내에서 try-catch 허용
+
 ## Git 컨벤션
 - 브랜치: `feat/#<이슈번호>-<설명>`, `fix/#<이슈번호>-<설명>`
 - 커밋: `<type>: #<이슈번호> - <한국어 설명>`

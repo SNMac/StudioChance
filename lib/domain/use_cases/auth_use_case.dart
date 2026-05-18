@@ -63,14 +63,17 @@ class AuthUseCaseImpl implements AuthUseCase {
   Future<void> signOut() async {
     final currentUserResult = await _userRepository.getCurrentUser();
 
-    if (currentUserResult.isRight()) {
-      final user = currentUserResult.getRight().toNullable();
-      if (user != null) {
-        try {
-          await _userRepository.removeCurrentDeviceFcmToken(user.id);
-        } catch (_) {}
-      }
-    }
+    // FCM 토큰 제거 실패 시에도 반드시 signOut을 실행해야 하므로 fold 후 signOut 호출
+    await currentUserResult.fold(
+      (_) async {},
+      (user) async {
+        if (user != null) {
+          try {
+            await _userRepository.removeCurrentDeviceFcmToken(user.id);
+          } catch (_) {}
+        }
+      },
+    );
 
     await _authRepository.signOut();
   }
@@ -79,24 +82,24 @@ class AuthUseCaseImpl implements AuthUseCase {
   Future<Either<Exception, void>> delete() async {
     final currentUserResult = await _userRepository.getCurrentUser();
 
-    if (currentUserResult.isLeft()) {
-      return left(currentUserResult.getLeft().toNullable()!);
-    }
+    return currentUserResult.fold(
+      (error) => left(error),
+      (currentUser) async {
+        if (currentUser == null) {
+          return left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'));
+        }
 
-    final currentUser = currentUserResult.getRight().toNullable();
-    if (currentUser == null) {
-      return left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'));
-    }
+        try {
+          await _userRepository.softDeleteUser(currentUser.id);
+        } catch (e) {
+          return left(
+            e is Exception ? e : UserUnknownException(message: e.toString()),
+          );
+        }
 
-    try {
-      await _userRepository.softDeleteUser(currentUser.id);
-    } catch (e) {
-      return left(
-        e is Exception ? e : UserUnknownException(message: e.toString()),
-      );
-    }
-
-    return _authRepository.delete();
+        return _authRepository.delete();
+      },
+    );
   }
 
   @override
