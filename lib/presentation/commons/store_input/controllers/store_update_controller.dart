@@ -24,12 +24,10 @@ class StoreUpdateController extends _$StoreUpdateController
     String memo = '';
 
     if (currentUser != null) {
-      try {
-        color = currentUser.storeInfos
-            .firstWhere((e) => e.id == store.id)
-            .color;
-        memo = currentUser.storeInfos.firstWhere((e) => e.id == store.id).memo;
-      } catch (_) {}
+      final storeInfo =
+          currentUser.storeInfos.where((e) => e.id == store.id).firstOrNull;
+      color = storeInfo?.color ?? StoreColor.red;
+      memo = storeInfo?.memo ?? '';
     }
 
     return StoreFormState(
