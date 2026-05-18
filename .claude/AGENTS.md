@@ -54,6 +54,8 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - `flutter run` - 앱 실행
 - `dart run build_runner build --delete-conflicting-outputs` - 코드 생성
 - `dart run build_runner watch` - 코드 생성 (watch 모드)
+- `flutter test` - 테스트 실행
+- `dart analyze` - 정적 분석
 
 ## 폰트 및 디자인
 - 기본 폰트: Pretendard (400, 500, 600, 700)
@@ -83,6 +85,17 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   final store = await storeF;
   final user = await userF;
   ```
+
+## 모달 시트 패턴
+
+- `DraggableScrollableSheet` 사용 금지 — 내부 gesture tracking이 `BottomSheet.onClosing → Navigator.pop`을 독립 호출, `GestureDetector`/`Listener` 우회 불가
+- 두 detent 시트: `showModalBottomSheet(isScrollControlled: true, enableDrag: false)` + `LayoutBuilder` + `AnimationController(lowerBound: initialSize, upperBound: 1.0)`
+  - 드래그: `Listener.onPointerMove` → `_controller.value = clamp(...)` 직접 조작
+  - 스냅: `onPointerUp` → `_controller.animateTo(target)`
+  - dismiss: `Navigator.pop()` 직접 호출 (route 기본 exit 애니메이션 활용)
+  - `lowerBound`는 반드시 `initialSize`로 설정 — `0.0`이면 dismiss 중 Column overflow 발생
+- 모드 전환 간 스크롤 위치 보존: `Stack + Positioned.fill + Offstage` × 2 + 모드별 독립 `ScrollController`
+  - 전환 전 `_syncScrollPosition()` 호출 필수 (setState 이전에)
 
 ## Agent Working Rules
 
