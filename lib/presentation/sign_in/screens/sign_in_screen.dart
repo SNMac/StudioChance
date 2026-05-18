@@ -15,7 +15,9 @@ class SignInScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
 
-    final state = ref.watch(signInControllerProvider);
+    final isLoading = ref.watch(
+      signInControllerProvider.select((s) => s.isLoading),
+    );
 
     final isDarkMode =
         MediaQuery.of(context).platformBrightness == Brightness.dark;
@@ -82,7 +84,7 @@ class SignInScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: 12,
                 children: [
-                  if (state.isLoading)
+                  if (isLoading)
                     const SizedBox(
                       height: 108,
                       child: Center(

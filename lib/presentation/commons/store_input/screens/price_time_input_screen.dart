@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
-import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
@@ -116,18 +116,22 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
     final Store? storeToEdit = args['store'] as Store?;
     final int groupIndex = args['index'] as int;
 
-    StoreFormState state;
-    StoreFormControllerable notifier;
+    final PriceSetting priceSettings;
+    final StoreFormControllerable notifier;
 
     if (storeToEdit != null) {
-      state = ref.watch(storeUpdateControllerProvider(storeToEdit));
+      priceSettings = ref.watch(
+        storeUpdateControllerProvider(storeToEdit).select((s) => s.priceSettings),
+      );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
-      state = ref.watch(storeCreationControllerProvider);
+      priceSettings = ref.watch(
+        storeCreationControllerProvider.select((s) => s.priceSettings),
+      );
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
-    if (groupIndex >= state.priceSettings.dayGroups.length) {
+    if (groupIndex >= priceSettings.dayGroups.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
@@ -142,7 +146,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
       );
     }
 
-    final currentDayGroup = state.priceSettings.dayGroups[groupIndex];
+    final currentDayGroup = priceSettings.dayGroups[groupIndex];
     _initializeData(currentDayGroup);
 
     void onSave() {

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/weekday.dart';
-import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
@@ -24,18 +24,22 @@ class PriceDaysInputScreen extends ConsumerWidget {
     final Store? storeToEdit = args['store'] as Store?;
     final int groupIndex = args['index'] as int;
 
-    StoreFormState state;
-    StoreFormControllerable notifier;
+    final PriceSetting priceSettings;
+    final StoreFormControllerable notifier;
 
     if (storeToEdit != null) {
-      state = ref.watch(storeUpdateControllerProvider(storeToEdit));
+      priceSettings = ref.watch(
+        storeUpdateControllerProvider(storeToEdit).select((s) => s.priceSettings),
+      );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
-      state = ref.watch(storeCreationControllerProvider);
+      priceSettings = ref.watch(
+        storeCreationControllerProvider.select((s) => s.priceSettings),
+      );
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
-    if (groupIndex >= state.priceSettings.dayGroups.length) {
+    if (groupIndex >= priceSettings.dayGroups.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
@@ -51,13 +55,13 @@ class PriceDaysInputScreen extends ConsumerWidget {
       );
     }
 
-    final currentDayGroup = state.priceSettings.dayGroups[groupIndex];
+    final currentDayGroup = priceSettings.dayGroups[groupIndex];
     final selectedDays = currentDayGroup.days;
 
     final Set<Weekday> unavailableDays = {};
-    for (int i = 0; i < state.priceSettings.dayGroups.length; i++) {
+    for (int i = 0; i < priceSettings.dayGroups.length; i++) {
       if (i == groupIndex) continue;
-      unavailableDays.addAll(state.priceSettings.dayGroups[i].days);
+      unavailableDays.addAll(priceSettings.dayGroups[i].days);
     }
 
     const List<Weekday> weekDays = [
