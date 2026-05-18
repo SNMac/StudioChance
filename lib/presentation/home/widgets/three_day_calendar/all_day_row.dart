@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
-import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
+import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
 /// 3일 캘린더 종일 이벤트 셀 (날짜 1열)
 class AllDayCell extends ConsumerStatefulWidget {
@@ -31,7 +29,6 @@ class AllDayCell extends ConsumerStatefulWidget {
 }
 
 class _AllDayCellState extends ConsumerState<AllDayCell> {
-  final Logger _logger = Logger();
   String? _highlightedId;
 
   Future<void> _onCellTap(ReservationDisplayData event) async {
@@ -45,14 +42,8 @@ class _AllDayCellState extends ConsumerState<AllDayCell> {
       availableStores: widget.availableStores,
       onSaved: (updated) {
         ref
-            .read(reservationUseCaseProvider)
-            .updateReservation(reservation: updated)
-            .then((result) {
-          result.fold(
-            (e) => _logger.e('예약 수정 실패', error: e),
-            (_) => ref.invalidate(homeReservationsProvider),
-          );
-        });
+            .read(homeReservationActionsControllerProvider.notifier)
+            .updateReservation(updated);
       },
     );
     if (!mounted) return;

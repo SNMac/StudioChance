@@ -2,18 +2,16 @@ import 'dart:math' show max;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
-import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
+import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
 /// N=2 겹침에서 시작 시간이 다를 때 (delta > 0) 적용하는 고정 stagger (px).
 /// back 셀의 foreground strip(4px) + gap(4px) = 8px.
@@ -220,8 +218,6 @@ class TimeGrid extends ConsumerStatefulWidget {
 }
 
 class _TimeGridState extends ConsumerState<TimeGrid> {
-  final Logger _logger = Logger();
-
   /// z-순서 최상단으로 올릴 셀 id
   String? _selectedId;
 
@@ -230,14 +226,8 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
 
   void _onReservationSaved(Reservation updated) {
     ref
-        .read(reservationUseCaseProvider)
-        .updateReservation(reservation: updated)
-        .then((result) {
-      result.fold(
-        (e) => _logger.e('예약 수정 실패', error: e),
-        (_) => ref.invalidate(homeReservationsProvider),
-      );
-    });
+        .read(homeReservationActionsControllerProvider.notifier)
+        .updateReservation(updated);
   }
 
   ({double top, double height}) _placementFor(
