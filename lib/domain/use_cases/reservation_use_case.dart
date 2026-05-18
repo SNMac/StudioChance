@@ -1,18 +1,11 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
-import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
-import 'package:studio_chance/data/repositories/store_repository_impl.dart';
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-
-part 'reservation_use_case.g.dart';
 
 abstract interface class ReservationUseCase {
   /// 예약 생성
@@ -194,17 +187,4 @@ class ReservationUseCaseImpl implements ReservationUseCase {
       totalPrice: calculatedPrice + reservation.priceAdjustment,
     );
   }
-}
-
-@riverpod
-ReservationUseCase reservationUseCase(Ref ref) {
-  final reservationRepository = ref.watch(reservationRepositoryProvider);
-  final userRepository = ref.watch(userRepositoryProvider);
-  final storeRepository = ref.watch(storeRepositoryProvider);
-
-  return ReservationUseCaseImpl(
-    reservationRepository: reservationRepository,
-    userRepository: userRepository,
-    storeRepository: storeRepository,
-  );
 }

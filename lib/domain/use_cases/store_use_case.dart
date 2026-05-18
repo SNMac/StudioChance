@@ -1,8 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
-
-import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
@@ -11,9 +8,6 @@ import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
-
-part 'store_use_case.g.dart';
 
 abstract interface class StoreUseCase {
   /// 점포 생성 (생성 요청자를 Admin으로 자동 등록)
@@ -212,15 +206,4 @@ class StoreUseCaseImpl implements StoreUseCase {
       });
     }, (error, stackTrace) => error is Exception ? error : Exception(error));
   }
-}
-
-@riverpod
-StoreUseCase storeUseCase(Ref ref) {
-  final storeRepository = ref.watch(storeRepositoryProvider);
-  final userRepository = ref.watch(userRepositoryProvider);
-
-  return StoreUseCaseImpl(
-    storeRepository: storeRepository,
-    userRepository: userRepository,
-  );
 }

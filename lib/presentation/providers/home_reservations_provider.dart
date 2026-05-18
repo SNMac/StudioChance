@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
+import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
 part 'home_reservations_provider.g.dart';

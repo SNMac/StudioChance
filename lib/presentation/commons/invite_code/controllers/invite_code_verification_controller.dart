@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
+import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/states/invite_code_verification_state.dart';
 
 part 'invite_code_verification_controller.g.dart';

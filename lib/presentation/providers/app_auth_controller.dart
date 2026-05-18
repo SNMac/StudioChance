@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 
-import 'package:studio_chance/domain/use_cases/user_use_case.dart';
+import 'package:studio_chance/domain/use_cases/user_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/auth_provider.dart';
 
 part 'app_auth_controller.g.dart';

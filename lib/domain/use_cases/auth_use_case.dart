@@ -1,16 +1,10 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
-
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
-import 'package:studio_chance/data/repositories/auth_repository_impl.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-
-part 'auth_use_case.g.dart';
 
 abstract interface class AuthUseCase {
   /// 로그인 상태 변경 `Stream`
@@ -109,15 +103,4 @@ class AuthUseCaseImpl implements AuthUseCase {
   Future<Either<Exception, void>> reauthenticate() {
     return _authRepository.reauthenticate();
   }
-}
-
-@riverpod
-AuthUseCase authUseCase(Ref ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  final userRepository = ref.watch(userRepositoryProvider);
-
-  return AuthUseCaseImpl(
-    authRepository: authRepository,
-    userRepository: userRepository,
-  );
 }
