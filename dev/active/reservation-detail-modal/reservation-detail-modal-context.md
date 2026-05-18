@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-05-18 (Phase 21 완료 — DraggableScrollableSheet 완전 제거, AnimationController 기반 두 detent 구현, 플랫폼 코드 통합. 전체 Phase 1~21 완료.)
+Last Updated: 2026-05-19 (Phase 22 완료 — viewer 역할 편집 제한, availableStores admin/staff 필터링)
 
 ---
 
@@ -492,13 +492,49 @@ _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
 |------|------|
 | ~~**Phase 20**~~ | ~~읽기 전용 종일 이벤트 입/퇴실 일시 통합 + `_onAllDayChanged` 버그 수정~~ → 2026-05-02 완료 ✅ |
 | ~~**Phase 21**~~ | ~~iOS/Android 통합 모달, DraggableScrollableSheet 제거~~ → 2026-05-18 완료 ✅ |
+| ~~**Phase 22**~~ | ~~viewer 역할 편집 제한 + availableStores 공급~~ → 2026-05-19 완료 ✅ |
 | `n번째` 계산 | 실제 데이터 연결 전까지 `1` 하드코딩 유지 |
 | 입금/확정 안내문 | `TextActionButton.onPressed` TODO 유지 |
 | `onSaved` 실제 연결 | 예약 저장 Use Case + Repository 구현 후 연결 |
-| `availableStores` 공급 | Home Provider에서 사용자 가입 점포 목록 fetch 후 전달 |
 | 숫자 콤마 포맷 | `calculatedPrice.toString()` → `"50,000"` style (스코프 아웃) |
 | `_formatDateTime` 공통화 | 현재 편집/확인 모달 각각 private 선언 (스코프 아웃) |
 | ~~`ReservationEditModal` 삭제~~ | 2026-04-19 삭제 완료 ✅ |
+
+## Phase 22 구현 상세 (2026-05-19)
+
+### `three_day_calendar.dart` — availableStores 필터링
+
+```dart
+// 변경 전
+final availableStores = storeInfos
+    ?.map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+    .toList();
+
+// 변경 후
+final filtered = storeInfos
+    ?.where((info) => info.role == UserRole.admin || info.role == UserRole.staff)
+    .map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+    .toList();
+final availableStores = (filtered == null || filtered.isEmpty) ? null : filtered;
+```
+
+빈 리스트 `[]`는 `?? [reservation.storeSummary]` fallback을 트리거하지 않으므로 반드시 `null`로 전달해야 함.
+
+### `reservation_detail_modal.dart` — `_canEdit` getter
+
+```dart
+bool get _canEdit {
+  final storeInfos = ref.watch(
+    currentUserProvider.select((u) => u.asData?.value?.storeInfos),
+  );
+  if (storeInfos == null) return false;
+  final storeId = widget.reservation.storeSummary.id;
+  final info = storeInfos.where((i) => i.id == storeId).firstOrNull;
+  return info?.role == UserRole.admin || info?.role == UserRole.staff;
+}
+```
+
+AppBar actions: `else AppBarActionButton(label: '편집')` → `else if (_canEdit) AppBarActionButton(label: '편집')`
 
 ---
 

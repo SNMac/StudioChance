@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/utils/calendar_events_utils.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
@@ -285,9 +286,12 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final storeInfos = ref.watch(
       currentUserProvider.select((async) => async.asData?.value?.storeInfos),
     );
-    final availableStores = storeInfos
-        ?.map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+    final filtered = storeInfos
+        ?.where((info) => info.role == UserRole.admin || info.role == UserRole.staff)
+        .map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
         .toList();
+    // 빈 리스트면 null로 전달 → detail modal의 ?? fallback 작동
+    final availableStores = (filtered == null || filtered.isEmpty) ? null : filtered;
 
     // 오늘 버튼 → 현재 시간 스크롤
     // animateToPage 진행 중이면 완료 후 실행 (스크롤 위치 경쟁 방지)

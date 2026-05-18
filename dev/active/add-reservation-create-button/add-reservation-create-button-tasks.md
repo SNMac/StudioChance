@@ -1,6 +1,6 @@
 # 예약 등록 버튼 — 태스크 체크리스트
 
-Last Updated: 2026-05-19
+Last Updated: 2026-05-19 (Phase 5 추가 — Opacity grabber 여백 유지)
 
 ## Phase 1: Controller 확장 (S) ✅
 
@@ -40,8 +40,15 @@ Last Updated: 2026-05-19
 - 브랜치: `feat/#5-home`
 - 커밋: `ec9d359` — feat: #5 - 예약 등록 버튼 및 생성 모달 추가
 
+## ✅ Phase 5: 생성 모달 Grabber 여백 추가 (커밋 fbd3503)
+
+- [x] `reservation_create_modal.dart` — `Opacity(opacity: 0.0, child: ModalGrabber())` 추가
+  - grabber pill 시각은 숨기되 상단 레이아웃 여백 유지
+  - detail modal의 `Opacity(opacity: _isEditing ? 0.0 : 1.0, child: ModalGrabber())` 패턴과 동일
+  - 생성 모달은 항상 숨김이므로 opacity 고정 0.0
+
 ## 미완료/후속 작업
 
 - [ ] 예약 생성 실패 시 사용자 피드백 UI (현재: 로그만 출력, 모달은 닫힘)
-- [ ] `availableStores` 실제 점포 데이터 연동 (현재: `userStoreInfos` 기반 변환)
+- [x] ~~`availableStores` 실제 점포 데이터 연동~~ → reservation-detail-modal Phase 22에서 완료 ✅
 - [ ] 예약 생성 후 해당 날짜로 캘린더 스크롤 이동 (UX 개선)

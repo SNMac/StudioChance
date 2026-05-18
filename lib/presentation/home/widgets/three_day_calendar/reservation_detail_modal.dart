@@ -9,6 +9,8 @@ import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
 import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
@@ -105,6 +107,17 @@ class _ReservationDetailModalState
 
   List<StoreSummary> get _availableStores =>
       widget.availableStores ?? [widget.reservation.storeSummary];
+
+  /// 현재 사용자가 이 예약의 점포에 대해 수정 권한(admin/staff)을 가지는지 여부.
+  bool get _canEdit {
+    final storeInfos = ref.watch(
+      currentUserProvider.select((u) => u.asData?.value?.storeInfos),
+    );
+    if (storeInfos == null) return false;
+    final storeId = widget.reservation.storeSummary.id;
+    final info = storeInfos.where((i) => i.id == storeId).firstOrNull;
+    return info?.role == UserRole.admin || info?.role == UserRole.staff;
+  }
 
   @override
   void initState() {
@@ -372,7 +385,7 @@ class _ReservationDetailModalState
                           label: '완료',
                           onPressed: _isValid ? _onComplete : null,
                         )
-                      else
+                      else if (_canEdit)
                         AppBarActionButton(
                           label: '편집',
                           onPressed: () {

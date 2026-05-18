@@ -330,11 +330,27 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 
 ---
 
+## ✅ Phase 22: viewer 역할 편집 제한 + availableStores 공급 (2026-05-19)
+
+- [x] **22-1** `three_day_calendar.dart` — `availableStores` admin/staff 필터링
+  - 기존: `storeInfos?.map(...)` 전체 점포 변환
+  - 변경: `.where(role == admin || role == staff)` 후 빈 리스트면 `null` 전달
+  - 이유: 빈 리스트 전달 시 `?? [reservation.storeSummary]` fallback 미작동
+  - `import user_role.dart` 추가
+- [x] **22-2** `reservation_detail_modal.dart` — `_canEdit` getter 추가
+  - `currentUserProvider`에서 해당 점포 role 조회
+  - `admin || staff`이면 true, viewer/none/null이면 false
+  - `import user_role.dart`, `import app_auth_controller.dart` 추가
+- [x] **22-3** 편집 버튼 조건부 표시
+  - `else AppBarActionButton(label: '편집')` → `else if (_canEdit) AppBarActionButton(label: '편집')`
+  - viewer 역할 점포 예약 열람 시 '편집' 버튼 미표시
+- [x] **22-4** `dart analyze` — No issues found
+
 ## 스코프 아웃
 
 - [x] 요금 콤마 포맷 (50,000)
 - [x] `_formatDateTime` 공통 extension 추출
 - [x] `n번째` 예약 실제 계산 연결
-- [x] `availableStores` 실제 데이터 연결
+- [x] ~~`availableStores` 실제 데이터 연결~~ → Phase 22에서 완료 ✅
 - [x] `onSaved` 실제 Firestore 저장 연결
 - [x] 입금/확정 안내문 화면 연결

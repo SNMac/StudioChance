@@ -32,10 +32,6 @@ Last Updated: 2026-05-19 (코드 구현 완료, 실기기 검증 대기)
 - [ ] 다른 기기(또는 Firebase 콘솔)에서 예약 변경 → 캘린더 반영 확인
 - [ ] `AsyncError` 케이스 (네트워크 끊김 등) UI 처리 확인
 
-## 추가 변경 (동 세션)
-
-- [x] `reservation_create_modal.dart`: `Opacity(opacity: 0.0, child: ModalGrabber())` 추가 — 여백 유지, pill 비표시
-
 ---
 
 ## 완료 기준

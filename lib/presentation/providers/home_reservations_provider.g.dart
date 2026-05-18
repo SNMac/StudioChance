@@ -110,16 +110,18 @@ final class StoreReservationsStreamFamily extends $Family
   String toString() => r'storeReservationsStreamProvider';
 }
 
-/// 현재 사용자가 접근 가능한 모든 점포의 [month] 기간 예약을 병합하여 반환한다.
+/// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
+/// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
 /// - 각 점포의 [storeReservationsStreamProvider]를 구독
 /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
 
 @ProviderFor(homeReservations)
 final homeReservationsProvider = HomeReservationsFamily._();
 
-/// 현재 사용자가 접근 가능한 모든 점포의 [month] 기간 예약을 병합하여 반환한다.
+/// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
+/// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
 /// - 각 점포의 [storeReservationsStreamProvider]를 구독
 /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
 
@@ -133,8 +135,9 @@ final class HomeReservationsProvider
     with
         $FutureModifier<List<Reservation>>,
         $FutureProvider<List<Reservation>> {
-  /// 현재 사용자가 접근 가능한 모든 점포의 [month] 기간 예약을 병합하여 반환한다.
+  /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
   ///
+  /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
   /// - 각 점포의 [storeReservationsStreamProvider]를 구독
   /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
   HomeReservationsProvider._({
@@ -181,10 +184,11 @@ final class HomeReservationsProvider
   }
 }
 
-String _$homeReservationsHash() => r'57f09913f8de59751b781b8d42ab877e54bc423c';
+String _$homeReservationsHash() => r'b849def4a4d463ac651192176000d4fbc2ac6cf0';
 
-/// 현재 사용자가 접근 가능한 모든 점포의 [month] 기간 예약을 병합하여 반환한다.
+/// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
+/// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
 /// - 각 점포의 [storeReservationsStreamProvider]를 구독
 /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
 
@@ -199,8 +203,9 @@ final class HomeReservationsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 현재 사용자가 접근 가능한 모든 점포의 [month] 기간 예약을 병합하여 반환한다.
+  /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
   ///
+  /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
   /// - 각 점포의 [storeReservationsStreamProvider]를 구독
   /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
 

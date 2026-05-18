@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/home/widgets/store_filter_modal.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 
 /// 홈 화면 네비게이션 바
@@ -67,7 +68,7 @@ class HomeNavBar extends ConsumerWidget {
               CupertinoButton(
                 minimumSize: Size.zero,
                 padding: EdgeInsets.zero,
-                onPressed: () => _showStoreFilter(context),
+                onPressed: () => showStoreFilterModal(context),
                 child: SizedBox(
                   width: 44.0,
                   height: navBarHeight,
@@ -115,42 +116,6 @@ class HomeNavBar extends ConsumerWidget {
     );
   }
 
-  /// 점포 필터 모달 표시
-  /// TODO: 실제 점포 목록 데이터 연동 필요 (점포/멤버 도메인)
-  void _showStoreFilter(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      enableDrag: true,
-      backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (ctx) => SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Grabber
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 4),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey3.resolveFrom(ctx),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('점포 필터 (구현 예정)'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 /// 네비바 chevron 아이콘 (너비 12, 높이 6)
