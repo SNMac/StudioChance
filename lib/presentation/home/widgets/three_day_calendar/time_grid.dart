@@ -2,14 +2,18 @@ import 'dart:math' show max;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/store_summary.dart';
+import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
+import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
 
 /// N=2 겹침에서 시작 시간이 다를 때 (delta > 0) 적용하는 고정 stagger (px).
 /// back 셀의 foreground strip(4px) + gap(4px) = 8px.
@@ -195,6 +199,7 @@ class TimeGrid extends ConsumerStatefulWidget {
     required this.isToday,
     required this.events,
     required this.reservations,
+    this.availableStores,
   });
 
   final ScrollController scrollController;
@@ -207,16 +212,33 @@ class TimeGrid extends ConsumerStatefulWidget {
   /// 탭 시 상세 모달에 전달할 전체 Reservation 맵 (id → Reservation)
   final Map<String, Reservation> reservations;
 
+  /// 예약 점포 선택 팝업에 표시할 점포 목록.
+  final List<StoreSummary>? availableStores;
+
   @override
   ConsumerState<TimeGrid> createState() => _TimeGridState();
 }
 
 class _TimeGridState extends ConsumerState<TimeGrid> {
+  final Logger _logger = Logger();
+
   /// z-순서 최상단으로 올릴 셀 id
   String? _selectedId;
 
   /// 하이라이트 중인 셀 id (로컬)
   String? _highlightedId;
+
+  void _onReservationSaved(Reservation updated) {
+    ref
+        .read(reservationUseCaseProvider)
+        .updateReservation(reservation: updated)
+        .then((result) {
+      result.fold(
+        (e) => _logger.e('예약 수정 실패', error: e),
+        (_) => ref.invalidate(homeReservationsProvider),
+      );
+    });
+  }
 
   ({double top, double height}) _placementFor(
       ReservationDisplayData event, double hourHeight) {
@@ -262,9 +284,8 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
       await showReservationDetailModal(
         context,
         reservation,
-        onSaved: (_) {
-          // TODO: 예약 저장 Use Case 연결
-        },
+        availableStores: widget.availableStores,
+        onSaved: _onReservationSaved,
       );
       if (!mounted) return;
       setState(() {
@@ -291,9 +312,8 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
       await showReservationDetailModal(
         context,
         reservation,
-        onSaved: (_) {
-          // TODO: 예약 저장 Use Case 연결
-        },
+        availableStores: widget.availableStores,
+        onSaved: _onReservationSaved,
       );
       // Provider 조작은 mounted와 무관하게 안전 (notifier는 위젯 생명주기 독립적)
       highlightNotifier.clear();
@@ -315,9 +335,8 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
       await showReservationDetailModal(
         context,
         reservation,
-        onSaved: (_) {
-          // TODO: 예약 저장 Use Case 연결
-        },
+        availableStores: widget.availableStores,
+        onSaved: _onReservationSaved,
       );
       if (!mounted) return;
       setState(() {

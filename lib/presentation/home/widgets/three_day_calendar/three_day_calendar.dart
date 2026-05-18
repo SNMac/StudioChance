@@ -4,21 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/entities/reservation_summary.dart';
-import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/payment_method.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/home/utils/calendar_events_utils.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
-import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/time_grid.dart';
+import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
+import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
 
 /// 3일 캘린더 최상위 위젯
 /// - 좌측 고정 시간 열 (시간 레이블 + 현재 시간 캡슐)
@@ -34,351 +28,6 @@ class ThreeDayCalendar extends ConsumerStatefulWidget {
 class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   // 캘린더 지원 범위의 시작일 (2001.01.01 ~ 2100.12.31)
   static final _referenceDate = DateTime(2001, 1, 1);
-
-  // ── 목업 데이터 ────────────────────────────────────────────────────────────
-  // TODO: Riverpod provider에서 실제 예약 데이터 수신으로 교체 예정.
-
-  static final _mockData = _buildMockData();
-  static List<ReservationDisplayData> get _mockEvents => _mockData.$1;
-  static Map<String, Reservation> get _mockReservations => _mockData.$2;
-
-  static StoreSummary _store(StoreColor color) =>
-      StoreSummary(id: 's_${color.name}', name: '점포', color: color);
-
-  static final _mockWriter = StoreMemberInfo(
-    user: User(
-      id: 'u1',
-      name: '관리자',
-      email: 'admin@test.com',
-      nickname: '관리자',
-      authProviders: [],
-      storeInfos: [],
-    ),
-    role: UserRole.admin,
-  );
-
-  static (List<ReservationDisplayData>, Map<String, Reservation>) _buildMockData() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final dayAfter = today.add(const Duration(days: 2));
-
-    // ── 기본 ReservationSummary 목록 (id → summary) ────────────────────────
-    final summaries = <String, ReservationSummary>{
-      // 오늘: 종일 단독
-      'e01': ReservationSummary(
-        id: 'e01', storeSummary: _store(StoreColor.green),
-        status: ReservationStatus.confirmed,
-        customerName: '유훈자', headCount: 2, customerPhone: '010-3109-6381',
-        isAllDay: true,
-        startTime: today, endTime: today.add(const Duration(days: 1)),
-      ),
-      // 오늘: 07:00~08:30 단독
-      'e02': ReservationSummary(
-        id: 'e02', storeSummary: _store(StoreColor.green),
-        status: ReservationStatus.confirmed,
-        customerName: '유훈자', headCount: 2, customerPhone: '010-3109-6381',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 7)),
-        endTime: today.add(const Duration(hours: 8, minutes: 30)),
-      ),
-      // 오늘: 10:00~ 4개 동시 겹침 (N=4, groupEvents로 처리)
-      'e03': ReservationSummary(
-        id: 'e03', storeSummary: _store(StoreColor.red),
-        status: ReservationStatus.confirmed,
-        customerName: '박지원', headCount: 1, customerPhone: '010-1111-2222',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 10)),
-        endTime: today.add(const Duration(hours: 11)),
-      ),
-      'e04': ReservationSummary(
-        id: 'e04', storeSummary: _store(StoreColor.blue),
-        status: ReservationStatus.confirmed,
-        customerName: '최수아', headCount: 2, customerPhone: '010-3333-4444',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 10)),
-        endTime: today.add(const Duration(hours: 12)),
-      ),
-      'e05': ReservationSummary(
-        id: 'e05', storeSummary: _store(StoreColor.green),
-        status: ReservationStatus.canceled,
-        customerName: '김민준', headCount: 4, customerPhone: '010-5555-1234',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 10)),
-        endTime: today.add(const Duration(hours: 13)),
-      ),
-      'e06': ReservationSummary(
-        id: 'e06', storeSummary: _store(StoreColor.yellow),
-        status: ReservationStatus.pending,
-        customerName: '이서준', headCount: 3, customerPhone: '010-7777-9999',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 10)),
-        endTime: today.add(const Duration(hours: 14)),
-      ),
-      // 오늘: 16:00~17:00 단독
-      'e07': ReservationSummary(
-        id: 'e07', storeSummary: _store(StoreColor.purple),
-        status: ReservationStatus.canceled,
-        customerName: '정하은', headCount: 1, customerPhone: '010-8888-4444',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 16)),
-        endTime: today.add(const Duration(hours: 17)),
-      ),
-      // 오늘 22:00 ~ 내일 02:00 (자정 넘김)
-      'e08': ReservationSummary(
-        id: 'e08', storeSummary: _store(StoreColor.indigo),
-        status: ReservationStatus.confirmed,
-        customerName: '이도윤', headCount: 3, customerPhone: '010-5050-7070',
-        isAllDay: false,
-        startTime: today.add(const Duration(hours: 22)),
-        endTime: tomorrow.add(const Duration(hours: 2)),
-      ),
-      // 내일: N=2, delta=0 (동시 시작)
-      'e09': ReservationSummary(
-        id: 'e09', storeSummary: _store(StoreColor.orange),
-        status: ReservationStatus.confirmed,
-        customerName: '나현우', headCount: 2, customerPhone: '010-2222-1111',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 9)),
-        endTime: tomorrow.add(const Duration(hours: 11)),
-      ),
-      'e10': ReservationSummary(
-        id: 'e10', storeSummary: _store(StoreColor.indigo),
-        status: ReservationStatus.pending,
-        customerName: '임지수', headCount: 5, customerPhone: '010-4444-3333',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 9)),
-        endTime: tomorrow.add(const Duration(hours: 13)),
-      ),
-      // 내일: N=3, delta=0
-      'e11': ReservationSummary(
-        id: 'e11', storeSummary: _store(StoreColor.green),
-        status: ReservationStatus.confirmed,
-        customerName: '강민서', headCount: 3, customerPhone: '010-6666-5555',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 13)),
-        endTime: tomorrow.add(const Duration(hours: 15)),
-      ),
-      'e12': ReservationSummary(
-        id: 'e12', storeSummary: _store(StoreColor.yellow),
-        status: ReservationStatus.pending,
-        customerName: '오세진', headCount: 2, customerPhone: '010-8888-7777',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 13)),
-        endTime: tomorrow.add(const Duration(hours: 16)),
-      ),
-      'e13': ReservationSummary(
-        id: 'e13', storeSummary: _store(StoreColor.purple),
-        status: ReservationStatus.canceled,
-        customerName: '윤채원', headCount: 1, customerPhone: '010-0000-9999',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 13)),
-        endTime: tomorrow.add(const Duration(hours: 17)),
-      ),
-      // 내일: N=2, delta=20분
-      'e14': ReservationSummary(
-        id: 'e14', storeSummary: _store(StoreColor.red),
-        status: ReservationStatus.confirmed,
-        customerName: '한소희', headCount: 2, customerPhone: '010-1357-2468',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 17)),
-        endTime: tomorrow.add(const Duration(hours: 19, minutes: 30)),
-      ),
-      'e15': ReservationSummary(
-        id: 'e15', storeSummary: _store(StoreColor.blue),
-        status: ReservationStatus.pending,
-        customerName: '도경수', headCount: 3, customerPhone: '010-2468-1357',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 17, minutes: 20)),
-        endTime: tomorrow.add(const Duration(hours: 19)),
-      ),
-      // 내일: N=2, delta=30분
-      'e16': ReservationSummary(
-        id: 'e16', storeSummary: _store(StoreColor.orange),
-        status: ReservationStatus.confirmed,
-        customerName: '박보검', headCount: 4, customerPhone: '010-9999-1111',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 20, minutes: 30)),
-        endTime: tomorrow.add(const Duration(hours: 23)),
-      ),
-      'e17': ReservationSummary(
-        id: 'e17', storeSummary: _store(StoreColor.indigo),
-        status: ReservationStatus.canceled,
-        customerName: '김태리', headCount: 1, customerPhone: '010-1111-9999',
-        isAllDay: false,
-        startTime: tomorrow.add(const Duration(hours: 21)),
-        endTime: tomorrow.add(const Duration(hours: 22, minutes: 30)),
-      ),
-      // 모레: 종일 단독
-      'e18': ReservationSummary(
-        id: 'e18', storeSummary: _store(StoreColor.orange),
-        status: ReservationStatus.pending,
-        customerName: '최수아', headCount: 5, customerPhone: '010-2222-3333',
-        isAllDay: true,
-        startTime: dayAfter, endTime: dayAfter.add(const Duration(days: 1)),
-      ),
-      // 모레: 시간대 단독들
-      'e19': ReservationSummary(
-        id: 'e19', storeSummary: _store(StoreColor.indigo),
-        status: ReservationStatus.confirmed,
-        customerName: '한지민', headCount: 3, customerPhone: '010-1234-5678',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 10)),
-        endTime: dayAfter.add(const Duration(hours: 12)),
-      ),
-      'e20': ReservationSummary(
-        id: 'e20', storeSummary: _store(StoreColor.blue),
-        status: ReservationStatus.confirmed,
-        customerName: '서동현', headCount: 1, customerPhone: '010-9876-5432',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 15)),
-        endTime: dayAfter.add(const Duration(hours: 16)),
-      ),
-      'e21': ReservationSummary(
-        id: 'e21', storeSummary: _store(StoreColor.red),
-        status: ReservationStatus.canceled,
-        customerName: '권나연', headCount: 4, customerPhone: '010-5678-1234',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 17)),
-        endTime: dayAfter.add(const Duration(hours: 19)),
-      ),
-      // 모레: N=2, delta=60분
-      'e22': ReservationSummary(
-        id: 'e22', storeSummary: _store(StoreColor.orange),
-        status: ReservationStatus.confirmed,
-        customerName: '송민호', headCount: 6, customerPhone: '010-1111-3333',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 20)),
-        endTime: dayAfter.add(const Duration(hours: 24)),
-      ),
-      'e23': ReservationSummary(
-        id: 'e23', storeSummary: _store(StoreColor.blue),
-        status: ReservationStatus.pending,
-        customerName: '백지현', headCount: 2, customerPhone: '010-2222-4444',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 21)),
-        endTime: dayAfter.add(const Duration(hours: 23)),
-      ),
-      // 모레: N=4 오버플로우, 다른 시작 시간 (20분 간격 stagger)
-      // — e19(10:00~12:00)와 겹치지 않고 e20(15:00~16:00)과도 겹치지 않는 12:00~15:00 슬롯
-      // — 12:00, 12:20, 12:40, 13:00 시작. 13:00에 4개 동시 활성 → max_col=3, N=4, overflow
-      'e24': ReservationSummary(
-        id: 'e24', storeSummary: _store(StoreColor.red),
-        status: ReservationStatus.confirmed,
-        customerName: '강예린', headCount: 2, customerPhone: '010-1122-3344',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 12)),
-        endTime: dayAfter.add(const Duration(hours: 14)),
-      ),
-      'e25': ReservationSummary(
-        id: 'e25', storeSummary: _store(StoreColor.orange),
-        status: ReservationStatus.pending,
-        customerName: '조현우', headCount: 3, customerPhone: '010-2233-4455',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 12, minutes: 20)),
-        endTime: dayAfter.add(const Duration(hours: 14, minutes: 20)),
-      ),
-      'e26': ReservationSummary(
-        id: 'e26', storeSummary: _store(StoreColor.yellow),
-        status: ReservationStatus.confirmed,
-        customerName: '문소리', headCount: 1, customerPhone: '010-3344-5566',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 12, minutes: 40)),
-        endTime: dayAfter.add(const Duration(hours: 14, minutes: 40)),
-      ),
-      'e27': ReservationSummary(
-        id: 'e27', storeSummary: _store(StoreColor.green),
-        status: ReservationStatus.canceled,
-        customerName: '변요한', headCount: 4, customerPhone: '010-4455-6677',
-        isAllDay: false,
-        startTime: dayAfter.add(const Duration(hours: 13)),
-        endTime: dayAfter.add(const Duration(hours: 15)),
-      ),
-    };
-
-    // ── ReservationDisplayData 목록 ────────────────────────────────────────
-    final events = summaries.values
-        .map((s) => ReservationDisplayData(summary: s))
-        .toList();
-
-    // ── Reservation 맵 (탭 시 상세 모달에 전달) ──────────────────────────────
-    final reservations = summaries.map(
-      (id, s) => MapEntry(
-        id,
-        Reservation(
-          id: id,
-          storeSummary: s.storeSummary,
-          writer: _mockWriter,
-          status: s.status,
-          customerName: s.customerName,
-          headCount: s.headCount,
-          customerPhone: s.customerPhone,
-          memo: '',
-          isAllDay: s.isAllDay,
-          startTime: s.startTime,
-          endTime: s.endTime,
-          platform: ReservationPlatform.other,
-          paymentMethod: PaymentMethod.other,
-          calculatedPrice: 0,
-          priceAdjustment: 0,
-          totalPrice: 0,
-        ),
-      ),
-    );
-
-    return (events, reservations);
-  }
-
-  /// 특정 날짜의 이벤트 목록 반환.
-  /// 자정을 넘기는 시간대 이벤트는 두 날짜에 각각 분할:
-  ///   - 시작일: endTime을 자정으로 제한 (summary.copyWith), continuesNextDay=true
-  ///   - 익일: startTime=자정 (summary.copyWith), isContinuation=true
-  static List<ReservationDisplayData> _eventsForDate(
-      DateTime date, {required bool allDay}) {
-    final dateStart = DateTime(date.year, date.month, date.day);
-    final dateMidnight = dateStart.add(const Duration(days: 1));
-    final result = <ReservationDisplayData>[];
-
-    for (final e in _mockEvents) {
-      if (e.summary.isAllDay != allDay) continue;
-
-      if (allDay) {
-        final s = e.summary.startTime;
-        if (s.year == date.year && s.month == date.month && s.day == date.day) {
-          result.add(e);
-        }
-        continue;
-      }
-
-      final start = e.summary.startTime;
-      final end = e.summary.endTime;
-
-      // 이 날짜에 시작하는 이벤트
-      if (start.year == date.year &&
-          start.month == date.month &&
-          start.day == date.day) {
-        if (end.isAfter(dateMidnight)) {
-          result.add(ReservationDisplayData(
-            summary: e.summary.copyWith(endTime: dateMidnight),
-            continuesNextDay: true,
-          ));
-        } else {
-          result.add(e);
-        }
-        continue;
-      }
-
-      // 이전 날에 시작해서 이 날짜까지 이어지는 이벤트 → 연속 셀
-      if (start.isBefore(dateStart) && end.isAfter(dateStart)) {
-        result.add(ReservationDisplayData(
-          summary: e.summary.copyWith(startTime: dateStart),
-          isContinuation: true,
-        ));
-      }
-    }
-
-    return result;
-  }
 
   // 기준일(2001.01.01) 기준 오늘의 페이지 인덱스
   static final _initialPage = DateTime(
@@ -623,6 +272,20 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final hourHeight = ref.watch(
       homeCalendarControllerProvider.select((s) => s.hourHeight),
     );
+    final displayedMonth = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.displayedMonth),
+    );
+    final reservationsAsync = ref.watch(homeReservationsProvider(displayedMonth));
+    final reservationsList = reservationsAsync.when(
+      data: (r) => r,
+      loading: () => const <Reservation>[],
+      error: (_, _) => const <Reservation>[],
+    );
+    final (allEvents, reservationsMap) = buildEventsFromReservations(reservationsList);
+    final currentUser = ref.watch(currentUserProvider).asData?.value;
+    final availableStores = currentUser?.storeInfos
+        .map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+        .toList();
 
     // 오늘 버튼 → 현재 시간 스크롤
     // animateToPage 진행 중이면 완료 후 실행 (스크롤 위치 경쟁 방지)
@@ -828,8 +491,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                               color: context.separator),
                           // 종일 이벤트 셀
                           AllDayCell(
-                            events: _eventsForDate(date, allDay: true),
-                            reservations: _mockReservations,
+                            events: eventsForDate(allEvents, date, allDay: true),
+                            reservations: reservationsMap,
+                            availableStores: availableStores,
                           ),
                           Container(
                               height: calendarDividerThickness,
@@ -840,8 +504,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                             child: TimeGrid(
                               scrollController: _controllerForPage(index),
                               isToday: _isToday(date),
-                              events: _eventsForDate(date, allDay: false),
-                              reservations: _mockReservations,
+                              events: eventsForDate(allEvents, date, allDay: false),
+                              reservations: reservationsMap,
+                              availableStores: availableStores,
                             ),
                           ),
                         ],
