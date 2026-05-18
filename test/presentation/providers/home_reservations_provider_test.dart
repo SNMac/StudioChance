@@ -7,6 +7,7 @@ import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
+import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
 
