@@ -45,6 +45,11 @@ class _AllDayCellState extends ConsumerState<AllDayCell> {
             .read(homeReservationActionsControllerProvider.notifier)
             .updateReservation(updated);
       },
+      onDeleted: () {
+        ref
+            .read(homeReservationActionsControllerProvider.notifier)
+            .deleteReservation(reservation);
+      },
     );
     if (!mounted) return;
     setState(() => _highlightedId = null);
