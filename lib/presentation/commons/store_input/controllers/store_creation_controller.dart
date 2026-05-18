@@ -57,9 +57,14 @@ class StoreCreationController extends _$StoreCreationController
         memo: data.memo,
       );
 
-      if (result.isLeft()) throw result.getLeft().toNullable()!;
-
-      ref.invalidate(currentUserProvider);
+      result.fold(
+        (exception) =>
+            state = state.copyWith(status: AsyncError(exception, StackTrace.current)),
+        (_) {
+          ref.invalidate(currentUserProvider);
+          state = state.copyWith(status: const AsyncData(null));
+        },
+      );
     } catch (e, st) {
       state = state.copyWith(status: AsyncError(e, st));
     }
