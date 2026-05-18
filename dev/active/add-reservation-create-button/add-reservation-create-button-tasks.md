@@ -1,6 +1,6 @@
 # 예약 등록 버튼 — 태스크 체크리스트
 
-Last Updated: 2026-05-19 (Phase 5 추가 — Opacity grabber 여백 유지)
+Last Updated: 2026-05-19 (Phase 6 추가 — 유효성 강화 + 요금 자동 계산 + ConsumerStatefulWidget 전환)
 
 ## Phase 1: Controller 확장 (S) ✅
 
@@ -46,6 +46,36 @@ Last Updated: 2026-05-19 (Phase 5 추가 — Opacity grabber 여백 유지)
   - grabber pill 시각은 숨기되 상단 레이아웃 여백 유지
   - detail modal의 `Opacity(opacity: _isEditing ? 0.0 : 1.0, child: ModalGrabber())` 패턴과 동일
   - 생성 모달은 항상 숨김이므로 opacity 고정 0.0
+
+## ✅ Phase 6: 유효성 강화 + 요금 자동 계산 (2026-05-19, 커밋 bdaab8e)
+
+### 6-1: _isValid 연락처 필수 추가
+- [x] `_isValid`: `_phoneController.text.trim().isNotEmpty` 조건 추가
+  - 기존: 예약자명 + 인원수 → 변경: 예약자명 + 인원수 + **연락처** 모두 비어있지 않아야 활성화
+- [x] `_phoneController`에 `onChanged: (_) => setState(() {})` 추가
+
+### 6-2: 생성 초기값 수정
+- [x] `home_screen.dart` `_onAddReservation`: `headCount: 1` → `headCount: 0` 변경
+  - `_initFields`에서 `headCount > 0`일 때만 채우므로 이제 인원 필드가 빈 상태로 시작
+
+### 6-3: ConsumerStatefulWidget 전환
+- [x] `StatefulWidget` → `ConsumerStatefulWidget`, `State` → `ConsumerState`
+- [x] `flutter_riverpod` + `home_reservation_actions_controller.dart` import 추가
+
+### 6-4: 요금 자동 계산
+- [x] `PriceSetting? _priceSetting` 상태 필드 추가
+- [x] `_loadPriceSetting(storeId)`: `initState` + 점포 변경 시 호출
+  - `HomeReservationActionsController.getStorePriceSetting(storeId)` 비동기 조회
+- [x] `_recalculatePrice()`: `PriceSetting.calculatePrice(start, end, headCount, isAllDay)` 호출 → `_priceController.text` 업데이트
+  - 입실/퇴실 시간 변경, 인원 변경, 하루종일 토글, 점포 변경 모두에서 호출
+
+### 관련 Controller 변경 (커밋 4c4ad37, bdaab8e)
+- [x] `HomeReservationActionsController.getStorePriceSetting(String storeId) -> Future<PriceSetting?>`
+  - `StoreUseCase.getStore(storeId)` → `Store?.priceSettings` 반환
+  - `store_use_case_provider.dart` + `price_setting.dart` import 추가
+- [x] `HomeReservationActionsController.deleteReservation(Reservation) -> Future<bool>` (별도 Phase)
+
+---
 
 ## 미완료/후속 작업
 

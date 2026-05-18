@@ -1,6 +1,14 @@
 # 홈 화면 구현 - 작업 체크리스트
 
-Last Updated: 2026-03-21 (9차)
+Last Updated: 2026-05-19 (PR #9 생성 — feat/#5-home → develop)
+
+## PR #9 (2026-05-19): feat/#5-home → develop ✅
+
+- PR 제목: `feat: #5 - 홈 화면 구현 (캘린더, 예약 관리, Data Layer)`
+- 스크린샷 첨부 항목 9개 목록 포함 (사용자 직접 첨부 예정)
+- 이 브랜치는 홈 화면 전체 구현 + Data Layer + 리팩토링 모두 포함
+
+---
 
 ## Phase 1~19: 완료 ✅
 

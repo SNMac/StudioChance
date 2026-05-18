@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-19 (Phase 23 완료 — 편집 모드 예약 삭제 버튼 추가)
+Last Updated: 2026-05-19 (Phase 25 완료 — 삭제 버튼 위치 수정, AllDayCell onDeleted 누락 수정, 유효성/요금 계산 강화)
 
 ---
 
@@ -359,6 +359,33 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - [x] **23-5** `time_grid.dart` — 3곳 호출에 `onDeleted: () => _onReservationDeleted(reservation)` 추가
   - `_onReservationDeleted()` 신규 메서드: Controller에 위임 (fire-and-forget, stream 자동 반영)
 - [x] **23-6** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 24: 삭제 버튼 위치 수정 + AllDayCell 누락 수정 (2026-05-19, 커밋 2fcc9d3, dfdac3e)
+
+- [x] **24-1** `_buildEditBody()`: `TextActionButton` 독립 child → `GroupedFormContainer(children: [TextActionButton(...)])` 래핑
+  - 다른 섹션들과 동일한 iOS 스타일 둥근 컨테이너 안에 배치 (섹션4 footer "할인인 경우..." 아래 20px)
+- [x] **24-2** `all_day_row.dart` — `showReservationDetailModal` 호출에 `onDeleted` 누락 수정
+  - Phase 23에서 `time_grid.dart`만 처리, `all_day_row.dart` 누락됨
+  - `onDeleted: () => ref.read(...).deleteReservation(reservation)` 추가
+
+---
+
+## ✅ Phase 25: 편집 모드 유효성 강화 + 요금 자동 계산 (2026-05-19, 커밋 bdaab8e)
+
+- [x] **25-1** `_isValid` — 연락처 필수 조건 추가 (생성/수정 모달 공통)
+  - 기존: 예약자명 + 인원수 → 변경: + `_phoneController.text.trim().isNotEmpty`
+  - `_buildSection2Edit()`: `_phoneController`에 `onChanged: (_) => setState(() {})` 추가
+- [x] **25-2** `_priceSetting: PriceSetting?` 상태 필드 추가
+- [x] **25-3** `_loadPriceSetting(storeId)`: `initState` + 점포 변경 시 호출
+  - `HomeReservationActionsController.getStorePriceSetting(storeId)` 비동기 조회 → mounted 체크 후 setState
+- [x] **25-4** `_recalculatePrice()`: `PriceSetting.calculatePrice(start, end, headCount, isAllDay)` → `_priceController.text` 갱신
+  - 호출 시점: 입실 시간, 퇴실 시간, 인원, 하루종일 토글, 점포 변경
+  - `price == 0`이면 빈 문자열 (점포 요금 미설정 구간은 비워둠)
+- [x] **25-5** `dart analyze` — No issues found!
+
+**참고**: `_buildSection3Edit()` 내 `_onAllDayChanged`에서도 `_recalculatePrice()` 호출됨 (setState 외부에서 호출 — 상태 갱신 후 계산 보장)
 
 ---
 
