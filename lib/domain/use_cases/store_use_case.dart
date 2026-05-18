@@ -1,9 +1,8 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
+import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
@@ -77,7 +76,7 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       final adminMemberInfo = StoreMemberInfo(
         user: currentUser,
         role: UserRole.admin,
@@ -116,7 +115,7 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _storeRepository.requestJoinStore(
           storeId: storeId,
@@ -167,7 +166,7 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _storeRepository.updateStore(
           store: store,
@@ -188,22 +187,5 @@ class StoreUseCaseImpl implements StoreUseCase {
       storeId,
       forceRegenerate: forceRegenerate,
     );
-  }
-
-  // ===========================================================================
-  // Private Helpers
-  // ===========================================================================
-
-  /// 현재 로그인한 유저를 가져오는 `TaskEither`
-  TaskEither<Exception, User> _getCurrentUser() {
-    return TaskEither.tryCatch(() async {
-      final result = await _userRepository.getCurrentUser();
-      return result.fold((left) => throw left, (right) {
-        if (right == null) {
-          throw AuthUserNotFoundException(message: '로그인 정보를 찾을 수 없습니다.');
-        }
-        return right;
-      });
-    }, (error, stackTrace) => error is Exception ? error : Exception(error));
   }
 }
