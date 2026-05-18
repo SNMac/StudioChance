@@ -14,6 +14,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 
 ## 아키텍처
 - `/lib/common`: 모든 계층에서 사용되는 로직
+  - `/utils/exception_utils.dart`: `toException()` — catch 블록 Object → Exception 변환 헬퍼
 - `/lib/constants`: 모든 계층에서 사용되는 상수값
 - `/lib/data`: Data 계층
   - `/data_sources`: DB 연결 로직
@@ -24,12 +25,13 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   - `/enums`: Domain 관련 enum
   - `/repository_interfaces`: Domain에서 필요로 하는 Data 로직 인터페이스
   - `/use_cases`: 비즈니스 로직 단위
+    - `use_case_helpers.dart`: `getCurrentUserOrThrow(UserRepository)` 공통 헬퍼
 - `/lib/presentation`: UI 계층
   - `/commons`: 여러 곳에서 사용되는 UI
   - `/home`: 홈 화면
   - `/my_page`: 마이페이지 화면
   - `/onboarding`: 온보딩 화면
-  - `/providers`: UI 상태 관리
+  - `/providers`: UI 상태 관리 (위젯 액션이 UseCase 호출을 필요로 하면 여기에 전용 Controller 생성)
   - `/sign_in`: 로그인 화면
   - `/splash`: 스플래시 화면
 - `/lib/router`: 화면 전환 로직
@@ -127,6 +129,12 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   - `lowerBound`는 반드시 `initialSize`로 설정 — `0.0`이면 dismiss 중 Column overflow 발생
 - 모드 전환 간 스크롤 위치 보존: `Stack + Positioned.fill + Offstage` × 2 + 모드별 독립 `ScrollController`
   - 전환 전 `_syncScrollPosition()` 호출 필수 (setState 이전에)
+
+## Presentation → Domain 접근 규칙
+
+- 위젯(`ConsumerWidget`, `ConsumerStatefulWidget`)에서 `*_use_case_provider.dart` 직접 `ref.read/watch` 금지
+- 위젯 액션이 UseCase 호출을 필요로 하면 `lib/presentation/providers/`에 전용 `@riverpod` Controller(Notifier) 생성하여 위임
+- 예: `HomeReservationActionsController` — `TimeGrid`/`AllDayCell`의 예약 수정 액션을 위임
 
 ## Agent Working Rules
 

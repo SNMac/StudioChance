@@ -30,6 +30,34 @@ Presentation → Domain ← Data
 
 **핵심 규칙**: Domain 레이어는 Data/Presentation에 의존하지 않음.
 
+**위젯 규칙**: 위젯(`ConsumerWidget`/`ConsumerStatefulWidget`)은 UseCase Provider를 직접 `ref.read/watch` 금지.
+UseCase 호출이 필요하면 `lib/presentation/providers/`에 전용 `@riverpod` Controller(Notifier)를 생성하여 위임.
+
+```dart
+// ❌ 위젯에서 UseCase 직접 참조
+class TimeGrid extends ConsumerStatefulWidget {
+  void _onSaved(Reservation r) {
+    ref.read(reservationUseCaseProvider).updateReservation(reservation: r); // 금지
+  }
+}
+
+// ✅ 전용 Controller 위임
+// lib/presentation/providers/home_reservation_actions_controller.dart
+@riverpod
+class HomeReservationActionsController extends _$HomeReservationActionsController {
+  @override void build() {}
+  Future<void> updateReservation(Reservation r) async {
+    final result = await ref.read(reservationUseCaseProvider).updateReservation(reservation: r);
+    result.fold((e) => ..., (_) => ref.invalidate(homeReservationsProvider));
+  }
+}
+
+// 위젯에서는 Controller만 참조
+void _onSaved(Reservation r) {
+  ref.read(homeReservationActionsControllerProvider.notifier).updateReservation(r);
+}
+```
+
 ### UseCase 파일 분리 패턴
 
 UseCase는 두 파일로 분리한다:
@@ -366,6 +394,7 @@ dart run build_runner build --delete-conflicting-outputs
 | 키보드 해제 | `MyApp`에서 `GestureDetector.onTap` → `unfocus()` |
 | 폰트 | Pretendard (400, 500, 600, 700) |
 | 디자인 | Material 3, `ThemeMode.system` |
+| Collection 탐색 | `firstWhere + try-catch` 금지 → `.where(...).firstOrNull` 사용 (Dart 3 네이티브) |
 
 ---
 
