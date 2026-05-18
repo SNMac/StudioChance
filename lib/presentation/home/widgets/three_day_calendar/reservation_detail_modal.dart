@@ -548,10 +548,14 @@ class _ReservationDetailModalState
           _buildSection2Edit(),
           _buildSection3Edit(),
           _buildSection4Edit(textTheme),
-          TextActionButton(
-            title: '예약 삭제',
-            isDestructive: true,
-            onPressed: _onDeletePressed,
+          GroupedFormContainer(
+            children: [
+              TextActionButton(
+                title: '예약 삭제',
+                isDestructive: true,
+                onPressed: _onDeletePressed,
+              ),
+            ],
           ),
         ],
       ),
