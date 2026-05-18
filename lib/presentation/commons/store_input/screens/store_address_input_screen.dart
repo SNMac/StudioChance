@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kpostal/kpostal.dart';
+import 'package:postal_ko/postal_ko.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
