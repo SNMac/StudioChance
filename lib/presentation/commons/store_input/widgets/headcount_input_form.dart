@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -27,6 +28,7 @@ class HeadcountInputForm extends StatefulWidget {
 class _HeadcountInputFormState extends State<HeadcountInputForm> {
   late final TextEditingController _baseCountController;
   late final TextEditingController _extraPriceController;
+  late final FocusNode _extraPriceFocusNode;
 
   late bool _isHourly;
   late bool _isPerPerson;
@@ -39,29 +41,51 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
           ? ''
           : widget.initialRule.headcountBase.toString(),
     );
+    _extraPriceFocusNode = FocusNode();
     _extraPriceController = TextEditingController(
       text: widget.initialRule.headcountExtraPrice == -1
           ? ''
-          : widget.initialRule.headcountExtraPrice.toString(),
+          : widget.initialRule.headcountExtraPrice.formattedPrice,
     );
     _isHourly = widget.initialRule.isHeadcountHourly;
     _isPerPerson = widget.initialRule.isHeadcountPerPerson;
 
     _baseCountController.addListener(_notifyParent);
     _extraPriceController.addListener(_notifyParent);
+    _extraPriceFocusNode.addListener(_onExtraFocusChanged);
   }
 
   @override
   void dispose() {
+    _extraPriceFocusNode.dispose();
     _baseCountController.dispose();
     _extraPriceController.dispose();
     super.dispose();
   }
 
+  void _onExtraFocusChanged() {
+    final raw = _extraPriceController.text.replaceAll(',', '').replaceAll('원', '');
+    if (_extraPriceFocusNode.hasFocus) {
+      _extraPriceController.value = TextEditingValue(
+        text: raw,
+        selection: TextSelection.collapsed(offset: raw.length),
+      );
+    } else {
+      final price = int.tryParse(raw);
+      if (price != null && price >= 0) {
+        final formatted = price.formattedPrice;
+        _extraPriceController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
+    }
+  }
+
   /// 상태 변경 시 부모 위젯에 데이터 전달
   void _notifyParent() {
     final baseText = _baseCountController.text;
-    final extraText = _extraPriceController.text;
+    final extraText = _extraPriceController.text.replaceAll(',', '').replaceAll('원', '');
 
     final isValid = baseText.isNotEmpty && extraText.isNotEmpty;
 
@@ -137,9 +161,10 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
         TitleTextField(
           title: '추가 인원 요금',
           controller: _extraPriceController,
+          focusNode: _extraPriceFocusNode,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          placeholder: '예: 2000',
+          placeholder: '예: 2,000',
         ),
         TitleSwitchButton(
           title: '추가 요금 시간당 부과',

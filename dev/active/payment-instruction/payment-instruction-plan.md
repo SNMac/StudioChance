@@ -8,19 +8,24 @@ Last Updated: 2026-05-19
 예약 정보와 점포 계좌 정보를 조합해 완성된 입금 안내 텍스트를 보여주고,
 하단 '복사하기' / '공유하기' 버튼으로 텍스트를 공유한다.
 
-추후 확정 안내문 작업을 대비해 `confirmationNotes`도 이번에 Store에 함께 추가.
+추가로 점포 생성/수정 폼에 입금 정보 입력 화면을 연동해,
+관리자가 점포 계좌 정보를 직접 입력할 수 있도록 한다.
+입금 안내문 미리보기는 실제 예약 없이도 확인 가능하다.
 
 ---
 
-## 현재 상태
+## 현재 상태 (구현 완료)
 
 | 항목 | 상태 |
 |------|------|
-| `Store` entity/model 계좌·마감·주의사항 필드 | ❌ 없음 |
-| 입금 안내문 화면 | ❌ 없음 |
-| 라우트 정의 | ❌ 없음 |
-| 모달 → 화면 연결 | ❌ TODO 주석만 있음 (`reservation_detail_modal.dart:932`) |
-| `share_plus` 패키지 | ❌ pubspec에 없음 |
+| `Store` entity/model 계좌·마감·주의사항 필드 | ✅ 완료 |
+| 입금 안내문 화면 (`PaymentInstructionScreen`) | ✅ 완료 |
+| 라우트 정의 | ✅ 완료 |
+| 모달 → 화면 연결 | ✅ 완료 |
+| `share_plus` 패키지 | ✅ 완료 |
+| 입금 정보 입력 폼 (`PaymentInfoInputScreen`) | ✅ 완료 |
+| 점포 폼 → 입금 정보 네비게이션 | ✅ 완료 |
+| 미리보기 모드 (실제 폼 값 반영) | ✅ 완료 |
 
 ---
 
@@ -31,15 +36,14 @@ Last Updated: 2026-05-19
 | `bankName` | `String?` | 점포 계좌 은행 (예: "국민은행") |
 | `bankAccountNumber` | `String?` | 점포 계좌번호 |
 | `bankAccountHolder` | `String?` | 점포 계좌 예금주 |
-| `paymentDeadlineHours` | `int?` | 입금 마감 시간 (n시간 이내) |
+| `paymentDeadlineMinutes` | `int?` | 입금 마감 시간 (분 단위, 15~180) |
 | `confirmationNotes` | `String?` | 확정 안내문 주의사항 (추후 확정 안내문 작업용) |
 
-기존 Firestore 문서에 해당 필드 없으면 `null` 역직렬화.
-`toEditableJson()`에 포함 → 점포 수정 시 저장 가능.
+> ⚠️ `paymentDeadlineMinutes`는 분 단위. 초기 설계 `paymentDeadlineHours`에서 변경됨.
 
 ---
 
-## 안내문 텍스트 템플릿 (이미지 확인)
+## 안내문 텍스트 템플릿
 
 ```
 [{점포명} 예약 입금 안내]
@@ -62,79 +66,104 @@ Last Updated: 2026-05-19
 감사합니다.
 ```
 
-### 플레이스홀더 매핑
-
-| 플레이스홀더 | 소스 | 비고 |
-|-------------|------|------|
-| `{점포명}` | `reservation.storeSummary.name` | |
-| `{예약자명}` | `reservation.customerName` | |
-| `{예약자 전화번호}` | `reservation.customerPhone.formattedPhone` | 하이픈 포맷 |
-| `{yyyy}년 {mm}월 {dd}일 ({요일})` | `reservation.startTime` | `intl` DateFormat |
-| `{hh}시 ~ {hh}시` | `startTime` ~ `endTime` | hour 포맷 |
-| `{n}시간` | `endTime - startTime` duration | hours 차이 |
-| `{예약 인원 수}` | `reservation.headCount` | |
-| `{요금}` | `reservation.totalPrice` | `formattedPrice` |
-| `{점포 계좌 은행}` | `store.bankName ?? ''` | |
-| `{점포 계좌번호}` | `store.bankAccountNumber ?? ''` | |
-| `{점포 계좌 예금주}` | `store.bankAccountHolder ?? ''` | |
-| `{입금 마감 n}시간 이내` | `store.paymentDeadlineHours` | null 시 해당 줄 생략 또는 빈값 |
-
 ---
 
-## UI 스펙
+## 화면 구조
+
+### PaymentInstructionScreen
 
 ```
 ┌─────────────────────────────────┐
-│  <        입금 안내문           │  ← CustomAppBar (actions 없음)
+│  <        입금 안내문           │  ← CustomAppBar
 ├─────────────────────────────────┤
-│  [{점포명} 예약 입금 안내]  ↑  │  ← bodyLarge, FontWeight.normal
-│  안녕하세요, {점포명}입니다. │     좌우 패딩 16px, 상단 32px
-│  ...                        S  │     (스크롤 영역)
-│  ...                        C  │
-│  ...                        R  │
-│  ...                        O  │
-│  ...                        L  │
-│  ...                        L  ↓
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤  ← 버튼 위 gap 32px
+│  [텍스트 내용]              ↑  │  ← bodyLarge, FontWeight.normal
+│  (실제 예약값 or placeholder)   │     좌우 패딩 16px, 상단 32px
+│                             S  │
+│                             C  │
+│                             R  │
+│                             O  │
+│                             L  │
+│                             L  ↓
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
 │         복사하기                │  ← GroupedFormContainer
 │─────────────────────────────── │     + TextActionButton × 2
-│         공유하기                │     (하단 고정, 배경 불투명)
+│         공유하기                │
 └─────────────────────────────────┘
 ```
 
-- **AppBar**: `CustomAppBar(title: '입금 안내문')` — leading 기본값(`AppBarNaviBackButton`)만 사용, actions 없음
-- **레이아웃**: `Stack` 구조
-  - `Positioned.fill` + `SingleChildScrollView`: 전체 영역 스크롤, 하단 패딩 145px(버튼 영역 높이)으로 마지막 내용 보호
-  - `Positioned(bottom: 0)`: 버튼 그룹 하단 고정
-- **버튼**: `GroupedFormContainer` + `TextActionButton` × 2 (복사하기 / 공유하기)
-- **복사하기**: `Clipboard.setData` → `ScaffoldMessenger.showSnackBar("복사됐습니다.")`
-- **공유하기**: `share_plus` 패키지 `SharePlus.instance.share(ShareParams(text: text))`
-- **Store 로딩 중**: `CircularProgressIndicator`
-- **Store 에러 / 계좌 null**: 해당 플레이스홀더 빈 문자열로 대체
+**두 가지 진입 모드:**
+- `reservation != null` → 실제 예약 기반 텍스트 (Store는 Firestore에서 로딩)
+- `reservation == null` → 미리보기 (StoreFormState에서 bank info 읽음, 예약 필드는 placeholder)
+
+### PaymentInfoInputScreen
+
+```
+┌─────────────────────────────────┐
+│  <        입금 정보       완료  │  ← CustomAppBar
+├─────────────────────────────────┤
+│ ┌─────────────────────────────┐ │
+│ │ 은행        [___________]  │ │  ← TitleTextField
+│ ├─────────────────────────────┤ │
+│ │ 계좌번호    [___________]  │ │  ← TitleTextField (숫자 전용)
+│ ├─────────────────────────────┤ │
+│ │ 예금주      [___________]  │ │  ← TitleTextField
+│ ├─────────────────────────────┤ │
+│ │ 입금 마감 기한  [1시간 ▾]  │ │  ← 인라인 CupertinoPicker
+│ │ ┌─────────────────────────┐ │ │    (접힘/펼침 AnimatedContainer)
+│ │ │   15분                 │ │ │
+│ │ │ ▶ 30분 ◀              │ │ │
+│ │ │   45분                 │ │ │
+│ │ └─────────────────────────┘ │ │
+│ └─────────────────────────────┘ │
+│  예약 등록 시간 기준              │  ← footer 캡션
+│                                  │
+│ ┌─────────────────────────────┐ │
+│ │         입금 안내문          │ │  ← TextActionButton
+│ └─────────────────────────────┘ │
+└─────────────────────────────────┘
+```
 
 ---
 
 ## 네비게이션 흐름
 
 ```
-HomeScreen
-  └── showReservationDetailModal (ModalBottomSheet)
-        └── '입금 안내문' 버튼
+[StoreFormScreen] 점포 생성/수정
+  └── "입금 정보" TitleNavigationButton
+        └── PaymentInfoInputScreen (/store-creation/payment-info)
+              ├── "완료" → 폼 저장 + pop
+              └── "입금 안내문" → 폼 임시 저장 → 미리보기
+                    └── PaymentInstructionScreen (reservation=null, previewStoreToEdit)
+
+[HomeScreen] 예약 관리
+  └── ReservationDetailModal
+        └── "입금 안내문" 버튼
               └── context.push('/home/payment-instruction', extra: reservation)
-                    └── PaymentInstructionScreen (전체화면)
-                          └── 뒤로가기 / '완료' → 모달로 복귀
+                    └── PaymentInstructionScreen (reservation=Reservation)
 ```
 
 ---
 
-## 패키지 추가
+## 설계 결정 사항
 
-`share_plus: ^11.0.0` (or latest stable) → `pubspec.yaml` 추가 후 `flutter pub get`
+### D1: paymentDeadlineMinutes (분 단위)
+초기 설계 `paymentDeadlineHours`(시간)에서 **분 단위**로 변경.
+- 15분 단위 picker 지원 (15분, 30분, 45분, 1시간, ..., 3시간)
+- 표시 형식: `_formatDuration(int minutes)` — 60분 미만은 `"n분"`, 이상은 `"n시간"` / `"n시간 m분"`
+- Firestore JSON key: `paymentDeadlineMinutes`
+
+### D2: 미리보기 모드에서 폼 컨트롤러 직접 참조
+`PaymentInstructionScreen`이 미리보기 모드에서 `storeCreationControllerProvider` / `storeUpdateControllerProvider`를 `ref.watch`.
+- Presentation 레이어 내부 참조이므로 아키텍처 위반 아님
+- "입금 안내문" 버튼 탭 시 폼 값을 먼저 컨트롤러에 임시 저장 → 화면 전환
+
+### D3: 두 개의 paymentInstruction 라우트
+- `/home/payment-instruction`: `Reservation?` extra → 예약 기반
+- `/store-creation/payment-info/payment-instruction`: `Store?` extra (`previewStoreToEdit`) → 미리보기
 
 ---
 
 ## 제외 범위
 
-- Store 수정 화면(StoreFormScreen)에 계좌 정보 입력 UI 추가 — 별도 태스크
-- '확정 안내문' 화면 — 별도 태스크 (Store 필드는 이번에 추가)
+- '확정 안내문' 화면 — 별도 태스크 (`confirmationNotes` 필드는 이번에 추가)
 - Firestore Security Rules 업데이트 — 배포 전 별도 처리

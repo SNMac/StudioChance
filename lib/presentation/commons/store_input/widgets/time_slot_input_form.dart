@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
@@ -47,32 +48,56 @@ class TimeSlotInputForm extends StatefulWidget {
 class _TimeSlotInputFormState extends State<TimeSlotInputForm>
     with TickerProviderStateMixin {
   late final TextEditingController _priceController;
+  late final FocusNode _priceFocusNode;
 
   _ActivePicker _activePicker = _ActivePicker.none;
 
   @override
   void initState() {
     super.initState();
+    _priceFocusNode = FocusNode();
     _priceController = TextEditingController(
-      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.formattedAmount,
+      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.formattedPrice,
     );
 
     _priceController.addListener(_onPriceChanged);
+    _priceFocusNode.addListener(_onPriceFocusChanged);
   }
 
   @override
   void dispose() {
+    _priceFocusNode.dispose();
     _priceController.dispose();
     super.dispose();
   }
 
   /// 요금 텍스트 변경 시 호출
   void _onPriceChanged() {
-    final priceText = _priceController.text.replaceAll(',', '');
+    final priceText = _priceController.text.replaceAll(',', '').replaceAll('원', '');
     final int price = int.tryParse(priceText) ?? -1;
 
     if (widget.timeSlot.price != price) {
       widget.onChanged(widget.timeSlot.copyWith(price: price));
+    }
+  }
+
+  /// 포커스 진입: 쉼표·'원' 제거 / 포커스 해제: 쉼표+'원' 추가
+  void _onPriceFocusChanged() {
+    final raw = _priceController.text.replaceAll(',', '').replaceAll('원', '');
+    if (_priceFocusNode.hasFocus) {
+      _priceController.value = TextEditingValue(
+        text: raw,
+        selection: TextSelection.collapsed(offset: raw.length),
+      );
+    } else {
+      final price = int.tryParse(raw);
+      if (price != null && price >= 0) {
+        final formatted = price.formattedPrice;
+        _priceController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
     }
   }
 
@@ -224,9 +249,10 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
         TitleTextField(
           title: '요금',
           controller: _priceController,
+          focusNode: _priceFocusNode,
           placeholder: '예: 7,000',
           keyboardType: TextInputType.number,
-          inputFormatters: [const PriceInputFormatter()],
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         TitleSwitchButton(
           title: '시간당 부과',

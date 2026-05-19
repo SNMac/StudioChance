@@ -105,6 +105,7 @@ class _ReservationDetailModalState
   late final TextEditingController _phoneController;
   late final TextEditingController _memoController;
   late final TextEditingController _adjustmentController;
+  late final FocusNode _adjustmentFocusNode;
 
   // ── 가격 설정 ─────────────────────────────────────────────────────────────
   PriceSetting? _priceSetting;
@@ -147,6 +148,8 @@ class _ReservationDetailModalState
     );
     _ownReadOnlyController = ScrollController();
     _editController = ScrollController();
+    _adjustmentFocusNode = FocusNode();
+    _adjustmentFocusNode.addListener(_onAdjustmentFocusChanged);
     _initFields(widget.reservation);
     _loadPriceSetting(widget.reservation.storeSummary.id);
     _loadReservationCount();
@@ -157,6 +160,7 @@ class _ReservationDetailModalState
     _sheetController.dispose();
     _ownReadOnlyController.dispose();
     _editController.dispose();
+    _adjustmentFocusNode.dispose();
     _nameController.dispose();
     _headCountController.dispose();
     _phoneController.dispose();
@@ -184,7 +188,7 @@ class _ReservationDetailModalState
     _memoController = TextEditingController(text: r.memo);
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController = TextEditingController(
-      text: r.priceAdjustment != 0 ? r.priceAdjustment.formattedAmount : '',
+      text: r.priceAdjustment != 0 ? r.priceAdjustment.formattedPrice : '',
     );
   }
 
@@ -204,7 +208,26 @@ class _ReservationDetailModalState
     _memoController.text = r.memo;
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController.text =
-        r.priceAdjustment != 0 ? r.priceAdjustment.formattedAmount : '';
+        r.priceAdjustment != 0 ? r.priceAdjustment.formattedPrice : '';
+  }
+
+  void _onAdjustmentFocusChanged() {
+    final raw = _adjustmentController.text.replaceAll(',', '').replaceAll('원', '');
+    if (_adjustmentFocusNode.hasFocus) {
+      _adjustmentController.value = TextEditingValue(
+        text: raw,
+        selection: TextSelection.collapsed(offset: raw.length),
+      );
+    } else {
+      final price = int.tryParse(raw);
+      if (price != null && price != 0) {
+        final formatted = price.formattedPrice;
+        _adjustmentController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
+    }
   }
 
   // ── 스크롤 위치 동기화 ────────────────────────────────────────────────────
@@ -287,7 +310,7 @@ class _ReservationDetailModalState
     FocusScope.of(context).unfocus();
     final calculatedPrice = _calculatedPrice;
     final priceAdjustment =
-        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
+        int.tryParse(_adjustmentController.text.replaceAll(',', '').replaceAll('원', '')) ?? 0;
 
     final updated = widget.reservation.copyWith(
       storeSummary: _storeSummary,
@@ -825,7 +848,7 @@ class _ReservationDetailModalState
 
   Widget _buildSection4ReadOnly() {
     final adjustment =
-        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
+        int.tryParse(_adjustmentController.text.replaceAll(',', '').replaceAll('원', '')) ?? 0;
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
@@ -854,7 +877,7 @@ class _ReservationDetailModalState
 
   Widget _buildSection4Edit(TextTheme textTheme) {
     final adjustment =
-        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
+        int.tryParse(_adjustmentController.text.replaceAll(',', '').replaceAll('원', '')) ?? 0;
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
@@ -900,9 +923,10 @@ class _ReservationDetailModalState
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
+          focusNode: _adjustmentFocusNode,
           onChanged: (_) => setState(() {}),
           keyboardType: const TextInputType.numberWithOptions(signed: true),
-          inputFormatters: [const PriceInputFormatter(allowNegative: true)],
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[-0-9]'))],
         ),
         TitleTextLabel(
           title: '최종 요금',
