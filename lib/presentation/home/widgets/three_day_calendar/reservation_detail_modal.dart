@@ -230,14 +230,14 @@ class _ReservationDetailModalState
         });
   }
 
-  void _loadReservationCount() {
+  void _loadReservationCount({String? customerName, String? customerPhone}) {
     final r = widget.reservation;
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getReservationCountByCustomer(
-          storeId: r.storeSummary.id,
-          customerName: r.customerName,
-          customerPhone: r.customerPhone,
+          storeId: _storeSummary.id,
+          customerName: customerName ?? r.customerName,
+          customerPhone: customerPhone ?? r.customerPhone,
         )
         .then((count) {
           if (!mounted) return;
@@ -304,7 +304,10 @@ class _ReservationDetailModalState
       totalPrice: calculatedPrice + priceAdjustment,
     );
     widget.onSaved(updated);
-    _loadReservationCount();
+    _loadReservationCount(
+      customerName: _nameController.text.trim(),
+      customerPhone: _phoneController.text.replaceAll('-', '').trim(),
+    );
     _syncScrollPosition(toEdit: false);
     setState(() {
       _isEditing = false;

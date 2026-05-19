@@ -981,7 +981,18 @@ n = 해당 점포에서 동일 `customerName` + `customerPhone`을 가진 예약
 실행 시 인덱스 오류가 발생하면 에러 메시지에 포함된 Firebase Console 링크로 인덱스 생성.
 컬렉션: `stores/{storeId}/reservations`, 필드: `customerName ASC`, `customerPhone ASC`
 
-### 완료 시 재조회
+### 완료 시 재조회 (편집된 값 기준)
 
-`_onComplete()`에서 `widget.onSaved(updated)` 직후 `_loadReservationCount()` 호출 추가.
-예약자명/연락처 수정 후 완료 시 읽기 전용 복귀 화면에서 최신 카운트가 즉시 반영됨.
+`_loadReservationCount`에 선택적 `customerName`, `customerPhone` 파라미터 추가.
+- `initState` 호출: 파라미터 없음 → `widget.reservation` 원본값 사용
+- `_onComplete` 호출: 편집된 값 명시 전달
+  ```dart
+  _loadReservationCount(
+    customerName: _nameController.text.trim(),
+    customerPhone: _phoneController.text.replaceAll('-', '').trim(),
+  );
+  ```
+- `storeId`도 `_storeSummary.id`로 통일 (점포 변경 케이스 대응)
+
+**원인**: 기존 구현은 항상 `widget.reservation`(원본)으로 조회해서, 편집 중 이름/연락처를 바꿔도
+완료 후 이전 고객 기준으로 조회 → 카운트가 변하지 않았음.

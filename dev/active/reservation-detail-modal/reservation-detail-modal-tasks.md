@@ -505,7 +505,10 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 - [x] **36-5** `home_reservation_actions_controller.dart` — `getReservationCountByCustomer(...)` 추가, 실패 시 `1` 폴백
 - [x] **36-6** `reservation_detail_modal.dart` — `int _reservationCount = 1` 상태, `_loadReservationCount()` 비동기 로드, `_buildSection5` 실제 값 사용
 - [x] **36-7** `reservation_detail_modal.dart` — `_onComplete()`에서 `_loadReservationCount()` 추가 (완료 시 재조회)
-- [x] **36-8** `dart analyze` — No issues found!
+- [x] **36-8** `_loadReservationCount`에 선택적 `customerName`/`customerPhone` 파라미터 추가
+  - `_onComplete`: 편집된 값 명시 전달 (이름/연락처 변경 케이스 대응)
+  - `storeId`: `widget.reservation.storeSummary.id` → `_storeSummary.id` (점포 변경 케이스 대응)
+- [x] **36-9** `dart analyze` — No issues found!
 
 > ⚠️ Firestore 복합 인덱스 필요 가능성: `customerName ASC` + `customerPhone ASC` (서브컬렉션 reservations)
 > 첫 실행 시 에러 메시지에 인덱스 생성 링크 포함됨.
