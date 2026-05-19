@@ -66,4 +66,28 @@ class HomeReservationActionsController
       (_) => true,
     );
   }
+
+  /// 동일 고객(예약자명 + 연락처)의 해당 점포 예약 수 조회.
+  ///
+  /// 실패 시 1 반환 (최소 1번째 예약으로 표시).
+  Future<int> getReservationCountByCustomer({
+    required String storeId,
+    required String customerName,
+    required String customerPhone,
+  }) async {
+    final result = await ref
+        .read(reservationUseCaseProvider)
+        .getReservationCountByCustomer(
+          storeId: storeId,
+          customerName: customerName,
+          customerPhone: customerPhone,
+        );
+    return result.fold(
+      (e) {
+        _logger.e('고객 예약 수 조회 실패', error: e);
+        return 1;
+      },
+      (count) => count,
+    );
+  }
 }

@@ -58,4 +58,11 @@ abstract interface class ReservationRepository {
     required String reservationId,
     required ReservationStatus status,
   });
+
+  /// 동일 고객(예약자명 + 연락처)의 해당 점포 예약 수 조회
+  Future<Either<Exception, int>> getReservationCountByCustomer({
+    required String storeId,
+    required String customerName,
+    required String customerPhone,
+  });
 }

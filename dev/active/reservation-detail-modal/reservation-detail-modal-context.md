@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-05-19 (Phase 35 완료 — 퇴실 시간 변경 시 입실 시간 밀어내기)
+Last Updated: 2026-05-19 (Phase 36 완료 — n번째 예약 카운트 실제 데이터 연결)
 
 ---
 
@@ -494,7 +494,7 @@ _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
 | ~~**Phase 21**~~ | ~~iOS/Android 통합 모달, DraggableScrollableSheet 제거~~ → 2026-05-18 완료 ✅ |
 | ~~**Phase 22**~~ | ~~viewer 역할 편집 제한 + availableStores 공급~~ → 2026-05-19 완료 ✅ |
 | ~~**Phase 27~34**~~ | ~~포맷터, 스테일 데이터, 키보드, 최종 요금~~ → 2026-05-19 완료 ✅ |
-| `n번째` 계산 | 실제 데이터 연결 전까지 `1` 하드코딩 유지 |
+| ~~**Phase 36**~~ | ~~`n번째` 예약 카운트 실제 데이터 연결~~ → 2026-05-19 완료 ✅ |
 | 입금/확정 안내문 | `TextActionButton.onPressed` TODO 유지 |
 | `onSaved` 실제 연결 | 예약 저장 Use Case + Repository 구현 후 연결 |
 | `_formatDateTime` 공통화 | 현재 편집/확인 모달 각각 private 선언 (스코프 아웃) |
@@ -938,3 +938,45 @@ onDateTimeChanged: (dt) {
 
 - `reservation_detail_modal.dart` — 편집 모드 퇴실 피커
 - `reservation_create_modal.dart` — 퇴실 피커
+
+---
+
+## ✅ Phase 36: n번째 예약 카운트 실제 데이터 연결 (2026-05-19)
+
+### 요구사항
+
+`_buildSection5`의 `"n번째 예약입니다."` 문구에서 n을 하드코딩(`1`) → 실제 데이터로 교체.
+n = 해당 점포에서 동일 `customerName` + `customerPhone`을 가진 예약의 총 수.
+
+### 구현 레이어
+
+**DataSource** (`reservation_data_source.dart`):
+- Firestore 집계 쿼리(`count().get()`) 추가 — 문서 로드 없이 카운트만 조회
+  ```dart
+  final snapshot = await _reservationsRef(storeId)
+      .where('customerName', isEqualTo: customerName)
+      .where('customerPhone', isEqualTo: customerPhone)
+      .count()
+      .get();
+  return snapshot.count ?? 0;
+  ```
+
+**Repository 인터페이스/구현체** (`reservation_repository.dart`, `reservation_repository_impl.dart`):
+- `getReservationCountByCustomer({storeId, customerName, customerPhone}) → Either<Exception, int>` 추가
+
+**UseCase 인터페이스/구현체** (`reservation_use_case.dart`):
+- Repository 위임 메서드 추가
+
+**Controller** (`home_reservation_actions_controller.dart`):
+- `getReservationCountByCustomer(...)` 추가, 실패 시 `1` 반환(폴백)
+
+**Modal** (`reservation_detail_modal.dart`):
+- `int _reservationCount = 1` 상태 필드 추가
+- `initState`에서 `_loadReservationCount()` 호출 (비동기, mounted 체크)
+- `_buildSection5`: `const int reservationCount = 1` + TODO 제거 → `$_reservationCount` 사용
+
+### Firestore 인덱스 주의사항
+
+`customerName` + `customerPhone` 복합 equality 쿼리는 **Firestore 복합 인덱스**가 필요할 수 있음.
+실행 시 인덱스 오류가 발생하면 에러 메시지에 포함된 Firebase Console 링크로 인덱스 생성.
+컬렉션: `stores/{storeId}/reservations`, 필드: `customerName ASC`, `customerPhone ASC`

@@ -108,6 +108,9 @@ class _ReservationDetailModalState
   PriceSetting? _priceSetting;
   int _calculatedPrice = 0;
 
+  // ── 방문 횟수 ─────────────────────────────────────────────────────────────
+  int _reservationCount = 1;
+
   // ── 유효성 ───────────────────────────────────────────────────────────────
   bool get _isValid {
     final headCount = int.tryParse(_headCountController.text) ?? 0;
@@ -144,6 +147,7 @@ class _ReservationDetailModalState
     _editController = ScrollController();
     _initFields(widget.reservation);
     _loadPriceSetting(widget.reservation.storeSummary.id);
+    _loadReservationCount();
   }
 
   @override
@@ -223,6 +227,21 @@ class _ReservationDetailModalState
           if (!mounted) return;
           setState(() => _priceSetting = ps);
           _recalculatePrice();
+        });
+  }
+
+  void _loadReservationCount() {
+    final r = widget.reservation;
+    ref
+        .read(homeReservationActionsControllerProvider.notifier)
+        .getReservationCountByCustomer(
+          storeId: r.storeSummary.id,
+          customerName: r.customerName,
+          customerPhone: r.customerPhone,
+        )
+        .then((count) {
+          if (!mounted) return;
+          setState(() => _reservationCount = count);
         });
   }
 
@@ -890,9 +909,6 @@ class _ReservationDetailModalState
   // ── 섹션 5: 안내문 (읽기 전용 전용) ──────────────────────────────────────
 
   Widget _buildSection5(TextTheme textTheme) {
-    // TODO: 실제 n번째 계산 로직 연결 (현재 1 하드코딩)
-    const int reservationCount = 1;
-
     return GroupedFormContainer(
       header: Padding(
         padding: const EdgeInsetsDirectional.only(
@@ -900,7 +916,7 @@ class _ReservationDetailModalState
           bottom: 8,
         ),
         child: Text(
-          '$reservationCount번째 예약입니다.',
+          '$_reservationCount번째 예약입니다.',
           style: textTheme.bodyMedium?.copyWith(
             color: context.secondaryLabel,
           ),

@@ -55,6 +55,13 @@ abstract interface class ReservationUseCase {
     required String reservationId,
     required ReservationStatus status,
   });
+
+  /// 동일 고객(예약자명 + 연락처)의 해당 점포 예약 수 조회
+  Future<Either<Exception, int>> getReservationCountByCustomer({
+    required String storeId,
+    required String customerName,
+    required String customerPhone,
+  });
 }
 
 class ReservationUseCaseImpl implements ReservationUseCase {
@@ -172,6 +179,19 @@ class ReservationUseCaseImpl implements ReservationUseCase {
       storeId: storeId,
       reservationId: reservationId,
       status: status,
+    );
+  }
+
+  @override
+  Future<Either<Exception, int>> getReservationCountByCustomer({
+    required String storeId,
+    required String customerName,
+    required String customerPhone,
+  }) {
+    return _reservationRepository.getReservationCountByCustomer(
+      storeId: storeId,
+      customerName: customerName,
+      customerPhone: customerPhone,
     );
   }
 

@@ -46,6 +46,13 @@ abstract interface class ReservationDataSource {
 
   /// 예약 삭제
   Future<void> deleteReservation(String storeId, String reservationId);
+
+  /// 동일 고객(예약자명 + 연락처)의 해당 점포 예약 수 조회
+  Future<int> getReservationCountByCustomer(
+    String storeId,
+    String customerName,
+    String customerPhone,
+  );
 }
 
 class ReservationFirestoreDataSource extends FirestoreDataSourceBase
@@ -190,6 +197,24 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
   ) async {
     try {
       await _reservationsRef(storeId).doc(reservationId).delete();
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<int> getReservationCountByCustomer(
+    String storeId,
+    String customerName,
+    String customerPhone,
+  ) async {
+    try {
+      final snapshot = await _reservationsRef(storeId)
+          .where('customerName', isEqualTo: customerName)
+          .where('customerPhone', isEqualTo: customerPhone)
+          .count()
+          .get();
+      return snapshot.count ?? 0;
     } catch (e) {
       throw handleFirestoreError(e);
     }

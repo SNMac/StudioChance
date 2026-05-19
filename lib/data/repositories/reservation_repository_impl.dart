@@ -234,6 +234,25 @@ class ReservationRepositoryImpl implements ReservationRepository {
     }
   }
 
+  @override
+  Future<Either<Exception, int>> getReservationCountByCustomer({
+    required String storeId,
+    required String customerName,
+    required String customerPhone,
+  }) async {
+    try {
+      final count = await _reservationDataSource.getReservationCountByCustomer(
+        storeId,
+        customerName,
+        customerPhone,
+      );
+      return right(count);
+    } catch (e) {
+      _logger.e('고객 예약 수 조회 실패');
+      return left(toException(e));
+    }
+  }
+
   // ===========================================================================
   // Private Helpers
   // ===========================================================================

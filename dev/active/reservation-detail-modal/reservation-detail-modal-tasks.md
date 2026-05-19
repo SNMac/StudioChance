@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-19 (Phase 35 완료 — 퇴실 시간 변경 시 입실 시간 밀어내기)
+Last Updated: 2026-05-19 (Phase 36 완료 — n번째 예약 카운트 실제 데이터 연결)
 
 ---
 
@@ -495,11 +495,27 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 
 ---
 
+## ✅ Phase 36: n번째 예약 카운트 실제 데이터 연결 (2026-05-19)
+
+- [x] **36-1** `reservation_data_source.dart` — `getReservationCountByCustomer(storeId, customerName, customerPhone)` 추가
+  - Firestore `.count().get()` 집계 쿼리 (문서 로드 없이 카운트만)
+- [x] **36-2** `reservation_repository.dart` — 인터페이스에 `Either<Exception, int>` 메서드 추가
+- [x] **36-3** `reservation_repository_impl.dart` — DataSource 위임 구현
+- [x] **36-4** `reservation_use_case.dart` — 인터페이스/구현체 추가 (Repository 위임)
+- [x] **36-5** `home_reservation_actions_controller.dart` — `getReservationCountByCustomer(...)` 추가, 실패 시 `1` 폴백
+- [x] **36-6** `reservation_detail_modal.dart` — `int _reservationCount = 1` 상태, `_loadReservationCount()` 비동기 로드, `_buildSection5` 실제 값 사용
+- [x] **36-7** `dart analyze` — No issues found!
+
+> ⚠️ Firestore 복합 인덱스 필요 가능성: `customerName ASC` + `customerPhone ASC` (서브컬렉션 reservations)
+> 첫 실행 시 에러 메시지에 인덱스 생성 링크 포함됨.
+
+---
+
 ## 스코프 아웃
 
 - [x] ~~요금 콤마 포맷 (50,000)~~ → Phase 31 완료 ✅
-- [x] `_formatDateTime` 공통 extension 추출
-- [x] `n번째` 예약 실제 계산 연결
+- [x] ~~`n번째` 예약 실제 계산 연결~~ → Phase 36 완료 ✅
 - [x] ~~`availableStores` 실제 데이터 연결~~ → Phase 22에서 완료 ✅
+- [x] `_formatDateTime` 공통 extension 추출
 - [x] `onSaved` 실제 Firestore 저장 연결
 - [x] 입금/확정 안내문 화면 연결
