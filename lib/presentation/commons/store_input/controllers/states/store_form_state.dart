@@ -18,6 +18,10 @@ abstract class StoreFormState with _$StoreFormState {
     @Default('') String memo,
     @Default(StoreColor.red) StoreColor color,
     required PriceSetting priceSettings,
+    @Default('') String bankName,
+    @Default('') String bankAccountNumber,
+    @Default('') String bankAccountHolder,
+    int? paymentDeadlineMinutes,
 
     @Default(AsyncData(null)) AsyncValue<void> status,
   }) = _StoreFormState;

@@ -21,7 +21,7 @@ abstract class Store with _$Store {
     String? bankName,
     String? bankAccountNumber,
     String? bankAccountHolder,
-    int? paymentDeadlineHours,
+    int? paymentDeadlineMinutes,
     String? confirmationNotes,
   }) = _Store;
 }

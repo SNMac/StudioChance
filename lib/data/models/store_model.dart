@@ -28,7 +28,7 @@ abstract class StoreModel with _$StoreModel {
     String? bankName,
     String? bankAccountNumber,
     String? bankAccountHolder,
-    int? paymentDeadlineHours,
+    int? paymentDeadlineMinutes,
     String? confirmationNotes,
   }) = _StoreModel;
 
@@ -45,7 +45,7 @@ abstract class StoreModel with _$StoreModel {
     'bankName': bankName,
     'bankAccountNumber': bankAccountNumber,
     'bankAccountHolder': bankAccountHolder,
-    'paymentDeadlineHours': paymentDeadlineHours,
+    'paymentDeadlineMinutes': paymentDeadlineMinutes,
     'confirmationNotes': confirmationNotes,
   };
 
@@ -71,7 +71,7 @@ abstract class StoreModel with _$StoreModel {
       bankName: entity.bankName,
       bankAccountNumber: entity.bankAccountNumber,
       bankAccountHolder: entity.bankAccountHolder,
-      paymentDeadlineHours: entity.paymentDeadlineHours,
+      paymentDeadlineMinutes: entity.paymentDeadlineMinutes,
       confirmationNotes: entity.confirmationNotes,
     );
   }
@@ -93,7 +93,7 @@ abstract class StoreModel with _$StoreModel {
       bankName: bankName,
       bankAccountNumber: bankAccountNumber,
       bankAccountHolder: bankAccountHolder,
-      paymentDeadlineHours: paymentDeadlineHours,
+      paymentDeadlineMinutes: paymentDeadlineMinutes,
       confirmationNotes: confirmationNotes,
     );
   }

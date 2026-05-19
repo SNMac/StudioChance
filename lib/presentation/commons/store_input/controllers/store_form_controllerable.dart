@@ -13,6 +13,10 @@ abstract interface class StoreFormControllerable {
   void setAddressGuide(String addressGuide);
   void setMemo(String memo);
   void setColor(StoreColor color);
+  void setBankName(String bankName);
+  void setBankAccountNumber(String bankAccountNumber);
+  void setBankAccountHolder(String bankAccountHolder);
+  void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes);
 
   void addDayGroup();
   void copyDayGroup(int index);
@@ -50,6 +54,14 @@ mixin StoreFormMixin {
       state = state.copyWith(addressGuide: addressGuide);
   void setMemo(String memo) => state = state.copyWith(memo: memo);
   void setColor(StoreColor color) => state = state.copyWith(color: color);
+  void setBankName(String bankName) =>
+      state = state.copyWith(bankName: bankName);
+  void setBankAccountNumber(String bankAccountNumber) =>
+      state = state.copyWith(bankAccountNumber: bankAccountNumber);
+  void setBankAccountHolder(String bankAccountHolder) =>
+      state = state.copyWith(bankAccountHolder: bankAccountHolder);
+  void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes) =>
+      state = state.copyWith(paymentDeadlineMinutes: paymentDeadlineMinutes);
 
   void addDayGroup() {
     final newGroups = [...state.priceSettings.dayGroups, DayGroup.empty()];

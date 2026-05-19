@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreModel {
 
-@JsonKey(includeToJson: false) String get id; String get name; String get address; String get addressDetail; String get addressGuide; PriceSettingsModel get priceSettingsModel; Map<String, StoreMemberInfoModel> get memberById; Map<String, StoreMemberInfoModel> get waitingMemberById; InviteInfoModel? get inviteInfoModel; String? get bankName; String? get bankAccountNumber; String? get bankAccountHolder; int? get paymentDeadlineHours; String? get confirmationNotes;
+@JsonKey(includeToJson: false) String get id; String get name; String get address; String get addressDetail; String get addressGuide; PriceSettingsModel get priceSettingsModel; Map<String, StoreMemberInfoModel> get memberById; Map<String, StoreMemberInfoModel> get waitingMemberById; InviteInfoModel? get inviteInfoModel; String? get bankName; String? get bankAccountNumber; String? get bankAccountHolder; int? get paymentDeadlineMinutes; String? get confirmationNotes;
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StoreModelCopyWith<StoreModel> get copyWith => _$StoreModelCopyWithImpl<StoreMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&const DeepCollectionEquality().equals(other.memberById, memberById)&&const DeepCollectionEquality().equals(other.waitingMemberById, waitingMemberById)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineHours, paymentDeadlineHours) || other.paymentDeadlineHours == paymentDeadlineHours)&&(identical(other.confirmationNotes, confirmationNotes) || other.confirmationNotes == confirmationNotes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&const DeepCollectionEquality().equals(other.memberById, memberById)&&const DeepCollectionEquality().equals(other.waitingMemberById, waitingMemberById)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.confirmationNotes, confirmationNotes) || other.confirmationNotes == confirmationNotes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,priceSettingsModel,const DeepCollectionEquality().hash(memberById),const DeepCollectionEquality().hash(waitingMemberById),inviteInfoModel,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineHours,confirmationNotes);
+int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,priceSettingsModel,const DeepCollectionEquality().hash(memberById),const DeepCollectionEquality().hash(waitingMemberById),inviteInfoModel,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,confirmationNotes);
 
 @override
 String toString() {
-  return 'StoreModel(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, priceSettingsModel: $priceSettingsModel, memberById: $memberById, waitingMemberById: $waitingMemberById, inviteInfoModel: $inviteInfoModel, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineHours: $paymentDeadlineHours, confirmationNotes: $confirmationNotes)';
+  return 'StoreModel(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, priceSettingsModel: $priceSettingsModel, memberById: $memberById, waitingMemberById: $waitingMemberById, inviteInfoModel: $inviteInfoModel, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, confirmationNotes: $confirmationNotes)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StoreModelCopyWith<$Res>  {
   factory $StoreModelCopyWith(StoreModel value, $Res Function(StoreModel) _then) = _$StoreModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, PriceSettingsModel priceSettingsModel, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById, InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineHours, String? confirmationNotes
+@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, PriceSettingsModel priceSettingsModel, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById, InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? confirmationNotes
 });
 
 
@@ -65,7 +65,7 @@ class _$StoreModelCopyWithImpl<$Res>
 
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? priceSettingsModel = null,Object? memberById = null,Object? waitingMemberById = null,Object? inviteInfoModel = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineHours = freezed,Object? confirmationNotes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? priceSettingsModel = null,Object? memberById = null,Object? waitingMemberById = null,Object? inviteInfoModel = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? confirmationNotes = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as Map<String, StoreMemberInfoModel>,inviteInfoModel: freezed == inviteInfoModel
 as InviteInfoModel?,bankName: freezed == bankName ? _self.bankName : bankName // ignore: cast_nullable_to_non_nullable
 as String?,bankAccountNumber: freezed == bankAccountNumber ? _self.bankAccountNumber : bankAccountNumber // ignore: cast_nullable_to_non_nullable
 as String?,bankAccountHolder: freezed == bankAccountHolder ? _self.bankAccountHolder : bankAccountHolder // ignore: cast_nullable_to_non_nullable
-as String?,paymentDeadlineHours: freezed == paymentDeadlineHours ? _self.paymentDeadlineHours : paymentDeadlineHours // ignore: cast_nullable_to_non_nullable
+as String?,paymentDeadlineMinutes: freezed == paymentDeadlineMinutes ? _self.paymentDeadlineMinutes : paymentDeadlineMinutes // ignore: cast_nullable_to_non_nullable
 as int?,confirmationNotes: freezed == confirmationNotes ? _self.confirmationNotes : confirmationNotes // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -187,10 +187,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  PriceSettingsModel priceSettingsModel,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineHours,  String? confirmationNotes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  PriceSettingsModel priceSettingsModel,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? confirmationNotes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
-return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.priceSettingsModel,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineHours,_that.confirmationNotes);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.priceSettingsModel,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.confirmationNotes);case _:
   return orElse();
 
 }
@@ -208,10 +208,10 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  PriceSettingsModel priceSettingsModel,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineHours,  String? confirmationNotes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  PriceSettingsModel priceSettingsModel,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? confirmationNotes)  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel():
-return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.priceSettingsModel,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineHours,_that.confirmationNotes);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.priceSettingsModel,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.confirmationNotes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -228,10 +228,10 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  PriceSettingsModel priceSettingsModel,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineHours,  String? confirmationNotes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  PriceSettingsModel priceSettingsModel,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? confirmationNotes)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
-return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.priceSettingsModel,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineHours,_that.confirmationNotes);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.priceSettingsModel,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.confirmationNotes);case _:
   return null;
 
 }
@@ -243,7 +243,7 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 @JsonSerializable()
 
 class _StoreModel extends StoreModel {
-  const _StoreModel({@JsonKey(includeToJson: false) required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required this.priceSettingsModel, required final  Map<String, StoreMemberInfoModel> memberById, final  Map<String, StoreMemberInfoModel> waitingMemberById = const {}, this.inviteInfoModel, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineHours, this.confirmationNotes}): _memberById = memberById,_waitingMemberById = waitingMemberById,super._();
+  const _StoreModel({@JsonKey(includeToJson: false) required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required this.priceSettingsModel, required final  Map<String, StoreMemberInfoModel> memberById, final  Map<String, StoreMemberInfoModel> waitingMemberById = const {}, this.inviteInfoModel, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.confirmationNotes}): _memberById = memberById,_waitingMemberById = waitingMemberById,super._();
   factory _StoreModel.fromJson(Map<String, dynamic> json) => _$StoreModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -270,7 +270,7 @@ class _StoreModel extends StoreModel {
 @override final  String? bankName;
 @override final  String? bankAccountNumber;
 @override final  String? bankAccountHolder;
-@override final  int? paymentDeadlineHours;
+@override final  int? paymentDeadlineMinutes;
 @override final  String? confirmationNotes;
 
 /// Create a copy of StoreModel
@@ -286,16 +286,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&const DeepCollectionEquality().equals(other._memberById, _memberById)&&const DeepCollectionEquality().equals(other._waitingMemberById, _waitingMemberById)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineHours, paymentDeadlineHours) || other.paymentDeadlineHours == paymentDeadlineHours)&&(identical(other.confirmationNotes, confirmationNotes) || other.confirmationNotes == confirmationNotes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.priceSettingsModel, priceSettingsModel) || other.priceSettingsModel == priceSettingsModel)&&const DeepCollectionEquality().equals(other._memberById, _memberById)&&const DeepCollectionEquality().equals(other._waitingMemberById, _waitingMemberById)&&(identical(other.inviteInfoModel, inviteInfoModel) || other.inviteInfoModel == inviteInfoModel)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.confirmationNotes, confirmationNotes) || other.confirmationNotes == confirmationNotes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,priceSettingsModel,const DeepCollectionEquality().hash(_memberById),const DeepCollectionEquality().hash(_waitingMemberById),inviteInfoModel,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineHours,confirmationNotes);
+int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,priceSettingsModel,const DeepCollectionEquality().hash(_memberById),const DeepCollectionEquality().hash(_waitingMemberById),inviteInfoModel,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,confirmationNotes);
 
 @override
 String toString() {
-  return 'StoreModel(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, priceSettingsModel: $priceSettingsModel, memberById: $memberById, waitingMemberById: $waitingMemberById, inviteInfoModel: $inviteInfoModel, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineHours: $paymentDeadlineHours, confirmationNotes: $confirmationNotes)';
+  return 'StoreModel(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, priceSettingsModel: $priceSettingsModel, memberById: $memberById, waitingMemberById: $waitingMemberById, inviteInfoModel: $inviteInfoModel, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, confirmationNotes: $confirmationNotes)';
 }
 
 
@@ -306,7 +306,7 @@ abstract mixin class _$StoreModelCopyWith<$Res> implements $StoreModelCopyWith<$
   factory _$StoreModelCopyWith(_StoreModel value, $Res Function(_StoreModel) _then) = __$StoreModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, PriceSettingsModel priceSettingsModel, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById, InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineHours, String? confirmationNotes
+@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, PriceSettingsModel priceSettingsModel, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById, InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? confirmationNotes
 });
 
 
@@ -323,7 +323,7 @@ class __$StoreModelCopyWithImpl<$Res>
 
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? priceSettingsModel = null,Object? memberById = null,Object? waitingMemberById = null,Object? inviteInfoModel = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineHours = freezed,Object? confirmationNotes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? priceSettingsModel = null,Object? memberById = null,Object? waitingMemberById = null,Object? inviteInfoModel = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? confirmationNotes = freezed,}) {
   return _then(_StoreModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -337,7 +337,7 @@ as Map<String, StoreMemberInfoModel>,inviteInfoModel: freezed == inviteInfoModel
 as InviteInfoModel?,bankName: freezed == bankName ? _self.bankName : bankName // ignore: cast_nullable_to_non_nullable
 as String?,bankAccountNumber: freezed == bankAccountNumber ? _self.bankAccountNumber : bankAccountNumber // ignore: cast_nullable_to_non_nullable
 as String?,bankAccountHolder: freezed == bankAccountHolder ? _self.bankAccountHolder : bankAccountHolder // ignore: cast_nullable_to_non_nullable
-as String?,paymentDeadlineHours: freezed == paymentDeadlineHours ? _self.paymentDeadlineHours : paymentDeadlineHours // ignore: cast_nullable_to_non_nullable
+as String?,paymentDeadlineMinutes: freezed == paymentDeadlineMinutes ? _self.paymentDeadlineMinutes : paymentDeadlineMinutes // ignore: cast_nullable_to_non_nullable
 as int?,confirmationNotes: freezed == confirmationNotes ? _self.confirmationNotes : confirmationNotes // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

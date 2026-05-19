@@ -38,6 +38,10 @@ class StoreUpdateController extends _$StoreUpdateController
       memo: memo,
       color: color,
       priceSettings: store.priceSettings,
+      bankName: store.bankName ?? '',
+      bankAccountNumber: store.bankAccountNumber ?? '',
+      bankAccountHolder: store.bankAccountHolder ?? '',
+      paymentDeadlineMinutes: store.paymentDeadlineMinutes,
     );
   }
 
@@ -51,6 +55,12 @@ class StoreUpdateController extends _$StoreUpdateController
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
       priceSettings: state.priceSettings,
+      bankName: state.bankName.isEmpty ? null : state.bankName,
+      bankAccountNumber:
+          state.bankAccountNumber.isEmpty ? null : state.bankAccountNumber,
+      bankAccountHolder:
+          state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
+      paymentDeadlineMinutes: state.paymentDeadlineMinutes,
     );
 
     return (store: updatedStore, color: state.color, memo: state.memo);
