@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-05-19 (Phase 34 완료 — 최종 요금 필드, 키보드 처리, 포맷터, 스테일 데이터 수정)
+Last Updated: 2026-05-19 (Phase 35 완료 — 퇴실 시간 변경 시 입실 시간 밀어내기)
 
 ---
 
@@ -903,3 +903,38 @@ TitleTextLabel(
 
 - `_adjustmentController`에 `onChanged: (_) => setState(() {})` 추가 → 입력 시 실시간 업데이트
 - `reservation_create_modal.dart`에도 동일 패턴 적용
+
+---
+
+## ✅ Phase 35: 퇴실 시간 변경 시 입실 시간 밀어내기 (2026-05-19)
+
+### 변경 전 동작
+
+퇴실 시간을 입실 이전으로 조정하면 퇴실이 `startTime + 1h/1d`로 고정됨 → 퇴실을 앞으로 당길 수 없었음.
+
+### 변경 후 동작 (time_slot_input_form과 동일)
+
+퇴실 시간을 변경했을 때 `newEnd <= _startTime`이면:
+- `_endTime = newEnd` (퇴실을 사용자가 선택한 값으로 설정)
+- `_startTime = newEnd - 1h` (시간 예약) / `newEnd - 1d` (종일 예약) 로 입실을 앞으로 밀어냄
+
+```dart
+onDateTimeChanged: (dt) {
+  final newEnd = _isAllDay ? dt.add(const Duration(days: 1)) : dt;
+  setState(() {
+    _endTime = newEnd;
+    // 퇴실이 입실과 같거나 이전이면 입실을 퇴실 1시간/1일 앞으로 밀어냄
+    if (!newEnd.isAfter(_startTime)) {
+      _startTime = _isAllDay
+          ? newEnd.subtract(const Duration(days: 1))
+          : newEnd.subtract(const Duration(hours: 1));
+    }
+  });
+  _recalculatePrice();
+},
+```
+
+### 적용 파일
+
+- `reservation_detail_modal.dart` — 편집 모드 퇴실 피커
+- `reservation_create_modal.dart` — 퇴실 피커

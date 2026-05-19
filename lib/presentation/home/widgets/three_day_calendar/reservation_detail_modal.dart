@@ -780,13 +780,12 @@ class _ReservationDetailModalState
           onDateTimeChanged: (dt) {
             final newEnd = _isAllDay ? dt.add(const Duration(days: 1)) : dt;
             setState(() {
-              // 퇴실이 입실과 같거나 이전이면 입실 1시간/1일 뒤로 고정
+              _endTime = newEnd;
+              // 퇴실이 입실과 같거나 이전이면 입실을 퇴실 1시간/1일 앞으로 밀어냄
               if (!newEnd.isAfter(_startTime)) {
-                _endTime = _isAllDay
-                    ? _startTime.add(const Duration(days: 1))
-                    : _startTime.add(const Duration(hours: 1));
-              } else {
-                _endTime = newEnd;
+                _startTime = _isAllDay
+                    ? newEnd.subtract(const Duration(days: 1))
+                    : newEnd.subtract(const Duration(hours: 1));
               }
             });
             _recalculatePrice();

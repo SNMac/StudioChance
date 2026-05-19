@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-19 (Phase 34 완료 — 최종 요금 필드, 키보드 처리, 포맷터, 스테일 데이터 수정)
+Last Updated: 2026-05-19 (Phase 35 완료 — 퇴실 시간 변경 시 입실 시간 밀어내기)
 
 ---
 
@@ -483,6 +483,15 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
   - `_adjustmentController`에 `onChanged: (_) => setState(() {})` 추가 → 실시간 업데이트
 - [x] **34-3** `reservation_create_modal.dart` 동일 적용
 - [x] **34-4** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 35: 퇴실 시간 변경 시 입실 시간 밀어내기 (2026-05-19)
+
+- [x] **35-1** `reservation_detail_modal.dart` 퇴실 피커 `onDateTimeChanged`: `newEnd <= _startTime`일 때 퇴실 고정 → 입실 밀어내기로 변경
+  - `_endTime = newEnd` 우선 설정 후, 조건 시 `_startTime = newEnd - 1h/1d`
+- [x] **35-2** `reservation_create_modal.dart` 동일 적용
+- [x] **35-3** `dart analyze` — No issues found!
 
 ---
 
