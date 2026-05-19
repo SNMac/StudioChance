@@ -11,7 +11,9 @@ import 'package:studio_chance/presentation/commons/store_input/screens/price_tim
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
+import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
+import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/sign_in/screens/sign_in_screen.dart';
@@ -107,6 +109,14 @@ GoRouter goRouter(Ref ref) {
         name: SCRoute.home.name,
         pageBuilder: (context, state) =>
             _fadePage(state: state, child: const HomeScreen()),
+        routes: [
+          GoRoute(
+            path: SCRoute.paymentInstruction.path,
+            builder: (context, state) => PaymentInstructionScreen(
+              reservation: state.extra as Reservation,
+            ),
+          ),
+        ],
       ),
 
       // 온보딩 섹션

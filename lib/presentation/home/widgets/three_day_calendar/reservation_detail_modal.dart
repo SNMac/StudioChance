@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/router/router_path.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
@@ -929,9 +931,10 @@ class _ReservationDetailModalState
       children: [
         TextActionButton(
           title: '입금 안내문',
-          onPressed: () {
-            // TODO: 입금 안내문 화면 연결
-          },
+          onPressed: () => context.push(
+            '${SCRoute.home.fullPath}/${SCRoute.paymentInstruction.path}',
+            extra: widget.reservation,
+          ),
         ),
         TextActionButton(
           title: '확정 안내문',

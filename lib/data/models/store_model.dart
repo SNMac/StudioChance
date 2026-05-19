@@ -25,6 +25,11 @@ abstract class StoreModel with _$StoreModel {
     @Default({}) Map<String, StoreMemberInfoModel> waitingMemberById,
 
     InviteInfoModel? inviteInfoModel,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountHolder,
+    int? paymentDeadlineHours,
+    String? confirmationNotes,
   }) = _StoreModel;
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
@@ -37,6 +42,11 @@ abstract class StoreModel with _$StoreModel {
     'addressDetail': addressDetail,
     'addressGuide': addressGuide,
     'priceSettingsModel': priceSettingsModel.toJson(),
+    'bankName': bankName,
+    'bankAccountNumber': bankAccountNumber,
+    'bankAccountHolder': bankAccountHolder,
+    'paymentDeadlineHours': paymentDeadlineHours,
+    'confirmationNotes': confirmationNotes,
   };
 
   factory StoreModel.fromEntity(Store entity) {
@@ -58,6 +68,11 @@ abstract class StoreModel with _$StoreModel {
       inviteInfoModel: entity.inviteInfo != null
           ? InviteInfoModel.fromEntity(entity.inviteInfo!)
           : null,
+      bankName: entity.bankName,
+      bankAccountNumber: entity.bankAccountNumber,
+      bankAccountHolder: entity.bankAccountHolder,
+      paymentDeadlineHours: entity.paymentDeadlineHours,
+      confirmationNotes: entity.confirmationNotes,
     );
   }
 
@@ -75,6 +90,11 @@ abstract class StoreModel with _$StoreModel {
       memberInfos: memberInfos,
       waitingMemberInfos: waitingMemberInfos,
       inviteInfo: inviteInfoModel?.toEntity(),
+      bankName: bankName,
+      bankAccountNumber: bankAccountNumber,
+      bankAccountHolder: bankAccountHolder,
+      paymentDeadlineHours: paymentDeadlineHours,
+      confirmationNotes: confirmationNotes,
     );
   }
 }
