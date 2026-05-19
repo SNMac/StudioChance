@@ -1,12 +1,12 @@
 # 캘린더 일정 셀 - 컨텍스트 및 참조
 
-Last Updated: 2026-04-22 (Phase 23 완료 — AllDayCell 탭 인터랙션 추가)
+Last Updated: 2026-05-19 (버그 수정 — 예약 셀 전화번호 하이픈 포맷 미적용)
 
 ---
 
 ## 현재 구현 상태
 
-**Phase 1~23 구현 완료.**
+**Phase 1~23 구현 완료. 버그 수정 1건 추가 (2026-05-19).**
 
 > Phase 7: 2개 이벤트 겹침 — 고정 `_overlapTopLeft=52.0` 방식 (Phase 8로 교체됨)
 > Phase 8: 스택 레이아웃 + delta 기반 stagger + 오버플로우 셀 + 자정 넘김 + 바운스 연결 — **완료**
@@ -14,6 +14,30 @@ Last Updated: 2026-04-22 (Phase 23 완료 — AllDayCell 탭 인터랙션 추가
 > Phase 10: 모달 UI 버그 수정 — **완료**
 > Phase 11: StoreColor 통합 + 리스트 모달 배경색 — **완료**
 > Phase 23: AllDayCell 탭 인터랙션 추가 — **완료**
+
+---
+
+## 버그 수정: 예약 셀 전화번호 하이픈 포맷 미적용 (2026-05-19)
+
+### 문제
+
+`ReservationCell`의 `_buildClipContent`와 `_buildContentRow`에서 `data.summary.customerPhone`을 그대로 표시하여 `01012345678` 형식으로 출력됨.
+
+### 원인
+
+`phone_formatter.dart`의 `formattedPhone` 확장(`StringPhoneFormatter`)이 이미 존재했으나 `reservation_cell.dart`에서 import 및 사용 누락.
+
+### 해결
+
+**`reservation_cell.dart`**:
+- `phone_formatter.dart` import 추가
+- `data.summary.customerPhone` → `data.summary.customerPhone.formattedPhone` (두 곳: `_buildClipContent`, `_buildContentRow`)
+
+### 영향 범위
+
+- `TimeGrid` 일반 셀(`clipContent=false`): `_buildContentRow` 경로
+- `TimeGrid` front/middle 셀(`clipContent=true`): `_buildClipContent` 경로
+- `AllDayCell`: 동일 `ReservationCell` 위젯 사용 → 동시 수정됨
 
 ---
 

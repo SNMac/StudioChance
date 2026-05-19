@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
 
 // ── 예약 셀 표시용 데이터 ─────────────────────────────────────────────────────
 
@@ -148,7 +149,7 @@ class ReservationCell extends StatelessWidget {
                 overflow: TextOverflow.clip,
               ),
               Text(
-                data.summary.customerPhone,
+                data.summary.customerPhone.formattedPhone,
                 style: style,
                 maxLines: 1,
                 overflow: TextOverflow.clip,
@@ -182,7 +183,7 @@ class ReservationCell extends StatelessWidget {
               maxLines: 1,
             ),
             Text(
-              data.summary.customerPhone,
+              data.summary.customerPhone.formattedPhone,
               style: style,
               maxLines: 1,
             ),

@@ -1,6 +1,6 @@
 # 캘린더 일정 셀 - 작업 체크리스트
 
-Last Updated: 2026-04-22 (Phase 23 완료 — AllDayCell 탭 인터랙션 추가)
+Last Updated: 2026-05-19 (버그 수정 — 예약 셀 전화번호 하이픈 포맷 미적용)
 
 ---
 
@@ -444,6 +444,14 @@ Last Updated: 2026-04-22 (Phase 23 완료 — AllDayCell 탭 인터랙션 추가
 - [x] **23-3**: `three_day_calendar.dart` — `AllDayCell`에 `reservations: _mockReservations` 전달
 
 > isContinuation 케이스 없음 (종일 이벤트는 날짜 분할 없음), 다중 이벤트 겹침 처리는 TODO 유지.
+
+---
+
+## 버그 수정 ✅
+
+- [x] **BugFix-1** (2026-05-19): `reservation_cell.dart` 전화번호 하이픈 포맷 미적용
+  - `phone_formatter.dart` import 추가
+  - `customerPhone` → `customerPhone.formattedPhone` (`_buildClipContent`, `_buildContentRow` 두 곳)
 
 ---
 
