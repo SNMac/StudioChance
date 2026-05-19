@@ -304,6 +304,7 @@ class _ReservationDetailModalState
       totalPrice: calculatedPrice + priceAdjustment,
     );
     widget.onSaved(updated);
+    _loadReservationCount();
     _syncScrollPosition(toEdit: false);
     setState(() {
       _isEditing = false;

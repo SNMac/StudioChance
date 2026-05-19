@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-05-19 (Phase 36 완료 — n번째 예약 카운트 실제 데이터 연결)
+Last Updated: 2026-05-19 (Phase 36 완료 — n번째 예약 카운트 실제 데이터 연결 + 완료 시 재조회)
 
 ---
 
@@ -980,3 +980,8 @@ n = 해당 점포에서 동일 `customerName` + `customerPhone`을 가진 예약
 `customerName` + `customerPhone` 복합 equality 쿼리는 **Firestore 복합 인덱스**가 필요할 수 있음.
 실행 시 인덱스 오류가 발생하면 에러 메시지에 포함된 Firebase Console 링크로 인덱스 생성.
 컬렉션: `stores/{storeId}/reservations`, 필드: `customerName ASC`, `customerPhone ASC`
+
+### 완료 시 재조회
+
+`_onComplete()`에서 `widget.onSaved(updated)` 직후 `_loadReservationCount()` 호출 추가.
+예약자명/연락처 수정 후 완료 시 읽기 전용 복귀 화면에서 최신 카운트가 즉시 반영됨.
