@@ -9,6 +9,7 @@ import 'package:studio_chance/presentation/commons/role_selection/screens/role_s
 import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_time_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/payment_info_input_screen.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/store_guide_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
@@ -52,6 +53,18 @@ List<GoRoute> _roleSubRoutes() => [
               GoRoute(
                 path: SCRoute.paymentInstruction.path,
                 builder: (context, state) => PaymentInstructionScreen(
+                  previewStoreToEdit: state.extra as Store?,
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: SCRoute.storeGuide.path,
+            builder: (context, state) => const StoreGuideInputScreen(),
+            routes: [
+              GoRoute(
+                path: SCRoute.confirmationNotice.path,
+                builder: (context, state) => ConfirmationNoticeScreen(
                   previewStoreToEdit: state.extra as Store?,
                 ),
               ),
@@ -134,7 +147,7 @@ GoRouter goRouter(Ref ref) {
           GoRoute(
             path: SCRoute.confirmationNotice.path,
             builder: (context, state) => ConfirmationNoticeScreen(
-              reservation: state.extra as Reservation,
+              reservation: state.extra as Reservation?,
             ),
           ),
         ],

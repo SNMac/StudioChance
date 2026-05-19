@@ -42,6 +42,8 @@ class StoreCreationController extends _$StoreCreationController
       bankAccountHolder:
           state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
       paymentDeadlineMinutes: state.paymentDeadlineMinutes,
+      confirmationNotes:
+          state.confirmationNotes.isEmpty ? null : state.confirmationNotes,
     );
 
     return (store: store, color: state.color, memo: state.memo);

@@ -226,6 +226,15 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               );
                             },
                           ),
+                          TitleNavigationButton(
+                            title: '안내사항',
+                            onPressed: () {
+                              SCRoute.storeGuide.pushChild(
+                                context,
+                                extra: widget.storeToEdit,
+                              );
+                            },
+                          ),
                           MemoTextField(
                             placeholder: '메모',
                             controller: _memoController,
