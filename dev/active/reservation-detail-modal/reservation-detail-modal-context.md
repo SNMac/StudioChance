@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 컨텍스트 및 참조
 
-Last Updated: 2026-05-19 (Phase 22 완료 — viewer 역할 편집 제한, availableStores admin/staff 필터링)
+Last Updated: 2026-05-19 (Phase 34 완료 — 최종 요금 필드, 키보드 처리, 포맷터, 스테일 데이터 수정)
 
 ---
 
@@ -493,12 +493,13 @@ _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
 | ~~**Phase 20**~~ | ~~읽기 전용 종일 이벤트 입/퇴실 일시 통합 + `_onAllDayChanged` 버그 수정~~ → 2026-05-02 완료 ✅ |
 | ~~**Phase 21**~~ | ~~iOS/Android 통합 모달, DraggableScrollableSheet 제거~~ → 2026-05-18 완료 ✅ |
 | ~~**Phase 22**~~ | ~~viewer 역할 편집 제한 + availableStores 공급~~ → 2026-05-19 완료 ✅ |
+| ~~**Phase 27~34**~~ | ~~포맷터, 스테일 데이터, 키보드, 최종 요금~~ → 2026-05-19 완료 ✅ |
 | `n번째` 계산 | 실제 데이터 연결 전까지 `1` 하드코딩 유지 |
 | 입금/확정 안내문 | `TextActionButton.onPressed` TODO 유지 |
 | `onSaved` 실제 연결 | 예약 저장 Use Case + Repository 구현 후 연결 |
-| 숫자 콤마 포맷 | `calculatedPrice.toString()` → `"50,000"` style (스코프 아웃) |
 | `_formatDateTime` 공통화 | 현재 편집/확인 모달 각각 private 선언 (스코프 아웃) |
 | ~~`ReservationEditModal` 삭제~~ | 2026-04-19 삭제 완료 ✅ |
+| ~~숫자 콤마 포맷~~ | ~~`calculatedPrice.toString()` → `"50,000"` style~~ → Phase 31에서 완료 ✅ |
 
 ## Phase 22 구현 상세 (2026-05-19)
 
@@ -665,3 +666,240 @@ onDateTimeChanged: (dt) => setState(
 - **데이터 저장**: `endTime`은 항상 iCal 관례(다음날 자정, exclusive) 유지
 - **UI 표시**: `isAllDay`일 때만 -1일 보정하여 표시
 - `dart analyze` → `No issues found!`
+
+---
+
+## ✅ Phase 27: 기준 끝 시간 00:00 = 1440분 처리 (2026-05-19)
+
+### 문제
+
+온보딩 요금 설정에서 기준 끝 시간을 00:00으로 설정하면 시작 시간이 00:00으로 초기화되는 버그.
+
+### 원인
+
+`CupertinoDatePicker`의 `initialDateTime`: `DateTime(..., hour: 24, minute: 0)`은 Dart에서 다음날 자정으로 정규화됨.
+하지만 피커는 "00:00"을 표시하므로 사용자가 00:00을 선택하면 `onDateTimeChanged`에 `hour=0, minute=0`이 들어옴.
+이것이 `newMinutes = 0`으로 계산 → `start(1440) >= end(0)` 조건 발동 → `newStart = (0 - 60).clamp(0, 1440) = 0` → 시작 시간 00:00 초기화.
+
+### 해결
+
+- **`time_formatter.dart`**: `formattedTime` getter에 `if (this == 1440) return '00:00';` 특수 케이스 추가
+- **`time_slot_input_form.dart`** 끝 시간 `onDateTimeChanged`:
+  ```dart
+  final int newMinutes =
+      newDate.hour == 0 && newDate.minute == 0
+          ? 1440
+          : newDate.hour * 60 + newDate.minute;
+  ```
+  - `hour=0, minute=0` 선택 → `1440`으로 매핑 (하루 끝)
+  - `_getInitialDate(1440)`: `DateTime(…, 24, 0)` → Dart 정규화 → 다음날 자정 → 피커에서 "00:00" 표시 ✓
+- `FilteringTextInputFormatter.digitsOnly` → `PriceInputFormatter()` 교체 (이 변경은 Phase 31과 연관)
+
+---
+
+## ✅ Phase 28: 멀티 슬롯 요금 계산 수정 (2026-05-19)
+
+### 문제
+
+예약 시간대가 여러 TimeSlot에 걸쳐 있을 때, 첫 번째 슬롯의 요금만 적용됨.
+예) 10:00~13:00 예약: 10~12시 슬롯(7,000원/시간) + 12~13시 슬롯(8,000원/시간) → 기대 22,000원, 실제 21,000원.
+
+### 원인
+
+`price_setting.dart`의 `calculatePrice`: `firstWhere`로 첫 매칭 슬롯만 찾아 전체 시간에 적용.
+
+### 해결 (`lib/domain/entities/price_setting.dart`)
+
+전체 TimeSlot을 순회하며 예약 시간과의 겹침(overlap)을 계산해 합산:
+
+```dart
+for (final slot in group.timeSlots) {
+  if (slot.isAllDay) continue;
+  final slotEnd = slot.endTime == 0 ? 1440 : slot.endTime;
+  final overlapStart = max(startMinutes, slot.startTime);
+  final overlapEnd = min(endMinutes, slotEnd);
+  if (overlapStart >= overlapEnd) continue;
+  final overlapHours = (overlapEnd - overlapStart) / 60.0;
+  int slotPrice = slot.isHourly ? (slot.price * overlapHours).round() : slot.price;
+  if (slot.isPerPerson) slotPrice *= headCount;
+  totalBase += slotPrice;
+}
+```
+
+- `endTime == 0`은 하위 호환성을 위해 `1440`으로 처리
+- `isAllDay` 슬롯은 별도 경로(하루종일 예약 전용)에서 처리
+
+---
+
+## ✅ Phase 29: 입출 시간 자동 조정 (2026-05-19)
+
+`reservation_detail_modal.dart` + `reservation_create_modal.dart` 두 파일 공통 적용.
+
+### 시작 시간 조정
+
+시작 시간을 변경했을 때 종료 시간이 시작 이전이면 자동 조정:
+
+```dart
+onDateTimeChanged: (newDate) {
+  if (newMinutes >= _endTime.hour * 60 + _endTime.minute) {
+    // 끝 시간 = 시작 + 1시간 (자정 넘으면 23:59 clamp)
+    setState(() { ... });
+  }
+}
+```
+
+### 종료 시간 조정
+
+종료 시간을 변경했을 때 시작 이전이면 자동 조정:
+
+```dart
+onDateTimeChanged: (newDate) {
+  if (newMinutes <= _startTime.hour * 60 + _startTime.minute) {
+    // 시작 시간 = 끝 - 1시간
+    setState(() { ... });
+  }
+}
+```
+
+---
+
+## ✅ Phase 30: 연락처 자동 하이픈 포맷 (2026-05-19)
+
+### 신규 파일: `lib/presentation/commons/extensions/phone_formatter.dart`
+
+```dart
+extension StringPhoneFormatter on String {
+  String get formattedPhone { ... }  // "01012345678" → "010-1234-5678"
+}
+
+class PhoneNumberInputFormatter extends TextInputFormatter {
+  // 최대 11자리, 실시간 앞3-중간-뒤4 포맷, 커서 항상 끝
+}
+```
+
+### 적용
+
+- `_initFields()` / `_resetFields()`: `phone.formattedPhone` 으로 초기화
+- `_onComplete()` / `_onSavePressed()`: `.replaceAll('-', '')` 후 저장 (순수 숫자로 DB 저장)
+- 전화번호 `TitleTextField`에 `PhoneNumberInputFormatter()` 추가
+
+---
+
+## ✅ Phase 31: 요금 쉼표+원 포맷 (2026-05-19)
+
+### 신규 파일: `lib/presentation/commons/extensions/price_formatter.dart`
+
+```dart
+extension IntPriceFormatter on int {
+  String get formattedPrice  { ... }  // 30000 → "30,000원"
+  String get formattedAmount { ... }  // 30000 → "30,000" (텍스트 필드 초기값용)
+}
+
+class PriceInputFormatter extends TextInputFormatter {
+  const PriceInputFormatter({this.allowNegative = false});
+  // 입력 시 천 단위 쉼표 자동 삽입, 커서 항상 끝
+}
+```
+
+### 적용
+
+| 위치 | 변경 내용 |
+|------|----------|
+| `time_slot_input_form.dart` | `FilteringTextInputFormatter.digitsOnly` → `PriceInputFormatter()`, 초기값 `formattedAmount`, 파싱 시 `,` 제거 |
+| `reservation_detail_modal.dart` | 조정 금액 필드 포맷터 → `PriceInputFormatter(allowNegative: true)` |
+| `reservation_create_modal.dart` | 동일 |
+| 요금 표시 읽기 전용 | `.formattedPrice` 사용 |
+
+---
+
+## ✅ Phase 32: 읽기 전용 스테일 데이터 수정 (2026-05-19)
+
+### 문제
+
+편집 완료(`_onComplete`) 후 읽기 전용 모드로 복귀할 때 이전 값(구 `widget.reservation`)이 표시됨.
+
+### 원인
+
+`_buildSection1~4ReadOnly()` 메서드들이 `widget.reservation`을 직접 참조하고 있었음.
+`onSaved(updated)` 호출 후 `widget.reservation`이 즉시 갱신되지 않아 스테일 데이터가 노출됨.
+
+### 해결
+
+모든 읽기 전용 빌드 메서드를 로컬 상태 변수로 전환:
+
+| 섹션 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| Section 1 | `widget.reservation.storeSummary` | `_storeSummary` |
+| Section 1 | `widget.reservation.status` | `_status` |
+| Section 2 | `widget.reservation.customerName/headCount/phone/memo` | `_*Controller.text` |
+| Section 3 | `widget.reservation.isAllDay/startTime/endTime` | `_isAllDay`, `_startTime`, `_endTime` |
+| Section 4 | `widget.reservation.platform/paymentMethod/calculatedPrice/priceAdjustment/totalPrice` | `_platform`, `_paymentMethod`, `_calculatedPrice`, `_adjustmentController.text` |
+
+---
+
+## ✅ Phase 33: 키보드 dismiss + Avoidance (2026-05-19)
+
+### 키보드 dismiss
+
+`_onComplete()` 시작 시 `FocusScope.of(context).unfocus()` 추가.
+
+### 키보드 Avoidance
+
+**문제**: 키보드가 올라오면 하단 입력 폼이 가려짐.
+
+**시도 1 (실패)**: ScrollView 콘텐츠 하단에 `SizedBox(height: viewInsets.bottom)` 추가.
+- 실패 원인: `Scrollable.ensureVisible`은 viewport 크기를 기준으로 동작. 콘텐츠 크기만 늘려서는 viewport가 줄지 않아 스크롤 불가.
+
+**해결**: `Expanded` 위젯(ScrollView 컨테이너)에 하단 패딩 적용 → viewport 실제 축소:
+
+```dart
+Expanded(
+  child: Padding(
+    padding: EdgeInsets.only(
+      bottom: _isEditing
+          ? MediaQuery.of(context).viewInsets.bottom
+          : 0,
+    ),
+    child: _buildScrollArea(textTheme),
+  ),
+),
+```
+
+편집 모드에서만 적용 (읽기 전용 모드에서 키보드가 올라오지 않으므로).
+
+---
+
+## ✅ Phase 34: '최종 요금' 필드 추가 (2026-05-19)
+
+### 요청
+
+섹션 4에 '최종 요금' 읽기 전용 필드 추가: `calculatedPrice + priceAdjustment = totalPrice`.
+Firestore의 `totalPrice` 필드와 연동.
+
+### 구현
+
+**읽기 전용 (`_buildSection4ReadOnly`)**:
+
+```dart
+TitleTextLabel(
+  title: '최종 요금',
+  content: widget.reservation.totalPrice.formattedPrice,
+),
+```
+
+**편집 모드 (`_buildSection4Edit`)**:
+
+```dart
+// 조정 금액 파싱 (로컬 변수)
+final rawAdj = _adjustmentController.text.replaceAll(',', '');
+final adjustment = int.tryParse(rawAdj) ?? 0;
+final totalPrice = _calculatedPrice + adjustment;
+
+TitleTextLabel(
+  title: '최종 요금',
+  content: totalPrice.formattedPrice,
+),
+```
+
+- `_adjustmentController`에 `onChanged: (_) => setState(() {})` 추가 → 입력 시 실시간 업데이트
+- `reservation_create_modal.dart`에도 동일 패턴 적용

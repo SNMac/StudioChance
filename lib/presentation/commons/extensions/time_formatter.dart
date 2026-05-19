@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 extension IntTimeFormatter on int {
   /// 분(int)을 "HH:mm" 형식의 문자열로 변환
-  /// 예: 600 -> "10:00"
+  /// 예: 600 -> "10:00", 1440(자정 끝) -> "00:00"
   String get formattedTime {
+    if (this == 1440) return '00:00';
     final int hour = this ~/ 60;
     final int minute = this % 60;
     final String hourStr = hour.toString().padLeft(2, '0');

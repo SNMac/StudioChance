@@ -12,6 +12,8 @@ import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -122,10 +124,10 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     _headCountController = TextEditingController(
       text: r.headCount > 0 ? r.headCount.toString() : '',
     );
-    _phoneController = TextEditingController(text: r.customerPhone);
+    _phoneController = TextEditingController(text: r.customerPhone.formattedPhone);
     _memoController = TextEditingController(text: r.memo);
     _adjustmentController = TextEditingController(
-      text: r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '',
+      text: r.priceAdjustment != 0 ? r.priceAdjustment.formattedAmount : '',
     );
   }
 
@@ -161,14 +163,15 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
 
   void _onSavePressed() {
     final calculatedPrice = _calculatedPrice;
-    final priceAdjustment = int.tryParse(_adjustmentController.text) ?? 0;
+    final priceAdjustment =
+        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
 
     final newReservation = widget.initialReservation.copyWith(
       storeSummary: _storeSummary,
       status: _status,
       customerName: _nameController.text.trim(),
       headCount: int.tryParse(_headCountController.text) ?? 0,
-      customerPhone: _phoneController.text.trim(),
+      customerPhone: _phoneController.text.replaceAll('-', '').trim(),
       memo: _memoController.text,
       isAllDay: _isAllDay,
       startTime: _startTime,
@@ -351,6 +354,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           controller: _phoneController,
           onChanged: (_) => setState(() {}),
           keyboardType: TextInputType.phone,
+          inputFormatters: [PhoneNumberInputFormatter()],
         ),
         MemoTextField(
           placeholder: '메모',
@@ -390,7 +394,13 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
               : CupertinoDatePickerMode.dateAndTime,
           initialDateTime: _startTime,
           onDateTimeChanged: (dt) {
-            setState(() => _startTime = dt);
+            setState(() {
+              _startTime = dt;
+              final minEnd = _isAllDay
+                  ? dt.add(const Duration(days: 1))
+                  : dt.add(const Duration(hours: 1));
+              if (!_endTime.isAfter(dt)) _endTime = minEnd;
+            });
             _recalculatePrice();
           },
         ),
@@ -407,7 +417,16 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
               : CupertinoDatePickerMode.dateAndTime,
           initialDateTime: displayEndTime,
           onDateTimeChanged: (dt) {
-            setState(() => _endTime = _isAllDay ? dt.add(const Duration(days: 1)) : dt);
+            final newEnd = _isAllDay ? dt.add(const Duration(days: 1)) : dt;
+            setState(() {
+              if (!newEnd.isAfter(_startTime)) {
+                _endTime = _isAllDay
+                    ? _startTime.add(const Duration(days: 1))
+                    : _startTime.add(const Duration(hours: 1));
+              } else {
+                _endTime = newEnd;
+              }
+            });
             _recalculatePrice();
           },
         ),
@@ -425,7 +444,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           top: 8,
         ),
         child: Text(
-          '할인인 경우 -[값]을 입력해주세요 (예: -2000)',
+          '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
           style: textTheme.labelMedium?.copyWith(
             color: context.secondaryLabel,
           ),
@@ -458,15 +477,13 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         ),
         TitleTextLabel(
           title: '요금',
-          content: _calculatedPrice.toString(),
+          content: _calculatedPrice.formattedPrice,
         ),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
           keyboardType: const TextInputType.numberWithOptions(signed: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
-          ],
+          inputFormatters: [const PriceInputFormatter(allowNegative: true)],
         ),
       ],
     );

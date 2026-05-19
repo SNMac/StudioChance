@@ -1,6 +1,6 @@
 # 예약 확인 모달 — 작업 체크리스트
 
-Last Updated: 2026-05-19 (Phase 26 완료 — 요금 필드 읽기 전용 전환)
+Last Updated: 2026-05-19 (Phase 34 완료 — 최종 요금 필드, 키보드 처리, 포맷터, 스테일 데이터 수정)
 
 ---
 
@@ -404,9 +404,91 @@ Phase 1~8은 StatelessWidget 기반 읽기 전용 모달로 완료됨.
 
 ---
 
+---
+
+## ✅ Phase 27: 기준 끝 시간 00:00 = 1440분 처리 (2026-05-19)
+
+- [x] **27-1** `time_formatter.dart`: `formattedTime` getter에 `if (this == 1440) return '00:00';` 추가
+- [x] **27-2** `time_slot_input_form.dart` 끝 시간 picker: `hour=0, minute=0` → `1440` 매핑
+- [x] **27-3** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 28: 멀티 슬롯 요금 계산 수정 (2026-05-19)
+
+- [x] **28-1** `price_setting.dart` `calculatePrice()`: `firstWhere` 단일 슬롯 → 전체 슬롯 overlap 합산 방식으로 재작성
+  - `max(startMinutes, slot.startTime)` / `min(endMinutes, slotEnd)` overlap 계산
+  - `slot.endTime == 0` → `1440` 하위 호환 처리
+  - `isHourly`: overlap 시간 비례 계산 / `isPerPerson`: headCount 곱셈
+- [x] **28-2** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 29: 입출 시간 자동 조정 (2026-05-19)
+
+- [x] **29-1** `reservation_detail_modal.dart` 시작 시간 picker: 변경 후 종료가 이전이면 끝 시간 자동 +1h
+- [x] **29-2** `reservation_detail_modal.dart` 종료 시간 picker: 변경 후 시작 이후가 되도록 자동 -1h
+- [x] **29-3** `reservation_create_modal.dart` 동일 적용
+- [x] **29-4** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 30: 연락처 자동 하이픈 포맷 (2026-05-19)
+
+- [x] **30-1** `lib/presentation/commons/extensions/phone_formatter.dart` 신규 생성
+  - `String.formattedPhone` extension
+  - `PhoneNumberInputFormatter` TextInputFormatter (최대 11자리, 커서 끝)
+- [x] **30-2** `reservation_detail_modal.dart`: 초기화/리셋 시 `.formattedPhone`, 저장 시 `-` 제거, 필드에 포맷터 추가
+- [x] **30-3** `reservation_create_modal.dart` 동일 적용
+- [x] **30-4** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 31: 요금 쉼표+원 포맷 (2026-05-19)
+
+- [x] **31-1** `lib/presentation/commons/extensions/price_formatter.dart` 신규 생성
+  - `int.formattedPrice` → "30,000원"
+  - `int.formattedAmount` → "30,000" (텍스트 필드 초기값용)
+  - `PriceInputFormatter({bool allowNegative})` TextInputFormatter
+- [x] **31-2** `time_slot_input_form.dart`: `FilteringTextInputFormatter.digitsOnly` → `PriceInputFormatter()`, 초기값 `formattedAmount`, 파싱 시 `,` 제거
+- [x] **31-3** `reservation_detail_modal.dart` 조정 금액 필드: `PriceInputFormatter(allowNegative: true)`, 요금 읽기 전용 표시 `formattedPrice`
+- [x] **31-4** `reservation_create_modal.dart` 동일 적용
+- [x] **31-5** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 32: 읽기 전용 스테일 데이터 수정 (2026-05-19)
+
+- [x] **32-1** `_buildSection1ReadOnly()`: `widget.reservation.storeSummary/status` → `_storeSummary`, `_status`
+- [x] **32-2** `_buildSection2ReadOnly()`: `widget.reservation.customerName/headCount/phone/memo` → `_*Controller.text`
+- [x] **32-3** `_buildSection3ReadOnly()`: `widget.reservation.isAllDay/startTime/endTime` → `_isAllDay`, `_startTime`, `_endTime`
+- [x] **32-4** `_buildSection4ReadOnly()`: `widget.reservation.platform/paymentMethod/calculatedPrice/priceAdjustment/totalPrice` → 로컬 상태 변수
+- [x] **32-5** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 33: 키보드 dismiss + Avoidance (2026-05-19)
+
+- [x] **33-1** `_onComplete()` 첫 줄에 `FocusScope.of(context).unfocus()` 추가
+- [x] **33-2** 키보드 avoidance: `Expanded` 래퍼에 `Padding(bottom: _isEditing ? viewInsets.bottom : 0)` 적용
+  - 편집 모드에서만 viewport 실축소 → `Scrollable.ensureVisible` 정상 동작
+- [x] **33-3** `dart analyze` — No issues found!
+
+---
+
+## ✅ Phase 34: '최종 요금' 필드 추가 (2026-05-19)
+
+- [x] **34-1** `_buildSection4ReadOnly()`: `totalPrice.formattedPrice` 표시하는 `TitleTextLabel` 추가
+- [x] **34-2** `_buildSection4Edit()`: `_calculatedPrice + adjustment`를 실시간 계산하는 `TitleTextLabel` 추가
+  - `_adjustmentController`에 `onChanged: (_) => setState(() {})` 추가 → 실시간 업데이트
+- [x] **34-3** `reservation_create_modal.dart` 동일 적용
+- [x] **34-4** `dart analyze` — No issues found!
+
+---
+
 ## 스코프 아웃
 
-- [x] 요금 콤마 포맷 (50,000)
+- [x] ~~요금 콤마 포맷 (50,000)~~ → Phase 31 완료 ✅
 - [x] `_formatDateTime` 공통 extension 추출
 - [x] `n번째` 예약 실제 계산 연결
 - [x] ~~`availableStores` 실제 데이터 연결~~ → Phase 22에서 완료 ✅

@@ -14,6 +14,8 @@ import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
@@ -172,11 +174,11 @@ class _ReservationDetailModalState
     _headCountController = TextEditingController(
       text: r.headCount > 0 ? r.headCount.toString() : '',
     );
-    _phoneController = TextEditingController(text: r.customerPhone);
+    _phoneController = TextEditingController(text: r.customerPhone.formattedPhone);
     _memoController = TextEditingController(text: r.memo);
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController = TextEditingController(
-      text: r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '',
+      text: r.priceAdjustment != 0 ? r.priceAdjustment.formattedAmount : '',
     );
   }
 
@@ -192,11 +194,11 @@ class _ReservationDetailModalState
 
     _nameController.text = r.customerName;
     _headCountController.text = r.headCount > 0 ? r.headCount.toString() : '';
-    _phoneController.text = r.customerPhone;
+    _phoneController.text = r.customerPhone.formattedPhone;
     _memoController.text = r.memo;
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController.text =
-        r.priceAdjustment != 0 ? r.priceAdjustment.toString() : '';
+        r.priceAdjustment != 0 ? r.priceAdjustment.formattedAmount : '';
   }
 
   // ── 스크롤 위치 동기화 ────────────────────────────────────────────────────
@@ -260,15 +262,17 @@ class _ReservationDetailModalState
   }
 
   void _onComplete() {
+    FocusScope.of(context).unfocus();
     final calculatedPrice = _calculatedPrice;
-    final priceAdjustment = int.tryParse(_adjustmentController.text) ?? 0;
+    final priceAdjustment =
+        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
 
     final updated = widget.reservation.copyWith(
       storeSummary: _storeSummary,
       status: _status,
       customerName: _nameController.text.trim(),
       headCount: int.tryParse(_headCountController.text) ?? 0,
-      customerPhone: _phoneController.text.trim(),
+      customerPhone: _phoneController.text.replaceAll('-', '').trim(),
       memo: _memoController.text,
       isAllDay: _isAllDay,
       startTime: _startTime,
@@ -462,7 +466,18 @@ class _ReservationDetailModalState
                 ],
               ),
             ),
-            Expanded(child: _buildScrollArea(textTheme)),
+            Expanded(
+              child: Padding(
+                // 편집 모드에서 키보드 높이만큼 스크롤 뷰포트를 줄여
+                // ensureVisible이 키보드 위로 필드를 정확히 스크롤하게 함
+                padding: EdgeInsets.only(
+                  bottom: _isEditing
+                      ? MediaQuery.of(context).viewInsets.bottom
+                      : 0,
+                ),
+                child: _buildScrollArea(textTheme),
+              ),
+            ),
           ],
         ),
       ),
@@ -561,24 +576,23 @@ class _ReservationDetailModalState
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection1ReadOnly() {
-    final store = widget.reservation.storeSummary;
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
           title: '예약 점포',
-          content: store.name,
+          content: _storeSummary.name,
           leading: Container(
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: Color(store.color.foregroundColorValue),
+              color: Color(_storeSummary.color.foregroundColorValue),
               shape: BoxShape.circle,
             ),
           ),
         ),
         TitleTextLabel(
           title: '예약 상태',
-          content: widget.reservation.status.displayName,
+          content: _status.displayName,
         ),
       ],
     );
@@ -633,17 +647,17 @@ class _ReservationDetailModalState
       children: [
         TitleTextLabel(
           title: '예약자명',
-          content: widget.reservation.customerName,
+          content: _nameController.text,
         ),
         TitleTextLabel(
           title: '인원',
-          content: widget.reservation.headCount.toString(),
+          content: _headCountController.text,
         ),
         TitleTextLabel(
           title: '연락처',
-          content: widget.reservation.customerPhone,
+          content: _phoneController.text, // 이미 하이픈 포맷 적용됨
         ),
-        _ReadOnlyMemo(text: widget.reservation.memo),
+        _ReadOnlyMemo(text: _memoController.text),
       ],
     );
   }
@@ -673,6 +687,7 @@ class _ReservationDetailModalState
           controller: _phoneController,
           onChanged: (_) => setState(() {}),
           keyboardType: TextInputType.phone,
+          inputFormatters: [PhoneNumberInputFormatter()],
         ),
         MemoTextField(
           placeholder: '메모',
@@ -689,27 +704,25 @@ class _ReservationDetailModalState
   // ── 섹션 3: 일시 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection3ReadOnly() {
-    final isAllDay = widget.reservation.isAllDay;
-    final startTime = widget.reservation.startTime;
     // 종일 이벤트는 iCal 관례상 endTime = 다음날 자정(exclusive) → 표시 시 -1일 보정
-    final displayEnd = isAllDay
-        ? widget.reservation.endTime.subtract(const Duration(days: 1))
-        : widget.reservation.endTime;
+    final displayEnd = _isAllDay
+        ? _endTime.subtract(const Duration(days: 1))
+        : _endTime;
 
     return GroupedFormContainer(
       children: [
         TitleSwitchButton(
           title: '하루종일',
-          value: isAllDay,
+          value: _isAllDay,
           onChanged: null,
         ),
         TitleTextLabel(
-          title: isAllDay ? '입실 일' : '입실 일시',
-          content: _formatDateTime(startTime, dateOnly: isAllDay),
+          title: _isAllDay ? '입실 일' : '입실 일시',
+          content: _formatDateTime(_startTime, dateOnly: _isAllDay),
         ),
         TitleTextLabel(
-          title: isAllDay ? '퇴실 일' : '퇴실 일시',
-          content: _formatDateTime(displayEnd, dateOnly: isAllDay),
+          title: _isAllDay ? '퇴실 일' : '퇴실 일시',
+          content: _formatDateTime(displayEnd, dateOnly: _isAllDay),
         ),
       ],
     );
@@ -740,7 +753,14 @@ class _ReservationDetailModalState
               : CupertinoDatePickerMode.dateAndTime,
           initialDateTime: _startTime,
           onDateTimeChanged: (dt) {
-            setState(() => _startTime = dt);
+            setState(() {
+              _startTime = dt;
+              // 입실이 퇴실과 같거나 이후면 퇴실을 1시간/1일 뒤로 조정
+              final minEnd = _isAllDay
+                  ? dt.add(const Duration(days: 1))
+                  : dt.add(const Duration(hours: 1));
+              if (!_endTime.isAfter(dt)) _endTime = minEnd;
+            });
             _recalculatePrice();
           },
         ),
@@ -758,7 +778,17 @@ class _ReservationDetailModalState
           initialDateTime: displayEndTime,
           // 종일 이벤트: 사용자가 선택한 날짜에 +1일하여 iCal 관례(exclusive) 유지
           onDateTimeChanged: (dt) {
-            setState(() => _endTime = _isAllDay ? dt.add(const Duration(days: 1)) : dt);
+            final newEnd = _isAllDay ? dt.add(const Duration(days: 1)) : dt;
+            setState(() {
+              // 퇴실이 입실과 같거나 이전이면 입실 1시간/1일 뒤로 고정
+              if (!newEnd.isAfter(_startTime)) {
+                _endTime = _isAllDay
+                    ? _startTime.add(const Duration(days: 1))
+                    : _startTime.add(const Duration(hours: 1));
+              } else {
+                _endTime = newEnd;
+              }
+            });
             _recalculatePrice();
           },
         ),
@@ -769,29 +799,37 @@ class _ReservationDetailModalState
   // ── 섹션 4: 결제 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection4ReadOnly() {
+    final adjustment =
+        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
           title: '예약 플랫폼',
-          content: widget.reservation.platform.displayName,
+          content: _platform.displayName,
         ),
         TitleTextLabel(
           title: '결제 방식',
-          content: widget.reservation.paymentMethod.displayName,
+          content: _paymentMethod.displayName,
         ),
         TitleTextLabel(
           title: '요금',
-          content: widget.reservation.calculatedPrice.toString(),
+          content: _calculatedPrice.formattedPrice,
         ),
         TitleTextLabel(
           title: '추가 요금/할인',
-          content: widget.reservation.priceAdjustment.toString(),
+          content: adjustment.formattedPrice,
+        ),
+        TitleTextLabel(
+          title: '최종 요금',
+          content: (_calculatedPrice + adjustment).formattedPrice,
         ),
       ],
     );
   }
 
   Widget _buildSection4Edit(TextTheme textTheme) {
+    final adjustment =
+        int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0;
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
@@ -799,7 +837,7 @@ class _ReservationDetailModalState
           top: 8,
         ),
         child: Text(
-          '할인인 경우 -[값]을 입력해주세요 (예: -2000)',
+          '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
           style: textTheme.labelMedium?.copyWith(
             color: context.secondaryLabel,
           ),
@@ -832,15 +870,18 @@ class _ReservationDetailModalState
         ),
         TitleTextLabel(
           title: '요금',
-          content: _calculatedPrice.toString(),
+          content: _calculatedPrice.formattedPrice,
         ),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
+          onChanged: (_) => setState(() {}),
           keyboardType: const TextInputType.numberWithOptions(signed: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
-          ],
+          inputFormatters: [const PriceInputFormatter(allowNegative: true)],
+        ),
+        TitleTextLabel(
+          title: '최종 요금',
+          content: (_calculatedPrice + adjustment).formattedPrice,
         ),
       ],
     );

@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/delete_copy_add_button_row.dart';
@@ -54,7 +54,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
   void initState() {
     super.initState();
     _priceController = TextEditingController(
-      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.toString(),
+      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.formattedAmount,
     );
 
     _priceController.addListener(_onPriceChanged);
@@ -68,7 +68,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
 
   /// 요금 텍스트 변경 시 호출
   void _onPriceChanged() {
-    final priceText = _priceController.text;
+    final priceText = _priceController.text.replaceAll(',', '');
     final int price = int.tryParse(priceText) ?? -1;
 
     if (widget.timeSlot.price != price) {
@@ -201,7 +201,11 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
             mode: CupertinoDatePickerMode.time,
             initialDateTime: _getInitialDate(widget.timeSlot.endTime),
             onDateTimeChanged: (newDate) {
-              final int newMinutes = newDate.hour * 60 + newDate.minute;
+              // 끝 시간 00:00 선택 = 자정(하루 끝) → 1440분으로 처리
+              final int newMinutes =
+                  newDate.hour == 0 && newDate.minute == 0
+                      ? 1440
+                      : newDate.hour * 60 + newDate.minute;
               if (newMinutes <= widget.timeSlot.startTime) {
                 final newStart = (newMinutes - 60).clamp(0, 1440);
                 widget.onChanged(
@@ -220,9 +224,9 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
         TitleTextField(
           title: '요금',
           controller: _priceController,
-          placeholder: '예: 7000',
+          placeholder: '예: 7,000',
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: [const PriceInputFormatter()],
         ),
         TitleSwitchButton(
           title: '시간당 부과',
