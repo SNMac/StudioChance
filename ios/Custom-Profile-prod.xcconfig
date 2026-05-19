@@ -1,5 +1,5 @@
 //
-//  Custom-Test-Profile.xcconfig
+//  Custom-Profile-prod.xcconfig
 //  Runner
 //
 //  Created by 서동환 on 1/2/26.
@@ -9,4 +9,4 @@
 // https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
 
 #include "GoogleConfig-prod.xcconfig"
-#include "Pods/Target Support Files/Pods-Runner/Pods-RunnerTests.profile.xcconfig"
+#include "Flutter/Release.xcconfig"
