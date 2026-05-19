@@ -58,7 +58,7 @@ final notesSection = (store?.confirmationNotes?.isNotEmpty == true)
 | 본문 하단 ↔ 하단버튼 상단 | 32px |
 | 좌우 패딩 | 16px |
 | AppBar leading | `AppBarNaviBackButton` (기본값) |
-| AppBar trailing | `AppBarActionButton(label: '완료', onPressed: context.pop)` |
+| AppBar trailing | 없음 |
 | 하단버튼 1 | 복사하기 |
 | 하단버튼 2 | 공유하기 |
 

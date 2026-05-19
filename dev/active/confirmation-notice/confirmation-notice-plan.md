@@ -82,7 +82,7 @@ AppBar 우측에 '완료' 버튼이 추가된 점만 다르다.
 
 ```
 ┌─────────────────────────────────┐
-│  <      확정 안내문      완료   │  ← CustomAppBar + AppBarActionButton
+│  <        확정 안내문           │  ← CustomAppBar (actions 없음)
 ├─────────────────────────────────┤
 │  [{점포명} 예약 확정 안내]  ↑  │  ← bodyLarge, FontWeight.normal
 │  안녕하세요, {점포명}입니다. │     좌우 패딩 16px, 상단 32px
@@ -99,7 +99,7 @@ AppBar 우측에 '완료' 버튼이 추가된 점만 다르다.
 └─────────────────────────────────┘
 ```
 
-- **AppBar**: `CustomAppBar(title: '확정 안내문', actions: [AppBarActionButton(label: '완료', onPressed: context.pop)])`
+- **AppBar**: `CustomAppBar(title: '확정 안내문')` — leading 기본값(`AppBarNaviBackButton`)만 사용, actions 없음
 - **레이아웃**: `Stack` 구조 (입금 안내문과 동일)
   - `Positioned.fill` + `SingleChildScrollView`: 하단 패딩 145px
   - `Positioned(bottom: 0)`: 버튼 그룹 하단 고정

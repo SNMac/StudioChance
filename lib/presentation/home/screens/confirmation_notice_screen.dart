@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
@@ -25,15 +23,7 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: '확정 안내문',
-        actions: [
-          AppBarActionButton(
-            label: '완료',
-            onPressed: () => context.pop(),
-          ),
-        ],
-      ),
+      appBar: const CustomAppBar(title: '확정 안내문'),
       body: SafeArea(
         child: storeAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
