@@ -30,6 +30,7 @@ enum SCRoute {
   storePriceTime,
   inviteCodeForm,
   inviteCodeVerified,
+  storePaymentInfo,
   paymentInstruction,
   confirmationNotice;
 
@@ -71,6 +72,8 @@ enum SCRoute {
         return 'invite-code-form';
       case SCRoute.inviteCodeVerified:
         return 'invite-code-verified';
+      case SCRoute.storePaymentInfo:
+        return 'payment-info';
       case SCRoute.paymentInstruction:
         return 'payment-instruction';
       case SCRoute.confirmationNotice:

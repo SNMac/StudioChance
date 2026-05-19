@@ -8,10 +8,12 @@ import 'package:studio_chance/presentation/commons/invite_code/screens/invite_co
 import 'package:studio_chance/presentation/commons/role_selection/screens/role_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_time_input_screen.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/payment_info_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/home/screens/confirmation_notice_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
 import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
@@ -42,6 +44,18 @@ List<GoRoute> _roleSubRoutes() => [
           GoRoute(
             path: SCRoute.storeAddress.path,
             builder: (context, state) => const StoreAddressInputScreen(),
+          ),
+          GoRoute(
+            path: SCRoute.storePaymentInfo.path,
+            builder: (context, state) => const PaymentInfoInputScreen(),
+            routes: [
+              GoRoute(
+                path: SCRoute.paymentInstruction.path,
+                builder: (context, state) => PaymentInstructionScreen(
+                  previewStoreToEdit: state.extra as Store?,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: SCRoute.storePriceDays.path,
@@ -114,7 +128,7 @@ GoRouter goRouter(Ref ref) {
           GoRoute(
             path: SCRoute.paymentInstruction.path,
             builder: (context, state) => PaymentInstructionScreen(
-              reservation: state.extra as Reservation,
+              reservation: state.extra as Reservation?,
             ),
           ),
           GoRoute(

@@ -214,6 +214,18 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               );
                             },
                           ),
+                          TitleNavigationButton(
+                            title: '입금 정보',
+                            content: state.bankName.isEmpty
+                                ? null
+                                : state.bankName,
+                            onPressed: () {
+                              SCRoute.storePaymentInfo.pushChild(
+                                context,
+                                extra: widget.storeToEdit,
+                              );
+                            },
+                          ),
                           MemoTextField(
                             placeholder: '메모',
                             controller: _memoController,

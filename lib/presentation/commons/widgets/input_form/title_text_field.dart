@@ -10,9 +10,11 @@ class TitleTextField extends StatelessWidget {
   final String? placeholder;
   final TextEditingController? controller;
   final void Function(String)? onChanged;
+  final FocusNode? focusNode;
   final bool autofocus;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
+  final TextInputAction? returnButtonType;
   final bool autocorrect;
 
   const TitleTextField({
@@ -21,9 +23,11 @@ class TitleTextField extends StatelessWidget {
     this.placeholder,
     this.controller,
     this.onChanged,
+    this.focusNode,
     this.autofocus = false,
     this.inputFormatters,
     this.keyboardType,
+    this.returnButtonType,
     this.autocorrect = false,
   });
 
@@ -53,8 +57,10 @@ class TitleTextField extends StatelessWidget {
                 ),
                 cursorHeight: 20,
                 controller: controller,
+                focusNode: focusNode,
                 textAlign: TextAlign.end,
                 textAlignVertical: TextAlignVertical.center,
+                textInputAction: returnButtonType,
                 autofocus: autofocus,
                 onChanged: onChanged,
                 inputFormatters: inputFormatters,
