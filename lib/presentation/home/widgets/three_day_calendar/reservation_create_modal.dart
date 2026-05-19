@@ -153,6 +153,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
+      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
     );
     setState(() => _calculatedPrice = price);
   }

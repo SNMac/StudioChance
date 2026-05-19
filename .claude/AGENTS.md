@@ -71,6 +71,13 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `*_use_case.dart`: 순수 Domain (interface + impl), data import 금지
 - `*_use_case_provider.dart`: `@riverpod` 팩토리만 포함, data import 허용
 
+### 공휴일 요금 — isHoliday 파라미터 패턴 (D6)
+`PriceSetting.calculatePrice(isHoliday: bool)`로 공휴일 판단을 호출부에 위임.
+- `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
+- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: false` 고정 (TODO 주석)
+- 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 값 전달
+- 구현 상세: `dev/active/holiday-pricing/holiday-pricing-context.md` 참고
+
 ## Either / TaskEither 패턴
 
 - 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)

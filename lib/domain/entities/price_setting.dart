@@ -25,12 +25,16 @@ abstract class PriceSetting with _$PriceSetting {
     required DateTime end,
     required int headCount,
     bool isAllDay = false,
+    bool isHoliday = false,
   }) {
     // 1. 예약 요일에 맞는 DayGroup 탐색
-    final weekday = Weekday.values.firstWhere(
-      (w) => w.index + 1 == start.weekday, // Weekday.monday.index = 0, weekday = 1
-      orElse: () => Weekday.monday,
-    );
+    // isHoliday=true이면 Weekday.holiday 그룹 우선 적용 (공휴일 감지는 호출부 책임)
+    final weekday = isHoliday
+        ? Weekday.holiday
+        : Weekday.values.firstWhere(
+            (w) => w.index + 1 == start.weekday, // Weekday.monday.index = 0, weekday = 1
+            orElse: () => Weekday.monday,
+          );
 
     final group = dayGroups.where((g) => g.days.contains(weekday)).firstOrNull;
     if (group == null) return 0;
