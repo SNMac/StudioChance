@@ -30,7 +30,8 @@ enum SCRoute {
   storePriceTime,
   inviteCodeForm,
   inviteCodeVerified,
-  paymentInstruction;
+  paymentInstruction,
+  confirmationNotice;
 
   /// [정의용] GoRoute path (상대 경로)
   String get path {
@@ -72,6 +73,8 @@ enum SCRoute {
         return 'invite-code-verified';
       case SCRoute.paymentInstruction:
         return 'payment-instruction';
+      case SCRoute.confirmationNotice:
+        return 'confirmation-notice';
     }
   }
 

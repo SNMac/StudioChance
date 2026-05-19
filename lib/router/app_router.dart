@@ -12,6 +12,7 @@ import 'package:studio_chance/presentation/commons/store_input/screens/store_add
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/presentation/home/screens/confirmation_notice_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
 import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
@@ -113,6 +114,12 @@ GoRouter goRouter(Ref ref) {
           GoRoute(
             path: SCRoute.paymentInstruction.path,
             builder: (context, state) => PaymentInstructionScreen(
+              reservation: state.extra as Reservation,
+            ),
+          ),
+          GoRoute(
+            path: SCRoute.confirmationNotice.path,
+            builder: (context, state) => ConfirmationNoticeScreen(
               reservation: state.extra as Reservation,
             ),
           ),

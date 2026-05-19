@@ -938,9 +938,10 @@ class _ReservationDetailModalState
         ),
         TextActionButton(
           title: '확정 안내문',
-          onPressed: () {
-            // TODO: 확정 안내문 화면 연결
-          },
+          onPressed: () => context.push(
+            '${SCRoute.home.fullPath}/${SCRoute.confirmationNotice.path}',
+            extra: widget.reservation,
+          ),
         ),
       ],
     );
