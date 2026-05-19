@@ -29,9 +29,10 @@ Last Updated: 2026-05-19
 
 - [x] **4-1** `lib/presentation/home/screens/payment_instruction_screen.dart` 생성
   - `CustomAppBar(title: '입금 안내문')` — leading 기본값만, actions 없음
-  - `SafeArea` + `Column`
-  - 텍스트 영역: `Expanded(SingleChildScrollView)`, 좌우 패딩 16, 상단 32
-  - 하단 버튼: `GroupedFormContainer` + `TextActionButton` × 2 (복사하기 / 공유하기)
+  - `SafeArea` + `Stack` 레이아웃
+    - `Positioned.fill` + `SingleChildScrollView` (하단 패딩 145px)
+    - `Positioned(bottom: 0)` 하단 고정 버튼 그룹
+  - 버튼: `GroupedFormContainer` + `TextActionButton` × 2 (복사하기 / 공유하기)
   - 자정 넘김 예약 시간 포맷 처리 (startTime.day ≠ endTime.day 분기)
 
 ## Phase 5: 라우팅 연결

@@ -57,7 +57,9 @@ Last Updated: 2026-05-19
 ✔ 입금 마감 시간: 앱에 예약 등록한 시간 기준 {n}시간 이내
 
 예약자와 실제 이용자의 이름 및 전화번호가 다를 경우 미리 알려주세요.
-입금 확인 후 예약 확정 안내를 드리겠습니다. 감사합니다.
+입금 확인 후 예약 확정 안내를 드리겠습니다.
+
+감사합니다.
 ```
 
 ### 플레이스홀더 매핑
@@ -83,24 +85,31 @@ Last Updated: 2026-05-19
 
 ```
 ┌─────────────────────────────────┐
-│  <   입금 안내문          완료  │  ← CustomAppBar
+│  <        입금 안내문           │  ← CustomAppBar (actions 없음)
 ├─────────────────────────────────┤
-│  ↕ 32px                         │
-│  [{점포명} 예약 입금 안내]      │  ← bodyLarge, FontWeight.normal
-│  안녕하세요, {점포명}입니다.   │     좌우 패딩 16px
-│  ...                            │
-│  ↕ 32px                         │
-├─────────────────────────────────┤
-│         복사하기                │  ← OutlinedButton (full width)
-│         공유하기                │  ← OutlinedButton (full width)
+│  [{점포명} 예약 입금 안내]  ↑  │  ← bodyLarge, FontWeight.normal
+│  안녕하세요, {점포명}입니다. │     좌우 패딩 16px, 상단 32px
+│  ...                        S  │     (스크롤 영역)
+│  ...                        C  │
+│  ...                        R  │
+│  ...                        O  │
+│  ...                        L  │
+│  ...                        L  ↓
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤  ← 버튼 위 gap 32px
+│         복사하기                │  ← GroupedFormContainer
+│─────────────────────────────── │     + TextActionButton × 2
+│         공유하기                │     (하단 고정, 배경 불투명)
 └─────────────────────────────────┘
 ```
 
 - **AppBar**: `CustomAppBar(title: '입금 안내문')` — leading 기본값(`AppBarNaviBackButton`)만 사용, actions 없음
-- **본문**: `SingleChildScrollView` + 좌우 16px 패딩, 상단 32px, 하단 32px
+- **레이아웃**: `Stack` 구조
+  - `Positioned.fill` + `SingleChildScrollView`: 전체 영역 스크롤, 하단 패딩 145px(버튼 영역 높이)으로 마지막 내용 보호
+  - `Positioned(bottom: 0)`: 버튼 그룹 하단 고정
+- **버튼**: `GroupedFormContainer` + `TextActionButton` × 2 (복사하기 / 공유하기)
 - **복사하기**: `Clipboard.setData` → `ScaffoldMessenger.showSnackBar("복사됐습니다.")`
-- **공유하기**: `share_plus` 패키지 `Share.share(text)`
-- **Store 로딩 중**: 텍스트 영역에 `CircularProgressIndicator`
+- **공유하기**: `share_plus` 패키지 `SharePlus.instance.share(ShareParams(text: text))`
+- **Store 로딩 중**: `CircularProgressIndicator`
 - **Store 에러 / 계좌 null**: 해당 플레이스홀더 빈 문자열로 대체
 
 ---

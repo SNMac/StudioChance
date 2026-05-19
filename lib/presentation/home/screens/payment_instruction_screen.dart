@@ -38,11 +38,13 @@ class PaymentInstructionScreen extends ConsumerWidget {
   Widget _buildContent(BuildContext context, TextTheme textTheme, Store? store) {
     final text = _buildText(store);
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
+        Positioned.fill(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+            // 버튼 영역 높이(상단 gap 32 + 버튼 48×2 + 구분선 1 + 하단 패딩 16)만큼
+            // 하단 패딩을 줘서 마지막 내용이 버튼에 가리지 않도록 함
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 145),
             child: Text(
               text,
               style: textTheme.bodyLarge?.copyWith(
@@ -51,26 +53,31 @@ class PaymentInstructionScreen extends ConsumerWidget {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-          child: GroupedFormContainer(
-            children: [
-              TextActionButton(
-                title: '복사하기',
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: text));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('복사됐습니다.')),
-                  );
-                },
-              ),
-              TextActionButton(
-                title: '공유하기',
-                onPressed: () => SharePlus.instance.share(
-                  ShareParams(text: text),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+            child: GroupedFormContainer(
+              children: [
+                TextActionButton(
+                  title: '복사하기',
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: text));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('복사됐습니다.')),
+                    );
+                  },
                 ),
-              ),
-            ],
+                TextActionButton(
+                  title: '공유하기',
+                  onPressed: () => SharePlus.instance.share(
+                    ShareParams(text: text),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -147,6 +154,8 @@ class PaymentInstructionScreen extends ConsumerWidget {
         '$deadlineLine'
         '\n'
         '예약자와 실제 이용자의 이름 및 전화번호가 다를 경우 미리 알려주세요.\n'
-        '입금 확인 후 예약 확정 안내를 드리겠습니다. 감사합니다.';
+        '입금 확인 후 예약 확정 안내를 드리겠습니다.\n'
+        '\n'
+        '감사합니다.';
   }
 }
