@@ -12,7 +12,7 @@ DateTime? _parseDateTimeNullable(Object? value) {
 
 ReservationPlatform? _parsePlatform(Object? raw) {
   if (raw == null) return null;
-  return switch ((raw as String).toUpperCase()) {
+  return switch (raw.toString().toUpperCase()) {
     'NAVER' => ReservationPlatform.naver,
     'SPACECLOUD' => ReservationPlatform.spaceCloud,
     'YANOLJA' => ReservationPlatform.yanolja,

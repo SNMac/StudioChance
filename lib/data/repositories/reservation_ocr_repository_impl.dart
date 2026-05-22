@@ -1,8 +1,9 @@
 import 'dart:typed_data';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:studio_chance/common/utils/exception_utils.dart';
+import 'package:studio_chance/common/exceptions/ocr_exceptions.dart';
 import 'package:studio_chance/data/data_sources/gemini_data_source.dart';
 import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_ocr_repository.dart';
@@ -25,7 +26,17 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
       return right(model.toEntity());
     } catch (e) {
       _logger.e('OCR 분석 실패', error: e);
-      return left(toException(e));
+      final exception = switch (e) {
+        FirebaseException(code: final code)
+            when code == 'unavailable' ||
+                code == 'deadline-exceeded' ||
+                code == 'network-request-failed' =>
+          OcrNetworkException(e.toString(), code: code),
+        FormatException() || TypeError() =>
+          OcrParsingException(e.toString()),
+        _ => OcrUnknownException(e.toString()),
+      };
+      return left(exception);
     }
   }
 }

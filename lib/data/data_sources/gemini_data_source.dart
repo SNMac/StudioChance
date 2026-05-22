@@ -39,13 +39,27 @@ class GeminiDataSourceImpl implements GeminiDataSource {
   "memo": "요청사항 또는 null"
 }''';
 
+  static String _detectMimeType(Uint8List bytes) {
+    if (bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
+      return 'image/jpeg';
+    }
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'image/png';
+    }
+    return 'image/jpeg'; // fallback
+  }
+
   @override
   Future<ReservationOcrResultModel> analyzeReservationImage(
     Uint8List imageBytes,
   ) async {
     final response = await _model.generateContent([
       Content.multi([
-        InlineDataPart('image/jpeg', imageBytes),
+        InlineDataPart(_detectMimeType(imageBytes), imageBytes),
         TextPart(_prompt),
       ]),
     ]);
