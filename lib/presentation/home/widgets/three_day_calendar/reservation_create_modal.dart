@@ -168,7 +168,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         _nameController.text = result.customerName!;
       }
       if (result.customerPhone != null) {
-        _phoneController.text = result.customerPhone!;
+        _phoneController.text = result.customerPhone!.formattedPhone;
       }
       if (result.headCount != null) {
         _headCountController.text = result.headCount.toString();
