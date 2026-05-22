@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
@@ -27,12 +28,22 @@ class StoreFilterModal extends ConsumerWidget {
     );
     final selectedIds = ref.watch(homeStoreFilterControllerProvider);
     final notifier = ref.read(homeStoreFilterControllerProvider.notifier);
+    final isAllSelected = selectedIds.length == storeInfos.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const ModalGrabber(),
-        const ModalAppBar(title: '점포 선택'),
+        ModalAppBar(
+          title: '점포 선택',
+          actions: [
+            AppBarActionButton(
+              label: isAllSelected ? '전체 해제' : '전체 선택',
+              onPressed: notifier.toggleAll,
+              isRegularWeight: true,
+            ),
+          ],
+        ),
         Expanded(
           child: SingleChildScrollView(
             controller: scrollController,

@@ -44,6 +44,16 @@ class HomeStoreFilterController extends _$HomeStoreFilterController {
     _persistDeselected();
   }
 
+  /// 전체 선택 상태이면 전체 해제, 아니면 전체 선택.
+  void toggleAll() {
+    final user = ref.read(currentUserProvider).asData?.value;
+    if (user == null) return;
+    final allIds = user.storeInfos.map((info) => info.id).toSet();
+    final isAllSelected = state.length == allIds.length && state.containsAll(allIds);
+    state = isAllSelected ? {} : Set<String>.of(allIds);
+    _persistDeselected();
+  }
+
   /// 현재 상태 기준으로 deselected IDs를 계산하여 SharedPreferences에 저장.
   Future<void> _persistDeselected() async {
     final prefs = ref.read(sharedPreferencesProvider).asData?.value;
