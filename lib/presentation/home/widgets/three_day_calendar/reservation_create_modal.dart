@@ -29,6 +29,7 @@ import 'package:studio_chance/presentation/providers/home_reservation_actions_co
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 import 'package:studio_chance/presentation/providers/reservation_ocr_controller.dart';
 
 /// 예약 생성 모달 (편집 모드 전용, 완료 시 [onSaved] 콜백 후 닫힘).
@@ -338,19 +339,14 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     final isLoading = ref.watch(
       reservationOcrControllerProvider.select((s) => s.isLoading),
     );
-    return OutlinedButton.icon(
+    return TextActionButton(
+      title: isLoading ? '분석 중...' : '스크린샷으로 자동 입력',
+      fontWeight: FontWeight.normal,
       onPressed: isLoading
           ? null
           : () => ref
               .read(reservationOcrControllerProvider.notifier)
               .extractFromImage(),
-      icon: isLoading
-          ? const SizedBox.square(
-              dimension: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.image_outlined),
-      label: Text(isLoading ? '분석 중...' : '스크린샷으로 자동 입력'),
     );
   }
 

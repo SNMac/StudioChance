@@ -646,19 +646,14 @@ class _ReservationDetailModalState
     final isLoading = ref.watch(
       reservationOcrControllerProvider.select((s) => s.isLoading),
     );
-    return OutlinedButton.icon(
+    return TextActionButton(
+      title: isLoading ? '분석 중...' : '스크린샷으로 자동 입력',
+      fontWeight: FontWeight.normal,
       onPressed: isLoading
           ? null
           : () => ref
               .read(reservationOcrControllerProvider.notifier)
               .extractFromImage(),
-      icon: isLoading
-          ? const SizedBox.square(
-              dimension: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.image_outlined),
-      label: Text(isLoading ? '분석 중...' : '스크린샷으로 자동 입력'),
     );
   }
 
