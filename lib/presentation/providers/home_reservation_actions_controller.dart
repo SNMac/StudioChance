@@ -14,28 +14,31 @@ class HomeReservationActionsController
   final _logger = Logger();
 
   @override
-  void build() {}
+  FutureOr<void> build() {}
 
   Future<void> updateReservation(Reservation reservation) async {
     final result = await ref
         .read(reservationUseCaseProvider)
         .updateReservation(reservation: reservation);
     result.fold(
-      (e) => _logger.e('예약 수정 실패', error: e),
+      (e) {
+        _logger.e('예약 수정 실패', error: e);
+        state = AsyncError(e, StackTrace.current);
+      },
       (_) {},
     );
   }
 
-  Future<bool> createReservation(Reservation reservation) async {
+  Future<void> createReservation(Reservation reservation) async {
     final result = await ref
         .read(reservationUseCaseProvider)
         .createReservation(reservation: reservation);
-    return result.fold(
+    result.fold(
       (e) {
         _logger.e('예약 생성 실패', error: e);
-        return false;
+        state = AsyncError(e, StackTrace.current);
       },
-      (_) => true,
+      (_) {},
     );
   }
 
@@ -51,19 +54,19 @@ class HomeReservationActionsController
     );
   }
 
-  Future<bool> deleteReservation(Reservation reservation) async {
+  Future<void> deleteReservation(Reservation reservation) async {
     final result = await ref
         .read(reservationUseCaseProvider)
         .deleteReservation(
           storeId: reservation.storeSummary.id,
           reservationId: reservation.id,
         );
-    return result.fold(
+    result.fold(
       (e) {
         _logger.e('예약 삭제 실패', error: e);
-        return false;
+        state = AsyncError(e, StackTrace.current);
       },
-      (_) => true,
+      (_) {},
     );
   }
 

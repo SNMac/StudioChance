@@ -11,7 +11,9 @@ import 'package:studio_chance/domain/enums/payment_method.dart';
 import 'package:studio_chance/domain/enums/reservation_platform.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/home/widgets/home_nav_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/monthly_calendar/monthly_calendar.dart';
@@ -35,6 +37,29 @@ class HomeScreen extends ConsumerWidget {
     final selectedStartDate = ref.watch(
       homeCalendarControllerProvider.select((s) => s.selectedStartDate),
     );
+
+    ref.listen(homeReservationActionsControllerProvider, (_, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          if (!context.mounted) return;
+          if (e is AppException && !e.isSilentable) {
+            showCustomAlertDialog(
+              context: context,
+              title: e.title,
+              content: e.content,
+              showCancel: false,
+            );
+          } else if (e is! AppException) {
+            showCustomAlertDialog(
+              context: context,
+              title: '오류',
+              content: '잠시 후 다시 시도해 주세요.',
+              showCancel: false,
+            );
+          }
+        },
+      );
+    });
 
     // admin·staff만 예약 생성 가능
     final canCreateReservation = storeInfos.any(

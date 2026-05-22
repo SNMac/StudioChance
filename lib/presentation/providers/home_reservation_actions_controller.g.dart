@@ -14,7 +14,7 @@ final homeReservationActionsControllerProvider =
     HomeReservationActionsControllerProvider._();
 
 final class HomeReservationActionsControllerProvider
-    extends $NotifierProvider<HomeReservationActionsController, void> {
+    extends $AsyncNotifierProvider<HomeReservationActionsController, void> {
   HomeReservationActionsControllerProvider._()
     : super(
         from: null,
@@ -33,30 +33,22 @@ final class HomeReservationActionsControllerProvider
   @override
   HomeReservationActionsController create() =>
       HomeReservationActionsController();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
-  }
 }
 
 String _$homeReservationActionsControllerHash() =>
-    r'3f6c82e8c44e747e80a8bfa24fe34cae7f2c048f';
+    r'fe76523f8a2f169b92b5cda82d850bd619c04896';
 
-abstract class _$HomeReservationActionsController extends $Notifier<void> {
-  void build();
+abstract class _$HomeReservationActionsController extends $AsyncNotifier<void> {
+  FutureOr<void> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<void, void>;
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
               Object?,
               Object?
             >;
