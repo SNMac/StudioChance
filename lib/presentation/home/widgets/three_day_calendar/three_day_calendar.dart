@@ -273,15 +273,30 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final hourHeight = ref.watch(
       homeCalendarControllerProvider.select((s) => s.hourHeight),
     );
-    final displayedMonth = ref.watch(
-      homeCalendarControllerProvider.select((s) => s.displayedMonth),
+    // 예약은 selectedStartDate 기준 과거 1달 + 현재 + 미래 2달 = 4개월 선로드
+    // → 월간 캘린더 스크롤 시 예약 사라짐 방지 + 인접 달 즉시 표시
+    final (prevMonth, currMonth, nextMonth, next2Month) = ref.watch(
+      homeCalendarControllerProvider.select((s) {
+        final y = s.selectedStartDate.year;
+        final m = s.selectedStartDate.month;
+        return (
+          DateTime(y, m - 1, 1),
+          DateTime(y, m, 1),
+          DateTime(y, m + 1, 1),
+          DateTime(y, m + 2, 1),
+        );
+      }),
     );
-    final reservationsAsync = ref.watch(homeReservationsProvider(displayedMonth));
-    final reservationsList = reservationsAsync.when(
-      data: (r) => r,
-      loading: () => const <Reservation>[],
-      error: (_, _) => const <Reservation>[],
-    );
+    final prevAsync = ref.watch(homeReservationsProvider(prevMonth));
+    final currAsync = ref.watch(homeReservationsProvider(currMonth));
+    final nextAsync = ref.watch(homeReservationsProvider(nextMonth));
+    final next2Async = ref.watch(homeReservationsProvider(next2Month));
+    final reservationsList = [
+      ...prevAsync.when(data: (r) => r, loading: () => const <Reservation>[], error: (_, _) => const <Reservation>[]),
+      ...currAsync.when(data: (r) => r, loading: () => const <Reservation>[], error: (_, _) => const <Reservation>[]),
+      ...nextAsync.when(data: (r) => r, loading: () => const <Reservation>[], error: (_, _) => const <Reservation>[]),
+      ...next2Async.when(data: (r) => r, loading: () => const <Reservation>[], error: (_, _) => const <Reservation>[]),
+    ];
     final (allEvents, reservationsMap) = buildEventsFromReservations(reservationsList);
     final storeInfos = ref.watch(
       currentUserProvider.select((async) => async.asData?.value?.storeInfos),

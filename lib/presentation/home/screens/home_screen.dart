@@ -31,6 +31,10 @@ class HomeScreen extends ConsumerWidget {
     final isMonthlyCalendarVisible = ref.watch(
       homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
     );
+    final displayedMonth = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.displayedMonth),
+    );
+    final calendarHeight = monthlyCalendarHeightForMonth(displayedMonth);
     final storeInfos = ref.watch(
       currentUserProvider.select((u) => u.asData?.value?.storeInfos ?? []),
     );
@@ -76,11 +80,11 @@ class HomeScreen extends ConsumerWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              height: isMonthlyCalendarVisible ? monthlyCalendarHeight : 0,
+              height: isMonthlyCalendarVisible ? calendarHeight : 0,
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(),
               child: OverflowBox(
-                maxHeight: monthlyCalendarHeight,
+                maxHeight: calendarHeight,
                 alignment: Alignment.topCenter,
                 child: const MonthlyCalendar(),
               ),

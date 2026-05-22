@@ -50,8 +50,8 @@ class MonthlyCalendarGrid extends ConsumerWidget {
     final selectedDay2 = selectedDay1.add(const Duration(days: 1));
     final selectedDay3 = selectedDay1.add(const Duration(days: 2));
 
-    return Column( // 5행 × 7열 = 35 셀
-      children: List.generate(5, (row) {
+    return Column(
+      children: List.generate(6, (row) {
         return Expanded(
           child: Row(
           children: List.generate(7, (col) {
