@@ -18,5 +18,10 @@ abstract class Store with _$Store {
     required List<StoreMemberInfo> waitingMemberInfos,
     required PriceSetting priceSettings,
     required InviteInfo? inviteInfo,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountHolder,
+    int? paymentDeadlineMinutes,
+    String? confirmationNotes,
   }) = _Store;
 }

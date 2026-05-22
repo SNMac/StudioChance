@@ -1,16 +1,10 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
-
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
-import 'package:studio_chance/data/repositories/auth_repository_impl.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-
-part 'auth_use_case.g.dart';
 
 abstract interface class AuthUseCase {
   /// 로그인 상태 변경 `Stream`
@@ -69,14 +63,17 @@ class AuthUseCaseImpl implements AuthUseCase {
   Future<void> signOut() async {
     final currentUserResult = await _userRepository.getCurrentUser();
 
-    if (currentUserResult.isRight()) {
-      final user = currentUserResult.getRight().toNullable();
-      if (user != null) {
-        try {
-          await _userRepository.removeCurrentDeviceFcmToken(user.id);
-        } catch (_) {}
-      }
-    }
+    // FCM 토큰 제거 실패 시에도 반드시 signOut을 실행해야 하므로 fold 후 signOut 호출
+    await currentUserResult.fold(
+      (_) async {},
+      (user) async {
+        if (user != null) {
+          try {
+            await _userRepository.removeCurrentDeviceFcmToken(user.id);
+          } catch (_) {}
+        }
+      },
+    );
 
     await _authRepository.signOut();
   }
@@ -85,39 +82,28 @@ class AuthUseCaseImpl implements AuthUseCase {
   Future<Either<Exception, void>> delete() async {
     final currentUserResult = await _userRepository.getCurrentUser();
 
-    if (currentUserResult.isLeft()) {
-      return left(currentUserResult.getLeft().toNullable()!);
-    }
+    return currentUserResult.fold(
+      (error) async => left(error),
+      (currentUser) async {
+        if (currentUser == null) {
+          return left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'));
+        }
 
-    final currentUser = currentUserResult.getRight().toNullable();
-    if (currentUser == null) {
-      return left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'));
-    }
+        try {
+          await _userRepository.softDeleteUser(currentUser.id);
+        } catch (e) {
+          return left(
+            e is Exception ? e : UserUnknownException(message: e.toString()),
+          );
+        }
 
-    try {
-      await _userRepository.softDeleteUser(currentUser.id);
-    } catch (e) {
-      return left(
-        e is Exception ? e : UserUnknownException(message: e.toString()),
-      );
-    }
-
-    return _authRepository.delete();
+        return _authRepository.delete();
+      },
+    );
   }
 
   @override
   Future<Either<Exception, void>> reauthenticate() {
     return _authRepository.reauthenticate();
   }
-}
-
-@riverpod
-AuthUseCase authUseCase(Ref ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  final userRepository = ref.watch(userRepositoryProvider);
-
-  return AuthUseCaseImpl(
-    authRepository: authRepository,
-    userRepository: userRepository,
-  );
 }

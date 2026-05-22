@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DayGroupModel {
 
- List<int> get days;// 1~7
- HeadcountRuleModel get headcountRuleModel; List<TimeSlotModel> get timeSlots;
+ List<Weekday> get days; HeadcountRuleModel get headcountRuleModel; List<TimeSlotModel> get timeSlots;
 /// Create a copy of DayGroupModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +48,7 @@ abstract mixin class $DayGroupModelCopyWith<$Res>  {
   factory $DayGroupModelCopyWith(DayGroupModel value, $Res Function(DayGroupModel) _then) = _$DayGroupModelCopyWithImpl;
 @useResult
 $Res call({
- List<int> days, HeadcountRuleModel headcountRuleModel, List<TimeSlotModel> timeSlots
+ List<Weekday> days, HeadcountRuleModel headcountRuleModel, List<TimeSlotModel> timeSlots
 });
 
 
@@ -69,7 +68,7 @@ class _$DayGroupModelCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? days = null,Object? headcountRuleModel = null,Object? timeSlots = null,}) {
   return _then(_self.copyWith(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
-as List<int>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
+as List<Weekday>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
 as HeadcountRuleModel,timeSlots: null == timeSlots ? _self.timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
 as List<TimeSlotModel>,
   ));
@@ -165,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Weekday> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DayGroupModel() when $default != null:
 return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
@@ -186,7 +185,7 @@ return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<int> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Weekday> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)  $default,) {final _that = this;
 switch (_that) {
 case _DayGroupModel():
 return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
@@ -206,7 +205,7 @@ return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<int> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Weekday> days,  HeadcountRuleModel headcountRuleModel,  List<TimeSlotModel> timeSlots)?  $default,) {final _that = this;
 switch (_that) {
 case _DayGroupModel() when $default != null:
 return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
@@ -221,17 +220,16 @@ return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
 @JsonSerializable()
 
 class _DayGroupModel extends DayGroupModel {
-  const _DayGroupModel({final  List<int> days = const [], required this.headcountRuleModel, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots,super._();
+  const _DayGroupModel({final  List<Weekday> days = const [], required this.headcountRuleModel, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots,super._();
   factory _DayGroupModel.fromJson(Map<String, dynamic> json) => _$DayGroupModelFromJson(json);
 
- final  List<int> _days;
-@override@JsonKey() List<int> get days {
+ final  List<Weekday> _days;
+@override@JsonKey() List<Weekday> get days {
   if (_days is EqualUnmodifiableListView) return _days;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_days);
 }
 
-// 1~7
 @override final  HeadcountRuleModel headcountRuleModel;
  final  List<TimeSlotModel> _timeSlots;
 @override@JsonKey() List<TimeSlotModel> get timeSlots {
@@ -274,7 +272,7 @@ abstract mixin class _$DayGroupModelCopyWith<$Res> implements $DayGroupModelCopy
   factory _$DayGroupModelCopyWith(_DayGroupModel value, $Res Function(_DayGroupModel) _then) = __$DayGroupModelCopyWithImpl;
 @override @useResult
 $Res call({
- List<int> days, HeadcountRuleModel headcountRuleModel, List<TimeSlotModel> timeSlots
+ List<Weekday> days, HeadcountRuleModel headcountRuleModel, List<TimeSlotModel> timeSlots
 });
 
 
@@ -294,7 +292,7 @@ class __$DayGroupModelCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? days = null,Object? headcountRuleModel = null,Object? timeSlots = null,}) {
   return _then(_DayGroupModel(
 days: null == days ? _self._days : days // ignore: cast_nullable_to_non_nullable
-as List<int>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
+as List<Weekday>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
 as HeadcountRuleModel,timeSlots: null == timeSlots ? _self._timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
 as List<TimeSlotModel>,
   ));

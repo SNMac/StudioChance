@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:studio_chance/constants/data_constants.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
+import 'package:studio_chance/domain/enums/weekday.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
@@ -24,18 +24,22 @@ class PriceDaysInputScreen extends ConsumerWidget {
     final Store? storeToEdit = args['store'] as Store?;
     final int groupIndex = args['index'] as int;
 
-    StoreFormState state;
-    StoreFormControllerable notifier;
+    final PriceSetting priceSettings;
+    final StoreFormControllerable notifier;
 
     if (storeToEdit != null) {
-      state = ref.watch(storeUpdateControllerProvider(storeToEdit));
+      priceSettings = ref.watch(
+        storeUpdateControllerProvider(storeToEdit).select((s) => s.priceSettings),
+      );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
-      state = ref.watch(storeCreationControllerProvider);
+      priceSettings = ref.watch(
+        storeCreationControllerProvider.select((s) => s.priceSettings),
+      );
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
-    if (groupIndex >= state.priceSettings.dayGroups.length) {
+    if (groupIndex >= priceSettings.dayGroups.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
@@ -51,23 +55,23 @@ class PriceDaysInputScreen extends ConsumerWidget {
       );
     }
 
-    final currentDayGroup = state.priceSettings.dayGroups[groupIndex];
+    final currentDayGroup = priceSettings.dayGroups[groupIndex];
     final selectedDays = currentDayGroup.days;
 
-    final Set<int> unavailableDays = {};
-    for (int i = 0; i < state.priceSettings.dayGroups.length; i++) {
+    final Set<Weekday> unavailableDays = {};
+    for (int i = 0; i < priceSettings.dayGroups.length; i++) {
       if (i == groupIndex) continue;
-      unavailableDays.addAll(state.priceSettings.dayGroups[i].days);
+      unavailableDays.addAll(priceSettings.dayGroups[i].days);
     }
 
-    final List<({int value, String title})> weekDays = [
-      (value: 7, title: '일요일'),
-      (value: 1, title: '월요일'),
-      (value: 2, title: '화요일'),
-      (value: 3, title: '수요일'),
-      (value: 4, title: '목요일'),
-      (value: 5, title: '금요일'),
-      (value: 6, title: '토요일'),
+    const List<Weekday> weekDays = [
+      Weekday.sunday,
+      Weekday.monday,
+      Weekday.tuesday,
+      Weekday.wednesday,
+      Weekday.thursday,
+      Weekday.friday,
+      Weekday.saturday,
     ];
 
     return Scaffold(
@@ -78,17 +82,17 @@ class PriceDaysInputScreen extends ConsumerWidget {
           children: [
             GroupedFormContainer(
               children: weekDays.map((day) {
-                final isSelected = selectedDays.contains(day.value);
-                final isDisabled = unavailableDays.contains(day.value);
+                final isSelected = selectedDays.contains(day);
+                final isDisabled = unavailableDays.contains(day);
 
-                return TitleSelectionButton<int>(
-                  value: day.value,
-                  title: day.title,
+                return TitleSelectionButton<Weekday>(
+                  value: day,
+                  title: day.displayName,
                   isSelected: isSelected,
                   onPressed: isDisabled
                       ? null
                       : () {
-                          notifier.toggleDayGroupDay(groupIndex, day.value);
+                          notifier.toggleDayGroupDay(groupIndex, day);
                         },
                 );
               }).toList(),
@@ -99,17 +103,17 @@ class PriceDaysInputScreen extends ConsumerWidget {
                 Builder(
                   builder: (context) {
                     final isHolidayDisabled = unavailableDays.contains(
-                      holidayValue,
+                      Weekday.holiday,
                     );
                     return TitleSwitchButton(
                       title: '공휴일',
-                      value: selectedDays.contains(holidayValue),
+                      value: selectedDays.contains(Weekday.holiday),
                       onChanged: isHolidayDisabled
                           ? null
                           : (_) {
                               notifier.toggleDayGroupDay(
                                 groupIndex,
-                                holidayValue,
+                                Weekday.holiday,
                               );
                             },
                     );

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+// ── 모달 ─────────────────────────────────────────────────────────────────────
+const Color modalGrabberColor = Color(0xFFB5B5BB);
+const Color modalGrabberDarkColor = Color(0xFF585858);
+const Color modalBarrierColor = Color(0x33000000);
+
 const googleSignInBackgroundColor = Color(0xFFFFFFFF);
 const googleSignInBackgroundDarkColor = Color(0xFF131314);
 const googleSignInBorderColor = Color(0xFF747775);

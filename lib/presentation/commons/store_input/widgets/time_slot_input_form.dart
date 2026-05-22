@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/delete_copy_add_button_row.dart';
@@ -47,32 +48,56 @@ class TimeSlotInputForm extends StatefulWidget {
 class _TimeSlotInputFormState extends State<TimeSlotInputForm>
     with TickerProviderStateMixin {
   late final TextEditingController _priceController;
+  late final FocusNode _priceFocusNode;
 
   _ActivePicker _activePicker = _ActivePicker.none;
 
   @override
   void initState() {
     super.initState();
+    _priceFocusNode = FocusNode();
     _priceController = TextEditingController(
-      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.toString(),
+      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.formattedPrice,
     );
 
     _priceController.addListener(_onPriceChanged);
+    _priceFocusNode.addListener(_onPriceFocusChanged);
   }
 
   @override
   void dispose() {
+    _priceFocusNode.dispose();
     _priceController.dispose();
     super.dispose();
   }
 
   /// 요금 텍스트 변경 시 호출
   void _onPriceChanged() {
-    final priceText = _priceController.text;
+    final priceText = _priceController.text.replaceAll(',', '').replaceAll('원', '');
     final int price = int.tryParse(priceText) ?? -1;
 
     if (widget.timeSlot.price != price) {
       widget.onChanged(widget.timeSlot.copyWith(price: price));
+    }
+  }
+
+  /// 포커스 진입: 쉼표·'원' 제거 / 포커스 해제: 쉼표+'원' 추가
+  void _onPriceFocusChanged() {
+    final raw = _priceController.text.replaceAll(',', '').replaceAll('원', '');
+    if (_priceFocusNode.hasFocus) {
+      _priceController.value = TextEditingValue(
+        text: raw,
+        selection: TextSelection.collapsed(offset: raw.length),
+      );
+    } else {
+      final price = int.tryParse(raw);
+      if (price != null && price >= 0) {
+        final formatted = price.formattedPrice;
+        _priceController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
     }
   }
 
@@ -201,7 +226,11 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
             mode: CupertinoDatePickerMode.time,
             initialDateTime: _getInitialDate(widget.timeSlot.endTime),
             onDateTimeChanged: (newDate) {
-              final int newMinutes = newDate.hour * 60 + newDate.minute;
+              // 끝 시간 00:00 선택 = 자정(하루 끝) → 1440분으로 처리
+              final int newMinutes =
+                  newDate.hour == 0 && newDate.minute == 0
+                      ? 1440
+                      : newDate.hour * 60 + newDate.minute;
               if (newMinutes <= widget.timeSlot.startTime) {
                 final newStart = (newMinutes - 60).clamp(0, 1440);
                 widget.onChanged(
@@ -220,7 +249,8 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
         TitleTextField(
           title: '요금',
           controller: _priceController,
-          placeholder: '예: 7000',
+          focusNode: _priceFocusNode,
+          placeholder: '예: 7,000',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),

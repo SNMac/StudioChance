@@ -237,6 +237,48 @@ Widget build(BuildContext context, WidgetRef ref) {
 
 ---
 
+## select를 이용한 rebuild 최적화
+
+`ref.watch(provider)`는 상태 객체 전체를 구독하므로, 관련 없는 필드가 변경되어도 위젯이 rebuild됨.
+특정 필드만 필요한 경우 `select`로 구독 범위를 좁혀야 함.
+
+```dart
+// ❌ 전체 상태 구독 — state의 어떤 필드가 바뀌어도 rebuild
+final isVisible = ref.watch(homeCalendarControllerProvider).isMonthlyCalendarVisible;
+
+// ✅ 필요한 필드만 구독 — isMonthlyCalendarVisible 변경 시에만 rebuild
+final isVisible = ref.watch(
+  homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+);
+```
+
+**여러 필드가 필요할 때**: 각각 별도 `select`로 watch.
+전체 구독(`watch(provider)`)은 실제로 상태 대부분의 필드를 사용할 때만 허용.
+
+```dart
+// 두 필드만 필요한 경우
+final month = ref.watch(
+  homeCalendarControllerProvider.select((s) => s.displayedMonth),
+);
+final isVisible = ref.watch(
+  homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+);
+```
+
+**ref.listen + select 조합** (특정 필드 변경에만 반응):
+
+```dart
+ref.listen(
+  homeCalendarControllerProvider.select((s) => s.selectedStartDate),
+  (prev, next) {
+    if (prev == next) return;
+    // selectedStartDate 변경 시에만 실행
+  },
+);
+```
+
+---
+
 ## 프로바이더 무효화
 
 ```dart

@@ -4,6 +4,7 @@ import 'package:studio_chance/data/models/headcount_rule_model.dart';
 import 'package:studio_chance/data/models/time_slot_model.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
+import 'package:studio_chance/domain/enums/weekday.dart';
 
 part 'day_group_model.freezed.dart';
 part 'day_group_model.g.dart';
@@ -13,7 +14,7 @@ abstract class DayGroupModel with _$DayGroupModel {
   const DayGroupModel._();
 
   const factory DayGroupModel({
-    @Default([]) List<int> days, // 1~7
+    @Default([]) List<Weekday> days,
     required HeadcountRuleModel headcountRuleModel,
     @Default([]) List<TimeSlotModel> timeSlots,
   }) = _DayGroupModel;

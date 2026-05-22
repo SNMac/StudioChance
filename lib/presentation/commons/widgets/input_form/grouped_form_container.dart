@@ -20,7 +20,7 @@ class GroupedFormContainer extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (header != null) header!,
+        ?header,
         Container(
           decoration: BoxDecoration(
             color: context.secondarySystemGroupedBackground,
@@ -49,7 +49,7 @@ class GroupedFormContainer extends StatelessWidget {
             ),
           ),
         ),
-        if (footer != null) footer!,
+        ?footer,
       ],
     );
   }

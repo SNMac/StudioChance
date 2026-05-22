@@ -7,7 +7,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
+import 'package:studio_chance/domain/use_cases/auth_use_case_provider.dart';
 import 'package:studio_chance/my_app.dart';
 
 import 'firebase_options.dart';

@@ -5,9 +5,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
+import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 
-import '../../../../helpers/fake_data.dart';
+import '../../../../helpers/fake_entities.dart';
 
 class MockStoreUseCase extends Mock implements StoreUseCase {}
 

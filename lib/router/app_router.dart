@@ -8,10 +8,16 @@ import 'package:studio_chance/presentation/commons/invite_code/screens/invite_co
 import 'package:studio_chance/presentation/commons/role_selection/screens/role_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_days_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/price_time_input_screen.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/payment_info_input_screen.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/store_guide_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_address_input_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
+import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/presentation/home/screens/confirmation_notice_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
+import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/sign_in/screens/sign_in_screen.dart';
@@ -39,6 +45,30 @@ List<GoRoute> _roleSubRoutes() => [
           GoRoute(
             path: SCRoute.storeAddress.path,
             builder: (context, state) => const StoreAddressInputScreen(),
+          ),
+          GoRoute(
+            path: SCRoute.storePaymentInfo.path,
+            builder: (context, state) => const PaymentInfoInputScreen(),
+            routes: [
+              GoRoute(
+                path: SCRoute.paymentInstruction.path,
+                builder: (context, state) => PaymentInstructionScreen(
+                  previewStoreToEdit: state.extra as Store?,
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: SCRoute.storeGuide.path,
+            builder: (context, state) => const StoreGuideInputScreen(),
+            routes: [
+              GoRoute(
+                path: SCRoute.confirmationNotice.path,
+                builder: (context, state) => ConfirmationNoticeScreen(
+                  previewStoreToEdit: state.extra as Store?,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: SCRoute.storePriceDays.path,
@@ -107,6 +137,20 @@ GoRouter goRouter(Ref ref) {
         name: SCRoute.home.name,
         pageBuilder: (context, state) =>
             _fadePage(state: state, child: const HomeScreen()),
+        routes: [
+          GoRoute(
+            path: SCRoute.paymentInstruction.path,
+            builder: (context, state) => PaymentInstructionScreen(
+              reservation: state.extra as Reservation?,
+            ),
+          ),
+          GoRoute(
+            path: SCRoute.confirmationNotice.path,
+            builder: (context, state) => ConfirmationNoticeScreen(
+              reservation: state.extra as Reservation?,
+            ),
+          ),
+        ],
       ),
 
       // 온보딩 섹션

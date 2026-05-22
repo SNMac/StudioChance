@@ -1,0 +1,167 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/home/widgets/store_filter_modal.dart';
+import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
+
+/// 홈 화면 네비게이션 바
+class HomeNavBar extends ConsumerWidget {
+  const HomeNavBar({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(homeCalendarControllerProvider.notifier);
+    final month = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.displayedMonth),
+    );
+    final isMonthlyCalendarVisible = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+    );
+
+    // 네비게이션 바에 표시할 연월 텍스트
+    final monthText = '${month.year}년 ${month.month}월';
+    final today = DateTime.now().day;
+    final navBarHeight = Platform.isIOS ? homeNavBarHeight : kToolbarHeight;
+
+    return Container(
+      height: navBarHeight,
+      color: context.systemBackground,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Row(
+        children: [
+          // 좌측: 연월 + chevron 버튼
+          CupertinoButton(
+            minimumSize: Size.zero,
+            padding: EdgeInsets.zero,
+            onPressed: notifier.toggleMonthlyCalendar,
+            child: SizedBox(
+              height: navBarHeight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    monthText,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: context.label,
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  _ChevronIcon(
+                    isUp: isMonthlyCalendarVisible,
+                    color: context.label,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Spacer(),
+          // 우측: 버튼 2개
+          Row(
+            children: [
+              // 점포 필터 버튼 (애플 캘린더의 "캘린더 선택"과 유사)
+              // 시각적 크기: 24×24 (오늘 날짜 버튼과 동일)
+              CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                onPressed: () => showStoreFilterModal(context),
+                child: SizedBox(
+                  width: 44.0,
+                  height: navBarHeight,
+                  child: Center(
+                    child: Icon(
+                      CupertinoIcons.calendar_circle,
+                      size: 28.0,
+                      color: context.label,
+                    ),
+                  ),
+                ),
+              ),
+              // 오늘 날짜 원형 버튼
+              CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                onPressed: notifier.goToToday,
+                child: SizedBox(
+                  width: 44.0,
+                  height: navBarHeight,
+                  child: Center(
+                    child: Container(
+                      width: 24.0,
+                      height: 24.0,
+                      decoration: BoxDecoration(
+                        color: context.label,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '$today',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: context.systemBackground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+/// 네비바 chevron 아이콘 (너비 12, 높이 6)
+class _ChevronIcon extends StatelessWidget {
+  const _ChevronIcon({required this.isUp, required this.color});
+
+  final bool isUp;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(12, 6),
+      painter: _ChevronPainter(color: color, isUp: isUp),
+    );
+  }
+}
+
+class _ChevronPainter extends CustomPainter {
+  _ChevronPainter({required this.color, required this.isUp});
+
+  final Color color;
+  final bool isUp;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    if (isUp) {
+      path.moveTo(0, size.height);
+      path.lineTo(size.width / 2, 0);
+      path.lineTo(size.width, size.height);
+    } else {
+      path.moveTo(0, 0);
+      path.lineTo(size.width / 2, size.height);
+      path.lineTo(size.width, 0);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ChevronPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.isUp != isUp;
+}

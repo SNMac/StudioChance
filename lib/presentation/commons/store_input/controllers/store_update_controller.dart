@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
+import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
@@ -24,12 +24,10 @@ class StoreUpdateController extends _$StoreUpdateController
     String memo = '';
 
     if (currentUser != null) {
-      try {
-        color = currentUser.storeInfos
-            .firstWhere((e) => e.id == store.id)
-            .color;
-        memo = currentUser.storeInfos.firstWhere((e) => e.id == store.id).memo;
-      } catch (_) {}
+      final storeInfo =
+          currentUser.storeInfos.where((e) => e.id == store.id).firstOrNull;
+      color = storeInfo?.color ?? StoreColor.red;
+      memo = storeInfo?.memo ?? '';
     }
 
     return StoreFormState(
@@ -40,6 +38,11 @@ class StoreUpdateController extends _$StoreUpdateController
       memo: memo,
       color: color,
       priceSettings: store.priceSettings,
+      bankName: store.bankName ?? '',
+      bankAccountNumber: store.bankAccountNumber ?? '',
+      bankAccountHolder: store.bankAccountHolder ?? '',
+      paymentDeadlineMinutes: store.paymentDeadlineMinutes,
+      confirmationNotes: store.confirmationNotes ?? '',
     );
   }
 
@@ -53,6 +56,14 @@ class StoreUpdateController extends _$StoreUpdateController
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
       priceSettings: state.priceSettings,
+      bankName: state.bankName.isEmpty ? null : state.bankName,
+      bankAccountNumber:
+          state.bankAccountNumber.isEmpty ? null : state.bankAccountNumber,
+      bankAccountHolder:
+          state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
+      paymentDeadlineMinutes: state.paymentDeadlineMinutes,
+      confirmationNotes:
+          state.confirmationNotes.isEmpty ? null : state.confirmationNotes,
     );
 
     return (store: updatedStore, color: state.color, memo: state.memo);

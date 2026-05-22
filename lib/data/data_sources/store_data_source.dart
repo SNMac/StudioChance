@@ -1,11 +1,11 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
+import 'package:studio_chance/data/data_sources/firestore_data_source_base.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
@@ -51,23 +51,52 @@ abstract interface class StoreDataSource {
     StoreMemberInfoModel memberInfo,
   );
 
-  /// 초대 코드 발급
-  /// - [forceRegenerate]: true면 무조건 새로 생성, false면 유효한 기존 코드 반환
-  /// - 유효기간: 생성일시로부터 15분
-  Future<InviteInfoModel> createInviteCode(
-    String storeId, {
-    bool forceRegenerate = false,
-  });
+  /// 현재 초대 코드 정보 조회 (만료 여부 판단 없이 원본 반환)
+  Future<InviteInfoModel?> getInviteInfo(String storeId);
 
-  /// 초대 코드로 점포 조회
+  /// 새 초대 코드를 생성하여 Firestore에 저장
+  Future<InviteInfoModel> createInviteCode(String storeId);
+
+  /// 초대 코드로 점포 조회 (만료 검증 없이 단순 조회)
   Future<StoreModel?> getStoreByInviteCode(String inviteCode);
 }
 
-class StoreFirestoreDataSource implements StoreDataSource {
-  final Logger _logger = Logger();
+class StoreFirestoreDataSource extends FirestoreDataSourceBase
+    implements StoreDataSource {
   final FirebaseFirestore _firestore;
+  final _rnd = Random();
 
   StoreFirestoreDataSource(this._firestore);
+
+  @override
+  String get errorLogTag => 'Store Firestore Error';
+
+  @override
+  bool isDomainException(Object e) => e is StoreException;
+
+  @override
+  Exception buildParsingException(String message) =>
+      StoreDataParsingException(message: message);
+
+  @override
+  Exception mapFirebaseCode(String code, String message) => switch (code) {
+    'permission-denied' || 'unauthenticated' =>
+      StorePermissionDeniedException(message: message, code: code),
+    'not-found' => StoreNotFoundException(message: message, code: code),
+    'already-exists' => StoreAlreadyExistsException(message: message, code: code),
+    'resource-exhausted' =>
+      StoreResourceExhaustedException(message: message, code: code),
+    'unavailable' || 'deadline-exceeded' =>
+      StoreNetworkException(message: message, code: code),
+    'aborted' || 'failed-precondition' =>
+      StoreTransactionException(message: message, code: code),
+    'cancelled' => StoreCancelledException(message: message, code: code),
+    _ => StoreUnknownException(message: message, code: code),
+  };
+
+  DocumentReference<Map<String, dynamic>> _storeDocRef(String storeId) {
+    return _firestore.collection('stores').doc(storeId);
+  }
 
   @override
   Future<StoreModel> createStore(
@@ -95,17 +124,14 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       return store.copyWith(id: docRef.id);
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
   @override
   Future<StoreModel?> getStore(String storeId) async {
     try {
-      final docSnapshot = await _firestore
-          .collection('stores')
-          .doc(storeId)
-          .get();
+      final docSnapshot = await _storeDocRef(storeId).get();
 
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
@@ -117,7 +143,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
       }
       return null;
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -127,9 +153,9 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final updates = Map<String, dynamic>.from(data);
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
-      await _firestore.collection('stores').doc(storeId).update(updates);
+      await _storeDocRef(storeId).update(updates);
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -138,7 +164,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
     try {
       final batch = _firestore.batch();
 
-      final storeRef = _firestore.collection('stores').doc(storeId);
+      final storeRef = _storeDocRef(storeId);
       batch.update(storeRef, {
         'memberById.$uid.role': role,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -152,7 +178,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       await batch.commit();
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -161,7 +187,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
     try {
       final batch = _firestore.batch();
 
-      final storeRef = _firestore.collection('stores').doc(storeId);
+      final storeRef = _storeDocRef(storeId);
       batch.update(storeRef, {
         'memberById.$uid': FieldValue.delete(),
         'waitingMemberById.$uid': FieldValue.delete(),
@@ -176,7 +202,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       await batch.commit();
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -189,7 +215,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
   ) async {
     try {
       final batch = _firestore.batch();
-      final storeRef = _firestore.collection('stores').doc(storeId);
+      final storeRef = _storeDocRef(storeId);
       final userRef = _firestore.collection('users').doc(uid);
 
       batch.update(storeRef, {
@@ -204,7 +230,7 @@ class StoreFirestoreDataSource implements StoreDataSource {
 
       await batch.commit();
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -215,13 +241,13 @@ class StoreFirestoreDataSource implements StoreDataSource {
     StoreMemberInfoModel memberInfo,
   ) async {
     try {
-      await _firestore.collection('stores').doc(storeId).update({
+      await _storeDocRef(storeId).update({
         'waitingMemberById.$uid': FieldValue.delete(),
         'memberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -231,62 +257,53 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final hardDeleteDate = DateTime.now().add(
         const Duration(days: storeSoftDeleteDays),
       );
-      await _firestore.collection('stores').doc(storeId).update({
+      await _storeDocRef(storeId).update({
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
         'inviteInfo': null,
       });
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
   @override
-  Future<InviteInfoModel> createInviteCode(
-    String storeId, {
-    bool forceRegenerate = false,
-  }) async {
+  Future<InviteInfoModel?> getInviteInfo(String storeId) async {
     try {
-      if (!forceRegenerate) {
-        final docSnapshot = await _firestore
-            .collection('stores')
-            .doc(storeId)
-            .get();
+      final docSnapshot = await _storeDocRef(storeId).get();
 
-        if (!docSnapshot.exists) {
-          throw StoreNotFoundException(message: '점포를 찾을 수 없습니다.');
-        }
-
-        final data = docSnapshot.data() ?? {};
-        final inviteData = data['inviteInfo'] as Map<String, dynamic>?;
-
-        if (inviteData != null && inviteData['createdAt'] != null) {
-          final createdAt = (inviteData['createdAt'] as Timestamp).toDate();
-          final expiresAt = createdAt.add(
-            const Duration(minutes: storeInviteCodeAvailableMin),
-          );
-
-          if (DateTime.now().isBefore(expiresAt)) {
-            return InviteInfoModel.fromJson(inviteData);
-          }
-        }
+      if (!docSnapshot.exists) {
+        throw StoreNotFoundException(message: '점포를 찾을 수 없습니다.');
       }
 
+      final inviteData =
+          docSnapshot.data()?['inviteInfo'] as Map<String, dynamic>?;
+      if (inviteData == null) return null;
+
+      return InviteInfoModel.fromJson(inviteData);
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<InviteInfoModel> createInviteCode(String storeId) async {
+    try {
       final newCode = _generateRandomCode(6);
       final inviteInfoModel = InviteInfoModel(inviteCode: newCode);
 
       final json = inviteInfoModel.toJson();
       json['createdAt'] = FieldValue.serverTimestamp();
 
-      await _firestore.collection('stores').doc(storeId).update({
+      await _storeDocRef(storeId).update({
         'inviteInfo': json,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       return inviteInfoModel;
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
@@ -296,97 +313,35 @@ class StoreFirestoreDataSource implements StoreDataSource {
       final querySnapshot = await _firestore
           .collection('stores')
           .where('inviteInfo.inviteCode', isEqualTo: inviteCode)
-          .where('deletedAt', isNull: true) // 삭제된 점포 제외
+          .where('deletedAt', isNull: true)
           .limit(1)
           .get();
 
-      if (querySnapshot.docs.isEmpty) {
-        return null;
-      }
+      if (querySnapshot.docs.isEmpty) return null;
 
       final docSnapshot = querySnapshot.docs.first;
       final data = docSnapshot.data();
-      final inviteData = data['inviteInfo'] as Map<String, dynamic>?;
-
-      if (inviteData != null && inviteData['createdAt'] != null) {
-        final createdAt = (inviteData['createdAt'] as Timestamp).toDate();
-        final expiresAt = createdAt.add(
-          const Duration(minutes: storeInviteCodeAvailableMin),
-        );
-
-        if (DateTime.now().isAfter(expiresAt)) {
-          throw StoreNotFoundException(message: '유효하지 않은 초대 코드입니다.');
-        }
-      } else {
-        throw StoreNotFoundException(message: '유효하지 않은 초대 코드입니다.');
-      }
-
       data['id'] = docSnapshot.id;
       return StoreModel.fromJson(data);
     } catch (e) {
-      throw _handleFirestoreError(e);
+      throw handleFirestoreError(e);
     }
   }
 
   // ===========================================================================
-  // Helper Methods
+  // Private Helpers
   // ===========================================================================
 
   String _generateRandomCode(int length) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final rnd = Random();
     return String.fromCharCodes(
       Iterable.generate(
         length,
-        (_) => chars.codeUnitAt(rnd.nextInt(chars.length)),
+        (_) => chars.codeUnitAt(_rnd.nextInt(chars.length)),
       ),
     );
   }
 
-  // ===========================================================================
-  // Error Handling
-  // ===========================================================================
-
-  Exception _handleFirestoreError(Object e) {
-    _logger.e('Store Firestore Error', error: e);
-
-    if (e is StoreException) return e;
-
-    if (e is TypeError || e is FormatException) {
-      return StoreDataParsingException(
-        message: '데이터 파싱에 실패했습니다.\n${e.toString()}',
-      );
-    }
-
-    if (e is FirebaseException) {
-      final msg = e.message ?? 'Cloud Firestore Error';
-      final code = e.code;
-
-      switch (code) {
-        case 'permission-denied':
-        case 'unauthenticated':
-          return StorePermissionDeniedException(message: msg, code: code);
-        case 'not-found':
-          return StoreNotFoundException(message: msg, code: code);
-        case 'already-exists':
-          return StoreAlreadyExistsException(message: msg, code: code);
-        case 'resource-exhausted':
-          return StoreResourceExhaustedException(message: msg, code: code);
-        case 'unavailable':
-        case 'deadline-exceeded':
-          return StoreNetworkException(message: msg, code: code);
-        case 'aborted':
-        case 'failed-precondition':
-          return StoreTransactionException(message: msg, code: code);
-        case 'cancelled':
-          return StoreCancelledException(message: msg, code: code);
-        default:
-          return StoreUnknownException(message: msg, code: code);
-      }
-    }
-
-    return StoreUnknownException(message: e.toString());
-  }
 }
 
 @Riverpod(keepAlive: true)

@@ -1,0 +1,14 @@
+//
+//  Custom-Debug-prod.xcconfig
+//  Runner
+//
+//  Created by 서동환 on 5/19/26.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+#include "GoogleConfig-prod.xcconfig"
+#include "Flutter/Debug.xcconfig"
+
+APP_DISPLAY_NAME = Studio Chance

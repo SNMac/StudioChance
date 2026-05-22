@@ -1,19 +1,12 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
-
-import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
+import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
-import 'package:studio_chance/data/repositories/user_repository_impl.dart';
-
-part 'store_use_case.g.dart';
 
 abstract interface class StoreUseCase {
   /// 점포 생성 (생성 요청자를 Admin으로 자동 등록)
@@ -83,7 +76,7 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       final adminMemberInfo = StoreMemberInfo(
         user: currentUser,
         role: UserRole.admin,
@@ -122,7 +115,7 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _storeRepository.requestJoinStore(
           storeId: storeId,
@@ -158,24 +151,13 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String targetUid,
     required UserRole newRole,
   }) {
-    // Repository에 updateMemberRole이 없어서 추가해야 한다면 여기서 호출
-    // 현재 RepositoryImpl에는 updateStore나 approveMember만 있고
-    // 역할 '수정' 메서드는 인터페이스에 명시되어 있지 않았습니다.
-    // 만약 Repository에 updateMemberRole 메서드를 추가했다면 아래와 같이 호출합니다.
-
-    // (임시) Repository에 해당 메서드를 추가했다고 가정하고 작성
-    /*
     return TaskEither(
       () => _storeRepository.updateMemberRole(
         storeId: storeId,
         uid: targetUid,
-        role: newRole,
+        newRole: newRole,
       ),
     ).run();
-    */
-
-    // 우선 구현되지 않은 상태라면 예외 처리 혹은 TODO
-    return TaskEither.left(Exception('기능 구현 예정')).run();
   }
 
   @override
@@ -184,7 +166,7 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    return _getCurrentUser().flatMap((currentUser) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _storeRepository.updateStore(
           store: store,
@@ -206,32 +188,4 @@ class StoreUseCaseImpl implements StoreUseCase {
       forceRegenerate: forceRegenerate,
     );
   }
-
-  // ===========================================================================
-  // Private Helpers
-  // ===========================================================================
-
-  /// 현재 로그인한 유저를 가져오는 `TaskEither`
-  TaskEither<Exception, User> _getCurrentUser() {
-    return TaskEither.tryCatch(() async {
-      final result = await _userRepository.getCurrentUser();
-      return result.fold((left) => throw left, (right) {
-        if (right == null) {
-          throw AuthUserNotFoundException(message: '로그인 정보를 찾을 수 없습니다.');
-        }
-        return right;
-      });
-    }, (error, stackTrace) => error is Exception ? error : Exception(error));
-  }
-}
-
-@riverpod
-StoreUseCase storeUseCase(Ref ref) {
-  final storeRepository = ref.watch(storeRepositoryProvider);
-  final userRepository = ref.watch(userRepositoryProvider);
-
-  return StoreUseCaseImpl(
-    storeRepository: storeRepository,
-    userRepository: userRepository,
-  );
 }

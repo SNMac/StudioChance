@@ -2,6 +2,7 @@ import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/domain/enums/weekday.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 
 /// 생성/수정 컨트롤러가 공통으로 구현해야 할 인터페이스
@@ -12,13 +13,18 @@ abstract interface class StoreFormControllerable {
   void setAddressGuide(String addressGuide);
   void setMemo(String memo);
   void setColor(StoreColor color);
+  void setBankName(String bankName);
+  void setBankAccountNumber(String bankAccountNumber);
+  void setBankAccountHolder(String bankAccountHolder);
+  void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes);
+  void setConfirmationNotes(String confirmationNotes);
 
   void addDayGroup();
   void copyDayGroup(int index);
   void removeDayGroup(int index);
 
-  /// 특정 그룹(groupIndex)의 특정 요일(dayValue)을 토글(추가/삭제)
-  void toggleDayGroupDay(int groupIndex, int dayValue);
+  /// 특정 그룹(groupIndex)의 특정 요일(day)을 토글(추가/삭제)
+  void toggleDayGroupDay(int groupIndex, Weekday day);
   void setDayGroup(int index, DayGroup dayGroup);
 
   /// 특정 DayGroup(groupIndex)에 새로운 TimeSlot 추가
@@ -49,6 +55,16 @@ mixin StoreFormMixin {
       state = state.copyWith(addressGuide: addressGuide);
   void setMemo(String memo) => state = state.copyWith(memo: memo);
   void setColor(StoreColor color) => state = state.copyWith(color: color);
+  void setBankName(String bankName) =>
+      state = state.copyWith(bankName: bankName);
+  void setBankAccountNumber(String bankAccountNumber) =>
+      state = state.copyWith(bankAccountNumber: bankAccountNumber);
+  void setBankAccountHolder(String bankAccountHolder) =>
+      state = state.copyWith(bankAccountHolder: bankAccountHolder);
+  void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes) =>
+      state = state.copyWith(paymentDeadlineMinutes: paymentDeadlineMinutes);
+  void setConfirmationNotes(String confirmationNotes) =>
+      state = state.copyWith(confirmationNotes: confirmationNotes);
 
   void addDayGroup() {
     final newGroups = [...state.priceSettings.dayGroups, DayGroup.empty()];
@@ -83,17 +99,17 @@ mixin StoreFormMixin {
     );
   }
 
-  void toggleDayGroupDay(int groupIndex, int dayValue) {
+  void toggleDayGroupDay(int groupIndex, Weekday day) {
     if (groupIndex >= state.priceSettings.dayGroups.length) return;
 
     final currentGroups = [...state.priceSettings.dayGroups];
     final targetGroup = currentGroups[groupIndex];
     final currentDays = [...targetGroup.days];
 
-    if (currentDays.contains(dayValue)) {
-      currentDays.remove(dayValue);
+    if (currentDays.contains(day)) {
+      currentDays.remove(day);
     } else {
-      currentDays.add(dayValue);
+      currentDays.add(day);
     }
 
     currentGroups[groupIndex] = targetGroup.copyWith(days: currentDays);

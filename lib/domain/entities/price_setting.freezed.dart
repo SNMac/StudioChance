@@ -205,8 +205,8 @@ return $default(_that.dayGroups);case _:
 /// @nodoc
 
 
-class _PriceSetting implements PriceSetting {
-  const _PriceSetting({required final  List<DayGroup> dayGroups}): _dayGroups = dayGroups;
+class _PriceSetting extends PriceSetting {
+  const _PriceSetting({required final  List<DayGroup> dayGroups}): _dayGroups = dayGroups,super._();
   
 
  final  List<DayGroup> _dayGroups;

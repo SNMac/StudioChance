@@ -198,9 +198,7 @@ class FirebaseAuthDataSource implements AuthDataSource {
       throw AuthUnknownException(message: 'Google idToken이 null입니다.');
     }
 
-    final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth.idToken,
-    );
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
 
     _logger.d('Google 로그인 성공');
     return credential;

@@ -91,6 +91,28 @@ class _BodyTextFieldState extends State<BodyTextField> {
 
 ---
 
+## build() 내 연산 주의사항
+
+build()는 프레임워크가 빈번하게 호출하므로 다음을 반드시 준수:
+
+```dart
+// ❌ 루프 내 반복 호출
+List.generate(35, (i) {
+  final today = DateTime.now(); // 35번 호출
+});
+
+// ✅ 루프 밖에서 한 번만
+final today = DateTime.now();
+List.generate(35, (i) {
+  final isToday = ...today...;
+});
+```
+
+- 루프 내 `DateTime.now()`, `Theme.of(context)` 등은 루프 밖으로 이동
+- build() 내 무거운 계산은 `final` 변수로 한 번만 계산
+
+---
+
 ## 화면 구성 공식
 
 ### 기본 구조
@@ -101,7 +123,7 @@ Widget build(BuildContext context, WidgetRef ref) {
   // 1. ref.listen (사이드 이펙트)
   ref.listen(controllerProvider, (previous, next) { ... });
 
-  // 2. ref.watch (상태 읽기)
+  // 2. ref.watch (상태 읽기) — 필요한 필드만 select 사용
   final state = ref.watch(controllerProvider);
   final isLoading = state is AsyncLoading;
 

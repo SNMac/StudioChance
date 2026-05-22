@@ -25,10 +25,29 @@ abstract class StoreModel with _$StoreModel {
     @Default({}) Map<String, StoreMemberInfoModel> waitingMemberById,
 
     InviteInfoModel? inviteInfoModel,
+    String? bankName,
+    String? bankAccountNumber,
+    String? bankAccountHolder,
+    int? paymentDeadlineMinutes,
+    String? confirmationNotes,
   }) = _StoreModel;
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
       _$StoreModelFromJson(json);
+
+  /// 점포 수정 가능 필드만 반환 (memberById, waitingMemberById, inviteInfoModel 제외)
+  Map<String, dynamic> toEditableJson() => {
+    'name': name,
+    'address': address,
+    'addressDetail': addressDetail,
+    'addressGuide': addressGuide,
+    'priceSettingsModel': priceSettingsModel.toJson(),
+    'bankName': bankName,
+    'bankAccountNumber': bankAccountNumber,
+    'bankAccountHolder': bankAccountHolder,
+    'paymentDeadlineMinutes': paymentDeadlineMinutes,
+    'confirmationNotes': confirmationNotes,
+  };
 
   factory StoreModel.fromEntity(Store entity) {
     return StoreModel(
@@ -49,6 +68,11 @@ abstract class StoreModel with _$StoreModel {
       inviteInfoModel: entity.inviteInfo != null
           ? InviteInfoModel.fromEntity(entity.inviteInfo!)
           : null,
+      bankName: entity.bankName,
+      bankAccountNumber: entity.bankAccountNumber,
+      bankAccountHolder: entity.bankAccountHolder,
+      paymentDeadlineMinutes: entity.paymentDeadlineMinutes,
+      confirmationNotes: entity.confirmationNotes,
     );
   }
 
@@ -66,6 +90,11 @@ abstract class StoreModel with _$StoreModel {
       memberInfos: memberInfos,
       waitingMemberInfos: waitingMemberInfos,
       inviteInfo: inviteInfoModel?.toEntity(),
+      bankName: bankName,
+      bankAccountNumber: bankAccountNumber,
+      bankAccountHolder: bankAccountHolder,
+      paymentDeadlineMinutes: paymentDeadlineMinutes,
+      confirmationNotes: confirmationNotes,
     );
   }
 }

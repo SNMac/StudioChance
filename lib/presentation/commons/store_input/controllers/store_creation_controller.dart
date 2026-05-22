@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
+import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
@@ -36,6 +36,14 @@ class StoreCreationController extends _$StoreCreationController
       memberInfos: [],
       waitingMemberInfos: [],
       inviteInfo: null,
+      bankName: state.bankName.isEmpty ? null : state.bankName,
+      bankAccountNumber:
+          state.bankAccountNumber.isEmpty ? null : state.bankAccountNumber,
+      bankAccountHolder:
+          state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
+      paymentDeadlineMinutes: state.paymentDeadlineMinutes,
+      confirmationNotes:
+          state.confirmationNotes.isEmpty ? null : state.confirmationNotes,
     );
 
     return (store: store, color: state.color, memo: state.memo);
@@ -57,9 +65,14 @@ class StoreCreationController extends _$StoreCreationController
         memo: data.memo,
       );
 
-      if (result.isLeft()) throw result.getLeft().toNullable()!;
-
-      ref.invalidate(currentUserProvider);
+      result.fold(
+        (exception) =>
+            state = state.copyWith(status: AsyncError(exception, StackTrace.current)),
+        (_) {
+          ref.invalidate(currentUserProvider);
+          state = state.copyWith(status: const AsyncData(null));
+        },
+      );
     } catch (e, st) {
       state = state.copyWith(status: AsyncError(e, st));
     }

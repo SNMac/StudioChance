@@ -375,4 +375,10 @@ fabric.properties
 .claude/settings.local.json
 firebase.json
 firebase_options.dart
+firebase_options_dev.dart
+firebase_options_prod.dart
+GoogleService-Info-dev.plist
+GoogleService-Info-prod.plist
 GoogleConfig.xcconfig
+GoogleConfig-dev.xcconfig
+GoogleConfig-prod.xcconfig

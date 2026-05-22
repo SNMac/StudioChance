@@ -32,6 +32,11 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
       : InviteInfoModel.fromJson(
           json['inviteInfoModel'] as Map<String, dynamic>,
         ),
+  bankName: json['bankName'] as String?,
+  bankAccountNumber: json['bankAccountNumber'] as String?,
+  bankAccountHolder: json['bankAccountHolder'] as String?,
+  paymentDeadlineMinutes: (json['paymentDeadlineMinutes'] as num?)?.toInt(),
+  confirmationNotes: json['confirmationNotes'] as String?,
 );
 
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
@@ -46,4 +51,9 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
         (k, e) => MapEntry(k, e.toJson()),
       ),
       'inviteInfoModel': instance.inviteInfoModel?.toJson(),
+      'bankName': instance.bankName,
+      'bankAccountNumber': instance.bankAccountNumber,
+      'bankAccountHolder': instance.bankAccountHolder,
+      'paymentDeadlineMinutes': instance.paymentDeadlineMinutes,
+      'confirmationNotes': instance.confirmationNotes,
     };

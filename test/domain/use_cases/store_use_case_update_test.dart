@@ -2,13 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
-import '../../helpers/fake_data.dart';
+import '../../helpers/fake_entities.dart';
 
 class MockStoreRepository extends Mock implements StoreRepository {}
 

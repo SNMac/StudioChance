@@ -30,6 +30,58 @@ Presentation → Domain ← Data
 
 **핵심 규칙**: Domain 레이어는 Data/Presentation에 의존하지 않음.
 
+**위젯 규칙**: 위젯(`ConsumerWidget`/`ConsumerStatefulWidget`)은 UseCase Provider를 직접 `ref.read/watch` 금지.
+UseCase 호출이 필요하면 `lib/presentation/providers/`에 전용 `@riverpod` Controller(Notifier)를 생성하여 위임.
+
+```dart
+// ❌ 위젯에서 UseCase 직접 참조
+class TimeGrid extends ConsumerStatefulWidget {
+  void _onSaved(Reservation r) {
+    ref.read(reservationUseCaseProvider).updateReservation(reservation: r); // 금지
+  }
+}
+
+// ✅ 전용 Controller 위임
+// lib/presentation/providers/home_reservation_actions_controller.dart
+@riverpod
+class HomeReservationActionsController extends _$HomeReservationActionsController {
+  @override void build() {}
+  Future<void> updateReservation(Reservation r) async {
+    final result = await ref.read(reservationUseCaseProvider).updateReservation(reservation: r);
+    result.fold((e) => ..., (_) => ref.invalidate(homeReservationsProvider));
+  }
+}
+
+// 위젯에서는 Controller만 참조
+void _onSaved(Reservation r) {
+  ref.read(homeReservationActionsControllerProvider.notifier).updateReservation(r);
+}
+```
+
+### UseCase 파일 분리 패턴
+
+UseCase는 두 파일로 분리한다:
+
+| 파일 | 역할 | data import |
+|------|------|-------------|
+| `*_use_case.dart` | interface + impl (순수 Domain) | ❌ 금지 |
+| `*_use_case_provider.dart` | `@riverpod` 팩토리 (DI 배선) | ✅ 허용 |
+
+```dart
+// auth_use_case.dart — data import 없음
+import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
+class AuthUseCaseImpl implements AuthUseCase { ... }
+
+// auth_use_case_provider.dart — DI 배선 파일
+import 'package:studio_chance/data/repositories/auth_repository_impl.dart';
+import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
+
+@riverpod
+AuthUseCase authUseCase(Ref ref) { ... }
+```
+
+Presentation에서는 `*_use_case_provider.dart`를 import해야 `authUseCaseProvider`에 접근 가능.
+
 ---
 
 ## Riverpod 프로바이더 패턴
@@ -155,11 +207,37 @@ ref.listen(controllerProvider, (previous, next) {
 // Repository / Use Case 반환 타입
 Future<Either<Exception, User>> signInWithGoogle();
 
-// Controller에서 소비
+// ✅ 기본 패턴: fold (함수형)
+result.fold(
+  (error) => left(error),   // UseCase 체이닝
+  (value) => right(value),
+);
+
+// ✅ Controller에서 소비
 result.fold(
   (exception) => state = AsyncError(exception, StackTrace.current),
   (user) => state = AsyncData(user),
 );
+
+// ❌ 금지 패턴: 명령형 isLeft/isRight
+if (result.isLeft()) return left(result.getLeft().toNullable()!); // null-force-unwrap 위험
+```
+
+**fold 비동기 처리**: 양쪽 람다 반환 타입을 `async`로 통일하면 `FutureOr` 추론 혼동 방지:
+
+```dart
+return result.fold(
+  (error) async => left(error),     // ✅ 둘 다 async로 명시
+  (value) async { ... return ...; },
+);
+```
+
+**TaskEither 체이닝** (여러 단계 UseCase):
+
+```dart
+return _getCurrentUser().flatMap((user) {
+  return TaskEither(() => _repository.someAction(user.id));
+}).run();
 ```
 
 ### Exception 계층
@@ -176,9 +254,25 @@ AppException (abstract) → title/content 추상 getter, isSilentable 기본값 
 ```
 
 - DataSource: Firebase 에러 → 타입된 Exception으로 변환 (switch)
-- Repository: try-catch → `left(exception)` 반환, 절대 예외 전파 금지
-- Use Case: Either 체이닝 (fold, flatMap, TaskEither)
-- Controller: `fold`로 상태 갱신 + `isSilentable` 체크 (`AppException` 타입 체크만으로 충분)
+- Repository: try-catch → `left(exception)` 반환, 절대 예외 전파 금지 / `toException()` 헬퍼(`common/utils/exception_utils.dart`) 활용
+- Use Case: `result.fold()` 함수형 / `TaskEither.flatMap().run()` 체이닝 / `isLeft()/isRight()` 명령형 금지
+- Controller: `result.fold()`로 상태 갱신 + `isSilentable` 체크 (`AppException` 타입 체크만으로 충분)
+
+### UseCase 공통 헬퍼
+
+현재 로그인 유저가 필요한 UseCase에서 반복 구현 대신 헬퍼 사용:
+
+```dart
+// lib/domain/use_cases/use_case_helpers.dart
+TaskEither<Exception, User> getCurrentUserOrThrow(UserRepository userRepository)
+```
+
+```dart
+// 사용 예 (StoreUseCaseImpl, ReservationUseCaseImpl)
+return getCurrentUserOrThrow(_userRepository).flatMap((user) {
+  return TaskEither(() => _repository.someAction(user.id));
+}).run();
+```
 
 자세한 내용: [error-handling.md](resources/error-handling.md)
 
@@ -300,6 +394,68 @@ dart run build_runner build --delete-conflicting-outputs
 | 키보드 해제 | `MyApp`에서 `GestureDetector.onTap` → `unfocus()` |
 | 폰트 | Pretendard (400, 500, 600, 700) |
 | 디자인 | Material 3, `ThemeMode.system` |
+| Collection 탐색 | `firstWhere + try-catch` 금지 → `.where(...).firstOrNull` 사용 (Dart 3 네이티브) |
+
+---
+
+## 성능 가이드라인
+
+### watch vs select
+
+`ref.watch(provider)`는 상태 객체 전체를 구독 → 관련 없는 필드 변경에도 rebuild 발생.
+필요한 필드만 구독하려면 `select` 사용:
+
+```dart
+// ❌ 전체 상태 구독 → hourHeight/selectedStartDate 변경 시에도 rebuild
+final isVisible = ref.watch(homeCalendarControllerProvider).isMonthlyCalendarVisible;
+
+// ✅ 필요한 필드만 구독
+final isVisible = ref.watch(
+  homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
+);
+
+// 여러 필드가 필요하면 각각 select
+final month = ref.watch(homeCalendarControllerProvider.select((s) => s.displayedMonth));
+final isVisible = ref.watch(homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible));
+```
+
+**기준**: 위젯에서 사용하는 필드가 상태 객체 전체 필드의 일부라면 select 사용.
+
+### build() 내 연산 주의사항
+
+build()는 flutter 프레임워크가 빈번하게 호출하므로, 무거운 연산이나 반복 호출은 루프 밖으로 이동:
+
+```dart
+// ❌ 루프 내 반복 호출 (35회)
+for (int i = 0; i < 35; i++) {
+  final today = DateTime.now(); // 매 셀마다 새 DateTime 객체 생성
+}
+
+// ✅ 루프 밖에서 한 번만 계산
+final today = DateTime.now();
+for (int i = 0; i < 35; i++) {
+  final isToday = cellDate.year == today.year && ...;
+}
+```
+
+### ScrollController 관리 (복수 컨트롤러)
+
+Map으로 여러 ScrollController를 관리할 때:
+- `dispose()`에서 맵의 모든 컨트롤러를 해제할 것
+- 범위 밖 컨트롤러는 주기적으로 evict하여 메모리 관리
+- `hasClients = false`인 컨트롤러는 re-attach 시 `initialScrollOffset`(stale) 사용 → unmount 감지 후 재생성 필요
+
+```dart
+// unmount 감지 → 재생성 패턴
+final existing = _controllers[page];
+if (existing != null && !existing.hasClients) {
+  existing.dispose();
+  _controllers.remove(page);
+}
+return _controllers.putIfAbsent(page, () => ScrollController(
+  initialScrollOffset: _currentOffset, // 현재 offset으로 생성
+));
+```
 
 ---
 
@@ -307,7 +463,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 | 문서 | 내용 |
 |------|------|
-| [riverpod-patterns.md](resources/riverpod-patterns.md) | 프로바이더 상세 패턴, 상태 관리 |
+| [riverpod-patterns.md](resources/riverpod-patterns.md) | 프로바이더 상세 패턴, 상태 관리, select 최적화 |
 | [widget-patterns.md](resources/widget-patterns.md) | 위젯 구성, ref.listen, PopScope |
 | [data-layer-patterns.md](resources/data-layer-patterns.md) | Repository, DataSource, Model, Firestore |
 | [error-handling.md](resources/error-handling.md) | Exception 계층, Either 체이닝, UI 매핑 |
