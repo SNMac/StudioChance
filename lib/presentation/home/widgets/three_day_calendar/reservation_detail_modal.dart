@@ -305,6 +305,7 @@ class _ReservationDetailModalState
       if (result.platform != null) _platform = result.platform!;
       if (result.memo != null) _memoController.text = result.memo!;
     });
+    _recalculatePrice();
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
