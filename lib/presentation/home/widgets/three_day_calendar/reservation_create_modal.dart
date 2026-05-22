@@ -26,6 +26,10 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
+import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/providers/reservation_ocr_controller.dart';
 
 /// 예약 생성 모달 (편집 모드 전용, 완료 시 [onSaved] 콜백 후 닫힘).
 class ReservationCreateModal extends ConsumerStatefulWidget {
@@ -158,6 +162,26 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     setState(() => _calculatedPrice = price);
   }
 
+  void _applyOcrResult(ReservationOcrResult result) {
+    setState(() {
+      if (result.customerName != null) {
+        _nameController.text = result.customerName!;
+      }
+      if (result.customerPhone != null) {
+        _phoneController.text = result.customerPhone!;
+      }
+      if (result.headCount != null) {
+        _headCountController.text = result.headCount.toString();
+      }
+      if (result.startTime != null) _startTime = result.startTime!;
+      if (result.endTime != null) _endTime = result.endTime!;
+      if (result.isAllDay != null) _isAllDay = result.isAllDay!;
+      if (result.platform != null) _platform = result.platform!;
+      if (result.memo != null) _memoController.text = result.memo!;
+    });
+    _recalculatePrice();
+  }
+
   // ── 액션 ─────────────────────────────────────────────────────────────────
 
   void _onCancelPressed() => Navigator.pop(context);
@@ -221,6 +245,31 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(reservationOcrControllerProvider, (_, next) {
+      next.whenOrNull(
+        data: (result) {
+          if (result != null && mounted) _applyOcrResult(result);
+        },
+        error: (e, _) {
+          if (!mounted) return;
+          if (e is AppException && !e.isSilentable) {
+            showCustomAlertDialog(
+              context: context,
+              title: e.title,
+              content: e.content,
+              showCancel: false,
+            );
+          } else {
+            showCustomAlertDialog(
+              context: context,
+              title: 'OCR 오류',
+              content: '스크린샷 분석에 실패했습니다.\n잠시 후 다시 시도해 주세요.',
+              showCancel: false,
+            );
+          }
+        },
+      );
+    });
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
@@ -275,12 +324,33 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       child: Column(
         spacing: 20,
         children: [
+          _buildOcrButton(),
           _buildSection1(),
           _buildSection2(),
           _buildSection3(),
           _buildSection4(textTheme),
         ],
       ),
+    );
+  }
+
+  Widget _buildOcrButton() {
+    final isLoading = ref.watch(
+      reservationOcrControllerProvider.select((s) => s.isLoading),
+    );
+    return OutlinedButton.icon(
+      onPressed: isLoading
+          ? null
+          : () => ref
+              .read(reservationOcrControllerProvider.notifier)
+              .extractFromImage(),
+      icon: isLoading
+          ? const SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.image_outlined),
+      label: Text(isLoading ? '분석 중...' : '스크린샷으로 자동 입력'),
     );
   }
 
