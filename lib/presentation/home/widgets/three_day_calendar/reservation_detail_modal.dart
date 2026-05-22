@@ -31,6 +31,10 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/providers/reservation_ocr_controller.dart';
 
 /// 예약 확인 모달 (읽기 전용 ↔ 편집 모드 인라인 전환).
 ///
@@ -284,6 +288,25 @@ class _ReservationDetailModalState
     setState(() => _calculatedPrice = price);
   }
 
+  void _applyOcrResult(ReservationOcrResult result) {
+    setState(() {
+      if (result.customerName != null) {
+        _nameController.text = result.customerName!;
+      }
+      if (result.customerPhone != null) {
+        _phoneController.text = result.customerPhone!.formattedPhone;
+      }
+      if (result.headCount != null) {
+        _headCountController.text = result.headCount.toString();
+      }
+      if (result.startTime != null) _startTime = result.startTime!;
+      if (result.endTime != null) _endTime = result.endTime!;
+      if (result.isAllDay != null) _isAllDay = result.isAllDay!;
+      if (result.platform != null) _platform = result.platform!;
+      if (result.memo != null) _memoController.text = result.memo!;
+    });
+  }
+
   // ── 액션 ─────────────────────────────────────────────────────────────────
 
   void _dismissModal() {
@@ -402,6 +425,32 @@ class _ReservationDetailModalState
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+
+    ref.listen(reservationOcrControllerProvider, (_, next) {
+      next.whenOrNull(
+        data: (result) {
+          if (result != null && mounted) _applyOcrResult(result);
+        },
+        error: (e, _) {
+          if (!mounted) return;
+          if (e is AppException && !e.isSilentable) {
+            showCustomAlertDialog(
+              context: context,
+              title: e.title,
+              content: e.content,
+              showCancel: false,
+            );
+          } else {
+            showCustomAlertDialog(
+              context: context,
+              title: 'OCR 오류',
+              content: '스크린샷 분석에 실패했습니다.\n잠시 후 다시 시도해 주세요.',
+              showCancel: false,
+            );
+          }
+        },
+      );
+    });
 
     return AnimatedBuilder(
       animation: _sheetController,
@@ -592,6 +641,26 @@ class _ReservationDetailModalState
 
   // ── 편집 본문 ─────────────────────────────────────────────────────────────
 
+  Widget _buildOcrButton() {
+    final isLoading = ref.watch(
+      reservationOcrControllerProvider.select((s) => s.isLoading),
+    );
+    return OutlinedButton.icon(
+      onPressed: isLoading
+          ? null
+          : () => ref
+              .read(reservationOcrControllerProvider.notifier)
+              .extractFromImage(),
+      icon: isLoading
+          ? const SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.image_outlined),
+      label: Text(isLoading ? '분석 중...' : '스크린샷으로 자동 입력'),
+    );
+  }
+
   Widget _buildEditBody(TextTheme textTheme) {
     return SafeAreaWithPadding(
       top: false,
@@ -604,6 +673,7 @@ class _ReservationDetailModalState
       child: Column(
         spacing: 20,
         children: [
+          _buildOcrButton(),
           _buildSection1Edit(),
           _buildSection2Edit(),
           _buildSection3Edit(),
