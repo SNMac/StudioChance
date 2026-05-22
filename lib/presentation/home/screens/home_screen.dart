@@ -155,7 +155,7 @@ class HomeScreen extends ConsumerWidget {
       isAllDay: false,
       startTime: start,
       endTime: start.add(const Duration(hours: 1)),
-      platform: ReservationPlatform.other,
+      platform: ReservationPlatform.naver,
       paymentMethod: PaymentMethod.bankTransfer,
       calculatedPrice: 0,
       priceAdjustment: 0,
