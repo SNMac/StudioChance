@@ -82,9 +82,9 @@ Last Updated: 2026-05-23
 
 - [x] `dart run build_runner build --delete-conflicting-outputs`
 - [x] `dart analyze` — 에러 없음 확인
-- [ ] App Check 디버그 토큰 Firebase Console 등록
+- [x] App Check 디버그 토큰 Firebase Console 등록
 - [x] 실기기 iOS — 갤러리 권한 요청 → 스크린샷 선택 → 폼 채우기 동작 확인
-- [ ] 실기기 Android — 동일
+- [x] 실기기 Android — 동일
 
 ---
 

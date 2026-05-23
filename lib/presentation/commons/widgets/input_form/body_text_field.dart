@@ -74,14 +74,18 @@ class _BodyTextFieldState extends State<BodyTextField> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: CupertinoTextField.borderless(
-              padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: horizontalPadding,
-              ),
-              placeholder: widget.placeholder,
-              placeholderStyle: textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.normal,
-                color: context.tertiaryLabel,
+            child: TextField(
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsetsDirectional.symmetric(
+                  horizontal: horizontalPadding,
+                ),
+                hintText: widget.placeholder,
+                hintStyle: textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.normal,
+                  color: context.tertiaryLabel,
+                ),
               ),
               textInputAction: widget.returnButtonType,
               cursorHeight: 20,
@@ -90,7 +94,6 @@ class _BodyTextFieldState extends State<BodyTextField> {
               textAlignVertical: TextAlignVertical.center,
               maxLines: widget.maxLines,
               autofocus: widget.autofocus,
-              clearButtonMode: OverlayVisibilityMode.never,
               onChanged: widget.onChanged,
               inputFormatters: widget.inputFormatters,
               keyboardType: widget.keyboardType,
