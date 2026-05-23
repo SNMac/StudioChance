@@ -2,75 +2,39 @@
 
 Last Updated: 2026-05-23
 
-## Phase 1: Domain Layer ✅
+---
 
-- [x] **1-1** `SpaceOption` 엔티티 신규 생성
-- [x] **1-2** `Store` 엔티티 수정 (`priceSettings` → `spaceOptions`, `priceSettingForSpace` getter)
-- [x] **1-3** `Reservation` 엔티티 수정 (`spaceOptionId: String?`)
-- [x] **1-4** 코드 생성 및 `dart analyze` 통과
+## Phase 1~5: 완료 ✅
+
+모든 코드 변경 완료 (32파일), `dart analyze` 오류 0개, 커밋 `f0bb5e4` / `1b0f1e1`.
 
 ---
 
-## Phase 2: Data Layer ✅
+## Phase 6: 수동 테스트
 
-- [x] **2-1** `SpaceOptionModel` 신규 생성 (`lib/data/models/space_option_model.dart`)
-- [x] **2-2** `StoreModel` 수정
-  - `priceSettingsModel` → `spaceOptions: List<SpaceOptionModel>`
-  - 하위 호환 처리: `StoreDataSource._migrateToSpaceOptions()` (DataSource 레이어)
-- [x] **2-3** `ReservationModel` 수정 (`spaceOptionId: String?`)
-- [x] **2-4** 코드 생성 및 빌드 확인
+- [ ] **6-1** 점포 생성 — 공간 추가/이름 입력/요금 설정 저장 확인
+- [ ] **6-2** 점포 수정 — 기존 점포 공간 목록 불러오기 확인
+- [ ] **6-3** 예약 생성 — `spaceOptionId` Firestore 저장 확인
+- [ ] **6-4** Firestore 구버전 문서 (`priceSettingsModel`) 읽기 확인 (불필요할 수 있음 — 배포 전)
 
 ---
 
-## Phase 3: UseCase ✅
+## 추가 작업 — 예약 모달 공간 선택 UI (미구현)
 
-- [x] **3-1** `ReservationUseCaseImpl._applyCalculatedPrice`
-  - `store.priceSettings` → `store.priceSettingForSpace(reservation.spaceOptionId)`
-- [x] **3-2** `dart analyze` 통과
+공간이 2개 이상인 경우 예약 생성/수정 시 공간을 선택할 수 없는 상태.
+현재는 항상 첫 번째 공간 또는 기존 `reservation.spaceOptionId` 유지.
 
----
-
-## Phase 4: Presentation — Store Form ✅
-
-- [x] **4-1** `StoreFormState` (`priceSettings` → `spaceOptions: List<SpaceOption>`)
-- [x] **4-2** `StoreFormControllerable/Mixin`
-  - DayGroup 메서드에 `spaceIndex` 파라미터 추가
-  - SpaceOption CRUD 신규: `addSpaceOption`, `removeSpaceOption`, `setSpaceOptionName`, `copySpaceOption`
-- [x] **4-3** `StoreCreationController`, `StoreUpdateController` 수정
-- [x] **4-4** `StoreFormScreen`: SpaceOption 루프, 공간명 입력, 공간 추가/삭제/복사 버튼
-- [x] **4-5** `PriceDaysInputScreen`: `spaceIndex/groupIndex` 파라미터 전환
-- [x] **4-6** `PriceTimeInputScreen`: `spaceIndex/groupIndex` 파라미터 전환
-- [x] **4-7** `PriceSettingInputForm`: 콜백 via StoreFormScreen (위젯 자체는 변경 불필요)
-- [x] **4-8** 코드 생성 및 빌드 확인
-
----
-
-## Phase 5: Presentation — 예약 모달 ✅
-
-- [x] **5-1** `ReservationCreateModal`
-  - `_priceSetting` → `_spaceOptions + _spaceOptionId`
-  - `_loadSpaceOptions()` / `_recalculatePrice()` 공간 기반으로 전환
-  - `spaceOptionId` 예약에 포함
-- [x] **5-2** `ReservationDetailModal` (동일한 패턴 적용)
-- [x] **5-3** `HomeReservationActionsController`
-  - `getStorePriceSetting` → `getStoreSpaceOptions(storeId): List<SpaceOption>?`
-
----
-
-## Phase 6: 최종 검증
-
-- [x] **6-1** `dart analyze` 오류 없음 확인
-- [ ] **6-2** 점포 생성 플로우 수동 테스트 (공간 2개 이상 생성)
-- [ ] **6-3** 점포 수정 플로우 수동 테스트 (기존 단일 공간 점포)
-- [ ] **6-4** 예약 생성 시 공간 선택 및 요금 자동 계산 확인
-- [ ] **6-5** 기존 Firestore 데이터 (priceSettingsModel 구조) 읽기 정상 동작 확인
-- [ ] **6-6** 기존 예약 (spaceOptionId 없음) 조회 정상 동작 확인
+- [ ] **A-1** `ReservationCreateModal._buildSection1()`에 공간 선택 `TitlePopupButton<SpaceOption>` 추가
+  - `_spaceOptions?.length > 1` 일 때만 표시
+  - 선택 시 `setState(() => _spaceOptionId = s.id)` + `_recalculatePrice()`
+  - `itemLabelBuilder: (s) => s.name`
+- [ ] **A-2** `ReservationDetailModal` 편집 모드에도 동일 UI 추가
+  - `_buildEditableSection1()` 또는 해당 섹션 빌더 내에 삽입
 
 ---
 
 ## 참고
 
-- 계획 상세: `space-options-plan.md`
-- 핵심 파일/의존성: `space-options-context.md`
-- 공휴일 요금 TODO는 이 작업과 별도로 유지 (`isHoliday: false` 고정 유지)
-- 예약 모달에서 공간 선택 UI (다중 공간 시 팝업) 구현은 향후 Phase로 분리 가능
+- 상세 구현 내용: `space-options-context.md`
+- 하위 호환 코드(`_migrateToSpaceOptions`) 존재하지만, 배포 전이므로 실질적으로 필요 없음
+- 공휴일 요금 TODO는 이 작업과 별개 (`isHoliday: false` 고정 유지)
