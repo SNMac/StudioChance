@@ -126,7 +126,7 @@ class PaymentInstructionScreen extends ConsumerWidget {
 
     final deadlineLine = formState.paymentDeadlineMinutes != null
         ? '✔ 입금 마감 시간: 앱에 예약 등록한 시간 기준 ${_formatDuration(formState.paymentDeadlineMinutes!)} 이내\n'
-        : '✔ 입금 마감 시간: 앱에 예약 등록한 시간 기준 {n}시간 이내\n';
+        : '';
 
     return '[{점포명} 예약 입금 안내]\n'
         '안녕하세요, {점포명}입니다.\n'

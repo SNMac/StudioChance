@@ -19,12 +19,17 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
 
-/// 15분 단위 선택지: 15분 ~ 3시간
+/// 0(설정 안함), 5분 단위 5~55분, 1시간 단위 1~24시간
 const List<int> _deadlineOptions = [
-  15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180,
+  0,
+  5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55,
+  60, 120, 180, 240, 300, 360, 420, 480, 540, 600,
+  660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200,
+  1260, 1320, 1380, 1440,
 ];
 
 String _formatDuration(int minutes) {
+  if (minutes == 0) return '설정 안함';
   if (minutes < 60) return '$minutes분';
   final hours = minutes ~/ 60;
   final remaining = minutes % 60;
@@ -106,7 +111,10 @@ class _PaymentInfoInputScreenState
     notifier.setBankName(_bankNameController.text);
     notifier.setBankAccountNumber(_bankAccountNumberController.text);
     notifier.setBankAccountHolder(_bankAccountHolderController.text);
-    notifier.setPaymentDeadlineMinutes(_selectedMinutes);
+    final minutes = _selectedMinutes;
+    notifier.setPaymentDeadlineMinutes(
+      (minutes == null || minutes == 0) ? null : minutes,
+    );
     context.pop();
   }
 
@@ -202,7 +210,10 @@ class _PaymentInfoInputScreenState
                     notifier.setBankAccountHolder(
                       _bankAccountHolderController.text,
                     );
-                    notifier.setPaymentDeadlineMinutes(_selectedMinutes);
+                    final m = _selectedMinutes;
+                    notifier.setPaymentDeadlineMinutes(
+                      (m == null || m == 0) ? null : m,
+                    );
                     // storeToEdit을 전달해 어느 폼 컨트롤러를 읽을지 결정
                     SCRoute.paymentInstruction.pushChild(
                       context,

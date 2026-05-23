@@ -19,7 +19,8 @@ abstract interface class StoreFormControllerable {
   void setBankAccountNumber(String bankAccountNumber);
   void setBankAccountHolder(String bankAccountHolder);
   void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes);
-  void setConfirmationNotes(String confirmationNotes);
+  void setInfoNotes(String infoNotes);
+  void setCautionNotes(String cautionNotes);
 
   // ── SpaceOption CRUD ──────────────────────────────────────────────────────
 
@@ -70,8 +71,10 @@ mixin StoreFormMixin {
       state = state.copyWith(bankAccountHolder: bankAccountHolder);
   void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes) =>
       state = state.copyWith(paymentDeadlineMinutes: paymentDeadlineMinutes);
-  void setConfirmationNotes(String confirmationNotes) =>
-      state = state.copyWith(confirmationNotes: confirmationNotes);
+  void setInfoNotes(String infoNotes) =>
+      state = state.copyWith(infoNotes: infoNotes);
+  void setCautionNotes(String cautionNotes) =>
+      state = state.copyWith(cautionNotes: cautionNotes);
 
   // ── SpaceOption CRUD ──────────────────────────────────────────────────────
 

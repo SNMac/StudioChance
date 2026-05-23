@@ -30,7 +30,8 @@ abstract class StoreModel with _$StoreModel {
     String? bankAccountNumber,
     String? bankAccountHolder,
     int? paymentDeadlineMinutes,
-    String? confirmationNotes,
+    String? infoNotes,
+    String? cautionNotes,
   }) = _StoreModel;
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
@@ -47,7 +48,8 @@ abstract class StoreModel with _$StoreModel {
     'bankAccountNumber': bankAccountNumber,
     'bankAccountHolder': bankAccountHolder,
     'paymentDeadlineMinutes': paymentDeadlineMinutes,
-    'confirmationNotes': confirmationNotes,
+    'infoNotes': infoNotes,
+    'cautionNotes': cautionNotes,
   };
 
   factory StoreModel.fromEntity(Store entity) {
@@ -75,7 +77,8 @@ abstract class StoreModel with _$StoreModel {
       bankAccountNumber: entity.bankAccountNumber,
       bankAccountHolder: entity.bankAccountHolder,
       paymentDeadlineMinutes: entity.paymentDeadlineMinutes,
-      confirmationNotes: entity.confirmationNotes,
+      infoNotes: entity.infoNotes,
+      cautionNotes: entity.cautionNotes,
     );
   }
 
@@ -101,7 +104,8 @@ abstract class StoreModel with _$StoreModel {
       bankAccountNumber: bankAccountNumber,
       bankAccountHolder: bankAccountHolder,
       paymentDeadlineMinutes: paymentDeadlineMinutes,
-      confirmationNotes: confirmationNotes,
+      infoNotes: infoNotes,
+      cautionNotes: cautionNotes,
     );
   }
 }

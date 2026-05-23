@@ -38,7 +38,8 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   bankAccountNumber: json['bankAccountNumber'] as String?,
   bankAccountHolder: json['bankAccountHolder'] as String?,
   paymentDeadlineMinutes: (json['paymentDeadlineMinutes'] as num?)?.toInt(),
-  confirmationNotes: json['confirmationNotes'] as String?,
+  infoNotes: json['infoNotes'] as String?,
+  cautionNotes: json['cautionNotes'] as String?,
 );
 
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
@@ -57,5 +58,6 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
       'bankAccountNumber': instance.bankAccountNumber,
       'bankAccountHolder': instance.bankAccountHolder,
       'paymentDeadlineMinutes': instance.paymentDeadlineMinutes,
-      'confirmationNotes': instance.confirmationNotes,
+      'infoNotes': instance.infoNotes,
+      'cautionNotes': instance.cautionNotes,
     };

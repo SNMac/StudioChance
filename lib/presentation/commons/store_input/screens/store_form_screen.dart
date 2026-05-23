@@ -228,7 +228,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             },
                           ),
                           TitleNavigationButton(
-                            title: '안내사항',
+                            title: '안내•주의사항',
                             onPressed: () {
                               SCRoute.storeGuide.pushChild(
                                 context,

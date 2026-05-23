@@ -22,7 +22,8 @@ abstract class StoreFormState with _$StoreFormState {
     @Default('') String bankAccountNumber,
     @Default('') String bankAccountHolder,
     int? paymentDeadlineMinutes,
-    @Default('') String confirmationNotes,
+    @Default('') String infoNotes,
+    @Default('') String cautionNotes,
 
     @Default(AsyncData(null)) AsyncValue<void> status,
   }) = _StoreFormState;

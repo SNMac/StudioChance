@@ -25,7 +25,8 @@ abstract class Store with _$Store {
     String? bankAccountNumber,
     String? bankAccountHolder,
     int? paymentDeadlineMinutes,
-    String? confirmationNotes,
+    String? infoNotes,
+    String? cautionNotes,
   }) = _Store;
 
   /// spaceOptionId에 해당하는 PriceSetting 반환.

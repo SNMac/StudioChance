@@ -119,8 +119,11 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
       formState.addressGuide,
     ].where((s) => s.isNotEmpty).join(' ');
 
-    final notesSection = formState.confirmationNotes.isNotEmpty
-        ? '\n📌 안내·주의사항\n${formState.confirmationNotes}\n'
+    final infoSection = formState.infoNotes.isNotEmpty
+        ? '\nℹ️ 안내사항\n${formState.infoNotes}\n'
+        : '';
+    final cautionSection = formState.cautionNotes.isNotEmpty
+        ? '\n⚠️ 주의사항\n${formState.cautionNotes}\n'
         : '';
 
     return '[{점포명} 예약 확정 안내]\n'
@@ -133,7 +136,8 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
         '• 예약 시간: {yyyy}년 {mm}월 {dd}일 ({요일}) {hh}시 ~ {hh}시 ({n}시간)\n'
         '• 예약 인원: {예약 인원}인\n'
         '• 이용 장소: ${addressParts.isEmpty ? '{이용 장소}' : addressParts}\n'
-        '$notesSection'
+        '$infoSection'
+        '$cautionSection'
         '\n'
         '이용해 주셔서 감사합니다! 좋은 시간 보내세요. 🙇‍♂️';
   }
@@ -194,8 +198,11 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
             .join(' ')
         : '';
 
-    final notesSection = (store?.confirmationNotes?.isNotEmpty == true)
-        ? '\n📌 안내·주의사항\n${store!.confirmationNotes}\n'
+    final infoSection = (store?.infoNotes?.isNotEmpty == true)
+        ? '\nℹ️ 안내사항\n${store!.infoNotes}\n'
+        : '';
+    final cautionSection = (store?.cautionNotes?.isNotEmpty == true)
+        ? '\n⚠️ 주의사항\n${store!.cautionNotes}\n'
         : '';
 
     return '[${r.storeSummary.name} 예약 확정 안내]\n'
@@ -208,7 +215,8 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
         '• 예약 시간: $timeStr\n'
         '• 예약 인원: ${r.headCount}인\n'
         '• 이용 장소: $addressParts\n'
-        '$notesSection'
+        '$infoSection'
+        '$cautionSection'
         '\n'
         '이용해 주셔서 감사합니다! 좋은 시간 보내세요. 🙇‍♂️';
   }

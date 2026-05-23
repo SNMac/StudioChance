@@ -42,7 +42,8 @@ class StoreUpdateController extends _$StoreUpdateController
       bankAccountNumber: store.bankAccountNumber ?? '',
       bankAccountHolder: store.bankAccountHolder ?? '',
       paymentDeadlineMinutes: store.paymentDeadlineMinutes,
-      confirmationNotes: store.confirmationNotes ?? '',
+      infoNotes: store.infoNotes ?? '',
+      cautionNotes: store.cautionNotes ?? '',
     );
   }
 
@@ -62,8 +63,9 @@ class StoreUpdateController extends _$StoreUpdateController
       bankAccountHolder:
           state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
       paymentDeadlineMinutes: state.paymentDeadlineMinutes,
-      confirmationNotes:
-          state.confirmationNotes.isEmpty ? null : state.confirmationNotes,
+      infoNotes:
+          state.infoNotes.isEmpty ? null : state.infoNotes,
+      cautionNotes: state.cautionNotes.isEmpty ? null : state.cautionNotes,
     );
 
     return (store: updatedStore, color: state.color, memo: state.memo);

@@ -27,13 +27,15 @@ class StoreGuideInputScreen extends ConsumerStatefulWidget {
 
 class _StoreGuideInputScreenState
     extends ConsumerState<StoreGuideInputScreen> {
-  late final TextEditingController _notesController;
+  late final TextEditingController _infoController;
+  late final TextEditingController _cautionController;
   bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _notesController = TextEditingController();
+    _infoController = TextEditingController();
+    _cautionController = TextEditingController();
   }
 
   @override
@@ -50,19 +52,22 @@ class _StoreGuideInputScreenState
         formState = ref.read(storeCreationControllerProvider);
       }
 
-      _notesController.text = formState.confirmationNotes;
+      _infoController.text = formState.infoNotes;
+      _cautionController.text = formState.cautionNotes;
       _isInitialized = true;
     }
   }
 
   @override
   void dispose() {
-    _notesController.dispose();
+    _infoController.dispose();
+    _cautionController.dispose();
     super.dispose();
   }
 
   void _save(StoreFormControllerable notifier) {
-    notifier.setConfirmationNotes(_notesController.text);
+    notifier.setInfoNotes(_infoController.text);
+    notifier.setCautionNotes(_cautionController.text);
     context.pop();
   }
 
@@ -80,7 +85,7 @@ class _StoreGuideInputScreenState
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: '안내사항',
+        title: '안내•주의사항',
         actions: [
           AppBarActionButton(
             label: '완료',
@@ -95,8 +100,18 @@ class _StoreGuideInputScreenState
             GroupedFormContainer(
               children: [
                 MemoTextField(
-                  placeholder: '점포 안내·주의사항',
-                  controller: _notesController,
+                  placeholder: '점포 안내사항',
+                  controller: _infoController,
+                  maxLength: maxConfirmationNotesCharCount,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(
+                      maxConfirmationNotesCharCount,
+                    ),
+                  ],
+                ),
+                MemoTextField(
+                  placeholder: '점포 주의사항',
+                  controller: _cautionController,
                   maxLength: maxConfirmationNotesCharCount,
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(
@@ -111,7 +126,8 @@ class _StoreGuideInputScreenState
                 TextActionButton(
                   title: '확정 안내문',
                   onPressed: () {
-                    notifier.setConfirmationNotes(_notesController.text);
+                    notifier.setInfoNotes(_infoController.text);
+                    notifier.setCautionNotes(_cautionController.text);
                     SCRoute.confirmationNotice.pushChild(
                       context,
                       extra: storeToEdit,
