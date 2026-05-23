@@ -57,7 +57,9 @@ class _ImagePreviewPage extends StatelessWidget {
                         style: TextButton.styleFrom(
                           backgroundColor: context.secondarySystemFill,
                           foregroundColor: context.label,
-                          textStyle: textTheme.labelLarge,
+                          textStyle: textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.normal,
+                          ),
                           minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text('취소'),
@@ -70,7 +72,7 @@ class _ImagePreviewPage extends StatelessWidget {
                         style: TextButton.styleFrom(
                           backgroundColor: context.systemBlue,
                           foregroundColor: Colors.white,
-                          textStyle: textTheme.bodyMedium,
+                          textStyle: textTheme.bodyLarge,
                           minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text('확인'),
