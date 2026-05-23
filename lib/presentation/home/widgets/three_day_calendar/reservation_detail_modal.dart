@@ -216,6 +216,7 @@ class _ReservationDetailModalState
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController.text =
         r.priceAdjustment != 0 ? r.priceAdjustment.formattedPrice : '';
+    _spaceOptionId = r.spaceOptionId;
   }
 
   void _onAdjustmentFocusChanged() {
@@ -721,6 +722,10 @@ class _ReservationDetailModalState
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection1ReadOnly() {
+    final spaceOptions = _spaceOptions;
+    final spaceName = spaceOptions != null && spaceOptions.isNotEmpty
+        ? (spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull?.name ?? spaceOptions.first.name)
+        : null;
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
@@ -735,6 +740,11 @@ class _ReservationDetailModalState
             ),
           ),
         ),
+        if (spaceName != null)
+          TitleTextLabel(
+            title: '예약 공간',
+            content: spaceName,
+          ),
         TitleTextLabel(
           title: '예약 상태',
           content: _status.displayName,
@@ -744,6 +754,7 @@ class _ReservationDetailModalState
   }
 
   Widget _buildSection1Edit() {
+    final spaceOptions = _spaceOptions;
     return GroupedFormContainer(
       children: [
         Padding(
@@ -773,6 +784,22 @@ class _ReservationDetailModalState
             },
           ),
         ),
+        if (spaceOptions != null && spaceOptions.isNotEmpty)
+          Padding(
+            padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: horizontalPadding,
+            ),
+            child: TitlePopupButton<SpaceOption>(
+              title: '예약 공간',
+              selectedValue: spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? spaceOptions.first,
+              items: spaceOptions,
+              itemLabelBuilder: (s) => s.name,
+              onSelected: (s) {
+                setState(() => _spaceOptionId = s.id);
+                _recalculatePrice();
+              },
+            ),
+          ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(
             horizontal: horizontalPadding,

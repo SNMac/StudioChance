@@ -384,6 +384,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection1() {
+    final spaceOptions = _spaceOptions;
     return GroupedFormContainer(
       children: [
         Padding(
@@ -413,6 +414,22 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
             },
           ),
         ),
+        if (spaceOptions != null && spaceOptions.isNotEmpty)
+          Padding(
+            padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: horizontalPadding,
+            ),
+            child: TitlePopupButton<SpaceOption>(
+              title: '예약 공간',
+              selectedValue: spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? spaceOptions.first,
+              items: spaceOptions,
+              itemLabelBuilder: (s) => s.name,
+              onSelected: (s) {
+                setState(() => _spaceOptionId = s.id);
+                _recalculatePrice();
+              },
+            ),
+          ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(
             horizontal: horizontalPadding,

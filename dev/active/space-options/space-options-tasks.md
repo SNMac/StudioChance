@@ -24,12 +24,14 @@ Last Updated: 2026-05-23
 공간이 2개 이상인 경우 예약 생성/수정 시 공간을 선택할 수 없는 상태.
 현재는 항상 첫 번째 공간 또는 기존 `reservation.spaceOptionId` 유지.
 
-- [ ] **A-1** `ReservationCreateModal._buildSection1()`에 공간 선택 `TitlePopupButton<SpaceOption>` 추가
+- [x] **A-1** `ReservationCreateModal._buildSection1()`에 공간 선택 `TitlePopupButton<SpaceOption>` 추가
   - `_spaceOptions?.length > 1` 일 때만 표시
   - 선택 시 `setState(() => _spaceOptionId = s.id)` + `_recalculatePrice()`
   - `itemLabelBuilder: (s) => s.name`
-- [ ] **A-2** `ReservationDetailModal` 편집 모드에도 동일 UI 추가
-  - `_buildEditableSection1()` 또는 해당 섹션 빌더 내에 삽입
+- [x] **A-2** `ReservationDetailModal` 편집 모드에도 동일 UI 추가
+  - `_buildSection1Edit()`에 삽입
+  - `_buildSection1ReadOnly()`에도 공간 이름 표시 (공간 2개 이상일 때)
+  - `_resetFields()`에 `_spaceOptionId = r.spaceOptionId` 추가 (취소 시 복원)
 
 ---
 

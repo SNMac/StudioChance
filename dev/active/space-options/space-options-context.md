@@ -11,7 +11,7 @@ Last Updated: 2026-05-23
 - 커밋: `f0bb5e4` — 전체 레이어 구현 (32파일)
 - 커밋: `1b0f1e1` — tasks.md 업데이트
 
-**남은 작업: Phase 6 수동 테스트 (앱 실행 후 확인)**
+**A-1/A-2 완료. 남은 작업: Phase 6 수동 테스트 (앱 실행 후 확인)**
 
 ---
 
@@ -28,10 +28,11 @@ Last Updated: 2026-05-23
 ### 3. SpaceOption ID 생성
 `DateTime.now().millisecondsSinceEpoch.toString()` 방식 사용 (uuid 패키지 없음).
 
-### 4. 예약 모달 공간 선택 UI 미구현
-`ReservationCreateModal` / `ReservationDetailModal`에서 `_spaceOptions`와 `_spaceOptionId`는 구현됐으나,
-**공간이 2개 이상일 때 공간 선택 팝업 UI는 아직 추가되지 않음.**
-현재: 항상 첫 번째 공간이 자동 선택되거나, `initialReservation.spaceOptionId`가 그대로 유지됨.
+### 4. 예약 모달 공간 선택 UI ✅ 구현 완료
+`ReservationCreateModal._buildSection1()`, `ReservationDetailModal._buildSection1Edit()`에
+`TitlePopupButton<SpaceOption>` 추가 완료 (공간 2개 이상일 때만 표시).
+`ReservationDetailModal._buildSection1ReadOnly()`에도 공간 이름 표시 추가.
+`_resetFields()`에 `_spaceOptionId = r.spaceOptionId` 추가 (편집 취소 시 복원).
 
 ---
 
@@ -134,17 +135,6 @@ extra: {'store': widget.storeToEdit, 'spaceIndex': spaceIndex, 'groupIndex': gro
 3. 공간별 요일/시간 요금 설정 저장 확인 (Firestore `spaceOptions` 키로 저장되는지)
 4. 예약 생성 시 `spaceOptionId` 필드가 저장되는지 확인
 5. (선택) 예약 모달에 공간 선택 드롭다운 UI 추가
-
-## 미구현 — 예약 모달 공간 선택 UI
-
-공간이 2개 이상인 점포의 예약 생성 시, 사용자가 공간을 직접 선택할 수 없음.
-현재는 첫 번째 공간이 자동 선택됨.
-
-구현 방법 (추가 작업):
-- `ReservationCreateModal._buildSection1()`에 공간 선택 `TitlePopupButton<SpaceOption>` 추가
-- `_spaceOptions` 로드 완료 후 표시, 공간 1개면 숨김
-- 선택 시 `_spaceOptionId` 업데이트 + `_recalculatePrice()` 호출
-- `ReservationDetailModal` 편집 모드에도 동일 UI 추가
 
 ---
 

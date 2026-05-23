@@ -139,7 +139,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
 
         if (data['deletedAt'] != null) return null;
 
-        _migrateToSpaceOptions(data);
         return StoreModel.fromJson(data);
       }
       return null;
@@ -323,7 +322,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final docSnapshot = querySnapshot.docs.first;
       final data = docSnapshot.data();
       data['id'] = docSnapshot.id;
-      _migrateToSpaceOptions(data);
       return StoreModel.fromJson(data);
     } catch (e) {
       throw handleFirestoreError(e);
@@ -342,20 +340,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         (_) => chars.codeUnitAt(_rnd.nextInt(chars.length)),
       ),
     );
-  }
-
-  /// 구버전 문서(priceSettingsModel)를 spaceOptions 구조로 인라인 변환.
-  void _migrateToSpaceOptions(Map<String, dynamic> data) {
-    if (!data.containsKey('spaceOptions') &&
-        data.containsKey('priceSettingsModel')) {
-      data['spaceOptions'] = [
-        {
-          'id': 'default',
-          'name': '기본 공간',
-          'priceSettings': data['priceSettingsModel'],
-        },
-      ];
-    }
   }
 
 }
