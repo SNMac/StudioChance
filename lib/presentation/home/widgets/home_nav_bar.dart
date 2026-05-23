@@ -21,6 +21,9 @@ class HomeNavBar extends ConsumerWidget {
     final isMonthlyCalendarVisible = ref.watch(
       homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
     );
+    final selectedStartDate = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.selectedStartDate),
+    );
 
     // 네비게이션 바에 표시할 연월 텍스트
     final monthText = '${month.year}년 ${month.month}월';
@@ -60,11 +63,31 @@ class HomeNavBar extends ConsumerWidget {
             ),
           ),
           const Spacer(),
-          // 우측: 버튼 2개
+          // 우측: 버튼 3개
           Row(
             children: [
-              // 점포 필터 버튼 (애플 캘린더의 "캘린더 선택"과 유사)
-              // 시각적 크기: 24×24 (오늘 날짜 버튼과 동일)
+              // 날짜 Picker 버튼
+              CupertinoButton(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                onPressed: () => _showDatePickerModal(
+                  context: context,
+                  notifier: notifier,
+                  initialDate: selectedStartDate,
+                ),
+                child: SizedBox(
+                  width: 44.0,
+                  height: navBarHeight,
+                  child: Center(
+                    child: Icon(
+                      CupertinoIcons.calendar_circle,
+                      size: 28.0,
+                      color: context.label,
+                    ),
+                  ),
+                ),
+              ),
+              // 점포 필터 버튼
               CupertinoButton(
                 minimumSize: Size.zero,
                 padding: EdgeInsets.zero,
@@ -116,6 +139,98 @@ class HomeNavBar extends ConsumerWidget {
     );
   }
 
+}
+
+/// iOS: CupertinoModalPopup, Android: showDatePicker
+Future<void> _showDatePickerModal({
+  required BuildContext context,
+  required HomeCalendarController notifier,
+  required DateTime initialDate,
+}) async {
+  if (Platform.isIOS) {
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => _DatePickerSheet(
+        initialDate: initialDate,
+        onConfirm: notifier.selectDateFromPicker,
+      ),
+    );
+  } else {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2001),
+      lastDate: DateTime(2100, 12, 31),
+    );
+    if (context.mounted && picked != null) {
+      notifier.selectDateFromPicker(picked);
+    }
+  }
+}
+
+/// iOS 날짜 선택 피커 시트
+class _DatePickerSheet extends StatefulWidget {
+  const _DatePickerSheet({
+    required this.initialDate,
+    required this.onConfirm,
+  });
+
+  final DateTime initialDate;
+  final ValueChanged<DateTime> onConfirm;
+
+  @override
+  State<_DatePickerSheet> createState() => _DatePickerSheetState();
+}
+
+class _DatePickerSheetState extends State<_DatePickerSheet> {
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double pickerHeight = 260.0;
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+    return ColoredBox(
+      color: context.systemBackground,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              CupertinoButton(
+                child: const Text('취소'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              CupertinoButton(
+                child: const Text('완료'),
+                onPressed: () {
+                  widget.onConfirm(_selectedDate);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+          SizedBox(
+            height: pickerHeight,
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: _selectedDate,
+              minimumDate: DateTime(2001),
+              maximumDate: DateTime(2100, 12, 31),
+              onDateTimeChanged: (date) => _selectedDate = date,
+            ),
+          ),
+          SizedBox(height: bottomPadding),
+        ],
+      ),
+    );
+  }
 }
 
 /// 네비바 chevron 아이콘 (너비 12, 높이 6)

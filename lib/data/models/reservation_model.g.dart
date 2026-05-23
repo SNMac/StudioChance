@@ -65,8 +65,8 @@ const _$ReservationPlatformEnumMap = {
 };
 
 const _$PaymentMethodEnumMap = {
-  PaymentMethod.onSite: 'ON_SITE',
   PaymentMethod.bankTransfer: 'BANK_TRANSFER',
+  PaymentMethod.onSite: 'ON_SITE',
   PaymentMethod.other: 'OTHER',
 };
 
