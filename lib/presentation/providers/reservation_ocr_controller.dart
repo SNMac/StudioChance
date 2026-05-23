@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -16,20 +18,28 @@ class ReservationOcrController extends _$ReservationOcrController {
   @override
   FutureOr<ReservationOcrResult?> build() => null;
 
-  Future<void> extractFromImage() async {
-    final picked = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
-    if (picked == null) return;
+  /// 갤러리에서 이미지를 선택하고 bytes를 반환한다. 상태는 변경하지 않는다.
+  /// 사용자가 선택을 취소하거나 읽기 실패 시 null 반환.
+  Future<Uint8List?> pickForPreview() async {
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (picked == null) return null;
+      return await picked.readAsBytes();
+    } catch (e) {
+      _logger.e('이미지 선택 실패', error: e);
+      return null;
+    }
+  }
 
+  /// 확인된 이미지 bytes로 OCR을 실행한다.
+  Future<void> analyzeImage(Uint8List bytes) async {
     final myGeneration = ++_generation;
     state = const AsyncLoading();
     try {
-      final bytes = await picked.readAsBytes();
-      if (_generation != myGeneration) return;
-      final result =
-          await ref.read(reservationOcrUseCaseProvider).execute(bytes);
+      final result = await ref.read(reservationOcrUseCaseProvider).execute(bytes);
       if (_generation != myGeneration) return;
       result.fold(
         (e) {
@@ -40,7 +50,7 @@ class ReservationOcrController extends _$ReservationOcrController {
       );
     } catch (e) {
       if (_generation != myGeneration) return;
-      _logger.e('OCR 이미지 읽기 실패', error: e);
+      _logger.e('OCR 분석 실패', error: e);
       state = AsyncError(OcrUnknownException(e.toString()), StackTrace.current);
     }
   }

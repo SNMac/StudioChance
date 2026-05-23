@@ -34,6 +34,7 @@ import 'package:studio_chance/presentation/commons/widgets/safe_area_with_paddin
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/image_preview_page.dart';
 import 'package:studio_chance/presentation/providers/reservation_ocr_controller.dart';
 
 /// 예약 확인 모달 (읽기 전용 ↔ 편집 모드 인라인 전환).
@@ -642,6 +643,16 @@ class _ReservationDetailModalState
 
   // ── 편집 본문 ─────────────────────────────────────────────────────────────
 
+  Future<void> _handleOcrButtonTap() async {
+    final bytes = await ref
+        .read(reservationOcrControllerProvider.notifier)
+        .pickForPreview();
+    if (bytes == null || !mounted) return;
+    final confirmed = await showImagePreviewPage(context, bytes);
+    if (!confirmed || !mounted) return;
+    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(bytes);
+  }
+
   Widget _buildOcrButton() {
     final isLoading = ref.watch(
       reservationOcrControllerProvider.select((s) => s.isLoading),
@@ -659,9 +670,7 @@ class _ReservationDetailModalState
                 onConfirmAfterPop: () =>
                     ref.read(reservationOcrControllerProvider.notifier).cancel(),
               )
-          : () => ref
-              .read(reservationOcrControllerProvider.notifier)
-              .extractFromImage(),
+          : _handleOcrButtonTap,
     );
   }
 

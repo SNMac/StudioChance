@@ -1,6 +1,6 @@
 # 예약 스크린샷 OCR — 컨텍스트
 
-Last Updated: 2026-05-23 (세션 2)
+Last Updated: 2026-05-23 (세션 3)
 
 ## 구현 상태: 구현 완료 / 야놀자 스크린샷 검증 필요
 
@@ -23,10 +23,11 @@ Last Updated: 2026-05-23 (세션 2)
 | `lib/data/models/reservation_ocr_result_model.dart` | JSON 역직렬화 모델 | **신규** |
 | `lib/data/data_sources/gemini_data_source.dart` | Gemini API 호출 | **신규** |
 | `lib/data/repositories/reservation_ocr_repository_impl.dart` | Repository 구현체 | **신규** |
-| `lib/presentation/providers/reservation_ocr_controller.dart` | OCR 작업 컨트롤러 | **신규 + 세션2 수정** — try-catch, _generation 카운터, cancel() |
+| `lib/presentation/providers/reservation_ocr_controller.dart` | OCR 작업 컨트롤러 | **신규 + 세션2·3 수정** — pickForPreview/analyzeImage 분리, _generation 카운터, cancel() |
+| `lib/presentation/commons/widgets/image_preview_page.dart` | 이미지 확인 전체화면 | **세션3 신규** — showImagePreviewPage(), InteractiveViewer, 핀치 줌 |
 | `lib/presentation/commons/widgets/input_form/text_action_button.dart` | 공통 버튼 컴포넌트 | **수정** — `fontWeight` 파라미터 추가 |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart` | OCR 버튼 + ref.listen | **수정 + 세션2** — 취소 확인 alert 추가 |
-| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | OCR 버튼 + ref.listen | **수정 + 세션2** — 동일 |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart` | OCR 버튼 + ref.listen | **수정 + 세션2·3** — _handleOcrButtonTap → showImagePreviewPage |
+| `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` | OCR 버튼 + ref.listen | **수정 + 세션2·3** — 동일 |
 | `lib/domain/use_cases/reservation_ocr_use_case.dart` | UseCase interface + impl | **세션2 수정** — 핵심 필드 null 체크 추가 |
 
 ---
@@ -143,6 +144,20 @@ alert가 떠 있는 사이 분석이 완료되면 폼이 먼저 채워진다. �
 - `cancel()` 호출 시 `state = AsyncData(null)` → `ref.listen data:` 콜백에서 `result != null` 조건 불충족 → no-op
 - 분석이 이미 성공한 결과라 폼을 지울 근거 없음 — 의도된 동작
 
+### OCR 확인 화면 — pickForPreview/analyzeImage 분리 (D10)
+`extractFromImage()` 단일 메서드를 두 단계로 분리.
+- `pickForPreview()`: 갤러리 선택 + bytes 반환만 (상태 변경 없음). 예외는 내부 catch → null 반환
+- `analyzeImage(bytes)`: OCR 실행 (AsyncLoading → result/error)
+- 모달의 `_handleOcrButtonTap()`이 양 메서드를 순서대로 호출하며 중간에 `showImagePreviewPage()` 삽입
+- 이 분리 덕분에 controller는 순수한 OCR 상태만 관리, 이미지 확인 UI는 모달 책임
+
+### ImagePreviewPage 레이아웃 (D11)
+`Column` + `SafeArea(bottom: false)` 구조로 이미지가 status bar와 버튼 어느 쪽에도 가려지지 않음.
+- `Stack(fit: expand)` 전체에 `InteractiveViewer` → 이미지가 영역을 완전히 채움
+- `BoxFit.contain` → 비율 유지, 검은 배경에 letterbox
+- 핀치 줌 최대 4x → 예약 텍스트 확대 확인 가능
+- `MaterialPageRoute(fullscreenDialog: true)` → iOS에서 하단 슬라이드-업 전환 애니메이션
+
 ### 핵심 필드 null 체크 위치 (D9)
 UseCase(`reservation_ocr_use_case.dart`)에서 체크.
 - `customerName`, `customerPhone`, `startTime` 세 필드 모두 null → `OcrParsingException('핵심 필드 미추출')`
@@ -151,6 +166,17 @@ UseCase(`reservation_ocr_use_case.dart`)에서 체크.
 
 ---
 
+## 현재 OCR 전체 흐름 (세션3 기준)
+
+```
+버튼 탭
+  → pickForPreview()   갤러리 선택 + bytes 반환 (상태 변경 없음)
+  → showImagePreviewPage()  전체화면 이미지 확인 (취소/확인)
+  → analyzeImage(bytes)  AsyncLoading → Gemini API → AsyncData/AsyncError
+  → ref.listen → _applyOcrResult() 또는 에러 alert
+```
+
 ## 다음 단계
 
 - [ ] 야놀자 스크린샷 OCR 정확도 검증
+- [ ] 실기기에서 이미지 확인 화면 UX 검증 (핀치 줌, 버튼 위치)

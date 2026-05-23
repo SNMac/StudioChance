@@ -1,6 +1,6 @@
 # 예약 스크린샷 OCR — 태스크
 
-Last Updated: 2026-05-23 (세션 2)
+Last Updated: 2026-05-23 (세션 3)
 
 ---
 
@@ -62,10 +62,21 @@ Last Updated: 2026-05-23 (세션 2)
 ### ReservationOcrController
 - [x] `lib/presentation/providers/reservation_ocr_controller.dart` 생성
   - `FutureOr<ReservationOcrResult?> build()` → 초기값 `null`
-  - `extractFromImage()`: image_picker → bytes → UseCase 호출
-  - try-catch로 이미지 읽기 실패 시 `OcrUnknownException` → 영구 로딩 방지
-  - `_generation` 카운터: 각 요청이 번호를 캡처 → stale 응답 차단
+  - `pickForPreview()`: 갤러리 선택 + bytes 반환 (상태 변경 없음, 예외 시 null 반환)
+  - `analyzeImage(Uint8List bytes)`: OCR 실행 (AsyncLoading → result/error)
+  - `_generation` 카운터: stale 응답 차단
   - `cancel()`: `_generation++` + `state = AsyncData(null)`
+
+### 이미지 확인 화면
+- [x] `lib/presentation/commons/widgets/image_preview_page.dart` 신규
+  - `showImagePreviewPage(context, bytes)` → `Future<bool>`
+  - `MaterialPageRoute(fullscreenDialog: true)`로 전체화면 push
+  - `SafeArea(bottom: false)` → 상단 safe area 준수, 이미지가 status bar 아래부터 표시
+  - `InteractiveViewer(minScale: 0.5, maxScale: 4.0)` + `BoxFit.contain` → 비율 유지, 핀치 줌
+  - 우측 상단 X 버튼 없음 — 하단 "취소" 버튼이 동일 역할
+  - 하단 버튼 컨테이너: `SafeArea(top: false)` + `systemBackground`
+  - 취소: `secondarySystemFill` 배경, `labelLarge`, 테두리 없음
+  - 확인: `systemBlue` 배경, 흰 글자, `bodyMedium`
 
 ### UseCase 에러 처리 보강
 - [x] `reservation_ocr_use_case.dart` — 핵심 필드(이름/연락처/시작시간) 전부 null → `OcrParsingException('핵심 필드 미추출')`
@@ -85,6 +96,7 @@ Last Updated: 2026-05-23 (세션 2)
   - `TextActionButton(fontWeight: FontWeight.normal)` OCR 버튼 추가 (폼 최상단)
   - `ref.listen(reservationOcrControllerProvider, ...)` 추가
   - `_applyOcrResult()`: `.formattedPhone` 적용, `_recalculatePrice()` 호출
+  - `_handleOcrButtonTap()`: `pickForPreview()` → `showImagePreviewPage()` → `analyzeImage()`
 - [x] `reservation_detail_modal.dart`
   - 동일 작업 (편집 모드에서만 버튼 표시)
 
