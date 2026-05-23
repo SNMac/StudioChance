@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -48,12 +47,16 @@ class TitleTextField extends StatelessWidget {
           children: [
             Text(title, style: textTheme.bodyLarge),
             Expanded(
-              child: CupertinoTextField.borderless(
-                padding: EdgeInsetsDirectional.zero,
-                placeholder: placeholder ?? title,
-                placeholderStyle: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.normal,
-                  color: context.tertiaryLabel,
+              child: TextField(
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsetsDirectional.zero,
+                  hintText: placeholder ?? title,
+                  hintStyle: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.normal,
+                    color: context.tertiaryLabel,
+                  ),
                 ),
                 cursorHeight: 20,
                 controller: controller,
