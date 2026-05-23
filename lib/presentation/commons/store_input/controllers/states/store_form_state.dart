@@ -28,7 +28,10 @@ abstract class StoreFormState with _$StoreFormState {
     @Default(AsyncData(null)) AsyncValue<void> status,
   }) = _StoreFormState;
 
-  // TODO: 유효성 검사 확인 필요
   /// 필수 입력값만 체크
-  bool get isValid => name.isNotEmpty && address.isNotEmpty;
+  bool get isValid =>
+      name.isNotEmpty &&
+      address.isNotEmpty &&
+      spaceOptions.isNotEmpty &&
+      spaceOptions.every((s) => s.name.isNotEmpty);
 }

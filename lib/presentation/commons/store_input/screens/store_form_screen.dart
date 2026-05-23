@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,9 +7,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/constants/data_constants.dart';
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_form_state_formatter.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
@@ -41,6 +44,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
   late final ScrollController _scrollController;
   late final TextEditingController _nameController;
   late final TextEditingController _memoController;
+  final Set<String> _expandedSpaceIds = {};
+  final Map<String, TextEditingController> _spaceNameControllers = {};
 
   ProviderListenable<StoreFormState> get _currentProvider {
     if (widget.storeToEdit != null) {
@@ -92,6 +97,10 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     _scrollController = ScrollController();
     _nameController = TextEditingController(text: initialState.name);
     _memoController = TextEditingController(text: initialState.memo);
+    for (final space in initialState.spaceOptions) {
+      _expandedSpaceIds.add(space.id);
+      _spaceNameControllers[space.id] = TextEditingController(text: space.name);
+    }
   }
 
   @override
@@ -99,6 +108,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     _scrollController.dispose();
     _nameController.dispose();
     _memoController.dispose();
+    for (final c in _spaceNameControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -248,98 +260,140 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                         ],
                       ),
 
-                      ...state.spaceOptions.asMap().entries.expand((
-                        spaceEntry,
-                      ) {
-                        final int spaceIndex = spaceEntry.key;
-                        final SpaceOption spaceOption = spaceEntry.value;
-                        final bool multipleSpaces = state.spaceOptions.length > 1;
+                      ...state.spaceOptions.asMap().entries.map((spaceEntry) {
+                        final int si = spaceEntry.key;
+                        final SpaceOption so = spaceEntry.value;
+                        final bool isExpanded =
+                            _expandedSpaceIds.contains(so.id);
+                        final controller = _spaceNameControllers[so.id] ??
+                            TextEditingController(text: so.name);
 
-                        return [
-                          // 공간 이름 입력 + 삭제/복사 버튼
-                          GroupedFormContainer(
-                            children: [
-                              TitleTextField(
-                                title: '공간명',
-                                controller: TextEditingController(
-                                  text: spaceOption.name,
-                                ),
-                                onChanged: (v) =>
-                                    notifier.setSpaceOptionName(spaceIndex, v),
-                                inputFormatters: [
-                                  LengthLimitingTextInputFormatter(20),
-                                ],
-                              ),
-                            ],
-                          ),
-
-                          // 이 공간의 요일별 요금 설정
-                          ...spaceOption.priceSetting.dayGroups
-                              .asMap()
-                              .entries
-                              .map((groupEntry) {
-                            final int groupIndex = groupEntry.key;
-                            final DayGroup dayGroup = groupEntry.value;
-                            final bool showAdd =
-                                spaceOption.priceSetting.dayGroups.length < 8;
-
-                            return PriceSettingInputForm(
-                              index: groupIndex,
-                              dayGroup: dayGroup,
-                              showAdd: showAdd,
-                              showDelete: true,
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _SpaceOptionHeader(
+                              isExpanded: isExpanded,
+                              showDelete: state.spaceOptions.length > 1,
+                              canAdd: state.spaceOptions.length < 5,
+                              nameController: controller,
+                              onToggle: () => setState(() {
+                                if (isExpanded) {
+                                  _expandedSpaceIds.remove(so.id);
+                                } else {
+                                  _expandedSpaceIds.add(so.id);
+                                }
+                              }),
+                              onNameChanged: (v) =>
+                                  notifier.setSpaceOptionName(si, v),
                               onDelete: () {
-                                notifier.removeDayGroup(spaceIndex, groupIndex);
+                                _spaceNameControllers
+                                    .remove(so.id)
+                                    ?.dispose();
+                                setState(() =>
+                                    _expandedSpaceIds.remove(so.id));
+                                notifier.removeSpaceOption(si);
                               },
                               onCopy: () {
-                                notifier.copyDayGroup(spaceIndex, groupIndex);
+                                notifier.copySpaceOption(si);
+                                final newSo = ref
+                                    .read(_currentProvider)
+                                    .spaceOptions
+                                    .last;
+                                _spaceNameControllers[newSo.id] =
+                                    TextEditingController(text: newSo.name);
+                                setState(() =>
+                                    _expandedSpaceIds.add(newSo.id));
                                 _scrollAfterBuild(toBottom: false);
                               },
                               onAdd: () {
-                                notifier.addDayGroup(spaceIndex);
+                                notifier.addSpaceOption();
+                                final newSo = ref
+                                    .read(_currentProvider)
+                                    .spaceOptions
+                                    .last;
+                                _spaceNameControllers[newSo.id] =
+                                    TextEditingController(text: newSo.name);
+                                setState(() =>
+                                    _expandedSpaceIds.add(newSo.id));
                                 _scrollAfterBuild();
                               },
-                              onPressedDaySetting: () {
-                                SCRoute.storePriceDays.pushChild(
-                                  context,
-                                  extra: {
-                                    'store': widget.storeToEdit,
-                                    'spaceIndex': spaceIndex,
-                                    'groupIndex': groupIndex,
-                                  },
-                                );
-                              },
-                              onPressedTimeSetting: () {
-                                SCRoute.storePriceTime.pushChild(
-                                  context,
-                                  extra: {
-                                    'store': widget.storeToEdit,
-                                    'spaceIndex': spaceIndex,
-                                    'groupIndex': groupIndex,
-                                  },
-                                );
-                              },
-                            );
-                          }),
-
-                          // 공간 삭제/복사/추가 버튼 행
-                          _SpaceOptionButtonRow(
-                            showDelete: multipleSpaces,
-                            canAdd: state.spaceOptions.length < 5,
-                            isLastSpace:
-                                spaceIndex == state.spaceOptions.length - 1,
-                            onDelete: () => notifier.removeSpaceOption(spaceIndex),
-                            onCopy: () {
-                              notifier.copySpaceOption(spaceIndex);
-                              _scrollAfterBuild(toBottom: false);
-                            },
-                            onAdd: () {
-                              notifier.addSpaceOption();
-                              _scrollAfterBuild();
-                            },
-                          ),
-                        ];
+                            ),
+                            ClipRect(
+                              child: AnimatedSize(
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeInOut,
+                                alignment: Alignment.topCenter,
+                                child: isExpanded
+                                    ? Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 20),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          spacing: 20,
+                                          children: [
+                                            ...so.priceSetting.dayGroups
+                                                .asMap()
+                                                .entries
+                                                .map((groupEntry) {
+                                              final int gi = groupEntry.key;
+                                              final DayGroup dg =
+                                                  groupEntry.value;
+                                              return PriceSettingInputForm(
+                                                index: gi,
+                                                dayGroup: dg,
+                                                showAdd: so.priceSetting
+                                                        .dayGroups.length <
+                                                    8,
+                                                showDelete: true,
+                                                onDelete: () => notifier
+                                                    .removeDayGroup(si, gi),
+                                                onCopy: () {
+                                                  notifier.copyDayGroup(
+                                                      si, gi);
+                                                  _scrollAfterBuild(
+                                                      toBottom: false);
+                                                },
+                                                onAdd: () {
+                                                  notifier.addDayGroup(si);
+                                                  _scrollAfterBuild();
+                                                },
+                                                onPressedDaySetting: () {
+                                                  SCRoute.storePriceDays
+                                                      .pushChild(
+                                                    context,
+                                                    extra: {
+                                                      'store':
+                                                          widget.storeToEdit,
+                                                      'spaceIndex': si,
+                                                      'groupIndex': gi,
+                                                    },
+                                                  );
+                                                },
+                                                onPressedTimeSetting: () {
+                                                  SCRoute.storePriceTime
+                                                      .pushChild(
+                                                    context,
+                                                    extra: {
+                                                      'store':
+                                                          widget.storeToEdit,
+                                                      'spaceIndex': si,
+                                                      'groupIndex': gi,
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            }),
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            ),
+                          ],
+                        );
                       }),
+
                     ],
                   ),
                 ),
@@ -354,19 +408,25 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
   }
 }
 
-/// 공간 옵션 하단 삭제/복사/추가 버튼 행
-class _SpaceOptionButtonRow extends StatelessWidget {
+/// 공간 옵션 헤더 (항상 표시 — 좌측 chevron + 인라인 이름 입력 + 삭제/복사/추가)
+class _SpaceOptionHeader extends StatelessWidget {
+  final bool isExpanded;
   final bool showDelete;
   final bool canAdd;
-  final bool isLastSpace;
+  final TextEditingController nameController;
+  final VoidCallback onToggle;
+  final ValueChanged<String> onNameChanged;
   final VoidCallback onDelete;
   final VoidCallback onCopy;
   final VoidCallback onAdd;
 
-  const _SpaceOptionButtonRow({
+  const _SpaceOptionHeader({
+    required this.isExpanded,
     required this.showDelete,
     required this.canAdd,
-    required this.isLastSpace,
+    required this.nameController,
+    required this.onToggle,
+    required this.onNameChanged,
     required this.onDelete,
     required this.onCopy,
     required this.onAdd,
@@ -374,17 +434,117 @@ class _SpaceOptionButtonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (showDelete)
-          TextButton(
-            onPressed: onDelete,
-            child: const Text('공간 삭제'),
+        SizedBox(
+          height: inputFormComponentHeight,
+          child: Row(
+            children: [
+              // 접기/펼치기 chevron — 터치 범위 30×44
+              SizedBox(
+                width: 30,
+                height: inputFormComponentHeight,
+                child: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  onPressed: onToggle,
+                  child: Icon(
+                    isExpanded
+                        ? CupertinoIcons.chevron_down
+                        : CupertinoIcons.chevron_right,
+                    size: 16,
+                    color: context.systemBlue,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              // 공간명 인라인 TextField — titleMedium
+              Expanded(
+                child: TextField(
+                  controller: nameController,
+                  onChanged: onNameChanged,
+                  style: textTheme.titleMedium,
+                  maxLength: 20,
+                  maxLines: 1,
+                  inputFormatters: [LengthLimitingTextInputFormatter(20)],
+                  decoration: InputDecoration(
+                    hintText: '공간명',
+                    hintStyle: textTheme.titleMedium?.copyWith(
+                      color: context.tertiaryLabel,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isCollapsed: true,
+                    counterText: '',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              // 삭제 버튼 — 터치 범위 44×44
+              if (showDelete) ...[
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: onDelete,
+                    child: Icon(
+                      CupertinoIcons.trash,
+                      size: 18,
+                      color: context.systemRed,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              // 복사 버튼 — 터치 범위 44×44
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: onCopy,
+                  child: Icon(
+                    CupertinoIcons.doc_on_doc,
+                    size: 18,
+                    color: context.systemBlue,
+                  ),
+                ),
+              ),
+              // 추가 버튼 — 터치 범위 44×44
+              if (canAdd) ...[
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: onAdd,
+                    child: Icon(
+                      CupertinoIcons.plus,
+                      size: 24,
+                      color: context.systemBlue,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(width: 4),
+            ],
           ),
-        TextButton(onPressed: onCopy, child: const Text('복사')),
-        if (isLastSpace && canAdd)
-          TextButton(onPressed: onAdd, child: const Text('공간 추가')),
+        ),
+        // 접힌 상태에서만 하단 구분선 표시
+        if (!isExpanded)
+          Divider(
+            height: 0.5,
+            thickness: 0.5,
+            color: context.separator,
+          ),
       ],
     );
   }
