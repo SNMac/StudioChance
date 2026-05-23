@@ -1,6 +1,6 @@
 # 예약 스크린샷 OCR — 태스크
 
-Last Updated: 2026-05-23
+Last Updated: 2026-05-23 (세션 2)
 
 ---
 
@@ -13,7 +13,7 @@ Last Updated: 2026-05-23
 - [x] `ios/Podfile` — `platform :ios, '16.0'` 주석 해제
 - [x] `ios/Podfile` — `FirebaseFirestore` 태그 `12.9.0` → `12.13.0` (cloud_firestore 6.4.1 호환)
 - [x] `pod install` 완료
-- [ ] Firebase Console에서 App Check 디버그 토큰 등록 (시뮬레이터 테스트 전 필수)
+- [x] Firebase Console에서 App Check 디버그 토큰 등록 (시뮬레이터 테스트 전 필수)
 
 ---
 
@@ -63,6 +63,18 @@ Last Updated: 2026-05-23
 - [x] `lib/presentation/providers/reservation_ocr_controller.dart` 생성
   - `FutureOr<ReservationOcrResult?> build()` → 초기값 `null`
   - `extractFromImage()`: image_picker → bytes → UseCase 호출
+  - try-catch로 이미지 읽기 실패 시 `OcrUnknownException` → 영구 로딩 방지
+  - `_generation` 카운터: 각 요청이 번호를 캡처 → stale 응답 차단
+  - `cancel()`: `_generation++` + `state = AsyncData(null)`
+
+### UseCase 에러 처리 보강
+- [x] `reservation_ocr_use_case.dart` — 핵심 필드(이름/연락처/시작시간) 전부 null → `OcrParsingException('핵심 필드 미추출')`
+  - Gemini가 예약 스크린샷이 아닌 이미지를 분석했을 때 사용자 피드백 없이 무반응하던 문제 해결
+
+### 취소 기능
+- [x] 두 모달 `_buildOcrButton()` — 분석 중 탭 시 확인 alert 표시
+  - title: '자동 입력 취소', confirmText: '중단', cancelText: '계속'
+  - "중단" → `cancel()` 호출
 
 ### 공통 컴포넌트 수정
 - [x] `lib/presentation/commons/widgets/input_form/text_action_button.dart`
@@ -94,5 +106,5 @@ Last Updated: 2026-05-23
 - [x] 스페이스클라우드 스크린샷 → 동일
 - [ ] 야놀자 스크린샷 → 동일
 - [x] 추출 실패 필드는 기존 폼 값 유지 (null → 건너뜀)
-- [ ] OCR 실패 시 에러 다이얼로그 표시
+- [x] OCR 실패 시 에러 다이얼로그 표시
 - [x] OCR 처리 중 버튼 비활성화 ('분석 중...' 텍스트)

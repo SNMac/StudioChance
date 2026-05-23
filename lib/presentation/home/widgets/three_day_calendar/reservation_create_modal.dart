@@ -343,7 +343,15 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       title: isLoading ? '분석 중...' : '스크린샷으로 자동 입력',
       fontWeight: FontWeight.normal,
       onPressed: isLoading
-          ? null
+          ? () => showCustomAlertDialog(
+                context: context,
+                title: '자동 입력 취소',
+                content: '스크린샷 분석을 중단할까요?',
+                confirmText: '중단',
+                cancelText: '계속',
+                onConfirmAfterPop: () =>
+                    ref.read(reservationOcrControllerProvider.notifier).cancel(),
+              )
           : () => ref
               .read(reservationOcrControllerProvider.notifier)
               .extractFromImage(),
