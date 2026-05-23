@@ -1,8 +1,8 @@
 /// 메모 최대 글자 수
-const int maxMemoCharCount = 200;
+const int maxMemoCharCount = 500;
 
-/// 확정 안내문 주의사항 최대 글자 수
-const int maxConfirmationNotesCharCount = 1000;
+/// 확정 안내문 안내/주의사항 최대 글자 수
+const int maxConfirmationNotesCharCount = 3000;
 
 /// 점포 초대 코드 유효 시간(분 단위)
 const int storeInviteCodeAvailableMin = 15;

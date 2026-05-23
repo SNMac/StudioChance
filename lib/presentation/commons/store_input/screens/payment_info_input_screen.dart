@@ -83,15 +83,14 @@ class _PaymentInfoInputScreenState
       _bankAccountNumberController.text = formState.bankAccountNumber;
       _bankAccountHolderController.text = formState.bankAccountHolder;
 
-      final initialMinutes = formState.paymentDeadlineMinutes;
+      // null(미설정)이면 0("설정 안함")을 기본값으로 사용
+      final initialMinutes = formState.paymentDeadlineMinutes ?? 0;
       _selectedMinutes = initialMinutes;
-      if (initialMinutes != null) {
-        final index = _deadlineOptions.indexOf(initialMinutes);
-        if (index != -1) {
-          _deadlineScrollController.dispose();
-          _deadlineScrollController =
-              FixedExtentScrollController(initialItem: index);
-        }
+      final index = _deadlineOptions.indexOf(initialMinutes);
+      if (index != -1) {
+        _deadlineScrollController.dispose();
+        _deadlineScrollController =
+            FixedExtentScrollController(initialItem: index);
       }
 
       _isInitialized = true;
@@ -153,7 +152,7 @@ class _PaymentInfoInputScreenState
                   top: 6,
                 ),
                 child: Text(
-                  '예약 등록 시간 기준',
+                  '예약 등록 시간 기준으로 설정해주세요',
                   style: textTheme.labelMedium?.copyWith(
                     color: context.secondaryLabel,
                   ),

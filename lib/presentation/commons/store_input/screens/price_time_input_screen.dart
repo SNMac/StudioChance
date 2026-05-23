@@ -81,20 +81,35 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   }
 
   void _addLocalTimeSlot() {
+    final pickerWasOpen = _openPicker != null;
     setState(() {
       _openPicker = null;
       _currentTimeSlots.add(TimeSlot.empty());
     });
-    _scrollAfterBuild();
+    // picker가 열려있었다면 닫힘 애니메이션(300ms) 완료 후 스크롤
+    if (pickerWasOpen) {
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted) _scrollAfterBuild();
+      });
+    } else {
+      _scrollAfterBuild();
+    }
   }
 
   void _copyLocalTimeSlot(int index) {
+    final pickerWasOpen = _openPicker != null;
     setState(() {
       _openPicker = null;
       final copiedSlot = _currentTimeSlots[index].copyWith();
       _currentTimeSlots.insert(index + 1, copiedSlot);
     });
-    _scrollAfterBuild(toBottom: false);
+    if (pickerWasOpen) {
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted) _scrollAfterBuild(toBottom: false);
+      });
+    } else {
+      _scrollAfterBuild(toBottom: false);
+    }
   }
 
   void _removeLocalTimeSlot(int index) {

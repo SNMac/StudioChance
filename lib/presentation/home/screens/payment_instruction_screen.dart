@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,9 +10,8 @@ import 'package:studio_chance/presentation/commons/extensions/price_formatter.da
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 class PaymentInstructionScreen extends ConsumerWidget {
@@ -37,73 +37,52 @@ class PaymentInstructionScreen extends ConsumerWidget {
       storeDetailProvider(reservation!.storeSummary.id),
     );
 
-    return Scaffold(
-      appBar: const CustomAppBar(title: '입금 안내문'),
-      body: SafeArea(
-        child: storeAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => _buildContent(context, textTheme, null),
-          data: (store) => _buildContent(context, textTheme, store),
-        ),
+    return storeAsync.when(
+      loading: () => const Scaffold(
+        appBar: CustomAppBar(title: '입금 안내문'),
+        body: Center(child: CircularProgressIndicator()),
       ),
+      error: (_, _) => _buildContent(context, textTheme, null),
+      data: (store) => _buildContent(context, textTheme, store),
     );
   }
 
   Scaffold _buildScaffold(BuildContext context, TextTheme textTheme, String text) {
     return Scaffold(
-      appBar: const CustomAppBar(title: '입금 안내문'),
-      body: SafeArea(child: _buildBody(context, textTheme, text)),
+      appBar: CustomAppBar(
+        title: '입금 안내문',
+        actions: [
+          IconButton(
+            icon: Icon(CupertinoIcons.share, color: context.systemBlue),
+            onPressed: () => SharePlus.instance.share(ShareParams(text: text)),
+          ),
+          IconButton(
+            icon: Icon(CupertinoIcons.doc_on_doc, color: context.systemBlue),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('복사 완료')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: _buildBody(context, textTheme, text),
     );
   }
 
   Widget _buildContent(BuildContext context, TextTheme textTheme, Store? store) {
-    return _buildBody(context, textTheme, _buildText(reservation!, store));
+    return _buildScaffold(context, textTheme, _buildText(reservation!, store));
   }
 
   Widget _buildBody(BuildContext context, TextTheme textTheme, String text) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: SingleChildScrollView(
-            // 버튼 영역 높이(상단 gap 32 + 버튼 48×2 + 구분선 1 + 하단 패딩 16)만큼
-            // 하단 패딩을 줘서 마지막 내용이 버튼에 가리지 않도록 함
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 145),
-            child: Text(
-              text,
-              style: textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-            child: GroupedFormContainer(
-              children: [
-                TextActionButton(
-                  title: '복사하기',
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: text));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('복사됐습니다.')),
-                    );
-                  },
-                ),
-                TextActionButton(
-                  title: '공유하기',
-                  onPressed: () => SharePlus.instance.share(
-                    ShareParams(text: text),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(16, 32, 16, 32 + bottomInset),
+      child: SelectableText(
+        text,
+        style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.normal),
+      ),
     );
   }
 
