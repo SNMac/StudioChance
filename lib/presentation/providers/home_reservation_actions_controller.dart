@@ -1,8 +1,8 @@
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 
@@ -42,15 +42,15 @@ class HomeReservationActionsController
     );
   }
 
-  /// 점포의 PriceSetting 조회 (요금 자동 계산용).
-  Future<PriceSetting?> getStorePriceSetting(String storeId) async {
+  /// 점포의 공간 옵션 목록 조회 (요금 자동 계산용).
+  Future<List<SpaceOption>?> getStoreSpaceOptions(String storeId) async {
     final result = await ref.read(storeUseCaseProvider).getStore(storeId);
     return result.fold(
       (e) {
-        _logger.e('점포 가격 설정 조회 실패', error: e);
+        _logger.e('점포 공간 옵션 조회 실패', error: e);
         return null;
       },
-      (store) => store?.priceSettings,
+      (store) => store?.spaceOptions,
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_form_state_formatter.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
@@ -247,50 +248,97 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                         ],
                       ),
 
-                      ...state.priceSettings.dayGroups.asMap().entries.map((
-                        entry,
+                      ...state.spaceOptions.asMap().entries.expand((
+                        spaceEntry,
                       ) {
-                        final int index = entry.key;
-                        final DayGroup dayGroup = entry.value;
+                        final int spaceIndex = spaceEntry.key;
+                        final SpaceOption spaceOption = spaceEntry.value;
+                        final bool multipleSpaces = state.spaceOptions.length > 1;
 
-                        final bool showAdd =
-                            state.priceSettings.dayGroups.length < 8;
+                        return [
+                          // 공간 이름 입력 + 삭제/복사 버튼
+                          GroupedFormContainer(
+                            children: [
+                              TitleTextField(
+                                title: '공간명',
+                                controller: TextEditingController(
+                                  text: spaceOption.name,
+                                ),
+                                onChanged: (v) =>
+                                    notifier.setSpaceOptionName(spaceIndex, v),
+                                inputFormatters: [
+                                  LengthLimitingTextInputFormatter(20),
+                                ],
+                              ),
+                            ],
+                          ),
 
-                        return PriceSettingInputForm(
-                          index: index,
-                          dayGroup: dayGroup,
-                          showAdd: showAdd,
-                          showDelete: true,
-                          onDelete: () {
-                            notifier.removeDayGroup(index);
-                          },
-                          onCopy: () {
-                            notifier.copyDayGroup(index);
-                            _scrollAfterBuild(toBottom: false);
-                          },
-                          onAdd: () {
-                            notifier.addDayGroup();
-                            _scrollAfterBuild();
-                          },
-                          onPressedDaySetting: () {
-                            SCRoute.storePriceDays.pushChild(
-                              context,
-                              extra: {
-                                'store': widget.storeToEdit,
-                                'index': index,
+                          // 이 공간의 요일별 요금 설정
+                          ...spaceOption.priceSetting.dayGroups
+                              .asMap()
+                              .entries
+                              .map((groupEntry) {
+                            final int groupIndex = groupEntry.key;
+                            final DayGroup dayGroup = groupEntry.value;
+                            final bool showAdd =
+                                spaceOption.priceSetting.dayGroups.length < 8;
+
+                            return PriceSettingInputForm(
+                              index: groupIndex,
+                              dayGroup: dayGroup,
+                              showAdd: showAdd,
+                              showDelete: true,
+                              onDelete: () {
+                                notifier.removeDayGroup(spaceIndex, groupIndex);
+                              },
+                              onCopy: () {
+                                notifier.copyDayGroup(spaceIndex, groupIndex);
+                                _scrollAfterBuild(toBottom: false);
+                              },
+                              onAdd: () {
+                                notifier.addDayGroup(spaceIndex);
+                                _scrollAfterBuild();
+                              },
+                              onPressedDaySetting: () {
+                                SCRoute.storePriceDays.pushChild(
+                                  context,
+                                  extra: {
+                                    'store': widget.storeToEdit,
+                                    'spaceIndex': spaceIndex,
+                                    'groupIndex': groupIndex,
+                                  },
+                                );
+                              },
+                              onPressedTimeSetting: () {
+                                SCRoute.storePriceTime.pushChild(
+                                  context,
+                                  extra: {
+                                    'store': widget.storeToEdit,
+                                    'spaceIndex': spaceIndex,
+                                    'groupIndex': groupIndex,
+                                  },
+                                );
                               },
                             );
-                          },
-                          onPressedTimeSetting: () {
-                            SCRoute.storePriceTime.pushChild(
-                              context,
-                              extra: {
-                                'store': widget.storeToEdit,
-                                'index': index,
-                              },
-                            );
-                          },
-                        );
+                          }),
+
+                          // 공간 삭제/복사/추가 버튼 행
+                          _SpaceOptionButtonRow(
+                            showDelete: multipleSpaces,
+                            canAdd: state.spaceOptions.length < 5,
+                            isLastSpace:
+                                spaceIndex == state.spaceOptions.length - 1,
+                            onDelete: () => notifier.removeSpaceOption(spaceIndex),
+                            onCopy: () {
+                              notifier.copySpaceOption(spaceIndex);
+                              _scrollAfterBuild(toBottom: false);
+                            },
+                            onAdd: () {
+                              notifier.addSpaceOption();
+                              _scrollAfterBuild();
+                            },
+                          ),
+                        ];
                       }),
                     ],
                   ),
@@ -302,6 +350,42 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 공간 옵션 하단 삭제/복사/추가 버튼 행
+class _SpaceOptionButtonRow extends StatelessWidget {
+  final bool showDelete;
+  final bool canAdd;
+  final bool isLastSpace;
+  final VoidCallback onDelete;
+  final VoidCallback onCopy;
+  final VoidCallback onAdd;
+
+  const _SpaceOptionButtonRow({
+    required this.showDelete,
+    required this.canAdd,
+    required this.isLastSpace,
+    required this.onDelete,
+    required this.onCopy,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (showDelete)
+          TextButton(
+            onPressed: onDelete,
+            child: const Text('공간 삭제'),
+          ),
+        TextButton(onPressed: onCopy, child: const Text('복사')),
+        if (isLastSpace && canAdd)
+          TextButton(onPressed: onAdd, child: const Text('공간 추가')),
+      ],
     );
   }
 }

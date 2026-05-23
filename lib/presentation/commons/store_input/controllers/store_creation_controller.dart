@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
@@ -16,9 +17,16 @@ class StoreCreationController extends _$StoreCreationController
     implements StoreFormControllerable {
   @override
   StoreFormState build() {
+    final defaultId = DateTime.now().millisecondsSinceEpoch.toString();
     return StoreFormState(
       color: StoreColor.red,
-      priceSettings: PriceSetting.empty(),
+      spaceOptions: [
+        SpaceOption(
+          id: defaultId,
+          name: '기본 공간',
+          priceSetting: PriceSetting.empty(),
+        ),
+      ],
     );
   }
 
@@ -32,7 +40,7 @@ class StoreCreationController extends _$StoreCreationController
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
-      priceSettings: state.priceSettings,
+      spaceOptions: state.spaceOptions,
       memberInfos: [],
       waitingMemberInfos: [],
       inviteInfo: null,

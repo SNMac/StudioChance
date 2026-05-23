@@ -1,4 +1,6 @@
 import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
@@ -19,22 +21,27 @@ abstract interface class StoreFormControllerable {
   void setPaymentDeadlineMinutes(int? paymentDeadlineMinutes);
   void setConfirmationNotes(String confirmationNotes);
 
-  void addDayGroup();
-  void copyDayGroup(int index);
-  void removeDayGroup(int index);
+  // ── SpaceOption CRUD ──────────────────────────────────────────────────────
+
+  void addSpaceOption();
+  void removeSpaceOption(int spaceIndex);
+  void setSpaceOptionName(int spaceIndex, String name);
+  void copySpaceOption(int spaceIndex);
+
+  // ── DayGroup 관리 (spaceIndex 기반) ───────────────────────────────────────
+
+  void addDayGroup(int spaceIndex);
+  void copyDayGroup(int spaceIndex, int groupIndex);
+  void removeDayGroup(int spaceIndex, int groupIndex);
 
   /// 특정 그룹(groupIndex)의 특정 요일(day)을 토글(추가/삭제)
-  void toggleDayGroupDay(int groupIndex, Weekday day);
-  void setDayGroup(int index, DayGroup dayGroup);
+  void toggleDayGroupDay(int spaceIndex, int groupIndex, Weekday day);
+  void setDayGroup(int spaceIndex, int groupIndex, DayGroup dayGroup);
 
   /// 특정 DayGroup(groupIndex)에 새로운 TimeSlot 추가
-  void addTimeSlot(int groupIndex);
-
-  /// 특정 TimeSlot 복사
-  void copyTimeSlot(int groupIndex, int slotIndex);
-
-  /// 특정 TimeSlot 삭제
-  void removeTimeSlot(int groupIndex, int slotIndex);
+  void addTimeSlot(int spaceIndex, int groupIndex);
+  void copyTimeSlot(int spaceIndex, int groupIndex, int slotIndex);
+  void removeTimeSlot(int spaceIndex, int groupIndex, int slotIndex);
 
   /// 현재 폼 데이터를 반환 (유효하지 않으면 null)
   ({Store store, StoreColor color, String memo})? getFormData();
@@ -66,46 +73,106 @@ mixin StoreFormMixin {
   void setConfirmationNotes(String confirmationNotes) =>
       state = state.copyWith(confirmationNotes: confirmationNotes);
 
-  void addDayGroup() {
-    final newGroups = [...state.priceSettings.dayGroups, DayGroup.empty()];
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: newGroups),
+  // ── SpaceOption CRUD ──────────────────────────────────────────────────────
+
+  void addSpaceOption() {
+    final newId = DateTime.now().millisecondsSinceEpoch.toString();
+    final newSpace = SpaceOption(
+      id: newId,
+      name: '',
+      priceSetting: PriceSetting.empty(),
     );
+    state = state.copyWith(spaceOptions: [...state.spaceOptions, newSpace]);
   }
 
-  void copyDayGroup(int index) {
-    if (index < 0 || index >= state.priceSettings.dayGroups.length) return;
-
-    final currentGroups = [...state.priceSettings.dayGroups];
-    final targetGroup = currentGroups[index];
-    final copiedGroup = targetGroup.copyWith(days: []);
-    currentGroups.insert(index + 1, copiedGroup);
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
-    );
-  }
-
-  void removeDayGroup(int index) {
-    final currentGroups = [...state.priceSettings.dayGroups];
-    if (currentGroups.length > 1) {
-      currentGroups.removeAt(index);
+  void removeSpaceOption(int spaceIndex) {
+    final current = [...state.spaceOptions];
+    if (current.length > 1) {
+      current.removeAt(spaceIndex);
     } else {
-      currentGroups[index] = DayGroup.empty();
+      current[spaceIndex] = current[spaceIndex].copyWith(
+        priceSetting: PriceSetting.empty(),
+      );
+    }
+    state = state.copyWith(spaceOptions: current);
+  }
+
+  void setSpaceOptionName(int spaceIndex, String name) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final current = [...state.spaceOptions];
+    current[spaceIndex] = current[spaceIndex].copyWith(name: name);
+    state = state.copyWith(spaceOptions: current);
+  }
+
+  void copySpaceOption(int spaceIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final current = [...state.spaceOptions];
+    final target = current[spaceIndex];
+    final newId = '${DateTime.now().millisecondsSinceEpoch}';
+    final copied = target.copyWith(
+      id: newId,
+      name: target.name.isEmpty ? '' : '${target.name} (복사)',
+    );
+    current.insert(spaceIndex + 1, copied);
+    state = state.copyWith(spaceOptions: current);
+  }
+
+  // ── DayGroup 관리 ─────────────────────────────────────────────────────────
+
+  void addDayGroup(int spaceIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final newGroups = [...targetSpace.priceSetting.dayGroups, DayGroup.empty()];
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: newGroups),
+    );
+    state = state.copyWith(spaceOptions: currentSpaces);
+  }
+
+  void copyDayGroup(int spaceIndex, int groupIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+    if (groupIndex < 0 || groupIndex >= currentGroups.length) return;
+
+    final copiedGroup = currentGroups[groupIndex].copyWith(days: []);
+    currentGroups.insert(groupIndex + 1, copiedGroup);
+
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
+    );
+    state = state.copyWith(spaceOptions: currentSpaces);
+  }
+
+  void removeDayGroup(int spaceIndex, int groupIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+
+    if (currentGroups.length > 1) {
+      currentGroups.removeAt(groupIndex);
+    } else {
+      currentGroups[groupIndex] = DayGroup.empty();
     }
 
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
     );
+    state = state.copyWith(spaceOptions: currentSpaces);
   }
 
-  void toggleDayGroupDay(int groupIndex, Weekday day) {
-    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+  void toggleDayGroupDay(int spaceIndex, int groupIndex, Weekday day) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+    if (groupIndex >= currentGroups.length) return;
 
-    final currentGroups = [...state.priceSettings.dayGroups];
     final targetGroup = currentGroups[groupIndex];
     final currentDays = [...targetGroup.days];
-
     if (currentDays.contains(day)) {
       currentDays.remove(day);
     } else {
@@ -113,63 +180,73 @@ mixin StoreFormMixin {
     }
 
     currentGroups[groupIndex] = targetGroup.copyWith(days: currentDays);
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
     );
+    state = state.copyWith(spaceOptions: currentSpaces);
   }
 
-  void setDayGroup(int index, DayGroup dayGroup) {
-    if (index < 0 || index >= state.priceSettings.dayGroups.length) return;
+  void setDayGroup(int spaceIndex, int groupIndex, DayGroup dayGroup) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+    if (groupIndex < 0 || groupIndex >= currentGroups.length) return;
 
-    final currentGroups = [...state.priceSettings.dayGroups];
-    currentGroups[index] = dayGroup;
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    currentGroups[groupIndex] = dayGroup;
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
     );
+    state = state.copyWith(spaceOptions: currentSpaces);
   }
 
-  void addTimeSlot(int groupIndex) {
-    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+  void addTimeSlot(int spaceIndex, int groupIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+    if (groupIndex >= currentGroups.length) return;
 
-    final currentGroups = [...state.priceSettings.dayGroups];
     final targetGroup = currentGroups[groupIndex];
-
     final newSlots = [...targetGroup.timeSlots, TimeSlot.empty()];
 
     currentGroups[groupIndex] = targetGroup.copyWith(timeSlots: newSlots);
-
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
     );
+    state = state.copyWith(spaceOptions: currentSpaces);
   }
 
-  void copyTimeSlot(int groupIndex, int slotIndex) {
-    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+  void copyTimeSlot(int spaceIndex, int groupIndex, int slotIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+    if (groupIndex >= currentGroups.length) return;
 
-    final currentGroups = [...state.priceSettings.dayGroups];
     final targetGroup = currentGroups[groupIndex];
-    if (slotIndex >= targetGroup.timeSlots.length) return;
-
     final currentSlots = [...targetGroup.timeSlots];
-    final targetSlot = currentSlots[slotIndex];
+    if (slotIndex >= currentSlots.length) return;
 
-    currentSlots.insert(slotIndex + 1, targetSlot.copyWith());
+    currentSlots.insert(slotIndex + 1, currentSlots[slotIndex].copyWith());
 
     currentGroups[groupIndex] = targetGroup.copyWith(timeSlots: currentSlots);
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
     );
+    state = state.copyWith(spaceOptions: currentSpaces);
   }
 
-  void removeTimeSlot(int groupIndex, int slotIndex) {
-    if (groupIndex >= state.priceSettings.dayGroups.length) return;
+  void removeTimeSlot(int spaceIndex, int groupIndex, int slotIndex) {
+    if (spaceIndex >= state.spaceOptions.length) return;
+    final currentSpaces = [...state.spaceOptions];
+    final targetSpace = currentSpaces[spaceIndex];
+    final currentGroups = [...targetSpace.priceSetting.dayGroups];
+    if (groupIndex >= currentGroups.length) return;
 
-    final currentGroups = [...state.priceSettings.dayGroups];
     final targetGroup = currentGroups[groupIndex];
-
     final currentSlots = [...targetGroup.timeSlots];
+
     if (currentSlots.length <= 1) {
       currentSlots[slotIndex] = TimeSlot.empty();
     } else {
@@ -177,8 +254,9 @@ mixin StoreFormMixin {
     }
 
     currentGroups[groupIndex] = targetGroup.copyWith(timeSlots: currentSlots);
-    state = state.copyWith(
-      priceSettings: state.priceSettings.copyWith(dayGroups: currentGroups),
+    currentSpaces[spaceIndex] = targetSpace.copyWith(
+      priceSetting: targetSpace.priceSetting.copyWith(dayGroups: currentGroups),
     );
+    state = state.copyWith(spaceOptions: currentSpaces);
   }
 }

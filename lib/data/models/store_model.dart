@@ -1,8 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/data/models/invite_info_model.dart';
-import 'package:studio_chance/data/models/price_settings_model.dart';
+import 'package:studio_chance/data/models/space_option_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 
@@ -20,7 +21,7 @@ abstract class StoreModel with _$StoreModel {
     required String addressDetail,
     required String addressGuide,
 
-    required PriceSettingsModel priceSettingsModel,
+    @Default([]) List<SpaceOptionModel> spaceOptions,
     required Map<String, StoreMemberInfoModel> memberById,
     @Default({}) Map<String, StoreMemberInfoModel> waitingMemberById,
 
@@ -41,7 +42,7 @@ abstract class StoreModel with _$StoreModel {
     'address': address,
     'addressDetail': addressDetail,
     'addressGuide': addressGuide,
-    'priceSettingsModel': priceSettingsModel.toJson(),
+    'spaceOptions': spaceOptions.map((s) => s.toJson()).toList(),
     'bankName': bankName,
     'bankAccountNumber': bankAccountNumber,
     'bankAccountHolder': bankAccountHolder,
@@ -56,7 +57,9 @@ abstract class StoreModel with _$StoreModel {
       address: entity.address,
       addressDetail: entity.addressDetail,
       addressGuide: entity.addressGuide,
-      priceSettingsModel: PriceSettingsModel.fromEntity(entity.priceSettings),
+      spaceOptions: entity.spaceOptions
+          .map((s) => SpaceOptionModel.fromEntity(s))
+          .toList(),
       memberById: {
         for (var member in entity.memberInfos)
           member.user.id: StoreMemberInfoModel(role: member.role),
@@ -80,13 +83,17 @@ abstract class StoreModel with _$StoreModel {
     required List<StoreMemberInfo> memberInfos,
     required List<StoreMemberInfo> waitingMemberInfos,
   }) {
+    final List<SpaceOption> entitySpaceOptions = spaceOptions.isEmpty
+        ? [SpaceOption.empty()]
+        : spaceOptions.map((s) => s.toEntity()).toList();
+
     return Store(
       id: id,
       name: name,
       address: address,
       addressDetail: addressDetail,
       addressGuide: addressGuide,
-      priceSettings: priceSettingsModel.toEntity(),
+      spaceOptions: entitySpaceOptions,
       memberInfos: memberInfos,
       waitingMemberInfos: waitingMemberInfos,
       inviteInfo: inviteInfoModel?.toEntity(),

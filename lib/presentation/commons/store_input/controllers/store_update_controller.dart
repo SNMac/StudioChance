@@ -37,7 +37,7 @@ class StoreUpdateController extends _$StoreUpdateController
       addressGuide: store.addressGuide,
       memo: memo,
       color: color,
-      priceSettings: store.priceSettings,
+      spaceOptions: store.spaceOptions,
       bankName: store.bankName ?? '',
       bankAccountNumber: store.bankAccountNumber ?? '',
       bankAccountHolder: store.bankAccountHolder ?? '',
@@ -55,7 +55,7 @@ class StoreUpdateController extends _$StoreUpdateController
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
-      priceSettings: state.priceSettings,
+      spaceOptions: state.spaceOptions,
       bankName: state.bankName.isEmpty ? null : state.bankName,
       bankAccountNumber:
           state.bankAccountNumber.isEmpty ? null : state.bankAccountNumber,

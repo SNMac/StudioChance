@@ -12,9 +12,11 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   address: json['address'] as String,
   addressDetail: json['addressDetail'] as String,
   addressGuide: json['addressGuide'] as String,
-  priceSettingsModel: PriceSettingsModel.fromJson(
-    json['priceSettingsModel'] as Map<String, dynamic>,
-  ),
+  spaceOptions:
+      (json['spaceOptions'] as List<dynamic>?)
+          ?.map((e) => SpaceOptionModel.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   memberById: (json['memberById'] as Map<String, dynamic>).map(
     (k, e) =>
         MapEntry(k, StoreMemberInfoModel.fromJson(e as Map<String, dynamic>)),
@@ -45,7 +47,7 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
       'address': instance.address,
       'addressDetail': instance.addressDetail,
       'addressGuide': instance.addressGuide,
-      'priceSettingsModel': instance.priceSettingsModel.toJson(),
+      'spaceOptions': instance.spaceOptions.map((e) => e.toJson()).toList(),
       'memberById': instance.memberById.map((k, e) => MapEntry(k, e.toJson())),
       'waitingMemberById': instance.waitingMemberById.map(
         (k, e) => MapEntry(k, e.toJson()),

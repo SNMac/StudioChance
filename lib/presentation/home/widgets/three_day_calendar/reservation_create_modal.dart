@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
 import 'package:studio_chance/domain/enums/reservation_platform.dart';
@@ -82,8 +82,9 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   // ── 스크롤 컨트롤러 ──────────────────────────────────────────────────────
   late final ScrollController _scrollController;
 
-  // ── 가격 설정 ─────────────────────────────────────────────────────────────
-  PriceSetting? _priceSetting;
+  // ── 공간 옵션 / 가격 설정 ──────────────────────────────────────────────────
+  List<SpaceOption>? _spaceOptions;
+  String? _spaceOptionId;
   int _calculatedPrice = 0;
 
   // ── 유효성 ───────────────────────────────────────────────────────────────
@@ -103,7 +104,8 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     super.initState();
     _scrollController = ScrollController();
     _initFields(widget.initialReservation);
-    _loadPriceSetting(widget.initialReservation.storeSummary.id);
+    _spaceOptionId = widget.initialReservation.spaceOptionId;
+    _loadSpaceOptions(widget.initialReservation.storeSummary.id);
   }
 
   @override
@@ -139,22 +141,33 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
 
   // ── 가격 계산 ─────────────────────────────────────────────────────────────
 
-  void _loadPriceSetting(String storeId) {
+  void _loadSpaceOptions(String storeId) {
     ref
         .read(homeReservationActionsControllerProvider.notifier)
-        .getStorePriceSetting(storeId)
-        .then((ps) {
+        .getStoreSpaceOptions(storeId)
+        .then((spaces) {
           if (!mounted) return;
-          setState(() => _priceSetting = ps);
+          setState(() {
+            _spaceOptions = spaces;
+            // 공간이 1개이면 자동 선택, 이미 spaceOptionId가 있으면 유지
+            if (spaces != null &&
+                spaces.isNotEmpty &&
+                _spaceOptionId == null) {
+              _spaceOptionId = spaces.first.id;
+            }
+          });
           _recalculatePrice();
         });
   }
 
   void _recalculatePrice() {
-    final ps = _priceSetting;
-    if (ps == null) return;
+    final spaces = _spaceOptions;
+    if (spaces == null || spaces.isEmpty) return;
+    final priceSetting = _spaceOptionId != null
+        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        : spaces.first.priceSetting;
     final headCount = int.tryParse(_headCountController.text) ?? 0;
-    final price = ps.calculatePrice(
+    final price = priceSetting.calculatePrice(
       start: _startTime,
       end: _endTime,
       headCount: headCount,
@@ -208,6 +221,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       calculatedPrice: calculatedPrice,
       priceAdjustment: priceAdjustment,
       totalPrice: calculatedPrice + priceAdjustment,
+      spaceOptionId: _spaceOptionId,
     );
     widget.onSaved(newReservation);
     Navigator.pop(context);
@@ -390,8 +404,12 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
               ),
             ),
             onSelected: (s) {
-              setState(() => _storeSummary = s);
-              _loadPriceSetting(s.id);
+              setState(() {
+                _storeSummary = s;
+                _spaceOptions = null;
+                _spaceOptionId = null;
+              });
+              _loadSpaceOptions(s.id);
             },
           ),
         ),

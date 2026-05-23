@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
@@ -130,24 +130,26 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   Widget build(BuildContext context) {
     final args = GoRouterState.of(context).extra as Map<String, dynamic>;
     final Store? storeToEdit = args['store'] as Store?;
-    final int groupIndex = args['index'] as int;
+    final int spaceIndex = args['spaceIndex'] as int;
+    final int groupIndex = args['groupIndex'] as int;
 
-    final PriceSetting priceSettings;
+    final List<SpaceOption> spaceOptions;
     final StoreFormControllerable notifier;
 
     if (storeToEdit != null) {
-      priceSettings = ref.watch(
-        storeUpdateControllerProvider(storeToEdit).select((s) => s.priceSettings),
+      spaceOptions = ref.watch(
+        storeUpdateControllerProvider(storeToEdit).select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
-      priceSettings = ref.watch(
-        storeCreationControllerProvider.select((s) => s.priceSettings),
+      spaceOptions = ref.watch(
+        storeCreationControllerProvider.select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
-    if (groupIndex >= priceSettings.dayGroups.length) {
+    if (spaceIndex >= spaceOptions.length ||
+        groupIndex >= spaceOptions[spaceIndex].priceSetting.dayGroups.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
@@ -162,7 +164,8 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
       );
     }
 
-    final currentDayGroup = priceSettings.dayGroups[groupIndex];
+    final currentDayGroup =
+        spaceOptions[spaceIndex].priceSetting.dayGroups[groupIndex];
     _initializeData(currentDayGroup);
 
     void onSave() {
@@ -199,7 +202,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
         timeSlots: _currentTimeSlots,
       );
 
-      notifier.setDayGroup(groupIndex, finalDayGroup);
+      notifier.setDayGroup(spaceIndex, groupIndex, finalDayGroup);
       context.pop();
     }
 
