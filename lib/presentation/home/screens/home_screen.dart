@@ -151,7 +151,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         role: defaultInfo.role,
       ),
-      status: ReservationStatus.confirmed,
+      status: ReservationStatus.pending,
       customerName: '',
       headCount: 0,
       customerPhone: '',
