@@ -14,13 +14,13 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_date
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
 
-enum _ActivePicker { none, start, end }
-
 class TimeSlotInputForm extends StatefulWidget {
   final int index;
   final TimeSlot timeSlot;
   final bool showAdd;
   final bool showDelete;
+  final bool startPickerOpen;
+  final bool endPickerOpen;
 
   final VoidCallback onDelete;
   final VoidCallback onCopy;
@@ -29,16 +29,22 @@ class TimeSlotInputForm extends StatefulWidget {
   /// 값이 변경될 때마다 부모에게 알리는 콜백
   final ValueChanged<TimeSlot> onChanged;
 
+  /// picker 버튼 탭 시 부모에게 알리는 콜백 (isStart: true=시작, false=끝)
+  final void Function({required bool isStart}) onPickerToggled;
+
   const TimeSlotInputForm({
     super.key,
     required this.index,
     required this.timeSlot,
     required this.showAdd,
     required this.showDelete,
+    required this.startPickerOpen,
+    required this.endPickerOpen,
     required this.onDelete,
     required this.onCopy,
     required this.onAdd,
     required this.onChanged,
+    required this.onPickerToggled,
   });
 
   @override
@@ -49,8 +55,6 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
     with TickerProviderStateMixin {
   late final TextEditingController _priceController;
   late final FocusNode _priceFocusNode;
-
-  _ActivePicker _activePicker = _ActivePicker.none;
 
   @override
   void initState() {
@@ -99,17 +103,6 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
         );
       }
     }
-  }
-
-  /// 피커 토글 로직
-  void _togglePicker(_ActivePicker target) {
-    setState(() {
-      if (_activePicker == target) {
-        _activePicker = _ActivePicker.none;
-      } else {
-        _activePicker = target;
-      }
-    });
   }
 
   DateTime _getInitialDate(int minutes) {
@@ -194,8 +187,8 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
           TitleDateTimeButton(
             title: '기준 시작 시간',
             content: widget.timeSlot.startTime.formattedTime,
-            isOpen: _activePicker == _ActivePicker.start,
-            onPressed: () => _togglePicker(_ActivePicker.start),
+            isOpen: widget.startPickerOpen,
+            onPressed: () => widget.onPickerToggled(isStart: true),
 
             mode: CupertinoDatePickerMode.time,
             initialDateTime: _getInitialDate(widget.timeSlot.startTime),
@@ -220,8 +213,8 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
           TitleDateTimeButton(
             title: '기준 끝 시간',
             content: widget.timeSlot.endTime.formattedTime,
-            isOpen: _activePicker == _ActivePicker.end,
-            onPressed: () => _togglePicker(_ActivePicker.end),
+            isOpen: widget.endPickerOpen,
+            onPressed: () => widget.onPickerToggled(isStart: false),
 
             mode: CupertinoDatePickerMode.time,
             initialDateTime: _getInitialDate(widget.timeSlot.endTime),

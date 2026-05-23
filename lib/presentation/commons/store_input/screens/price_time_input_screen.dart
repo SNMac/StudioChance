@@ -36,6 +36,9 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   bool _isHeadcountValid = false;
   bool _isInitialized = false;
 
+  /// 현재 열린 picker: (slotIndex, isStart). null이면 모두 닫힘.
+  ({int slotIndex, bool isStart})? _openPicker;
+
   /// 초기 데이터 로드 (최초 1회)
   void _initializeData(DayGroup currentGroup) {
     if (_isInitialized) return;
@@ -67,8 +70,19 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
     });
   }
 
+  void _togglePicker(int slotIndex, {required bool isStart}) {
+    setState(() {
+      if (_openPicker?.slotIndex == slotIndex && _openPicker?.isStart == isStart) {
+        _openPicker = null;
+      } else {
+        _openPicker = (slotIndex: slotIndex, isStart: isStart);
+      }
+    });
+  }
+
   void _addLocalTimeSlot() {
     setState(() {
+      _openPicker = null;
       _currentTimeSlots.add(TimeSlot.empty());
     });
     _scrollAfterBuild();
@@ -76,6 +90,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
   void _copyLocalTimeSlot(int index) {
     setState(() {
+      _openPicker = null;
       final copiedSlot = _currentTimeSlots[index].copyWith();
       _currentTimeSlots.insert(index + 1, copiedSlot);
     });
@@ -84,6 +99,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
   void _removeLocalTimeSlot(int index) {
     setState(() {
+      _openPicker = null;
       if (_currentTimeSlots.length > 1) {
         _currentTimeSlots.removeAt(index);
       } else {
@@ -236,11 +252,20 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
                       timeSlot: timeSlot,
                       showAdd: showAdd,
                       showDelete: true,
+                      startPickerOpen:
+                          _openPicker?.slotIndex == slotIndex &&
+                          _openPicker?.isStart == true,
+                      endPickerOpen:
+                          _openPicker?.slotIndex == slotIndex &&
+                          _openPicker?.isStart == false,
                       onAdd: _addLocalTimeSlot,
                       onCopy: () => _copyLocalTimeSlot(slotIndex),
                       onDelete: () => _removeLocalTimeSlot(slotIndex),
                       onChanged: (updatedSlot) {
                         _updateLocalTimeSlot(slotIndex, updatedSlot);
+                      },
+                      onPickerToggled: ({required bool isStart}) {
+                        _togglePicker(slotIndex, isStart: isStart);
                       },
                     );
                   }),
