@@ -3,7 +3,7 @@
 >
 > [Figma](https://www.figma.com/design/k9iL4QL7DsR93RoyoqHrkU/studio-chance?node-id=0-1&t=cOvS5HBllgn6Uxjm-1)
 >
-> 개발 기간: 2026.12.10 ~
+> 개발 기간: 2025.12.10 ~
 
 <br>
 
