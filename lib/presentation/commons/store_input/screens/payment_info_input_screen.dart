@@ -142,9 +142,10 @@ class _PaymentInfoInputScreenState
         ],
       ),
       body: SafeAreaWithPadding(
-        child: Column(
-          spacing: 20,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            spacing: 20,
+            children: [
             GroupedFormContainer(
               footer: Padding(
                 padding: const EdgeInsetsDirectional.only(
@@ -181,6 +182,7 @@ class _PaymentInfoInputScreenState
                   isOpen: _isDeadlinePickerOpen,
                   scrollController: _deadlineScrollController,
                   onPressed: () {
+                    FocusScope.of(context).unfocus();
                     setState(() {
                       _isDeadlinePickerOpen = !_isDeadlinePickerOpen;
                       if (_isDeadlinePickerOpen && _selectedMinutes == null) {
@@ -201,6 +203,7 @@ class _PaymentInfoInputScreenState
                 TextActionButton(
                   title: '입금 안내문',
                   onPressed: () {
+                    FocusScope.of(context).unfocus();
                     // 현재 입력값을 폼 컨트롤러에 임시 반영 (pop 없이)
                     notifier.setBankName(_bankNameController.text);
                     notifier.setBankAccountNumber(
@@ -223,6 +226,7 @@ class _PaymentInfoInputScreenState
               ],
             ),
           ],
+          ),
         ),
       ),
     );

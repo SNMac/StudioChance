@@ -71,6 +71,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   }
 
   void _togglePicker(int slotIndex, {required bool isStart}) {
+    FocusScope.of(context).unfocus();
     setState(() {
       if (_openPicker?.slotIndex == slotIndex && _openPicker?.isStart == isStart) {
         _openPicker = null;
@@ -81,6 +82,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   }
 
   void _addLocalTimeSlot() {
+    FocusScope.of(context).unfocus();
     final pickerWasOpen = _openPicker != null;
     setState(() {
       _openPicker = null;
@@ -97,6 +99,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   }
 
   void _copyLocalTimeSlot(int index) {
+    FocusScope.of(context).unfocus();
     final pickerWasOpen = _openPicker != null;
     setState(() {
       _openPicker = null;
@@ -113,6 +116,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   }
 
   void _removeLocalTimeSlot(int index) {
+    FocusScope.of(context).unfocus();
     setState(() {
       _openPicker = null;
       if (_currentTimeSlots.length > 1) {

@@ -180,6 +180,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
           title: '하루종일',
           value: widget.timeSlot.isAllDay,
           onChanged: (val) {
+            FocusScope.of(context).unfocus();
             widget.onChanged(widget.timeSlot.copyWith(isAllDay: val));
           },
         ),
@@ -251,6 +252,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
           title: '시간당 부과',
           value: widget.timeSlot.isHourly,
           onChanged: (val) {
+            FocusScope.of(context).unfocus();
             widget.onChanged(widget.timeSlot.copyWith(isHourly: val));
           },
         ),
@@ -258,6 +260,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
           title: '인원당 부과',
           value: widget.timeSlot.isPerPerson,
           onChanged: (val) {
+            FocusScope.of(context).unfocus();
             widget.onChanged(widget.timeSlot.copyWith(isPerPerson: val));
           },
         ),

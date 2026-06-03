@@ -170,6 +170,7 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
           title: '추가 요금 시간당 부과',
           value: _isHourly,
           onChanged: (val) {
+            FocusScope.of(context).unfocus();
             _isHourly = val;
             _notifyParent();
           },
@@ -178,6 +179,7 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
           title: '추가 요금 인원당 부과',
           value: _isPerPerson,
           onChanged: (val) {
+            FocusScope.of(context).unfocus();
             _isPerPerson = val;
             _notifyParent();
           },
