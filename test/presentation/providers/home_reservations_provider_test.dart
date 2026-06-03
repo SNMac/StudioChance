@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
@@ -43,7 +42,7 @@ void main() {
     final result = await container.read(homeReservationsProvider(month).future);
 
     expect(result, isEmpty);
-    verifyNever(() => mockUseCase.getReservationsByDateRange(
+    verifyNever(() => mockUseCase.watchReservationsByDateRange(
           storeId: any(named: 'storeId'),
           start: any(named: 'start'),
           end: any(named: 'end'),
@@ -61,11 +60,11 @@ void main() {
   });
 
   test('단일 점포의 예약을 반환한다', () async {
-    when(() => mockUseCase.getReservationsByDateRange(
+    when(() => mockUseCase.watchReservationsByDateRange(
           storeId: 'store-123',
           start: any(named: 'start'),
           end: any(named: 'end'),
-        )).thenAnswer((_) async => right([fakeReservation]));
+        )).thenAnswer((_) => Stream.value([fakeReservation]));
 
     final container = createContainer(useCase: mockUseCase, user: fakeUser);
     addTearDown(container.dispose);
@@ -80,14 +79,14 @@ void main() {
     DateTime? capturedStart;
     DateTime? capturedEnd;
 
-    when(() => mockUseCase.getReservationsByDateRange(
+    when(() => mockUseCase.watchReservationsByDateRange(
           storeId: any(named: 'storeId'),
           start: any(named: 'start'),
           end: any(named: 'end'),
-        )).thenAnswer((invocation) async {
+        )).thenAnswer((invocation) {
       capturedStart = invocation.namedArguments[#start] as DateTime;
       capturedEnd = invocation.namedArguments[#end] as DateTime;
-      return right(<Reservation>[]);
+      return Stream.value(<Reservation>[]);
     });
 
     final container = createContainer(useCase: mockUseCase, user: fakeUser);
@@ -103,17 +102,17 @@ void main() {
     final reservation1 = fakeReservation.copyWith(id: 'res-001');
     final reservation2 = fakeReservation.copyWith(id: 'res-002');
 
-    when(() => mockUseCase.getReservationsByDateRange(
+    when(() => mockUseCase.watchReservationsByDateRange(
           storeId: 'store-123',
           start: any(named: 'start'),
           end: any(named: 'end'),
-        )).thenAnswer((_) async => right([reservation1]));
+        )).thenAnswer((_) => Stream.value([reservation1]));
 
-    when(() => mockUseCase.getReservationsByDateRange(
+    when(() => mockUseCase.watchReservationsByDateRange(
           storeId: 'store-456',
           start: any(named: 'start'),
           end: any(named: 'end'),
-        )).thenAnswer((_) async => right([reservation2]));
+        )).thenAnswer((_) => Stream.value([reservation2]));
 
     final userWith2Stores = fakeUser.copyWith(storeInfos: [
       fakeUser.storeInfos.first,
@@ -136,17 +135,17 @@ void main() {
   });
 
   test('한 점포 조회 실패 시 성공한 점포 결과만 포함한다', () async {
-    when(() => mockUseCase.getReservationsByDateRange(
+    when(() => mockUseCase.watchReservationsByDateRange(
           storeId: 'store-123',
           start: any(named: 'start'),
           end: any(named: 'end'),
-        )).thenAnswer((_) async => right([fakeReservation]));
+        )).thenAnswer((_) => Stream.value([fakeReservation]));
 
-    when(() => mockUseCase.getReservationsByDateRange(
+    when(() => mockUseCase.watchReservationsByDateRange(
           storeId: 'store-456',
           start: any(named: 'start'),
           end: any(named: 'end'),
-        )).thenAnswer((_) async => left(Exception('네트워크 오류')));
+        )).thenAnswer((_) => Stream.error(Exception('네트워크 오류')));
 
     final userWith2Stores = fakeUser.copyWith(storeInfos: [
       fakeUser.storeInfos.first,

@@ -30,8 +30,8 @@ Stream<List<Reservation>> storeReservationsStream(
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 [storeReservationsStreamProvider]를 구독
-/// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
+/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 @riverpod
 Future<List<Reservation>> homeReservations(Ref ref, DateTime month) async {
   final user = await ref.watch(currentUserProvider.future);
@@ -45,10 +45,20 @@ Future<List<Reservation>> homeReservations(Ref ref, DateTime month) async {
 
   if (storeIds.isEmpty) return [];
 
+  final useCase = ref.watch(reservationUseCaseProvider);
+  final start = DateTime(month.year, month.month, 1);
+  final end = DateTime(month.year, month.month + 1, 1);
+
   final results = await Future.wait(
-    storeIds.map(
-      (id) => ref.watch(storeReservationsStreamProvider(id, month).future),
-    ),
+    storeIds.map((id) async {
+      try {
+        return await useCase
+            .watchReservationsByDateRange(storeId: id, start: start, end: end)
+            .first;
+      } catch (_) {
+        return <Reservation>[];
+      }
+    }),
   );
 
   return [for (final list in results) ...list];

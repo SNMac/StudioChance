@@ -77,7 +77,7 @@ void main() {
       expect(storeData.containsKey('address'), true);
       expect(storeData.containsKey('addressDetail'), true);
       expect(storeData.containsKey('addressGuide'), true);
-      expect(storeData.containsKey('priceSettingsModel'), true);
+      expect(storeData.containsKey('spaceOptions'), true);
       expect(storeData['name'], fakeStore.name);
 
       // 유저 점포 정보 업데이트 호출 확인

@@ -1,4 +1,3 @@
-import 'package:studio_chance/data/models/price_settings_model.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
@@ -36,7 +35,6 @@ final fakeStoreModel = StoreModel(
   address: '서울시 강남구 테헤란로 1',
   addressDetail: '101호',
   addressGuide: '정문으로 오세요',
-  priceSettingsModel: PriceSettingsModel(),
   memberById: {'user-123': StoreMemberInfoModel(role: UserRole.admin)},
 );
 
