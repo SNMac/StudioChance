@@ -203,7 +203,6 @@ class _PaymentInfoInputScreenState
                 TextActionButton(
                   title: '입금 안내문',
                   onPressed: () {
-                    FocusScope.of(context).unfocus();
                     // 현재 입력값을 폼 컨트롤러에 임시 반영 (pop 없이)
                     notifier.setBankName(_bankNameController.text);
                     notifier.setBankAccountNumber(

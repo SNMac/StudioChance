@@ -43,7 +43,10 @@ class TitleDateTimeButton extends StatelessWidget {
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
-            onPressed: onPressed,
+            onPressed: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+              onPressed();
+            },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

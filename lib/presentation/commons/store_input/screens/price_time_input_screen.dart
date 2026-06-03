@@ -71,7 +71,6 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   }
 
   void _togglePicker(int slotIndex, {required bool isStart}) {
-    FocusScope.of(context).unfocus();
     setState(() {
       if (_openPicker?.slotIndex == slotIndex && _openPicker?.isStart == isStart) {
         _openPicker = null;

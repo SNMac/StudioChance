@@ -38,7 +38,12 @@ class TitleSwitchButton extends StatelessWidget {
             ),
             Switch.adaptive(
               value: value,
-              onChanged: onChanged,
+              onChanged: onChanged == null
+                  ? null
+                  : (val) {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      onChanged!(val);
+                    },
               padding: const EdgeInsetsDirectional.all(0),
             ),
           ],
