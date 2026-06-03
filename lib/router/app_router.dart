@@ -106,6 +106,13 @@ List<GoRoute> _roleSubRoutes() => [
   ),
 ];
 
+class _UnfocusNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+}
+
 @riverpod
 GoRouter goRouter(Ref ref) {
   final authListenable = AuthStreamListenable(ref);
@@ -114,6 +121,7 @@ GoRouter goRouter(Ref ref) {
     initialLocation: SCRoute.splash.path,
     debugLogDiagnostics: true,
     refreshListenable: authListenable,
+    observers: [_UnfocusNavigatorObserver()],
     routes: <GoRoute>[
       // 스플래시
       GoRoute(
