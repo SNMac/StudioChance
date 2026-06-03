@@ -6,8 +6,10 @@ Last Updated: 2026-05-22
 
 예약 생성/수정 폼 최상단에 스크린샷 불러오기 버튼을 추가한다.
 사용자가 네이버 예약·스페이스클라우드·야놀자 예약 스크린샷을 선택하면
-`firebase_vertexai` 패키지를 통해 Gemini 2.0 Flash API가 이미지를 분석하고,
+`firebase_ai` 패키지를 통해 Gemini 2.5 Flash Lite API가 이미지를 분석하고,
 추출된 예약 정보를 폼 필드에 자동으로 채워준다.
+
+> **구현 완료** — 실제 구현은 `reservation-ocr-context.md` 참고. 아래 내용은 초기 계획 기록용.
 
 관련 이슈: #10
 

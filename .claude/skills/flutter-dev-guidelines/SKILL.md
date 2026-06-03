@@ -303,13 +303,17 @@ abstract class User with _$User {
 }
 ```
 
+### FirestoreDataSourceBase
+
+모든 Firestore DataSource는 `FirestoreDataSourceBase`를 상속. `errorLogTag`, `isDomainException`, `buildParsingException`, `mapFirebaseCode` 4개 멤버 구현 후 catch 블록에서 `handleFirestoreError(e)` 호출.
+
 ### Firestore 규칙
 
 - Document ID 주입: `data['id'] = docSnapshot.id`
 - 서버 타임스탬프: `FieldValue.serverTimestamp()`
 - Soft delete: `deletedAt` 필드 체크
 - 배치 작업: `_firestore.batch()` + `batch.commit()`
-- 타임스탬프 변환: `@TimestampConverter()`
+- 타임스탬프 변환: `@TimestampConverter()` (`common/converters/timestamp_converter.dart`)
 
 자세한 내용: [data-layer-patterns.md](resources/data-layer-patterns.md)
 

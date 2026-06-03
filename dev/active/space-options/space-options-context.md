@@ -11,7 +11,7 @@ Last Updated: 2026-05-23
 - 커밋: `f0bb5e4` — 전체 레이어 구현 (32파일)
 - 커밋: `68477c3` — 예약 모달 공간 선택 UI, 하위 호환 코드 제거
 - 커밋: `24cb560` — 확정 안내문 안내/주의사항 분리 + 입금 마감 기한 선택지 개선
-- 미커밋(이번 세션): `store_form_screen.dart` + `store_form_state.dart` → 커밋 필요
+- 커밋: (이후) — `store_form_screen.dart` + `store_form_state.dart` StoreFormScreen 아코디언 UI, isValid 공간명 검증
 
 ---
 
@@ -66,14 +66,7 @@ Last Updated: 2026-05-23
 
 ## 변경된 파일 목록
 
-### 이번 세션 미커밋 변경 (커밋 필요)
-
-| 파일 | 변경 내용 |
-|------|----------|
-| `lib/presentation/commons/store_input/screens/store_form_screen.dart` | `_SpaceOptionHeader` 아코디언 UI 전면 재작성 |
-| `lib/presentation/commons/store_input/controllers/states/store_form_state.dart` | `isValid`에 공간명 검증 추가 |
-
-### 기 커밋 변경 (참고)
+### 전체 커밋 변경
 
 | 커밋 | 파일 | 변경 내용 |
 |------|------|----------|
@@ -87,6 +80,8 @@ Last Updated: 2026-05-23
 | `24cb560` | `confirmation_notice_screen.dart` | 두 섹션 분리 표시 |
 | `24cb560` | `payment_info_input_screen.dart` | 선택지 확장 |
 | `24cb560` | `payment_instruction_screen.dart` | null 처리 |
+| (이후) | `store_form_screen.dart` | `_SpaceOptionHeader` 아코디언 UI 전면 재작성 |
+| (이후) | `store_form_state.dart` | `isValid`에 공간명 검증 추가 |
 
 ---
 
