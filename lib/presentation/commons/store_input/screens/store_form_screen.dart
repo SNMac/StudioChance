@@ -211,6 +211,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               ),
                             ),
                             onPressed: () {
+                              FocusScope.of(context).unfocus();
                               SCRoute.storeColor.pushChild(
                                 context,
                                 extra: widget.storeToEdit,
@@ -221,6 +222,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             title: '주소',
                             content: state.formattedAddress,
                             onPressed: () {
+                              FocusScope.of(context).unfocus();
                               SCRoute.storeAddress.pushChild(
                                 context,
                                 extra: widget.storeToEdit,
@@ -233,6 +235,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                 ? null
                                 : state.bankName,
                             onPressed: () {
+                              FocusScope.of(context).unfocus();
                               SCRoute.storePaymentInfo.pushChild(
                                 context,
                                 extra: widget.storeToEdit,
@@ -242,6 +245,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                           TitleNavigationButton(
                             title: '안내•주의사항',
                             onPressed: () {
+                              FocusScope.of(context).unfocus();
                               SCRoute.storeGuide.pushChild(
                                 context,
                                 extra: widget.storeToEdit,
@@ -359,6 +363,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                                   _scrollAfterBuild();
                                                 },
                                                 onPressedDaySetting: () {
+                                                  FocusScope.of(context).unfocus();
                                                   SCRoute.storePriceDays
                                                       .pushChild(
                                                     context,
@@ -371,6 +376,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                                   );
                                                 },
                                                 onPressedTimeSetting: () {
+                                                  FocusScope.of(context).unfocus();
                                                   SCRoute.storePriceTime
                                                       .pushChild(
                                                     context,
