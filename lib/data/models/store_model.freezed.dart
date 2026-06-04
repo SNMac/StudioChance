@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreModel {
 
-@JsonKey(includeToJson: false) String get id; String get name; String get address; String get addressDetail; String get addressGuide; List<SpaceOptionModel> get spaceOptions; Map<String, StoreMemberInfoModel> get memberById; Map<String, StoreMemberInfoModel> get waitingMemberById; InviteInfoModel? get inviteInfoModel; String? get bankName; String? get bankAccountNumber; String? get bankAccountHolder; int? get paymentDeadlineMinutes; String? get infoNotes; String? get cautionNotes;
+@JsonKey(includeToJson: false) String get id; String get name; String get address; String get addressDetail; String get addressGuide; List<SpaceOptionModel> get spaceOptions; Map<String, StoreMemberInfoModel> get memberById; Map<String, StoreMemberInfoModel> get waitingMemberById;@JsonKey(name: 'inviteInfo') InviteInfoModel? get inviteInfoModel; String? get bankName; String? get bankAccountNumber; String? get bankAccountHolder; int? get paymentDeadlineMinutes; String? get infoNotes; String? get cautionNotes;
 /// Create a copy of StoreModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $StoreModelCopyWith<$Res>  {
   factory $StoreModelCopyWith(StoreModel value, $Res Function(StoreModel) _then) = _$StoreModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, List<SpaceOptionModel> spaceOptions, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById, InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes
+@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, List<SpaceOptionModel> spaceOptions, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById,@JsonKey(name: 'inviteInfo') InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes
 });
 
 
@@ -179,7 +179,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<SpaceOptionModel> spaceOptions,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<SpaceOptionModel> spaceOptions,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById, @JsonKey(name: 'inviteInfo')  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
 return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.spaceOptions,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes);case _:
@@ -200,7 +200,7 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<SpaceOptionModel> spaceOptions,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<SpaceOptionModel> spaceOptions,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById, @JsonKey(name: 'inviteInfo')  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel():
 return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.spaceOptions,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes);case _:
@@ -220,7 +220,7 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<SpaceOptionModel> spaceOptions,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById,  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<SpaceOptionModel> spaceOptions,  Map<String, StoreMemberInfoModel> memberById,  Map<String, StoreMemberInfoModel> waitingMemberById, @JsonKey(name: 'inviteInfo')  InviteInfoModel? inviteInfoModel,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreModel() when $default != null:
 return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.spaceOptions,_that.memberById,_that.waitingMemberById,_that.inviteInfoModel,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes);case _:
@@ -235,7 +235,7 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 @JsonSerializable()
 
 class _StoreModel extends StoreModel {
-  const _StoreModel({@JsonKey(includeToJson: false) required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, final  List<SpaceOptionModel> spaceOptions = const [], required final  Map<String, StoreMemberInfoModel> memberById, final  Map<String, StoreMemberInfoModel> waitingMemberById = const {}, this.inviteInfoModel, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.infoNotes, this.cautionNotes}): _spaceOptions = spaceOptions,_memberById = memberById,_waitingMemberById = waitingMemberById,super._();
+  const _StoreModel({@JsonKey(includeToJson: false) required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, final  List<SpaceOptionModel> spaceOptions = const [], required final  Map<String, StoreMemberInfoModel> memberById, final  Map<String, StoreMemberInfoModel> waitingMemberById = const {}, @JsonKey(name: 'inviteInfo') this.inviteInfoModel, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.infoNotes, this.cautionNotes}): _spaceOptions = spaceOptions,_memberById = memberById,_waitingMemberById = waitingMemberById,super._();
   factory _StoreModel.fromJson(Map<String, dynamic> json) => _$StoreModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -264,7 +264,7 @@ class _StoreModel extends StoreModel {
   return EqualUnmodifiableMapView(_waitingMemberById);
 }
 
-@override final  InviteInfoModel? inviteInfoModel;
+@override@JsonKey(name: 'inviteInfo') final  InviteInfoModel? inviteInfoModel;
 @override final  String? bankName;
 @override final  String? bankAccountNumber;
 @override final  String? bankAccountHolder;
@@ -305,7 +305,7 @@ abstract mixin class _$StoreModelCopyWith<$Res> implements $StoreModelCopyWith<$
   factory _$StoreModelCopyWith(_StoreModel value, $Res Function(_StoreModel) _then) = __$StoreModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, List<SpaceOptionModel> spaceOptions, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById, InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes
+@JsonKey(includeToJson: false) String id, String name, String address, String addressDetail, String addressGuide, List<SpaceOptionModel> spaceOptions, Map<String, StoreMemberInfoModel> memberById, Map<String, StoreMemberInfoModel> waitingMemberById,@JsonKey(name: 'inviteInfo') InviteInfoModel? inviteInfoModel, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes
 });
 
 

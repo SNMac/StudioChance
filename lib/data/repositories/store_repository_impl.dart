@@ -110,8 +110,12 @@ class StoreRepositoryImpl implements StoreRepository {
 
       await _storeDataSource.updateStore(store.id, storeModel.toEditableJson());
 
+      // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
+      final colorJson = UserStoreInfoModel(
+        name: '', role: UserRole.none, color: color, memo: '',
+      ).toJson()['color'] as String;
       await _userDataSource.updateStoreInfo(uid, store.id, {
-        'color': color.name,
+        'color': colorJson,
         'memo': memo,
       });
 
@@ -259,7 +263,9 @@ class StoreRepositoryImpl implements StoreRepository {
     required UserRole newRole,
   }) async {
     try {
-      await _storeDataSource.updateMemberRole(storeId, uid, newRole.name);
+      // newRole.name은 Dart 식별자('admin')를 반환하므로 toJson()으로 JSON 값('ADMIN') 직렬화
+      final roleJson = StoreMemberInfoModel(role: newRole).toJson()['role'] as String;
+      await _storeDataSource.updateMemberRole(storeId, uid, roleJson);
 
       _logger.i(
         '멤버 권한 변경 완료\nstoreId: $storeId, uid: $uid, role: ${newRole.name}',

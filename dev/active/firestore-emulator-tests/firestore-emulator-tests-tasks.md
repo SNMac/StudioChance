@@ -58,9 +58,11 @@ Last Updated: 2026-06-04
   - [x] `requestJoinWithBatch`: 가입 신청 batch write
 
 ### 중기 (선택)
-- [ ] `StoreRepositoryImpl` integration test 추가 (DataSource 실제 구현과 연동)
-  - 현재: DataSource mock 기반 단위 테스트만 존재
-  - 추가 시: `StoreFirestoreDataSource` + `UserFirestoreDataSource` 조합 검증
+- [x] `StoreRepositoryImpl` integration test 추가 (DataSource 실제 구현과 연동)
+  - [x] `StoreFirestoreDataSource` + `UserFirestoreDataSource` 조합 검증 (12개 테스트)
+  - [x] 발견 버그 수정: `updateStore`의 `color.name` → `toJson()` JSON 값으로 수정
+  - [x] 발견 버그 수정: `updateMemberRole`의 `newRole.name` → `toJson()` JSON 값으로 수정
+  - [x] 발견 버그 수정: `StoreModel.inviteInfoModel`의 `@JsonKey(name: 'inviteInfo')` 누락
 
 ### 장기 (선택)
 - [ ] 실제 Firestore Emulator 전환
@@ -89,9 +91,9 @@ flutter test test/data/data_sources/reservation_data_source_test.dart
 
 | 항목 | 값 |
 |------|-----|
-| 신규 테스트 수 | 58개 (49 + 멤버 관리 9) |
+| 신규 테스트 수 | 70개 (49 + 멤버 관리 9 + Repository 통합 12) |
 | 기존 테스트 수 | 106개 |
-| 전체 테스트 | 164개 |
+| 전체 테스트 | 176개 |
 | 통과율 | 100% |
 | 회귀 발생 | 없음 |
 | 변경 production 파일 | 0개 |

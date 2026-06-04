@@ -29,11 +29,9 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
         ),
       ) ??
       const {},
-  inviteInfoModel: json['inviteInfoModel'] == null
+  inviteInfoModel: json['inviteInfo'] == null
       ? null
-      : InviteInfoModel.fromJson(
-          json['inviteInfoModel'] as Map<String, dynamic>,
-        ),
+      : InviteInfoModel.fromJson(json['inviteInfo'] as Map<String, dynamic>),
   bankName: json['bankName'] as String?,
   bankAccountNumber: json['bankAccountNumber'] as String?,
   bankAccountHolder: json['bankAccountHolder'] as String?,
@@ -53,7 +51,7 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
       'waitingMemberById': instance.waitingMemberById.map(
         (k, e) => MapEntry(k, e.toJson()),
       ),
-      'inviteInfoModel': instance.inviteInfoModel?.toJson(),
+      'inviteInfo': instance.inviteInfoModel?.toJson(),
       'bankName': instance.bankName,
       'bankAccountNumber': instance.bankAccountNumber,
       'bankAccountHolder': instance.bankAccountHolder,

@@ -91,7 +91,7 @@ void main() {
       expect(capturedUserArgs[0], fakeUser.id);
       expect(capturedUserArgs[1], fakeStore.id);
       final userStoreData = capturedUserArgs[2] as Map<String, dynamic>;
-      expect(userStoreData['color'], StoreColor.blue.name);
+      expect(userStoreData['color'], 'BLUE');
       expect(userStoreData['memo'], '새 메모');
     });
 

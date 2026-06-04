@@ -25,7 +25,7 @@ abstract class StoreModel with _$StoreModel {
     required Map<String, StoreMemberInfoModel> memberById,
     @Default({}) Map<String, StoreMemberInfoModel> waitingMemberById,
 
-    InviteInfoModel? inviteInfoModel,
+    @JsonKey(name: 'inviteInfo') InviteInfoModel? inviteInfoModel,
     String? bankName,
     String? bankAccountNumber,
     String? bankAccountHolder,
