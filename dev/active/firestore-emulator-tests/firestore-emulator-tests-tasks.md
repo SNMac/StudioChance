@@ -66,11 +66,12 @@ Last Updated: 2026-06-04
 
 ### 장기 (선택)
 - [ ] 실제 Firestore Emulator 전환
-  - 트리거: Security Rules 검증이 필요해질 때
+  - 트리거: Security Rules 기반 테스트가 필요해질 때
   - 방법: `test/helpers/firestore_emulator_helper.dart`의 `create()` 교체
   - 추가 필요: `integration_test/` 디렉토리, CI `firebase emulators:exec` 설정
-- [ ] `firestore.rules` 작성 후 Rules 기반 테스트 추가
-- [ ] CI/CD 파이프라인에 `flutter test test/data/data_sources/` 추가
+- [ ] `firestore.rules` Rules 기반 테스트 추가 (실제 Emulator 전환 후)
+- [x] `firestore.rules` 기본 작성 (stores / users / reservations 3-tier 규칙)
+- [x] CI/CD 파이프라인 추가 (`.github/workflows/ci.yml` — `dart analyze` + `flutter test`)
 
 ---
 

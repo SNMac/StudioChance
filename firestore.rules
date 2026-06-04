@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 기본 차단: 명시적으로 허용된 규칙만 접근 가능
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ─── users 컬렉션 ─────────────────────────────────────────────────────
+    // 경로: users/{uid}
+    //
+    // 읽기: 인증된 모든 사용자 허용
+    //   → 점포 멤버 정보 조회 시 다른 멤버의 user 문서를 읽어야 하므로 완화
+    // 쓰기: 자신의 문서만 허용
+    //   → 탈퇴(softDeleteUser), 닉네임 수정, 복구 등 본인 작업만 가능
+    //
+    // TODO: 점포 공유 멤버만 서로의 문서를 읽도록 규칙 강화 검토
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ─── stores 컬렉션 ───────────────────────────────────────────────────
+    // 경로: stores/{storeId}
+    //
+    // 읽기: 인증된 모든 사용자 허용
+    //   → 초대 코드(inviteInfo.inviteCode)로 점포를 조회할 때
+    //      아직 멤버가 아닌 인증된 사용자의 쿼리가 필요하므로 완화
+    //   → inviteCode 자체가 비밀 값이므로 인증 요구만으로 충분
+    // 생성: 인증된 모든 사용자 허용
+    //   → 첫 점포 등록 시 본인이 memberById[uid] = ADMIN으로 포함되어야 함
+    //      (UseCase 레벨에서 강제, Rules에서는 현재 미검증)
+    // 수정/삭제: ADMIN 역할 보유자만 허용
+    //
+    // TODO: 생성 시 request.resource.data.memberById[request.auth.uid].role == 'ADMIN' 검증 추가
+    match /stores/{storeId} {
+      function isAdmin() {
+        return request.auth != null
+            && request.auth.uid in resource.data.memberById
+            && resource.data.memberById[request.auth.uid].role == 'ADMIN';
+      }
+
+      allow read:   if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
+
+      // ─── reservations 서브컬렉션 ─────────────────────────────────────
+      // 경로: stores/{storeId}/reservations/{reservationId}
+      //
+      // 읽기: 해당 점포의 멤버(ADMIN, STAFF, VIEWER)만 허용
+      // 쓰기: ADMIN 또는 STAFF만 허용 (VIEWER는 읽기 전용)
+      //
+      // NOTE: get()으로 상위 stores 문서를 읽으므로 읽기 1회 추가 과금
+      match /reservations/{reservationId} {
+        function storeMembers() {
+          return get(/databases/$(database)/documents/stores/$(storeId)).data.memberById;
+        }
+
+        function memberRole() {
+          return storeMembers()[request.auth.uid].role;
+        }
+
+        function isStoreMember() {
+          return request.auth != null
+              && request.auth.uid in storeMembers();
+        }
+
+        function isStaffOrAbove() {
+          return isStoreMember()
+              && memberRole() in ['ADMIN', 'STAFF'];
+        }
+
+        allow read:  if isStoreMember();
+        allow write: if isStaffOrAbove();
+      }
+    }
+  }
+}

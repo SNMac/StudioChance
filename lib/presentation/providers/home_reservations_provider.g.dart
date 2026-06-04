@@ -113,8 +113,8 @@ final class StoreReservationsStreamFamily extends $Family
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 [storeReservationsStreamProvider]를 구독
-/// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
+/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
 @ProviderFor(homeReservations)
 final homeReservationsProvider = HomeReservationsFamily._();
@@ -122,8 +122,8 @@ final homeReservationsProvider = HomeReservationsFamily._();
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 [storeReservationsStreamProvider]를 구독
-/// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
+/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
 final class HomeReservationsProvider
     extends
@@ -138,8 +138,8 @@ final class HomeReservationsProvider
   /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
   ///
   /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-  /// - 각 점포의 [storeReservationsStreamProvider]를 구독
-  /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
+  /// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+  /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
   HomeReservationsProvider._({
     required HomeReservationsFamily super.from,
     required DateTime super.argument,
@@ -184,13 +184,13 @@ final class HomeReservationsProvider
   }
 }
 
-String _$homeReservationsHash() => r'b849def4a4d463ac651192176000d4fbc2ac6cf0';
+String _$homeReservationsHash() => r'eea8ab6d6393551d886a622f7ec39586b12360cb';
 
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 [storeReservationsStreamProvider]를 구독
-/// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
+/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
 final class HomeReservationsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Reservation>>, DateTime> {
@@ -206,8 +206,8 @@ final class HomeReservationsFamily extends $Family
   /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
   ///
   /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-  /// - 각 점포의 [storeReservationsStreamProvider]를 구독
-  /// - 어느 점포 스트림이 새 값을 방출하면 자동으로 재실행됩니다.
+  /// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+  /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
   HomeReservationsProvider call(DateTime month) =>
       HomeReservationsProvider._(argument: month, from: this);
