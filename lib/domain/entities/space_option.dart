@@ -13,7 +13,7 @@ abstract class SpaceOption with _$SpaceOption {
   }) = _SpaceOption;
 
   factory SpaceOption.empty() => SpaceOption(
-    id: '',
+    id: DateTime.now().millisecondsSinceEpoch.toString(),
     name: '',
     priceSetting: PriceSetting.empty(),
   );
