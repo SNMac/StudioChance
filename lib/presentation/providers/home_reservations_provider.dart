@@ -30,7 +30,7 @@ Stream<List<Reservation>> storeReservationsStream(
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 데이터 fetch 완료 후 [storeReservationsStreamProvider]를 listen하여 Firestore 변경 시 자동 재실행
 /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 @riverpod
 Future<List<Reservation>> homeReservations(Ref ref, DateTime month) async {
@@ -60,6 +60,15 @@ Future<List<Reservation>> homeReservations(Ref ref, DateTime month) async {
       }
     }),
   );
+
+  // fetch 완료 후 실시간 구독 등록 (동기 코드이므로 스트림 방출이 return 전에 끼어들지 않음)
+  // Firestore 변경 시 ref.invalidateSelf()로 재실행 예약
+  for (final id in storeIds) {
+    ref.listen(
+      storeReservationsStreamProvider(id, month),
+      (_, __) => ref.invalidateSelf(),
+    );
+  }
 
   return [for (final list in results) ...list];
 }

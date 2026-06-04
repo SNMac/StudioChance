@@ -113,7 +113,7 @@ final class StoreReservationsStreamFamily extends $Family
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 데이터 fetch 완료 후 [storeReservationsStreamProvider]를 listen하여 Firestore 변경 시 자동 재실행
 /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
 @ProviderFor(homeReservations)
@@ -122,7 +122,7 @@ final homeReservationsProvider = HomeReservationsFamily._();
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 데이터 fetch 완료 후 [storeReservationsStreamProvider]를 listen하여 Firestore 변경 시 자동 재실행
 /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
 final class HomeReservationsProvider
@@ -138,7 +138,7 @@ final class HomeReservationsProvider
   /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
   ///
   /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-  /// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+  /// - 데이터 fetch 완료 후 [storeReservationsStreamProvider]를 listen하여 Firestore 변경 시 자동 재실행
   /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
   HomeReservationsProvider._({
     required HomeReservationsFamily super.from,
@@ -184,12 +184,12 @@ final class HomeReservationsProvider
   }
 }
 
-String _$homeReservationsHash() => r'eea8ab6d6393551d886a622f7ec39586b12360cb';
+String _$homeReservationsHash() => r'92b006a459ffdb5915c59f10a86e5150f256db9d';
 
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
 ///
 /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-/// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+/// - 데이터 fetch 완료 후 [storeReservationsStreamProvider]를 listen하여 Firestore 변경 시 자동 재실행
 /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
 final class HomeReservationsFamily extends $Family
@@ -206,7 +206,7 @@ final class HomeReservationsFamily extends $Family
   /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을 병합하여 반환한다.
   ///
   /// - [HomeStoreFilterController]의 selectedIds로 점포 필터링
-  /// - 각 점포의 예약 스트림 첫 번째 스냅샷을 반환
+  /// - 데이터 fetch 완료 후 [storeReservationsStreamProvider]를 listen하여 Firestore 변경 시 자동 재실행
   /// - 한 점포 조회 실패 시 해당 점포를 건너뛰고 나머지 결과만 반환
 
   HomeReservationsProvider call(DateTime month) =>
