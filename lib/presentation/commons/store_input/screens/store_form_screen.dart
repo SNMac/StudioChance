@@ -265,8 +265,10 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                         final SpaceOption so = spaceEntry.value;
                         final bool isExpanded =
                             _expandedSpaceIds.contains(so.id);
-                        final controller = _spaceNameControllers[so.id] ??
-                            TextEditingController(text: so.name);
+                        final controller = _spaceNameControllers.putIfAbsent(
+                          so.id,
+                          () => TextEditingController(text: so.name),
+                        );
 
                         return Column(
                           mainAxisSize: MainAxisSize.min,

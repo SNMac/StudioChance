@@ -48,10 +48,10 @@ class ReservationOcrController extends _$ReservationOcrController {
         },
         (ocrResult) => state = AsyncData(ocrResult),
       );
-    } catch (e) {
+    } catch (e, st) {
       if (_generation != myGeneration) return;
-      _logger.e('OCR 분석 실패', error: e);
-      state = AsyncError(OcrUnknownException(e.toString()), StackTrace.current);
+      _logger.e('OCR 분석 실패', error: e, stackTrace: st);
+      state = AsyncError(OcrUnknownException(e.toString()), st);
     }
   }
 

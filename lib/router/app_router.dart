@@ -107,10 +107,16 @@ List<GoRoute> _roleSubRoutes() => [
 ];
 
 class _UnfocusNavigatorObserver extends NavigatorObserver {
+  void _unfocus() => FocusManager.instance.primaryFocus?.unfocus();
+
   @override
-  void didPush(Route route, Route? previousRoute) {
-    FocusManager.instance.primaryFocus?.unfocus();
-  }
+  void didPush(Route route, Route? previousRoute) => _unfocus();
+
+  @override
+  void didPop(Route route, Route? previousRoute) => _unfocus();
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) => _unfocus();
 }
 
 @riverpod
