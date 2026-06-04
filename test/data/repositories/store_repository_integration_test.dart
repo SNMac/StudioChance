@@ -2,9 +2,6 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
-import 'package:studio_chance/data/models/space_option_model.dart';
-import 'package:studio_chance/data/models/store_member_info_model.dart';
-import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
@@ -14,20 +11,6 @@ import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
-
-// Freezed @Default 타입 문제 회피: 명시적 타입 파라미터 사용
-StoreModel _testStoreModel(String uid) => StoreModel(
-      id: FirestoreEmulatorHelper.generateId(),
-      name: '통합 테스트 점포',
-      address: '서울시 강남구',
-      addressDetail: '101호',
-      addressGuide: '안내',
-      memberById: <String, StoreMemberInfoModel>{
-        uid: StoreMemberInfoModel(role: UserRole.admin),
-      },
-      waitingMemberById: <String, StoreMemberInfoModel>{},
-      spaceOptions: <SpaceOptionModel>[],
-    );
 
 Store _testStoreEntity(String uid, User adminUser) => Store(
       id: '',

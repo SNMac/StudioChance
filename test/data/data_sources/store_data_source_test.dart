@@ -36,8 +36,8 @@ const _creatorInfo = UserStoreInfoModel(
 /// createStore는 batch.update(userRef)로 users 컬렉션을 참조하므로,
 /// 사용자 문서를 먼저 생성해야 합니다.
 ///
-/// fake_cloud_firestore는 map literal `{}`을 _Map<dynamic, dynamic>으로 처리하여
-/// Map<String, dynamic> 캐스팅 시 TypeError가 발생합니다.
+/// fake_cloud_firestore는 map literal `{}`을 `_Map<dynamic, dynamic>`으로 처리하여
+/// `Map<String, dynamic>` 캐스팅 시 TypeError가 발생합니다.
 /// 명시적 타입 파라미터를 사용합니다.
 Future<void> _seedUserDoc(FakeFirebaseFirestore firestore, String uid) async {
   await firestore.collection('users').doc(uid).set(<String, dynamic>{
