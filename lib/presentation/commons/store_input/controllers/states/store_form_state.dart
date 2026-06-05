@@ -31,7 +31,7 @@ abstract class StoreFormState with _$StoreFormState {
   /// 필수 입력값만 체크
   bool get isValid =>
       name.isNotEmpty &&
-      address.isNotEmpty &&
+      (address.isNotEmpty || addressDetail.isNotEmpty) &&
       spaceOptions.isNotEmpty &&
       spaceOptions.every((s) => s.name.isNotEmpty);
 }

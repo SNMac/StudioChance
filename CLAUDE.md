@@ -161,6 +161,17 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 모드 전환 간 스크롤 위치 보존: `Stack + Positioned.fill + Offstage` × 2 + 모드별 독립 `ScrollController`
   - 전환 전 `_syncScrollPosition()` 호출 필수 (setState 이전에)
 
+## 화면 전환 전 데이터 로딩 패턴
+
+화면/모달 전환 전에 데이터를 미리 조회해야 할 때 (예: 예약 등록 모달 오픈 전 공간 옵션 조회):
+- `ConsumerStatefulWidget`으로 로컬 상태(`_isLoading`, `_showOverlay`) + `Timer` 관리
+- 버튼 탭 즉시 `_isLoading = true`로 중복 호출 차단
+- fetch 시작과 동시에 1초 `Timer`를 시작하고, 타이머 콜백에서 `_showOverlay = true`로 `LoadingOverlay` 표시
+- fetch가 완료되거나 오류가 수신되면 `finally`에서 즉시 타이머 취소 + 두 플래그 모두 reset — 모달/화면 전환은 `finally` 이후에 수행
+- `LoadingOverlay`는 `Stack`의 최상단 레이어로 Scaffold 전체를 덮음
+- `dispose()`에서 반드시 타이머 취소
+- 구현 예시: `home_screen.dart` `_onAddReservation`
+
 ## Presentation → Domain 접근 규칙
 
 - 위젯(`ConsumerWidget`, `ConsumerStatefulWidget`)에서 `*_use_case_provider.dart` 직접 `ref.read/watch` 금지

@@ -12,7 +12,8 @@ part of 'home_reservations_provider.dart';
 /// 실시간으로 병합하여 스트림으로 반환한다.
 ///
 /// - 각 점포의 Firestore 변경을 직접 구독 → fetch 없이 즉시 반영
-/// - 한 점포 조회 실패 시 해당 점포를 빈 목록으로 처리하고 나머지 결과만 반환
+/// - [ReservationNetworkException] 발생 시 5초 후 재연결 시도
+/// - 그 외 에러(권한 거부 등)는 해당 점포를 빈 목록으로 처리하고 재연결 없이 종료
 /// - 필터/사용자 변경 시 provider 재실행으로 새 구독 세트 생성
 
 @ProviderFor(homeReservations)
@@ -22,7 +23,8 @@ final homeReservationsProvider = HomeReservationsFamily._();
 /// 실시간으로 병합하여 스트림으로 반환한다.
 ///
 /// - 각 점포의 Firestore 변경을 직접 구독 → fetch 없이 즉시 반영
-/// - 한 점포 조회 실패 시 해당 점포를 빈 목록으로 처리하고 나머지 결과만 반환
+/// - [ReservationNetworkException] 발생 시 5초 후 재연결 시도
+/// - 그 외 에러(권한 거부 등)는 해당 점포를 빈 목록으로 처리하고 재연결 없이 종료
 /// - 필터/사용자 변경 시 provider 재실행으로 새 구독 세트 생성
 
 final class HomeReservationsProvider
@@ -39,7 +41,8 @@ final class HomeReservationsProvider
   /// 실시간으로 병합하여 스트림으로 반환한다.
   ///
   /// - 각 점포의 Firestore 변경을 직접 구독 → fetch 없이 즉시 반영
-  /// - 한 점포 조회 실패 시 해당 점포를 빈 목록으로 처리하고 나머지 결과만 반환
+  /// - [ReservationNetworkException] 발생 시 5초 후 재연결 시도
+  /// - 그 외 에러(권한 거부 등)는 해당 점포를 빈 목록으로 처리하고 재연결 없이 종료
   /// - 필터/사용자 변경 시 provider 재실행으로 새 구독 세트 생성
   HomeReservationsProvider._({
     required HomeReservationsFamily super.from,
@@ -85,13 +88,14 @@ final class HomeReservationsProvider
   }
 }
 
-String _$homeReservationsHash() => r'b7e1c7d0269845166e4e79bc487a1df521842376';
+String _$homeReservationsHash() => r'c00566afb04a221190d187418842ba39bf04cb6a';
 
 /// 현재 사용자가 접근 가능한 점포 중 필터에서 선택된 점포의 [month] 기간 예약을
 /// 실시간으로 병합하여 스트림으로 반환한다.
 ///
 /// - 각 점포의 Firestore 변경을 직접 구독 → fetch 없이 즉시 반영
-/// - 한 점포 조회 실패 시 해당 점포를 빈 목록으로 처리하고 나머지 결과만 반환
+/// - [ReservationNetworkException] 발생 시 5초 후 재연결 시도
+/// - 그 외 에러(권한 거부 등)는 해당 점포를 빈 목록으로 처리하고 재연결 없이 종료
 /// - 필터/사용자 변경 시 provider 재실행으로 새 구독 세트 생성
 
 final class HomeReservationsFamily extends $Family
@@ -109,7 +113,8 @@ final class HomeReservationsFamily extends $Family
   /// 실시간으로 병합하여 스트림으로 반환한다.
   ///
   /// - 각 점포의 Firestore 변경을 직접 구독 → fetch 없이 즉시 반영
-  /// - 한 점포 조회 실패 시 해당 점포를 빈 목록으로 처리하고 나머지 결과만 반환
+  /// - [ReservationNetworkException] 발생 시 5초 후 재연결 시도
+  /// - 그 외 에러(권한 거부 등)는 해당 점포를 빈 목록으로 처리하고 재연결 없이 종료
   /// - 필터/사용자 변경 시 provider 재실행으로 새 구독 세트 생성
 
   HomeReservationsProvider call(DateTime month) =>

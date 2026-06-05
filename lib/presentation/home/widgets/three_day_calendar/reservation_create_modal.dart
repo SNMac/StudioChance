@@ -41,6 +41,7 @@ class ReservationCreateModal extends ConsumerStatefulWidget {
     required this.onSaved,
     required this.maxAvailableHeight,
     this.availableStores,
+    this.initialSpaceOptions,
   });
 
   final Reservation initialReservation;
@@ -53,6 +54,9 @@ class ReservationCreateModal extends ConsumerStatefulWidget {
   /// 예약 점포 선택 팝업에 표시할 점포 목록.
   /// null이면 [initialReservation.storeSummary] 단일 항목으로 fallback.
   final List<StoreSummary>? availableStores;
+
+  /// 모달 오픈 전 선 조회된 공간 옵션. 제공되면 내부 async 로드를 스킵한다.
+  final List<SpaceOption>? initialSpaceOptions;
 
   @override
   ConsumerState<ReservationCreateModal> createState() =>
@@ -83,7 +87,8 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   late final ScrollController _scrollController;
 
   // ── 공간 옵션 / 가격 설정 ──────────────────────────────────────────────────
-  List<SpaceOption>? _spaceOptions;
+  List<SpaceOption> _spaceOptions = const [];
+  bool _isLoadingSpaceOptions = true;
   String? _spaceOptionId;
   int _calculatedPrice = 0;
 
@@ -105,7 +110,15 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     _scrollController = ScrollController();
     _initFields(widget.initialReservation);
     _spaceOptionId = widget.initialReservation.spaceOptionId;
-    _loadSpaceOptions(widget.initialReservation.storeSummary.id);
+
+    final initial = widget.initialSpaceOptions;
+    if (initial != null) {
+      _isLoadingSpaceOptions = false;
+      _spaceOptions = initial;
+      _spaceOptionId ??= initial.isNotEmpty ? initial.first.id : null;
+    } else {
+      _loadSpaceOptions(widget.initialReservation.storeSummary.id);
+    }
   }
 
   @override
@@ -147,22 +160,48 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         .getStoreSpaceOptions(storeId)
         .then((spaces) {
           if (!mounted) return;
-          setState(() {
-            _spaceOptions = spaces;
-            // 공간이 1개이면 자동 선택, 이미 spaceOptionId가 있으면 유지
-            if (spaces != null &&
-                spaces.isNotEmpty &&
-                _spaceOptionId == null) {
-              _spaceOptionId = spaces.first.id;
-            }
-          });
-          _recalculatePrice();
+          final animation = ModalRoute.of(context)?.animation;
+          // 모달 오픈 애니메이션이 진행 중이면 완료 후 setState 실행
+          if (animation != null && animation.status != AnimationStatus.completed) {
+            late final void Function(AnimationStatus) listener;
+            listener = (status) {
+              if (status == AnimationStatus.completed) {
+                animation.removeStatusListener(listener);
+                if (!mounted) return;
+                _applySpaceOptions(spaces);
+              }
+            };
+            animation.addStatusListener(listener);
+          } else {
+            _applySpaceOptions(spaces);
+          }
         });
+  }
+
+  void _applySpaceOptions(List<SpaceOption>? spaces) {
+    final loaded = spaces ?? const [];
+    if (loaded.isEmpty) {
+      setState(() => _isLoadingSpaceOptions = false);
+      showCustomAlertDialog(
+        context: context,
+        title: '공간 정보 오류',
+        content: '예약 공간 정보를 불러오지 못했습니다.\n잠시 후 다시 시도해 주세요.',
+        showCancel: false,
+      );
+      return;
+    }
+    setState(() {
+      _isLoadingSpaceOptions = false;
+      _spaceOptions = loaded;
+      // 공간이 1개이면 자동 선택, 이미 spaceOptionId가 있으면 유지
+      _spaceOptionId ??= loaded.first.id;
+    });
+    _recalculatePrice();
   }
 
   void _recalculatePrice() {
     final spaces = _spaceOptions;
-    if (spaces == null || spaces.isEmpty) return;
+    if (spaces.isEmpty) return;
     final priceSetting = _spaceOptionId != null
         ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
         : spaces.first.priceSetting;
@@ -384,7 +423,6 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection1() {
-    final spaceOptions = _spaceOptions;
     return GroupedFormContainer(
       children: [
         Padding(
@@ -407,28 +445,34 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
             onSelected: (s) {
               setState(() {
                 _storeSummary = s;
-                _spaceOptions = null;
+                _spaceOptions = const [];
+                _isLoadingSpaceOptions = true;
                 _spaceOptionId = null;
               });
               _loadSpaceOptions(s.id);
             },
           ),
         ),
-        if (spaceOptions != null && spaceOptions.isNotEmpty)
+        // 로딩 중에도 행을 항상 렌더링해 레이아웃을 안정적으로 유지.
+        // 애니메이션 완료 후 setState가 실행되므로 애니메이션 끊김 없음.
+        // 에러로 빈 배열이 되면 행을 숨김 (크래시 방지).
+        if (_isLoadingSpaceOptions || _spaceOptions.isNotEmpty)
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
-            child: TitlePopupButton<SpaceOption>(
-              title: '예약 공간',
-              selectedValue: spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? spaceOptions.first,
-              items: spaceOptions,
-              itemLabelBuilder: (s) => s.name,
-              onSelected: (s) {
-                setState(() => _spaceOptionId = s.id);
-                _recalculatePrice();
-              },
-            ),
+            child: _isLoadingSpaceOptions
+                ? const TitleTextLabel(title: '예약 공간', content: '—')
+                : TitlePopupButton<SpaceOption>(
+                    title: '예약 공간',
+                    selectedValue: _spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? _spaceOptions.first,
+                    items: _spaceOptions,
+                    itemLabelBuilder: (s) => s.name,
+                    onSelected: (s) {
+                      setState(() => _spaceOptionId = s.id);
+                      _recalculatePrice();
+                    },
+                  ),
           ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(
@@ -618,6 +662,7 @@ Future<void> showReservationCreateModal(
   BuildContext context,
   Reservation initialReservation, {
   List<StoreSummary>? availableStores,
+  List<SpaceOption>? initialSpaceOptions,
   required void Function(Reservation) onSaved,
 }) {
   return showModalBottomSheet<void>(
@@ -631,6 +676,7 @@ Future<void> showReservationCreateModal(
       builder: (_, constraints) => ReservationCreateModal(
         initialReservation: initialReservation,
         availableStores: availableStores,
+        initialSpaceOptions: initialSpaceOptions,
         onSaved: onSaved,
         maxAvailableHeight: constraints.maxHeight,
       ),
