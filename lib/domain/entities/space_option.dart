@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:studio_chance/domain/entities/price_setting.dart';
 
@@ -13,7 +14,7 @@ abstract class SpaceOption with _$SpaceOption {
   }) = _SpaceOption;
 
   factory SpaceOption.empty() => SpaceOption(
-    id: DateTime.now().millisecondsSinceEpoch.toString(),
+    id: const Uuid().v4(),
     name: '',
     priceSetting: PriceSetting.empty(),
   );

@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
@@ -79,7 +81,7 @@ mixin StoreFormMixin {
   // ── SpaceOption CRUD ──────────────────────────────────────────────────────
 
   void addSpaceOption() {
-    final newId = DateTime.now().millisecondsSinceEpoch.toString();
+    final newId = const Uuid().v4();
     final newSpace = SpaceOption(
       id: newId,
       name: '',
@@ -111,7 +113,7 @@ mixin StoreFormMixin {
     if (spaceIndex >= state.spaceOptions.length) return;
     final current = [...state.spaceOptions];
     final target = current[spaceIndex];
-    final newId = '${DateTime.now().millisecondsSinceEpoch}';
+    final newId = const Uuid().v4();
     final copied = target.copyWith(
       id: newId,
       name: target.name.isEmpty ? '' : '${target.name} (복사)',

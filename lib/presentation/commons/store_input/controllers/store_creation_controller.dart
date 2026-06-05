@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
@@ -17,7 +18,7 @@ class StoreCreationController extends _$StoreCreationController
     implements StoreFormControllerable {
   @override
   StoreFormState build() {
-    final defaultId = DateTime.now().millisecondsSinceEpoch.toString();
+    final defaultId = const Uuid().v4();
     return StoreFormState(
       color: StoreColor.red,
       spaceOptions: [

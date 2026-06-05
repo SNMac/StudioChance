@@ -11,6 +11,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - Dart 컨벤션 사용
 - 콘솔 출력 시 `logger` 라이브러리 사용
 - 한국어로 커밋 메시지, 주석 작성
+- 앱 내에서 ID를 자체 생성할 때는 `uuid` 패키지의 `const Uuid().v4()` 사용 (`DateTime.now().millisecondsSinceEpoch` 금지)
 
 ## 아키텍처
 - `/lib/common`: 모든 계층에서 사용되는 로직
