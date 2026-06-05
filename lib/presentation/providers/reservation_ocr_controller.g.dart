@@ -38,7 +38,7 @@ final class ReservationOcrControllerProvider
 }
 
 String _$reservationOcrControllerHash() =>
-    r'd3670efc8ff00011bb604098c16100e489951f9f';
+    r'4987eaaccf94c3dda9755dd579c6c7ed94e42fec';
 
 abstract class _$ReservationOcrController
     extends $AsyncNotifier<ReservationOcrResult?> {

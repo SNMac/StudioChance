@@ -35,11 +35,19 @@ void main() {
     );
   }
 
+  /// autoDispose provider는 구독자가 없으면 즉시 dispose되므로
+  /// listen으로 살아있게 유지한 뒤 future를 읽는다.
+  Future<List<Reservation>> readFuture(ProviderContainer container) async {
+    final sub = container.listen(homeReservationsProvider(month), (_, __) {});
+    addTearDown(sub.close);
+    return container.read(homeReservationsProvider(month).future);
+  }
+
   test('currentUser가 null이면 빈 목록을 반환하고 UseCase를 호출하지 않는다', () async {
     final container = createContainer(useCase: mockUseCase, user: null);
     addTearDown(container.dispose);
 
-    final result = await container.read(homeReservationsProvider(month).future);
+    final result = await readFuture(container);
 
     expect(result, isEmpty);
     verifyNever(() => mockUseCase.watchReservationsByDateRange(
@@ -54,7 +62,7 @@ void main() {
     final container = createContainer(useCase: mockUseCase, user: userWithNoStores);
     addTearDown(container.dispose);
 
-    final result = await container.read(homeReservationsProvider(month).future);
+    final result = await readFuture(container);
 
     expect(result, isEmpty);
   });
@@ -69,7 +77,7 @@ void main() {
     final container = createContainer(useCase: mockUseCase, user: fakeUser);
     addTearDown(container.dispose);
 
-    final result = await container.read(homeReservationsProvider(month).future);
+    final result = await readFuture(container);
 
     expect(result.length, 1);
     expect(result.first.id, fakeReservation.id);
@@ -92,7 +100,7 @@ void main() {
     final container = createContainer(useCase: mockUseCase, user: fakeUser);
     addTearDown(container.dispose);
 
-    await container.read(homeReservationsProvider(month).future);
+    await readFuture(container);
 
     expect(capturedStart, DateTime(2026, 5, 1));
     expect(capturedEnd, DateTime(2026, 6, 1));
@@ -128,7 +136,7 @@ void main() {
     final container = createContainer(useCase: mockUseCase, user: userWith2Stores);
     addTearDown(container.dispose);
 
-    final result = await container.read(homeReservationsProvider(month).future);
+    final result = await readFuture(container);
 
     expect(result.length, 2);
     expect(result.map((r) => r.id), containsAll(['res-001', 'res-002']));
@@ -161,7 +169,7 @@ void main() {
     final container = createContainer(useCase: mockUseCase, user: userWith2Stores);
     addTearDown(container.dispose);
 
-    final result = await container.read(homeReservationsProvider(month).future);
+    final result = await readFuture(container);
 
     expect(result.length, 1);
     expect(result.first.id, fakeReservation.id);
