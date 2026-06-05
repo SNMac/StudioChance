@@ -126,7 +126,7 @@ class _StoreAddressInputScreenState
                   result = await showCupertinoSheet<Kpostal>(
                     enableDrag: false,
                     context: context,
-                    builder: (context) {
+                    scrollableBuilder: (context, _) {
                       return KpostalView(
                         appBar: commonAppBar,
                         onLoading: commonOnLoading,

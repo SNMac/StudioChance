@@ -38,7 +38,7 @@ void main() {
   /// autoDispose provider는 구독자가 없으면 즉시 dispose되므로
   /// listen으로 살아있게 유지한 뒤 future를 읽는다.
   Future<List<Reservation>> readFuture(ProviderContainer container) async {
-    final sub = container.listen(homeReservationsProvider(month), (_, __) {});
+    final sub = container.listen(homeReservationsProvider(month), (_, _) {});
     addTearDown(sub.close);
     return container.read(homeReservationsProvider(month).future);
   }
