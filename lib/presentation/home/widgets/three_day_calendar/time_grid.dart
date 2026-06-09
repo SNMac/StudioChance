@@ -4,14 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
-import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
-import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
 /// N=2 겹침에서 시작 시간이 다를 때 (delta > 0) 적용하는 고정 stagger (px).
 /// back 셀의 foreground strip(4px) + gap(4px) = 8px.
@@ -197,7 +194,8 @@ class TimeGrid extends ConsumerStatefulWidget {
     required this.isToday,
     required this.events,
     required this.reservations,
-    this.availableStores,
+    required this.onOpenDetailModal,
+    required this.isInteractionBlocked,
   });
 
   final ScrollController scrollController;
@@ -210,8 +208,11 @@ class TimeGrid extends ConsumerStatefulWidget {
   /// 탭 시 상세 모달에 전달할 전체 Reservation 맵 (id → Reservation)
   final Map<String, Reservation> reservations;
 
-  /// 예약 점포 선택 팝업에 표시할 점포 목록.
-  final List<StoreSummary>? availableStores;
+  /// 예약 셀 탭 시 상세 모달을 여는 콜백 (공간 옵션 선 조회 + 모달 표시 포함).
+  final Future<void> Function(Reservation) onOpenDetailModal;
+
+  /// true이면 셀 터치를 완전히 차단한다 (로딩 중 중복 탭 방지).
+  final bool isInteractionBlocked;
 
   @override
   ConsumerState<TimeGrid> createState() => _TimeGridState();
@@ -223,18 +224,6 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
 
   /// 하이라이트 중인 셀 id (로컬)
   String? _highlightedId;
-
-  void _onReservationSaved(Reservation updated) {
-    ref
-        .read(homeReservationActionsControllerProvider.notifier)
-        .updateReservation(updated);
-  }
-
-  void _onReservationDeleted(Reservation reservation) {
-    ref
-        .read(homeReservationActionsControllerProvider.notifier)
-        .deleteReservation(reservation);
-  }
 
   ({double top, double height}) _placementFor(
       ReservationDisplayData event, double hourHeight) {
@@ -277,13 +266,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         return;
       }
       if (!mounted) return;
-      await showReservationDetailModal(
-        context,
-        reservation,
-        availableStores: widget.availableStores,
-        onSaved: _onReservationSaved,
-        onDeleted: () => _onReservationDeleted(reservation),
-      );
+      await widget.onOpenDetailModal(reservation);
       if (!mounted) return;
       setState(() {
         _highlightedId = null;
@@ -306,13 +289,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
           .read(homeCalendarControllerProvider.notifier)
           .selectDateFromContinuation(originalDate);
       ref.read(scrollToTimeTriggerProvider.notifier).trigger(originalStartTime);
-      await showReservationDetailModal(
-        context,
-        reservation,
-        availableStores: widget.availableStores,
-        onSaved: _onReservationSaved,
-        onDeleted: () => _onReservationDeleted(reservation),
-      );
+      await widget.onOpenDetailModal(reservation);
       // Provider 조작은 mounted와 무관하게 안전 (notifier는 위젯 생명주기 독립적)
       highlightNotifier.clear();
     } else {
@@ -330,13 +307,7 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
         return;
       }
       if (!mounted) return;
-      await showReservationDetailModal(
-        context,
-        reservation,
-        availableStores: widget.availableStores,
-        onSaved: _onReservationSaved,
-        onDeleted: () => _onReservationDeleted(reservation),
-      );
+      await widget.onOpenDetailModal(reservation);
       if (!mounted) return;
       setState(() {
         _highlightedId = null;
@@ -354,7 +325,9 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
     final effectiveHighlightId = _highlightedId ?? externalHighlight;
     final totalHeight = hourHeight * 24;
 
-    return SingleChildScrollView(
+    return AbsorbPointer(
+      absorbing: widget.isInteractionBlocked,
+      child: SingleChildScrollView(
       controller: widget.scrollController,
       physics: const BouncingScrollPhysics(),
       child: SizedBox(
@@ -422,6 +395,8 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
           },
         ),
       ),
+    ),
     );
   }
 }
+

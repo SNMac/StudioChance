@@ -49,6 +49,7 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
     required this.onDeleted,
     required this.maxAvailableHeight,
     this.availableStores,
+    this.initialSpaceOptions,
   });
 
   final Reservation reservation;
@@ -65,6 +66,9 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
   /// null이면 [reservation.storeSummary] 단일 항목으로 fallback.
   /// TODO: 실제 데이터 연결 시 Home Provider에서 전달.
   final List<StoreSummary>? availableStores;
+
+  /// 모달 진입 전 미리 조회된 공간 옵션. non-null이면 내부 fetch를 생략한다.
+  final List<SpaceOption>? initialSpaceOptions;
 
   @override
   ConsumerState<ReservationDetailModal> createState() =>
@@ -158,7 +162,17 @@ class _ReservationDetailModalState
     _adjustmentFocusNode.addListener(_onAdjustmentFocusChanged);
     _initFields(widget.reservation);
     _spaceOptionId = widget.reservation.spaceOptionId;
-    _loadSpaceOptions(widget.reservation.storeSummary.id);
+    final preloaded = widget.initialSpaceOptions;
+    if (preloaded != null) {
+      _spaceOptions = preloaded;
+      if (preloaded.isNotEmpty && _spaceOptionId == null) {
+        _spaceOptionId = preloaded.first.id;
+      }
+      // initState에서 직접 계산 (setState 호출 불가)
+      _applyInitialPrice(preloaded);
+    } else {
+      _loadSpaceOptions(widget.reservation.storeSummary.id);
+    }
     _loadReservationCount();
   }
 
@@ -300,6 +314,22 @@ class _ReservationDetailModalState
       isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
     );
     setState(() => _calculatedPrice = price);
+  }
+
+  // initState에서 setState 없이 초기 가격을 계산할 때만 사용
+  void _applyInitialPrice(List<SpaceOption> spaces) {
+    if (spaces.isEmpty) return;
+    final priceSetting = _spaceOptionId != null
+        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        : spaces.first.priceSetting;
+    final headCount = int.tryParse(_headCountController.text) ?? 0;
+    _calculatedPrice = priceSetting.calculatePrice(
+      start: _startTime,
+      end: _endTime,
+      headCount: headCount,
+      isAllDay: _isAllDay,
+      isHoliday: false,
+    );
   }
 
   void _applyOcrResult(ReservationOcrResult result) {
@@ -1153,6 +1183,7 @@ Future<void> showReservationDetailModal(
   BuildContext context,
   Reservation reservation, {
   List<StoreSummary>? availableStores,
+  List<SpaceOption>? initialSpaceOptions,
   required void Function(Reservation) onSaved,
   required VoidCallback onDeleted,
 }) {
@@ -1167,6 +1198,7 @@ Future<void> showReservationDetailModal(
       builder: (_, constraints) => ReservationDetailModal(
         reservation: reservation,
         availableStores: availableStores,
+        initialSpaceOptions: initialSpaceOptions,
         onSaved: onSaved,
         onDeleted: onDeleted,
         maxAvailableHeight: constraints.maxHeight,

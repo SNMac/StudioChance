@@ -20,7 +20,18 @@ import 'package:studio_chance/presentation/providers/home_reservations_provider.
 /// - 우측 PageView (viewportFraction: 1/3, 1페이지=1일, 3일 동시 표시)
 /// - 수직 스크롤: 페이지별 ScrollController + 중앙 offset 동기화
 class ThreeDayCalendar extends ConsumerStatefulWidget {
-  const ThreeDayCalendar({super.key});
+  const ThreeDayCalendar({
+    super.key,
+    required this.onOpenDetailModal,
+    required this.isInteractionBlocked,
+  });
+
+  /// 예약 셀 탭 시 상세 모달을 여는 콜백.
+  /// availableStores는 ThreeDayCalendar 내부에서 커리되어 주입된다.
+  final Future<void> Function(Reservation, List<StoreSummary>?) onOpenDetailModal;
+
+  /// true이면 셀 터치를 완전히 차단한다 (로딩 중 중복 탭 방지).
+  final bool isInteractionBlocked;
 
   @override
   ConsumerState<ThreeDayCalendar> createState() => _ThreeDayCalendarState();
@@ -514,7 +525,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                           AllDayCell(
                             events: eventsForDate(allEvents, date, allDay: true),
                             reservations: reservationsMap,
-                            availableStores: availableStores,
+                            onOpenDetailModal: (r) =>
+                                widget.onOpenDetailModal(r, availableStores),
+                            isInteractionBlocked: widget.isInteractionBlocked,
                           ),
                           Container(
                               height: calendarDividerThickness,
@@ -527,7 +540,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                               isToday: _isToday(date),
                               events: eventsForDate(allEvents, date, allDay: false),
                               reservations: reservationsMap,
-                              availableStores: availableStores,
+                              onOpenDetailModal: (r) =>
+                                  widget.onOpenDetailModal(r, availableStores),
+                              isInteractionBlocked: widget.isInteractionBlocked,
                             ),
                           ),
                         ],

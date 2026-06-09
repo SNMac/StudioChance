@@ -22,6 +22,7 @@ import 'package:studio_chance/presentation/home/widgets/home_nav_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/monthly_calendar/monthly_calendar.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/three_day_calendar.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
@@ -110,8 +111,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: const MonthlyCalendar(),
                   ),
                 ),
-                const Expanded(
-                  child: ThreeDayCalendar(),
+                Expanded(
+                  child: ThreeDayCalendar(
+                    onOpenDetailModal: _onOpenDetailModal,
+                    isInteractionBlocked: _isLoadingForModal,
+                  ),
                 ),
               ],
             ),
@@ -127,6 +131,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         LoadingOverlay(isLoading: _showLoadingOverlay),
       ],
+    );
+  }
+
+  Future<void> _onOpenDetailModal(
+    Reservation reservation,
+    List<StoreSummary>? availableStores,
+  ) async {
+    if (_isLoadingForModal) return;
+
+    setState(() => _isLoadingForModal = true);
+    _overlayTimer = Timer(
+      const Duration(seconds: 1),
+      () { if (mounted) setState(() => _showLoadingOverlay = true); },
+    );
+
+    List<SpaceOption>? spaceOptions;
+    try {
+      spaceOptions = await ref
+          .read(homeReservationActionsControllerProvider.notifier)
+          .getStoreSpaceOptions(reservation.storeSummary.id);
+    } finally {
+      _overlayTimer?.cancel();
+      _overlayTimer = null;
+      if (mounted) {
+        setState(() {
+          _isLoadingForModal = false;
+          _showLoadingOverlay = false;
+        });
+      }
+    }
+
+    if (!mounted) return;
+    await showReservationDetailModal(
+      context,
+      reservation,
+      availableStores: availableStores,
+      initialSpaceOptions: spaceOptions,
+      onSaved: (updated) {
+        ref
+            .read(homeReservationActionsControllerProvider.notifier)
+            .updateReservation(updated);
+      },
+      onDeleted: () {
+        ref
+            .read(homeReservationActionsControllerProvider.notifier)
+            .deleteReservation(reservation);
+      },
     );
   }
 
