@@ -482,8 +482,8 @@ Widget _buildScrollArea(TextTheme textTheme) {
 
 |    설명    |   화면   |
 | :-------------: | :----------: |
-| addPostFrameCallback (flash 발생) | <img width="300" alt="addPostFrameCallback" src="https://github.com/user-attachments/assets/d3683229-1b0e-444b-bb6a-e44ab439573e"> |
-| Offstage + 동기 offset 복사 (해결) | <img width="300" alt="Offstage" src="https://github.com/user-attachments/assets/68134d14-9414-4288-8953-21cbdb5806bc"> |
+| addPostFrameCallback (flash 발생) | <img width="300" alt="addPostFrameCallback" src="https://github.com/user-attachments/assets/02fa1363-45e0-4dc4-9df4-e872d61c3510"> |
+| Offstage + 동기 offset 복사 (해결) | <img width="300" alt="Offstage" src="https://github.com/user-attachments/assets/3f20d2aa-f7dc-4887-9039-189f4374e096"> |
 
 <br>
 
@@ -496,7 +496,42 @@ Widget _buildScrollArea(TextTheme textTheme) {
 
 ## 📱 주요 기능
 
-1. **기능 제목**
-   > 기능 설명
+1. **소셜 로그인**  
+   Google 및 Apple 계정으로 간편하게 로그인할 수 있습니다.
+
+<br><br>
+
+2. **3일 캘린더 예약 현황**  
+   3일 단위 타임 그리드로 예약 현황을 실시간으로 확인합니다. 종일 예약은 상단 행, 시간대 예약은 해당 시간 셀에 표시되며 Firestore 실시간 구독으로 즉시 반영됩니다.
+
+<br><br>
+
+3. **월간 캘린더**  
+   홈 상단의 월간 캘린더로 날짜를 빠르게 이동할 수 있습니다. 날짜를 탭하면 3일 캘린더가 해당 날짜로 이동합니다.
+
+<br><br>
+
+4. **예약 등록 · 수정 · 삭제**  
+   고객명, 연락처, 시간, 공간, 결제 방법 등 예약 정보를 입력하고 관리합니다. 점포의 요금 설정에 따라 금액이 자동 계산되며, 메모와 금액 조정도 지원합니다.
+
+<br><br>
+
+5. **예약 스크린샷 OCR (AI 자동 입력)**  
+   예약 스크린샷 이미지를 업로드하면 Firebase AI(Gemini)가 고객명, 연락처, 예약 시간을 자동으로 인식해 입력 폼에 채워줍니다.
+
+<br><br>
+
+6. **점포 등록 및 설정**  
+   점포 이름, 주소, 계좌 정보, 안내사항 등 기본 정보를 등록합니다. 공간 옵션별로 요일 그룹·시간대·인원 기준을 세분화한 요금 설정을 구성할 수 있습니다.
+
+<br><br>
+
+7. **멤버 초대 및 권한 관리**  
+   초대 코드(6자리, 15분 유효)를 생성해 직원·스태프를 초대합니다. 관리자는 가입 대기 멤버를 승인하고 역할(Admin/Staff/Viewer)을 변경할 수 있습니다.
+
+<br><br>
+
+8. **다중 점포 관리**  
+   여러 점포를 하나의 앱에서 관리합니다. 점포별 색상으로 구분하고 필터로 원하는 점포의 예약만 표시할 수 있습니다.
 
 <br><br>
