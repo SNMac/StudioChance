@@ -17,4 +17,11 @@ enum ReservationPlatform {
     ReservationPlatform.yanolja => '야놀자',
     ReservationPlatform.other => '기타',
   };
+
+  String get jsonValue => switch (this) {
+    ReservationPlatform.naver => 'NAVER',
+    ReservationPlatform.spaceCloud => 'SPACECLOUD',
+    ReservationPlatform.yanolja => 'YANOLJA',
+    ReservationPlatform.other => 'OTHER',
+  };
 }

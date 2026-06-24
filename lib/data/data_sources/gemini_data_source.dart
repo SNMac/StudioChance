@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/data/models/reservation_ocr_result_model.dart';
+import 'package:studio_chance/domain/enums/reservation_platform.dart';
 
 part 'gemini_data_source.g.dart';
 
@@ -30,11 +31,19 @@ class GeminiDataSourceImpl implements GeminiDataSource {
   }
 
   static String _buildPrompt(Map<String, List<String>>? storeSpaceMap) {
-    const baseRules = '''이 이미지는 공간 예약 플랫폼의 확인 화면 또는 관리자 예약 승인 대기 화면 스크린샷입니다.
+    final knownPlatforms = ReservationPlatform.values
+        .where((p) => p != ReservationPlatform.other)
+        .map((p) => p.jsonValue)
+        .join(', ');
+    final allPlatforms = ReservationPlatform.values
+        .map((p) => p.jsonValue)
+        .join(' | ');
+
+    final baseRules = '''이 이미지는 공간 예약 플랫폼의 확인 화면 또는 관리자 예약 승인 대기 화면 스크린샷입니다.
 다음 규칙에 따라 예약 데이터를 정확하게 추출하여 JSON 포맷으로 생성하세요.
 
 [데이터 추출 규칙]
-1. platform: 화면 내 텍스트나 UI 특징을 보고 다음 중 하나를 선택 (NAVER, SPACECLOUD, YANOLJA, OTHER).
+1. platform: 화면 내 텍스트나 UI 특징을 보고 다음 중 하나를 선택 ($knownPlatforms, OTHER).
    - '톡톡 대화하기', '네이버 플레이스' 등이 보이면 'NAVER'입니다.
 2. customerName:
    - '방문자' 이름이 별도로 존재하고 '예약자'와 다르면 '방문자' 이름을 우선 추출하십시오.
@@ -70,7 +79,7 @@ $rules89
 
 [출력 포맷 스키마]
 {
-  "platform": "NAVER" | "SPACECLOUD" | "YANOLJA" | "OTHER",
+  "platform": $allPlatforms,
   "customerName": string,
   "customerPhone": string,
   "startTime": string,

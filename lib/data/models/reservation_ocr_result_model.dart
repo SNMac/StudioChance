@@ -12,12 +12,10 @@ DateTime? _parseDateTimeNullable(Object? value) {
 
 ReservationPlatform? _parsePlatform(Object? raw) {
   if (raw == null) return null;
-  return switch (raw.toString().toUpperCase()) {
-    'NAVER' => ReservationPlatform.naver,
-    'SPACECLOUD' => ReservationPlatform.spaceCloud,
-    'YANOLJA' => ReservationPlatform.yanolja,
-    _ => ReservationPlatform.other,
-  };
+  final upper = raw.toString().toUpperCase();
+  return ReservationPlatform.values
+      .where((p) => p.jsonValue == upper)
+      .firstOrNull ?? ReservationPlatform.other;
 }
 
 @freezed
