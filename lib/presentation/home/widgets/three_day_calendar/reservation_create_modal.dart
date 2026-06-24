@@ -197,7 +197,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       _isLoadingSpaceOptions = false;
       _spaceOptions = loaded;
       if (pending != null) {
-        final matched = loaded.where((s) => _nameMatches(pending, s.name)).firstOrNull;
+        final matched = loaded.where((s) => s.name == pending).firstOrNull;
         if (matched != null) {
           _spaceOptionId = matched.id;
         } else {
@@ -228,12 +228,6 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
     );
     setState(() => _calculatedPrice = price);
-  }
-
-  bool _nameMatches(String ocrName, String actualName) {
-    final ocrLower = ocrName.toLowerCase().trim();
-    final actualLower = actualName.toLowerCase().trim();
-    return actualLower.contains(ocrLower) || ocrLower.contains(actualLower);
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -278,7 +272,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     StoreSummary? matchedStore;
     if (ocrStoreName != null && _availableStores.length > 1) {
       matchedStore = _availableStores
-          .where((s) => _nameMatches(ocrStoreName, s.name))
+          .where((s) => s.name == ocrStoreName)
           .firstOrNull;
       if (matchedStore != null) {
         setState(() {
@@ -299,7 +293,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       final ocrSpaceName = result.spaceName;
       if (ocrSpaceName != null && _spaceOptions.isNotEmpty) {
         final matched = _spaceOptions
-            .where((s) => _nameMatches(ocrSpaceName, s.name))
+            .where((s) => s.name == ocrSpaceName)
             .firstOrNull;
         if (matched != null) {
           setState(() => _spaceOptionId = matched.id);
@@ -472,7 +466,26 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     if (bytes == null || !mounted) return;
     final confirmed = await showImagePreviewPage(context, bytes);
     if (!confirmed || !mounted) return;
-    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(bytes);
+
+    // 이미지 확정 후 모든 점포의 공간 옵션 병렬 조회
+    final notifier = ref.read(homeReservationActionsControllerProvider.notifier);
+    final allSpaceOptions = await Future.wait(
+      _availableStores.map((s) => notifier.getStoreSpaceOptions(s.id)),
+    );
+    if (!mounted) return;
+
+    final storeSpaceMap = <String, List<String>>{};
+    for (var i = 0; i < _availableStores.length; i++) {
+      final spaces = allSpaceOptions[i];
+      if (spaces != null && spaces.isNotEmpty) {
+        storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+      }
+    }
+
+    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(
+      bytes,
+      storeSpaceMap: storeSpaceMap.isNotEmpty ? storeSpaceMap : null,
+    );
   }
 
   Widget _buildOcrButton() {
