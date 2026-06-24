@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/presentation/commons/extensions/day_group_formatter.dart';
@@ -35,6 +35,9 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
   bool _isHeadcountValid = false;
   bool _isInitialized = false;
+
+  /// 현재 열린 picker: (slotIndex, isStart). null이면 모두 닫힘.
+  ({int slotIndex, bool isStart})? _openPicker;
 
   /// 초기 데이터 로드 (최초 1회)
   void _initializeData(DayGroup currentGroup) {
@@ -67,23 +70,54 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
     });
   }
 
-  void _addLocalTimeSlot() {
+  void _togglePicker(int slotIndex, {required bool isStart}) {
     setState(() {
+      if (_openPicker?.slotIndex == slotIndex && _openPicker?.isStart == isStart) {
+        _openPicker = null;
+      } else {
+        _openPicker = (slotIndex: slotIndex, isStart: isStart);
+      }
+    });
+  }
+
+  void _addLocalTimeSlot() {
+    FocusScope.of(context).unfocus();
+    final pickerWasOpen = _openPicker != null;
+    setState(() {
+      _openPicker = null;
       _currentTimeSlots.add(TimeSlot.empty());
     });
-    _scrollAfterBuild();
+    // picker가 열려있었다면 닫힘 애니메이션(300ms) 완료 후 스크롤
+    if (pickerWasOpen) {
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted) _scrollAfterBuild();
+      });
+    } else {
+      _scrollAfterBuild();
+    }
   }
 
   void _copyLocalTimeSlot(int index) {
+    FocusScope.of(context).unfocus();
+    final pickerWasOpen = _openPicker != null;
     setState(() {
+      _openPicker = null;
       final copiedSlot = _currentTimeSlots[index].copyWith();
       _currentTimeSlots.insert(index + 1, copiedSlot);
     });
-    _scrollAfterBuild(toBottom: false);
+    if (pickerWasOpen) {
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted) _scrollAfterBuild(toBottom: false);
+      });
+    } else {
+      _scrollAfterBuild(toBottom: false);
+    }
   }
 
   void _removeLocalTimeSlot(int index) {
+    FocusScope.of(context).unfocus();
     setState(() {
+      _openPicker = null;
       if (_currentTimeSlots.length > 1) {
         _currentTimeSlots.removeAt(index);
       } else {
@@ -114,24 +148,26 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
   Widget build(BuildContext context) {
     final args = GoRouterState.of(context).extra as Map<String, dynamic>;
     final Store? storeToEdit = args['store'] as Store?;
-    final int groupIndex = args['index'] as int;
+    final int spaceIndex = args['spaceIndex'] as int;
+    final int groupIndex = args['groupIndex'] as int;
 
-    final PriceSetting priceSettings;
+    final List<SpaceOption> spaceOptions;
     final StoreFormControllerable notifier;
 
     if (storeToEdit != null) {
-      priceSettings = ref.watch(
-        storeUpdateControllerProvider(storeToEdit).select((s) => s.priceSettings),
+      spaceOptions = ref.watch(
+        storeUpdateControllerProvider(storeToEdit).select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
-      priceSettings = ref.watch(
-        storeCreationControllerProvider.select((s) => s.priceSettings),
+      spaceOptions = ref.watch(
+        storeCreationControllerProvider.select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
-    if (groupIndex >= priceSettings.dayGroups.length) {
+    if (spaceIndex >= spaceOptions.length ||
+        groupIndex >= spaceOptions[spaceIndex].priceSetting.dayGroups.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
@@ -146,7 +182,8 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
       );
     }
 
-    final currentDayGroup = priceSettings.dayGroups[groupIndex];
+    final currentDayGroup =
+        spaceOptions[spaceIndex].priceSetting.dayGroups[groupIndex];
     _initializeData(currentDayGroup);
 
     void onSave() {
@@ -183,7 +220,7 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
         timeSlots: _currentTimeSlots,
       );
 
-      notifier.setDayGroup(groupIndex, finalDayGroup);
+      notifier.setDayGroup(spaceIndex, groupIndex, finalDayGroup);
       context.pop();
     }
 
@@ -236,11 +273,20 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
                       timeSlot: timeSlot,
                       showAdd: showAdd,
                       showDelete: true,
+                      startPickerOpen:
+                          _openPicker?.slotIndex == slotIndex &&
+                          _openPicker?.isStart == true,
+                      endPickerOpen:
+                          _openPicker?.slotIndex == slotIndex &&
+                          _openPicker?.isStart == false,
                       onAdd: _addLocalTimeSlot,
                       onCopy: () => _copyLocalTimeSlot(slotIndex),
                       onDelete: () => _removeLocalTimeSlot(slotIndex),
                       onChanged: (updatedSlot) {
                         _updateLocalTimeSlot(slotIndex, updatedSlot);
+                      },
+                      onPickerToggled: ({required bool isStart}) {
+                        _togglePicker(slotIndex, isStart: isStart);
                       },
                     );
                   }),

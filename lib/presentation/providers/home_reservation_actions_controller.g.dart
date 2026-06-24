@@ -36,7 +36,7 @@ final class HomeReservationActionsControllerProvider
 }
 
 String _$homeReservationActionsControllerHash() =>
-    r'fe76523f8a2f169b92b5cda82d850bd619c04896';
+    r'5cbc49761d6daaee72595ff55c6c1e52ca10e78a';
 
 abstract class _$HomeReservationActionsController extends $AsyncNotifier<void> {
   FutureOr<void> build();

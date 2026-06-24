@@ -29,6 +29,7 @@ _ReservationModel _$ReservationModelFromJson(Map<String, dynamic> json) =>
       priceAdjustment: (json['priceAdjustment'] as num).toInt(),
       totalPrice: (json['totalPrice'] as num).toInt(),
       writerRole: $enumDecode(_$UserRoleEnumMap, json['writerRole']),
+      spaceOptionId: json['spaceOptionId'] as String?,
     );
 
 Map<String, dynamic> _$ReservationModelToJson(_ReservationModel instance) =>
@@ -49,6 +50,7 @@ Map<String, dynamic> _$ReservationModelToJson(_ReservationModel instance) =>
       'priceAdjustment': instance.priceAdjustment,
       'totalPrice': instance.totalPrice,
       'writerRole': _$UserRoleEnumMap[instance.writerRole]!,
+      'spaceOptionId': instance.spaceOptionId,
     };
 
 const _$ReservationStatusEnumMap = {
@@ -65,8 +67,8 @@ const _$ReservationPlatformEnumMap = {
 };
 
 const _$PaymentMethodEnumMap = {
-  PaymentMethod.onSite: 'ON_SITE',
   PaymentMethod.bankTransfer: 'BANK_TRANSFER',
+  PaymentMethod.onSite: 'ON_SITE',
   PaymentMethod.other: 'OTHER',
 };
 

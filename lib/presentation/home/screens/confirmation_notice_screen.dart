@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,9 +9,8 @@ import 'package:studio_chance/presentation/commons/extensions/phone_formatter.da
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
-import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 class ConfirmationNoticeScreen extends ConsumerWidget {
@@ -40,15 +40,13 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
       storeDetailProvider(reservation!.storeSummary.id),
     );
 
-    return Scaffold(
-      appBar: const CustomAppBar(title: '확정 안내문'),
-      body: SafeArea(
-        child: storeAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => _buildContent(context, textTheme, null),
-          data: (store) => _buildContent(context, textTheme, store),
-        ),
+    return storeAsync.when(
+      loading: () => const Scaffold(
+        appBar: CustomAppBar(title: '확정 안내문'),
+        body: Center(child: CircularProgressIndicator()),
       ),
+      error: (_, _) => _buildContent(context, textTheme, null),
+      data: (store) => _buildContent(context, textTheme, store),
     );
   }
 
@@ -58,57 +56,40 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
     String text,
   ) {
     return Scaffold(
-      appBar: const CustomAppBar(title: '확정 안내문'),
-      body: SafeArea(child: _buildBody(context, textTheme, text)),
+      appBar: CustomAppBar(
+        title: '확정 안내문',
+        actions: [
+          IconButton(
+            icon: Icon(CupertinoIcons.share, color: context.systemBlue),
+            onPressed: () => SharePlus.instance.share(ShareParams(text: text)),
+          ),
+          IconButton(
+            icon: Icon(CupertinoIcons.doc_on_doc, color: context.systemBlue),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('복사됐습니다.')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: _buildBody(context, textTheme, text),
     );
   }
 
   Widget _buildContent(BuildContext context, TextTheme textTheme, Store? store) {
-    return _buildBody(context, textTheme, _buildText(store));
+    return _buildScaffold(context, textTheme, _buildText(store));
   }
 
   Widget _buildBody(BuildContext context, TextTheme textTheme, String text) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 145),
-            child: Text(
-              text,
-              style: textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-            child: GroupedFormContainer(
-              children: [
-                TextActionButton(
-                  title: '복사하기',
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: text));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('복사됐습니다.')),
-                    );
-                  },
-                ),
-                TextActionButton(
-                  title: '공유하기',
-                  onPressed: () => SharePlus.instance.share(
-                    ShareParams(text: text),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(16, 32, 16, 32 + bottomInset),
+      child: SelectableText(
+        text,
+        style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.normal),
+      ),
     );
   }
 
@@ -119,8 +100,11 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
       formState.addressGuide,
     ].where((s) => s.isNotEmpty).join(' ');
 
-    final notesSection = formState.confirmationNotes.isNotEmpty
-        ? '\n📌 안내·주의사항\n${formState.confirmationNotes}\n'
+    final infoSection = formState.infoNotes.isNotEmpty
+        ? '\nℹ️ 안내사항\n${formState.infoNotes}\n'
+        : '';
+    final cautionSection = formState.cautionNotes.isNotEmpty
+        ? '\n⚠️ 주의사항\n${formState.cautionNotes}\n'
         : '';
 
     return '[{점포명} 예약 확정 안내]\n'
@@ -133,7 +117,8 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
         '• 예약 시간: {yyyy}년 {mm}월 {dd}일 ({요일}) {hh}시 ~ {hh}시 ({n}시간)\n'
         '• 예약 인원: {예약 인원}인\n'
         '• 이용 장소: ${addressParts.isEmpty ? '{이용 장소}' : addressParts}\n'
-        '$notesSection'
+        '$infoSection'
+        '$cautionSection'
         '\n'
         '이용해 주셔서 감사합니다! 좋은 시간 보내세요. 🙇‍♂️';
   }
@@ -194,8 +179,11 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
             .join(' ')
         : '';
 
-    final notesSection = (store?.confirmationNotes?.isNotEmpty == true)
-        ? '\n📌 안내·주의사항\n${store!.confirmationNotes}\n'
+    final infoSection = (store?.infoNotes?.isNotEmpty == true)
+        ? '\nℹ️ 안내사항\n${store!.infoNotes}\n'
+        : '';
+    final cautionSection = (store?.cautionNotes?.isNotEmpty == true)
+        ? '\n⚠️ 주의사항\n${store!.cautionNotes}\n'
         : '';
 
     return '[${r.storeSummary.name} 예약 확정 안내]\n'
@@ -208,7 +196,8 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
         '• 예약 시간: $timeStr\n'
         '• 예약 인원: ${r.headCount}인\n'
         '• 이용 장소: $addressParts\n'
-        '$notesSection'
+        '$infoSection'
+        '$cautionSection'
         '\n'
         '이용해 주셔서 감사합니다! 좋은 시간 보내세요. 🙇‍♂️';
   }

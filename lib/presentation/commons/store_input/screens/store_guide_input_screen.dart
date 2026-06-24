@@ -25,15 +25,16 @@ class StoreGuideInputScreen extends ConsumerStatefulWidget {
       _StoreGuideInputScreenState();
 }
 
-class _StoreGuideInputScreenState
-    extends ConsumerState<StoreGuideInputScreen> {
-  late final TextEditingController _notesController;
+class _StoreGuideInputScreenState extends ConsumerState<StoreGuideInputScreen> {
+  late final TextEditingController _infoController;
+  late final TextEditingController _cautionController;
   bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _notesController = TextEditingController();
+    _infoController = TextEditingController();
+    _cautionController = TextEditingController();
   }
 
   @override
@@ -50,19 +51,22 @@ class _StoreGuideInputScreenState
         formState = ref.read(storeCreationControllerProvider);
       }
 
-      _notesController.text = formState.confirmationNotes;
+      _infoController.text = formState.infoNotes;
+      _cautionController.text = formState.cautionNotes;
       _isInitialized = true;
     }
   }
 
   @override
   void dispose() {
-    _notesController.dispose();
+    _infoController.dispose();
+    _cautionController.dispose();
     super.dispose();
   }
 
   void _save(StoreFormControllerable notifier) {
-    notifier.setConfirmationNotes(_notesController.text);
+    notifier.setInfoNotes(_infoController.text);
+    notifier.setCautionNotes(_cautionController.text);
     context.pop();
   }
 
@@ -72,55 +76,67 @@ class _StoreGuideInputScreenState
 
     final StoreFormControllerable notifier;
     if (storeToEdit != null) {
-      notifier =
-          ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
+      notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: '안내사항',
+        title: '안내•주의사항',
         actions: [
-          AppBarActionButton(
-            label: '완료',
-            onPressed: () => _save(notifier),
-          ),
+          AppBarActionButton(label: '완료', onPressed: () => _save(notifier)),
         ],
       ),
-      body: SafeAreaWithPadding(
-        child: Column(
-          spacing: 20,
-          children: [
-            GroupedFormContainer(
-              children: [
-                MemoTextField(
-                  placeholder: '점포 안내·주의사항',
-                  controller: _notesController,
-                  maxLength: maxConfirmationNotesCharCount,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(
-                      maxConfirmationNotesCharCount,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            GroupedFormContainer(
-              children: [
-                TextActionButton(
-                  title: '확정 안내문',
-                  onPressed: () {
-                    notifier.setConfirmationNotes(_notesController.text);
-                    SCRoute.confirmationNotice.pushChild(
-                      context,
-                      extra: storeToEdit,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+      body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: SafeAreaWithPadding(
+          child: Column(
+            spacing: 20,
+            children: [
+              GroupedFormContainer(
+                children: [
+                  MemoTextField(
+                    placeholder: '점포 안내사항',
+                    controller: _infoController,
+                    maxLength: maxConfirmationNotesCharCount,
+                    maxDisplayLines: 15,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(
+                        maxConfirmationNotesCharCount,
+                      ),
+                    ],
+                  ),
+                  MemoTextField(
+                    placeholder: '점포 주의사항',
+                    controller: _cautionController,
+                    maxLength: maxConfirmationNotesCharCount,
+                    maxDisplayLines: 15,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(
+                        maxConfirmationNotesCharCount,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              GroupedFormContainer(
+                children: [
+                  TextActionButton(
+                    title: '확정 안내문',
+                    onPressed: () {
+                      notifier.setInfoNotes(_infoController.text);
+                      notifier.setCautionNotes(_cautionController.text);
+                      SCRoute.confirmationNotice.pushChild(
+                        context,
+                        extra: storeToEdit,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

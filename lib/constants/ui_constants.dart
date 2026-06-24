@@ -29,7 +29,16 @@ const double currentTimeCapsuleRightInset = 0.25;
 // 홈 화면 - 월간 캘린더
 const double monthlyCalendarDayRowHeight = 40.0; // 날짜 셀 행 높이
 const double monthlyCalendarWeekdayRowHeight = 20.0; // 요일 헤더 행 높이
-const double monthlyCalendarHeight = 260.0; // 월간 캘린더 총 높이
+const double monthlyCalendarHeight = 260.0; // 5행 기준 높이 (16=패딩 + 20=요일헤더 + 5×44.8=셀)
+
+/// 월간 캘린더 총 높이 (항상 6행 고정)
+/// 셀 높이 = (5행 기준 260 - 패딩16 - 요일헤더20) / 5 = 44.8
+/// 6행 총 높이 = 16 + 20 + 6 × 44.8 ≈ 304.8
+double monthlyCalendarHeightForMonth(DateTime month) {
+  const cellHeight =
+      (monthlyCalendarHeight - 16.0 - monthlyCalendarWeekdayRowHeight) / 5.0;
+  return 16.0 + monthlyCalendarWeekdayRowHeight + 6 * cellHeight;
+}
 
 // 홈 화면 - 3일 캘린더 헤더
 const double threeDayHeaderHeight = 28.0;

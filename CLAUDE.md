@@ -11,13 +11,17 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - Dart 컨벤션 사용
 - 콘솔 출력 시 `logger` 라이브러리 사용
 - 한국어로 커밋 메시지, 주석 작성
+- 앱 내에서 ID를 자체 생성할 때는 `uuid` 패키지의 `const Uuid().v4()` 사용 (`DateTime.now().millisecondsSinceEpoch` 금지)
 
 ## 아키텍처
 - `/lib/common`: 모든 계층에서 사용되는 로직
   - `/utils/exception_utils.dart`: `toException()` — catch 블록 Object → Exception 변환 헬퍼
+  - `/converters/timestamp_converter.dart`: `TimestampConverter` — Firestore `Timestamp` ↔ `DateTime` 변환. Data Model에 `@TimestampConverter()` 어노테이션으로 사용
 - `/lib/constants`: 모든 계층에서 사용되는 상수값
 - `/lib/data`: Data 계층
   - `/data_sources`: DB 연결 로직
+    - `firestore_data_source_base.dart`: `FirestoreDataSourceBase` — 모든 Firestore DataSource 기반 클래스. `errorLogTag`, `isDomainException`, `buildParsingException`, `mapFirebaseCode` 4개 멤버 구현 필요
+    - `gemini_data_source.dart`: 예약 스크린샷 OCR — Firebase AI Vertex AI `gemini-2.5-flash-lite` 사용
   - `/models`: Data 모델
   - `/repositories`: Data 로직 구현체
 - `/lib/domain`: Domain(비즈니스 로직) 계층
@@ -27,10 +31,17 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   - `/use_cases`: 비즈니스 로직 단위
     - `use_case_helpers.dart`: `getCurrentUserOrThrow(UserRepository)` 공통 헬퍼
 - `/lib/presentation`: UI 계층
-  - `/commons`: 여러 곳에서 사용되는 UI
+  - `/commons`: 온보딩·마이페이지가 공유하는 플로우 화면 및 공통 위젯
+    - `admin_store_registration/`: 관리자 점포 등록 화면
+    - `invite_code/`: 초대 코드 입력/확인 화면
+    - `nickname_input/`: 닉네임 입력 (온보딩/마이페이지 공유)
+    - `role_selection/`: 역할 선택
+    - `store_input/`: 점포 생성·수정 폼 화면
+    - `extensions/`: UI 관련 extension 메서드 (포맷터, colors 등)
+    - `widgets/`: 재사용 공통 위젯
   - `/home`: 홈 화면
-  - `/my_page`: 마이페이지 화면
-  - `/onboarding`: 온보딩 화면
+  - `/my_page`: 마이페이지 화면 (미구현)
+  - `/onboarding`: 닉네임 입력 화면 (온보딩 진입점만 포함, 나머지 플로우는 `/commons`에 위치)
   - `/providers`: UI 상태 관리 (위젯 액션이 UseCase 호출을 필요로 하면 여기에 전용 Controller 생성)
   - `/sign_in`: 로그인 화면
   - `/splash`: 스플래시 화면
@@ -71,12 +82,23 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `*_use_case.dart`: 순수 Domain (interface + impl), data import 금지
 - `*_use_case_provider.dart`: `@riverpod` 팩토리만 포함, data import 허용
 
-### 공휴일 요금 — isHoliday 파라미터 패턴 (D6)
+### 점포 폼 컨트롤러 패턴 (D7)
+`abstract interface class StoreFormControllerable` + `mixin StoreFormMixin` 조합으로 생성/수정 컨트롤러가 공통 인터페이스를 구현.
+- `StoreFormControllerable`: 생성/수정 컨트롤러가 구현해야 할 메서드 계약 정의
+- `StoreFormMixin`: 공통 로직(setter, SpaceOption/DayGroup/TimeSlot CRUD)을 Mixin으로 재사용
+- 신규 점포 폼 컨트롤러 추가 시 두 파일 모두 참고: `store_form_controllerable.dart`
+
+### 공휴일 요금 — isHoliday 파라미터 패턴 (D8)
 `PriceSetting.calculatePrice(isHoliday: bool)`로 공휴일 판단을 호출부에 위임.
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
 - 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: false` 고정 (TODO 주석)
 - 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 값 전달
 - 구현 상세: `dev/active/holiday-pricing/holiday-pricing-context.md` 참고
+
+### 앱 최초 실행 인증 데이터 삭제 (D9)
+`SharedPreferences` `hasLaunchedBefore` 플래그로 앱 최초 설치 실행을 감지하여 기존 인증 데이터 삭제.
+- iOS Keychain은 앱 삭제 후에도 인증 토큰이 잔존 → 재설치 후 로그인 없이 진입하는 문제 방지
+- `main_dev.dart`, `main_prod.dart`의 `_checkFirstLaunchAndClearData()`에 구현
 
 ## Either / TaskEither 패턴
 
@@ -89,9 +111,11 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 브랜치: `feat/#<이슈번호>-<설명>`, `fix/#<이슈번호>-<설명>`
 - 커밋: `<type>: #<이슈번호> - <한국어 설명>`
 - 기본 브랜치: `develop` (PR 대상)
+- 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
 ## 빌드 및 실행
-- `flutter run` - 앱 실행
+- `flutter run --target lib/main_dev.dart` - dev 플레이버 실행 (App Check 항상 Debug Provider)
+- `flutter run --target lib/main_prod.dart` - prod 플레이버 실행 (릴리즈: Play Integrity / App Attest)
 - `dart run build_runner build --delete-conflicting-outputs` - 코드 생성
 - `dart run build_runner watch` - 코드 생성 (watch 모드)
 - `flutter test` - 테스트 실행
@@ -136,6 +160,17 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   - `lowerBound`는 반드시 `initialSize`로 설정 — `0.0`이면 dismiss 중 Column overflow 발생
 - 모드 전환 간 스크롤 위치 보존: `Stack + Positioned.fill + Offstage` × 2 + 모드별 독립 `ScrollController`
   - 전환 전 `_syncScrollPosition()` 호출 필수 (setState 이전에)
+
+## 화면 전환 전 데이터 로딩 패턴
+
+화면/모달 전환 전에 데이터를 미리 조회해야 할 때 (예: 예약 등록 모달 오픈 전 공간 옵션 조회):
+- `ConsumerStatefulWidget`으로 로컬 상태(`_isLoading`, `_showOverlay`) + `Timer` 관리
+- 버튼 탭 즉시 `_isLoading = true`로 중복 호출 차단
+- fetch 시작과 동시에 1초 `Timer`를 시작하고, 타이머 콜백에서 `_showOverlay = true`로 `LoadingOverlay` 표시
+- fetch가 완료되거나 오류가 수신되면 `finally`에서 즉시 타이머 취소 + 두 플래그 모두 reset — 모달/화면 전환은 `finally` 이후에 수행
+- `LoadingOverlay`는 `Stack`의 최상단 레이어로 Scaffold 전체를 덮음
+- `dispose()`에서 반드시 타이머 취소
+- 구현 예시: `home_screen.dart` `_onAddReservation`
 
 ## Presentation → Domain 접근 규칙
 

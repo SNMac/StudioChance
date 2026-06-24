@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/router/router_path.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
 import 'package:studio_chance/domain/enums/reservation_platform.dart';
@@ -31,6 +31,11 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/image_preview_page.dart';
+import 'package:studio_chance/presentation/providers/reservation_ocr_controller.dart';
 
 /// 예약 확인 모달 (읽기 전용 ↔ 편집 모드 인라인 전환).
 ///
@@ -44,6 +49,7 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
     required this.onDeleted,
     required this.maxAvailableHeight,
     this.availableStores,
+    this.initialSpaceOptions,
   });
 
   final Reservation reservation;
@@ -60,6 +66,9 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
   /// null이면 [reservation.storeSummary] 단일 항목으로 fallback.
   /// TODO: 실제 데이터 연결 시 Home Provider에서 전달.
   final List<StoreSummary>? availableStores;
+
+  /// 모달 진입 전 미리 조회된 공간 옵션. non-null이면 내부 fetch를 생략한다.
+  final List<SpaceOption>? initialSpaceOptions;
 
   @override
   ConsumerState<ReservationDetailModal> createState() =>
@@ -107,8 +116,9 @@ class _ReservationDetailModalState
   late final TextEditingController _adjustmentController;
   late final FocusNode _adjustmentFocusNode;
 
-  // ── 가격 설정 ─────────────────────────────────────────────────────────────
-  PriceSetting? _priceSetting;
+  // ── 공간 옵션 / 가격 설정 ──────────────────────────────────────────────────
+  List<SpaceOption>? _spaceOptions;
+  String? _spaceOptionId;
   int _calculatedPrice = 0;
 
   // ── 방문 횟수 ─────────────────────────────────────────────────────────────
@@ -151,7 +161,18 @@ class _ReservationDetailModalState
     _adjustmentFocusNode = FocusNode();
     _adjustmentFocusNode.addListener(_onAdjustmentFocusChanged);
     _initFields(widget.reservation);
-    _loadPriceSetting(widget.reservation.storeSummary.id);
+    _spaceOptionId = widget.reservation.spaceOptionId;
+    final preloaded = widget.initialSpaceOptions;
+    if (preloaded != null) {
+      _spaceOptions = preloaded;
+      if (preloaded.isNotEmpty && _spaceOptionId == null) {
+        _spaceOptionId = preloaded.first.id;
+      }
+      // initState에서 직접 계산 (setState 호출 불가)
+      _applyInitialPrice(preloaded);
+    } else {
+      _loadSpaceOptions(widget.reservation.storeSummary.id);
+    }
     _loadReservationCount();
   }
 
@@ -209,6 +230,7 @@ class _ReservationDetailModalState
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController.text =
         r.priceAdjustment != 0 ? r.priceAdjustment.formattedPrice : '';
+    _spaceOptionId = r.spaceOptionId;
   }
 
   void _onAdjustmentFocusChanged() {
@@ -244,13 +266,20 @@ class _ReservationDetailModalState
 
   // ── 가격 계산 ─────────────────────────────────────────────────────────────
 
-  void _loadPriceSetting(String storeId) {
+  void _loadSpaceOptions(String storeId) {
     ref
         .read(homeReservationActionsControllerProvider.notifier)
-        .getStorePriceSetting(storeId)
-        .then((ps) {
+        .getStoreSpaceOptions(storeId)
+        .then((spaces) {
           if (!mounted) return;
-          setState(() => _priceSetting = ps);
+          setState(() {
+            _spaceOptions = spaces;
+            if (spaces != null &&
+                spaces.isNotEmpty &&
+                _spaceOptionId == null) {
+              _spaceOptionId = spaces.first.id;
+            }
+          });
           _recalculatePrice();
         });
   }
@@ -271,10 +300,13 @@ class _ReservationDetailModalState
   }
 
   void _recalculatePrice() {
-    final ps = _priceSetting;
-    if (ps == null) return;
+    final spaces = _spaceOptions;
+    if (spaces == null || spaces.isEmpty) return;
+    final priceSetting = _spaceOptionId != null
+        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        : spaces.first.priceSetting;
     final headCount = int.tryParse(_headCountController.text) ?? 0;
-    final price = ps.calculatePrice(
+    final price = priceSetting.calculatePrice(
       start: _startTime,
       end: _endTime,
       headCount: headCount,
@@ -282,6 +314,42 @@ class _ReservationDetailModalState
       isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
     );
     setState(() => _calculatedPrice = price);
+  }
+
+  // initState에서 setState 없이 초기 가격을 계산할 때만 사용
+  void _applyInitialPrice(List<SpaceOption> spaces) {
+    if (spaces.isEmpty) return;
+    final priceSetting = _spaceOptionId != null
+        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        : spaces.first.priceSetting;
+    final headCount = int.tryParse(_headCountController.text) ?? 0;
+    _calculatedPrice = priceSetting.calculatePrice(
+      start: _startTime,
+      end: _endTime,
+      headCount: headCount,
+      isAllDay: _isAllDay,
+      isHoliday: false,
+    );
+  }
+
+  void _applyOcrResult(ReservationOcrResult result) {
+    setState(() {
+      if (result.customerName != null) {
+        _nameController.text = result.customerName!;
+      }
+      if (result.customerPhone != null) {
+        _phoneController.text = result.customerPhone!.formattedPhone;
+      }
+      if (result.headCount != null) {
+        _headCountController.text = result.headCount.toString();
+      }
+      if (result.startTime != null) _startTime = result.startTime!;
+      if (result.endTime != null) _endTime = result.endTime!;
+      if (result.isAllDay != null) _isAllDay = result.isAllDay!;
+      if (result.platform != null) _platform = result.platform!;
+      if (result.memo != null) _memoController.text = result.memo!;
+    });
+    _recalculatePrice();
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
@@ -327,6 +395,7 @@ class _ReservationDetailModalState
       calculatedPrice: calculatedPrice,
       priceAdjustment: priceAdjustment,
       totalPrice: calculatedPrice + priceAdjustment,
+      spaceOptionId: _spaceOptionId,
     );
     widget.onSaved(updated);
     _loadReservationCount(
@@ -402,6 +471,32 @@ class _ReservationDetailModalState
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+
+    ref.listen(reservationOcrControllerProvider, (_, next) {
+      next.whenOrNull(
+        data: (result) {
+          if (result != null && mounted) _applyOcrResult(result);
+        },
+        error: (e, _) {
+          if (!mounted) return;
+          if (e is AppException && !e.isSilentable) {
+            showCustomAlertDialog(
+              context: context,
+              title: e.title,
+              content: e.content,
+              showCancel: false,
+            );
+          } else {
+            showCustomAlertDialog(
+              context: context,
+              title: 'OCR 오류',
+              content: '스크린샷 분석에 실패했습니다.\n잠시 후 다시 시도해 주세요.',
+              showCancel: false,
+            );
+          }
+        },
+      );
+    });
 
     return AnimatedBuilder(
       animation: _sheetController,
@@ -592,6 +687,37 @@ class _ReservationDetailModalState
 
   // ── 편집 본문 ─────────────────────────────────────────────────────────────
 
+  Future<void> _handleOcrButtonTap() async {
+    final bytes = await ref
+        .read(reservationOcrControllerProvider.notifier)
+        .pickForPreview();
+    if (bytes == null || !mounted) return;
+    final confirmed = await showImagePreviewPage(context, bytes);
+    if (!confirmed || !mounted) return;
+    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(bytes);
+  }
+
+  Widget _buildOcrButton() {
+    final isLoading = ref.watch(
+      reservationOcrControllerProvider.select((s) => s.isLoading),
+    );
+    return TextActionButton(
+      title: isLoading ? '분석 중...' : '스크린샷으로 자동 입력',
+      fontWeight: FontWeight.normal,
+      onPressed: isLoading
+          ? () => showCustomAlertDialog(
+                context: context,
+                title: '자동 입력 취소',
+                content: '스크린샷 분석을 중단할까요?',
+                confirmText: '중단',
+                cancelText: '계속',
+                onConfirmAfterPop: () =>
+                    ref.read(reservationOcrControllerProvider.notifier).cancel(),
+              )
+          : _handleOcrButtonTap,
+    );
+  }
+
   Widget _buildEditBody(TextTheme textTheme) {
     return SafeAreaWithPadding(
       top: false,
@@ -604,6 +730,7 @@ class _ReservationDetailModalState
       child: Column(
         spacing: 20,
         children: [
+          _buildOcrButton(),
           _buildSection1Edit(),
           _buildSection2Edit(),
           _buildSection3Edit(),
@@ -625,6 +752,10 @@ class _ReservationDetailModalState
   // ── 섹션 1: 기본 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection1ReadOnly() {
+    final spaceOptions = _spaceOptions;
+    final spaceName = spaceOptions != null && spaceOptions.isNotEmpty
+        ? (spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull?.name ?? spaceOptions.first.name)
+        : null;
     return GroupedFormContainer(
       children: [
         TitleTextLabel(
@@ -639,6 +770,11 @@ class _ReservationDetailModalState
             ),
           ),
         ),
+        if (spaceName != null)
+          TitleTextLabel(
+            title: '예약 공간',
+            content: spaceName,
+          ),
         TitleTextLabel(
           title: '예약 상태',
           content: _status.displayName,
@@ -648,6 +784,7 @@ class _ReservationDetailModalState
   }
 
   Widget _buildSection1Edit() {
+    final spaceOptions = _spaceOptions;
     return GroupedFormContainer(
       children: [
         Padding(
@@ -668,11 +805,31 @@ class _ReservationDetailModalState
               ),
             ),
             onSelected: (s) {
-              setState(() => _storeSummary = s);
-              _loadPriceSetting(s.id);
+              setState(() {
+                _storeSummary = s;
+                _spaceOptions = null;
+                _spaceOptionId = null;
+              });
+              _loadSpaceOptions(s.id);
             },
           ),
         ),
+        if (spaceOptions != null && spaceOptions.isNotEmpty)
+          Padding(
+            padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: horizontalPadding,
+            ),
+            child: TitlePopupButton<SpaceOption>(
+              title: '예약 공간',
+              selectedValue: spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? spaceOptions.first,
+              items: spaceOptions,
+              itemLabelBuilder: (s) => s.name,
+              onSelected: (s) {
+                setState(() => _spaceOptionId = s.id);
+                _recalculatePrice();
+              },
+            ),
+          ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(
             horizontal: horizontalPadding,
@@ -1026,6 +1183,7 @@ Future<void> showReservationDetailModal(
   BuildContext context,
   Reservation reservation, {
   List<StoreSummary>? availableStores,
+  List<SpaceOption>? initialSpaceOptions,
   required void Function(Reservation) onSaved,
   required VoidCallback onDeleted,
 }) {
@@ -1040,6 +1198,7 @@ Future<void> showReservationDetailModal(
       builder: (_, constraints) => ReservationDetailModal(
         reservation: reservation,
         availableStores: availableStores,
+        initialSpaceOptions: initialSpaceOptions,
         onSaved: onSaved,
         onDeleted: onDeleted,
         maxAvailableHeight: constraints.maxHeight,

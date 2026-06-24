@@ -1,6 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
@@ -16,9 +18,16 @@ class StoreCreationController extends _$StoreCreationController
     implements StoreFormControllerable {
   @override
   StoreFormState build() {
+    final defaultId = const Uuid().v4();
     return StoreFormState(
       color: StoreColor.red,
-      priceSettings: PriceSetting.empty(),
+      spaceOptions: [
+        SpaceOption(
+          id: defaultId,
+          name: '기본 공간',
+          priceSetting: PriceSetting.empty(),
+        ),
+      ],
     );
   }
 
@@ -32,7 +41,7 @@ class StoreCreationController extends _$StoreCreationController
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
-      priceSettings: state.priceSettings,
+      spaceOptions: state.spaceOptions,
       memberInfos: [],
       waitingMemberInfos: [],
       inviteInfo: null,
@@ -42,8 +51,9 @@ class StoreCreationController extends _$StoreCreationController
       bankAccountHolder:
           state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
       paymentDeadlineMinutes: state.paymentDeadlineMinutes,
-      confirmationNotes:
-          state.confirmationNotes.isEmpty ? null : state.confirmationNotes,
+      infoNotes:
+          state.infoNotes.isEmpty ? null : state.infoNotes,
+      cautionNotes: state.cautionNotes.isEmpty ? null : state.cautionNotes,
     );
 
     return (store: store, color: state.color, memo: state.memo);

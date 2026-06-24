@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
 import 'package:studio_chance/domain/enums/reservation_platform.dart';
@@ -14,23 +17,44 @@ import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/home/widgets/home_nav_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/monthly_calendar/monthly_calendar.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/three_day_calendar.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _isLoadingForModal = false;
+  bool _showLoadingOverlay = false;
+  Timer? _overlayTimer;
+
+  @override
+  void dispose() {
+    _overlayTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isMonthlyCalendarVisible = ref.watch(
       homeCalendarControllerProvider.select((s) => s.isMonthlyCalendarVisible),
     );
+    final displayedMonth = ref.watch(
+      homeCalendarControllerProvider.select((s) => s.displayedMonth),
+    );
+    final calendarHeight = monthlyCalendarHeightForMonth(displayedMonth);
     final storeInfos = ref.watch(
       currentUserProvider.select((u) => u.asData?.value?.storeInfos ?? []),
     );
@@ -66,53 +90,103 @@ class HomeScreen extends ConsumerWidget {
       (info) => info.role == UserRole.admin || info.role == UserRole.staff,
     );
 
-    return Scaffold(
-      backgroundColor: context.systemBackground,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const HomeNavBar(),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              height: isMonthlyCalendarVisible ? monthlyCalendarHeight : 0,
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(),
-              child: OverflowBox(
-                maxHeight: monthlyCalendarHeight,
-                alignment: Alignment.topCenter,
-                child: const MonthlyCalendar(),
-              ),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: context.systemBackground,
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                const HomeNavBar(),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: isMonthlyCalendarVisible ? calendarHeight : 0,
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(),
+                  child: OverflowBox(
+                    maxHeight: calendarHeight,
+                    alignment: Alignment.topCenter,
+                    child: const MonthlyCalendar(),
+                  ),
+                ),
+                Expanded(
+                  child: ThreeDayCalendar(
+                    onOpenDetailModal: _onOpenDetailModal,
+                    isInteractionBlocked: _isLoadingForModal,
+                  ),
+                ),
+              ],
             ),
-            const Expanded(
-              child: ThreeDayCalendar(),
-            ),
-          ],
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: canCreateReservation
+              ? _AddReservationFab(
+                  enabled: !_isLoadingForModal,
+                  onPressed: () => _onAddReservation(storeInfos, selectedStartDate),
+                )
+              : null,
+          bottomNavigationBar: const HomeTabBar(),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: canCreateReservation
-          ? _AddReservationFab(
-              onPressed: () => _onAddReservation(
-                context,
-                ref,
-                storeInfos,
-                selectedStartDate,
-              ),
-            )
-          : null,
-      bottomNavigationBar: const HomeTabBar(),
+        LoadingOverlay(isLoading: _showLoadingOverlay),
+      ],
+    );
+  }
+
+  Future<void> _onOpenDetailModal(
+    Reservation reservation,
+    List<StoreSummary>? availableStores,
+  ) async {
+    if (_isLoadingForModal) return;
+
+    setState(() => _isLoadingForModal = true);
+    _overlayTimer = Timer(
+      const Duration(seconds: 1),
+      () { if (mounted) setState(() => _showLoadingOverlay = true); },
+    );
+
+    List<SpaceOption>? spaceOptions;
+    try {
+      spaceOptions = await ref
+          .read(homeReservationActionsControllerProvider.notifier)
+          .getStoreSpaceOptions(reservation.storeSummary.id);
+    } finally {
+      _overlayTimer?.cancel();
+      _overlayTimer = null;
+      if (mounted) {
+        setState(() {
+          _isLoadingForModal = false;
+          _showLoadingOverlay = false;
+        });
+      }
+    }
+
+    if (!mounted) return;
+    await showReservationDetailModal(
+      context,
+      reservation,
+      availableStores: availableStores,
+      initialSpaceOptions: spaceOptions,
+      onSaved: (updated) {
+        ref
+            .read(homeReservationActionsControllerProvider.notifier)
+            .updateReservation(updated);
+      },
+      onDeleted: () {
+        ref
+            .read(homeReservationActionsControllerProvider.notifier)
+            .deleteReservation(reservation);
+      },
     );
   }
 
   Future<void> _onAddReservation(
-    BuildContext context,
-    WidgetRef ref,
     List<UserStoreInfo> storeInfos,
     DateTime selectedStartDate,
   ) async {
-    // 예약 생성 가능한 점포만 선택 목록에 포함
+    if (_isLoadingForModal) return;
+
     final creatableInfos = storeInfos
         .where((info) => info.role == UserRole.admin || info.role == UserRole.staff)
         .toList();
@@ -147,7 +221,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         role: defaultInfo.role,
       ),
-      status: ReservationStatus.confirmed,
+      status: ReservationStatus.pending,
       customerName: '',
       headCount: 0,
       customerPhone: '',
@@ -155,18 +229,43 @@ class HomeScreen extends ConsumerWidget {
       isAllDay: false,
       startTime: start,
       endTime: start.add(const Duration(hours: 1)),
-      platform: ReservationPlatform.other,
+      platform: ReservationPlatform.naver,
       paymentMethod: PaymentMethod.bankTransfer,
       calculatedPrice: 0,
       priceAdjustment: 0,
       totalPrice: 0,
     );
 
-    if (!context.mounted) return;
+    // 공간 옵션 선 조회 — fetch 중에만 버튼 비활성화, 1초 이상 지연 시 LoadingOverlay 표시
+    setState(() => _isLoadingForModal = true);
+    _overlayTimer = Timer(
+      const Duration(seconds: 1),
+      () { if (mounted) setState(() => _showLoadingOverlay = true); },
+    );
+
+    List<SpaceOption>? initialSpaceOptions;
+    try {
+      initialSpaceOptions = await ref
+          .read(homeReservationActionsControllerProvider.notifier)
+          .getStoreSpaceOptions(defaultInfo.id);
+    } finally {
+      // fetch 완료(성공·오류) 즉시 타이머 취소 및 로딩 상태 해제
+      _overlayTimer?.cancel();
+      _overlayTimer = null;
+      if (mounted) {
+        setState(() {
+          _isLoadingForModal = false;
+          _showLoadingOverlay = false;
+        });
+      }
+    }
+
+    if (!mounted) return;
     await showReservationCreateModal(
       context,
       initialReservation,
       availableStores: availableStores,
+      initialSpaceOptions: initialSpaceOptions,
       onSaved: (reservation) {
         ref
             .read(homeReservationActionsControllerProvider.notifier)
@@ -180,14 +279,15 @@ class HomeScreen extends ConsumerWidget {
 
 /// 예약 등록 버튼 (44×44 원형, systemBlue 배경, plus 아이콘)
 class _AddReservationFab extends StatelessWidget {
-  const _AddReservationFab({required this.onPressed});
+  const _AddReservationFab({required this.onPressed, required this.enabled});
 
   final VoidCallback onPressed;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
+      onTap: enabled ? onPressed : null,
       child: Container(
         width: 44,
         height: 44,

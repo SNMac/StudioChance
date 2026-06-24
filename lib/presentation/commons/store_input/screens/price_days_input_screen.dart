@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/weekday.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
@@ -22,24 +22,26 @@ class PriceDaysInputScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final args = GoRouterState.of(context).extra as Map<String, dynamic>;
     final Store? storeToEdit = args['store'] as Store?;
-    final int groupIndex = args['index'] as int;
+    final int spaceIndex = args['spaceIndex'] as int;
+    final int groupIndex = args['groupIndex'] as int;
 
-    final PriceSetting priceSettings;
+    final List<SpaceOption> spaceOptions;
     final StoreFormControllerable notifier;
 
     if (storeToEdit != null) {
-      priceSettings = ref.watch(
-        storeUpdateControllerProvider(storeToEdit).select((s) => s.priceSettings),
+      spaceOptions = ref.watch(
+        storeUpdateControllerProvider(storeToEdit).select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
-      priceSettings = ref.watch(
-        storeCreationControllerProvider.select((s) => s.priceSettings),
+      spaceOptions = ref.watch(
+        storeCreationControllerProvider.select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
 
-    if (groupIndex >= priceSettings.dayGroups.length) {
+    if (spaceIndex >= spaceOptions.length ||
+        groupIndex >= spaceOptions[spaceIndex].priceSetting.dayGroups.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomAlertDialog(
           context: context,
@@ -55,13 +57,15 @@ class PriceDaysInputScreen extends ConsumerWidget {
       );
     }
 
-    final currentDayGroup = priceSettings.dayGroups[groupIndex];
+    final currentDayGroup =
+        spaceOptions[spaceIndex].priceSetting.dayGroups[groupIndex];
     final selectedDays = currentDayGroup.days;
 
     final Set<Weekday> unavailableDays = {};
-    for (int i = 0; i < priceSettings.dayGroups.length; i++) {
+    final allGroups = spaceOptions[spaceIndex].priceSetting.dayGroups;
+    for (int i = 0; i < allGroups.length; i++) {
       if (i == groupIndex) continue;
-      unavailableDays.addAll(priceSettings.dayGroups[i].days);
+      unavailableDays.addAll(allGroups[i].days);
     }
 
     const List<Weekday> weekDays = [
@@ -92,7 +96,7 @@ class PriceDaysInputScreen extends ConsumerWidget {
                   onPressed: isDisabled
                       ? null
                       : () {
-                          notifier.toggleDayGroupDay(groupIndex, day);
+                          notifier.toggleDayGroupDay(spaceIndex, groupIndex, day);
                         },
                 );
               }).toList(),
@@ -112,6 +116,7 @@ class PriceDaysInputScreen extends ConsumerWidget {
                           ? null
                           : (_) {
                               notifier.toggleDayGroupDay(
+                                spaceIndex,
                                 groupIndex,
                                 Weekday.holiday,
                               );

@@ -27,5 +27,6 @@ abstract class Reservation with _$Reservation {
     required int calculatedPrice,
     required int priceAdjustment,
     required int totalPrice,
+    String? spaceOptionId,
   }) = _Reservation;
 }

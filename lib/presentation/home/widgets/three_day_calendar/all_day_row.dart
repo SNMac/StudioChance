@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
-import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
-import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
 /// 3일 캘린더 종일 이벤트 셀 (날짜 1열)
-class AllDayCell extends ConsumerStatefulWidget {
+class AllDayCell extends StatefulWidget {
   const AllDayCell({
     super.key,
     required this.events,
     required this.reservations,
-    this.availableStores,
+    required this.onOpenDetailModal,
+    required this.isInteractionBlocked,
   });
 
   final List<ReservationDisplayData> events;
@@ -21,14 +18,17 @@ class AllDayCell extends ConsumerStatefulWidget {
   /// 탭 시 상세 모달에 전달할 전체 Reservation 맵 (id → Reservation)
   final Map<String, Reservation> reservations;
 
-  /// 예약 점포 선택 팝업에 표시할 점포 목록.
-  final List<StoreSummary>? availableStores;
+  /// 예약 셀 탭 시 상세 모달을 여는 콜백 (공간 옵션 선 조회 + 모달 표시 포함).
+  final Future<void> Function(Reservation) onOpenDetailModal;
+
+  /// true이면 셀 터치를 완전히 차단한다 (로딩 중 중복 탭 방지).
+  final bool isInteractionBlocked;
 
   @override
-  ConsumerState<AllDayCell> createState() => _AllDayCellState();
+  State<AllDayCell> createState() => _AllDayCellState();
 }
 
-class _AllDayCellState extends ConsumerState<AllDayCell> {
+class _AllDayCellState extends State<AllDayCell> {
   String? _highlightedId;
 
   Future<void> _onCellTap(ReservationDisplayData event) async {
@@ -36,28 +36,16 @@ class _AllDayCellState extends ConsumerState<AllDayCell> {
     if (reservation == null) return;
     setState(() => _highlightedId = event.summary.id);
     if (!mounted) return;
-    await showReservationDetailModal(
-      context,
-      reservation,
-      availableStores: widget.availableStores,
-      onSaved: (updated) {
-        ref
-            .read(homeReservationActionsControllerProvider.notifier)
-            .updateReservation(updated);
-      },
-      onDeleted: () {
-        ref
-            .read(homeReservationActionsControllerProvider.notifier)
-            .deleteReservation(reservation);
-      },
-    );
+    await widget.onOpenDetailModal(reservation);
     if (!mounted) return;
     setState(() => _highlightedId = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AbsorbPointer(
+      absorbing: widget.isInteractionBlocked,
+      child: SizedBox(
       height: allDayRowHeight,
       child: Stack(
         // TODO: 다중 이벤트 겹침 처리 미구현 — 현재는 단순 Stack (겹쳐 보임)
@@ -78,6 +66,7 @@ class _AllDayCellState extends ConsumerState<AllDayCell> {
             ),
         ],
       ),
+    ),
     );
   }
 }

@@ -35,6 +35,7 @@ abstract class ReservationModel with _$ReservationModel {
     required int priceAdjustment,
     required int totalPrice,
     required UserRole writerRole,
+    String? spaceOptionId,
   }) = _ReservationModel;
 
   factory ReservationModel.fromJson(Map<String, dynamic> json) =>
@@ -59,6 +60,7 @@ abstract class ReservationModel with _$ReservationModel {
       priceAdjustment: entity.priceAdjustment,
       totalPrice: entity.totalPrice,
       writerRole: entity.writer.role,
+      spaceOptionId: entity.spaceOptionId,
     );
   }
 
@@ -89,6 +91,7 @@ abstract class ReservationModel with _$ReservationModel {
       calculatedPrice: calculatedPrice,
       priceAdjustment: priceAdjustment,
       totalPrice: totalPrice,
+      spaceOptionId: spaceOptionId,
     );
   }
 }

@@ -11,12 +11,14 @@ class TextActionButton extends StatelessWidget {
   final String title;
   final VoidCallback? onPressed;
   final bool isDestructive;
+  final FontWeight? fontWeight;
 
   const TextActionButton({
     super.key,
     required this.title,
     this.onPressed,
     this.isDestructive = false,
+    this.fontWeight,
   });
 
   @override
@@ -31,6 +33,7 @@ class TextActionButton extends StatelessWidget {
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: isDestructive ? context.systemRed : context.systemBlue,
+            fontWeight: fontWeight,
           ),
         ),
       ),

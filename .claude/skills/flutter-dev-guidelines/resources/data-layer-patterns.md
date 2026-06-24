@@ -134,6 +134,52 @@ TaskEither<Exception, User> _getCurrentUser() {
 
 ## DataSource 패턴
 
+### FirestoreDataSourceBase
+
+모든 Firestore DataSource는 `FirestoreDataSourceBase`를 상속한다. 에러 핸들링 공통 로직을 단일 위치에서 처리.
+
+```dart
+// 상속 예
+class ReservationFirestoreDataSource extends FirestoreDataSourceBase
+    implements ReservationDataSource {
+
+  @override
+  String get errorLogTag => 'Reservation Firestore Error';
+
+  @override
+  bool isDomainException(Object e) => e is ReservationException;
+
+  @override
+  Exception buildParsingException(String message) =>
+      ReservationParsingException(message: message);
+
+  @override
+  Exception mapFirebaseCode(String code, String message) =>
+      switch (code) {
+        'permission-denied' => ReservationPermissionException(message: message),
+        _ => ReservationUnknownException(message: message),
+      };
+
+  @override
+  Future<ReservationModel?> getReservation(String id) async {
+    try {
+      final doc = await _firestore.doc(path).get();
+      ...
+    } catch (e) {
+      throw handleFirestoreError(e); // 기반 클래스 메서드
+    }
+  }
+}
+```
+
+4개 멤버 구현 필수:
+| 멤버 | 타입 | 역할 |
+|------|------|------|
+| `errorLogTag` | `String get` | 로그 태그 |
+| `isDomainException` | `bool fn(Object)` | 도메인 예외 통과 여부 |
+| `buildParsingException` | `Exception fn(String)` | 파싱 예외 생성 |
+| `mapFirebaseCode` | `Exception fn(String, String)` | Firebase 코드 → 도메인 예외 |
+
 ### Firebase Auth
 
 ```dart

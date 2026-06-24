@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,6 +14,9 @@ class MemoTextField extends StatefulWidget {
   /// 글자 수 카운터 표시. null이면 카운터 미표시.
   final int? maxLength;
 
+  /// 표시할 최대 줄 수. 초과 시 TextField 내부 스크롤 활성화. null이면 무제한.
+  final int? maxDisplayLines;
+
   const MemoTextField({
     super.key,
     required this.placeholder,
@@ -23,6 +25,7 @@ class MemoTextField extends StatefulWidget {
     this.inputFormatters,
     this.autofocus = false,
     this.maxLength,
+    this.maxDisplayLines = 10,
   });
 
   @override
@@ -58,32 +61,37 @@ class _MemoTextFieldState extends State<MemoTextField> {
 
     return Stack(
       children: [
-        CupertinoTextField.borderless(
-          padding: EdgeInsetsDirectional.only(
-            start: horizontalPadding,
-            end: horizontalPadding,
-            top: 12,
-            // 카운터 표시 시 하단에 공간 확보
-            bottom: widget.maxLength != null ? 32 : 12,
-          ),
-          placeholder: widget.placeholder,
-          placeholderStyle: textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.normal,
-            color: context.tertiaryLabel,
-          ),
-          cursorHeight: 20,
+        TextField(
           controller: widget.controller,
           focusNode: _focusNode,
-          textAlignVertical: TextAlignVertical.top,
-          // 초기 높이 3줄, 이후 유동적으로 확장
-          minLines: 3,
-          maxLines: null,
-          autofocus: widget.autofocus,
           onChanged: widget.onChanged,
           inputFormatters: widget.inputFormatters,
+          autofocus: widget.autofocus,
+          minLines: 3,
+          maxLines: widget.maxDisplayLines,
+          textAlignVertical: TextAlignVertical.top,
+          cursorHeight: 20,
           autocorrect: true,
           enableSuggestions: true,
           style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.normal),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            isDense: true,
+            contentPadding: EdgeInsetsDirectional.only(
+              start: horizontalPadding,
+              end: horizontalPadding,
+              top: 12,
+              // 카운터 표시 시 하단에 공간 확보
+              bottom: widget.maxLength != null ? 32 : 12,
+            ),
+            hintText: widget.placeholder,
+            hintStyle: textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.normal,
+              color: context.tertiaryLabel,
+            ),
+          ),
         ),
 
         if (widget.maxLength != null)

@@ -210,7 +210,10 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     final store = storeResult.toOption().toNullable();
     if (store == null) return reservation;
 
-    final calculatedPrice = store.priceSettings.calculatePrice(
+    final priceSetting = store.priceSettingForSpace(reservation.spaceOptionId);
+    if (priceSetting == null) return reservation;
+
+    final calculatedPrice = priceSetting.calculatePrice(
       start: reservation.startTime,
       end: reservation.endTime,
       headCount: reservation.headCount,

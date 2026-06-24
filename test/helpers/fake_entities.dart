@@ -1,7 +1,6 @@
 import 'package:studio_chance/domain/entities/auth_info.dart';
-import 'package:studio_chance/domain/entities/day_group.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
@@ -45,7 +44,7 @@ final fakeStore = Store(
   addressGuide: '정문으로 오세요',
   memberInfos: [],
   waitingMemberInfos: [],
-  priceSettings: PriceSetting(dayGroups: [DayGroup.empty()]),
+  spaceOptions: [SpaceOption.empty()],
   inviteInfo: null,
 );
 

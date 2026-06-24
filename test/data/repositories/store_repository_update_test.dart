@@ -77,7 +77,7 @@ void main() {
       expect(storeData.containsKey('address'), true);
       expect(storeData.containsKey('addressDetail'), true);
       expect(storeData.containsKey('addressGuide'), true);
-      expect(storeData.containsKey('priceSettingsModel'), true);
+      expect(storeData.containsKey('spaceOptions'), true);
       expect(storeData['name'], fakeStore.name);
 
       // 유저 점포 정보 업데이트 호출 확인
@@ -91,7 +91,7 @@ void main() {
       expect(capturedUserArgs[0], fakeUser.id);
       expect(capturedUserArgs[1], fakeStore.id);
       final userStoreData = capturedUserArgs[2] as Map<String, dynamic>;
-      expect(userStoreData['color'], StoreColor.blue.name);
+      expect(userStoreData['color'], 'BLUE');
       expect(userStoreData['memo'], '새 메모');
     });
 

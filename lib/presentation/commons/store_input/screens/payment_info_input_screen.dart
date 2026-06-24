@@ -19,12 +19,17 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
 
-/// 15분 단위 선택지: 15분 ~ 3시간
+/// 0(설정 안함), 5분 단위 5~55분, 1시간 단위 1~24시간
 const List<int> _deadlineOptions = [
-  15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180,
+  0,
+  5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55,
+  60, 120, 180, 240, 300, 360, 420, 480, 540, 600,
+  660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200,
+  1260, 1320, 1380, 1440,
 ];
 
 String _formatDuration(int minutes) {
+  if (minutes == 0) return '설정 안함';
   if (minutes < 60) return '$minutes분';
   final hours = minutes ~/ 60;
   final remaining = minutes % 60;
@@ -78,15 +83,14 @@ class _PaymentInfoInputScreenState
       _bankAccountNumberController.text = formState.bankAccountNumber;
       _bankAccountHolderController.text = formState.bankAccountHolder;
 
-      final initialMinutes = formState.paymentDeadlineMinutes;
+      // null(미설정)이면 0("설정 안함")을 기본값으로 사용
+      final initialMinutes = formState.paymentDeadlineMinutes ?? 0;
       _selectedMinutes = initialMinutes;
-      if (initialMinutes != null) {
-        final index = _deadlineOptions.indexOf(initialMinutes);
-        if (index != -1) {
-          _deadlineScrollController.dispose();
-          _deadlineScrollController =
-              FixedExtentScrollController(initialItem: index);
-        }
+      final index = _deadlineOptions.indexOf(initialMinutes);
+      if (index != -1) {
+        _deadlineScrollController.dispose();
+        _deadlineScrollController =
+            FixedExtentScrollController(initialItem: index);
       }
 
       _isInitialized = true;
@@ -106,7 +110,10 @@ class _PaymentInfoInputScreenState
     notifier.setBankName(_bankNameController.text);
     notifier.setBankAccountNumber(_bankAccountNumberController.text);
     notifier.setBankAccountHolder(_bankAccountHolderController.text);
-    notifier.setPaymentDeadlineMinutes(_selectedMinutes);
+    final minutes = _selectedMinutes;
+    notifier.setPaymentDeadlineMinutes(
+      (minutes == null || minutes == 0) ? null : minutes,
+    );
     context.pop();
   }
 
@@ -135,9 +142,10 @@ class _PaymentInfoInputScreenState
         ],
       ),
       body: SafeAreaWithPadding(
-        child: Column(
-          spacing: 20,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            spacing: 20,
+            children: [
             GroupedFormContainer(
               footer: Padding(
                 padding: const EdgeInsetsDirectional.only(
@@ -145,7 +153,7 @@ class _PaymentInfoInputScreenState
                   top: 6,
                 ),
                 child: Text(
-                  '예약 등록 시간 기준',
+                  '예약 등록 시간 기준으로 설정해주세요',
                   style: textTheme.labelMedium?.copyWith(
                     color: context.secondaryLabel,
                   ),
@@ -174,6 +182,7 @@ class _PaymentInfoInputScreenState
                   isOpen: _isDeadlinePickerOpen,
                   scrollController: _deadlineScrollController,
                   onPressed: () {
+                    FocusScope.of(context).unfocus();
                     setState(() {
                       _isDeadlinePickerOpen = !_isDeadlinePickerOpen;
                       if (_isDeadlinePickerOpen && _selectedMinutes == null) {
@@ -202,7 +211,10 @@ class _PaymentInfoInputScreenState
                     notifier.setBankAccountHolder(
                       _bankAccountHolderController.text,
                     );
-                    notifier.setPaymentDeadlineMinutes(_selectedMinutes);
+                    final m = _selectedMinutes;
+                    notifier.setPaymentDeadlineMinutes(
+                      (m == null || m == 0) ? null : m,
+                    );
                     // storeToEdit을 전달해 어느 폼 컨트롤러를 읽을지 결정
                     SCRoute.paymentInstruction.pushChild(
                       context,
@@ -213,6 +225,7 @@ class _PaymentInfoInputScreenState
               ],
             ),
           ],
+          ),
         ),
       ),
     );

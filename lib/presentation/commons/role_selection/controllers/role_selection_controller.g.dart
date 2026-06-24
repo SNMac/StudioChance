@@ -42,7 +42,7 @@ final class RoleSelectionControllerProvider
 }
 
 String _$roleSelectionControllerHash() =>
-    r'cbaf16fe3f15ceef7a28aa62cc3a7689a5c0f82d';
+    r'fc1eda00b172e3972527cb20ed2e4e10ecc51adb';
 
 abstract class _$RoleSelectionController extends $Notifier<UserRole> {
   UserRole build();
