@@ -34,6 +34,8 @@ abstract class ReservationOcrResultModel with _$ReservationOcrResultModel {
     bool? isAllDay,
     int? headCount,
     String? memo,
+    String? storeName,
+    String? spaceName,
   }) = _ReservationOcrResultModel;
 
   factory ReservationOcrResultModel.fromJson(Map<String, dynamic> json) =>
@@ -49,6 +51,8 @@ abstract class ReservationOcrResultModel with _$ReservationOcrResultModel {
       isAllDay: isAllDay,
       headCount: headCount,
       memo: memo,
+      storeName: storeName,
+      spaceName: spaceName,
     );
   }
 }

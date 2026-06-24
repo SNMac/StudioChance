@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ReservationOcrResultModel {
 
-@JsonKey(name: 'platform', fromJson: _parsePlatform) ReservationPlatform? get platform; String? get customerName; String? get customerPhone;@JsonKey(fromJson: _parseDateTimeNullable) DateTime? get startTime;@JsonKey(fromJson: _parseDateTimeNullable) DateTime? get endTime; bool? get isAllDay; int? get headCount; String? get memo;
+@JsonKey(name: 'platform', fromJson: _parsePlatform) ReservationPlatform? get platform; String? get customerName; String? get customerPhone;@JsonKey(fromJson: _parseDateTimeNullable) DateTime? get startTime;@JsonKey(fromJson: _parseDateTimeNullable) DateTime? get endTime; bool? get isAllDay; int? get headCount; String? get memo; String? get storeName; String? get spaceName;
 /// Create a copy of ReservationOcrResultModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ReservationOcrResultModelCopyWith<ReservationOcrResultModel> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.spaceName, spaceName) || other.spaceName == spaceName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo);
+int get hashCode => Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo,storeName,spaceName);
 
 @override
 String toString() {
-  return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo)';
+  return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo, storeName: $storeName, spaceName: $spaceName)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ReservationOcrResultModelCopyWith<$Res>  {
   factory $ReservationOcrResultModelCopyWith(ReservationOcrResultModel value, $Res Function(ReservationOcrResultModel) _then) = _$ReservationOcrResultModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'platform', fromJson: _parsePlatform) ReservationPlatform? platform, String? customerName, String? customerPhone,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? startTime,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? endTime, bool? isAllDay, int? headCount, String? memo
+@JsonKey(name: 'platform', fromJson: _parsePlatform) ReservationPlatform? platform, String? customerName, String? customerPhone,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? startTime,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? endTime, bool? isAllDay, int? headCount, String? memo, String? storeName, String? spaceName
 });
 
 
@@ -65,7 +65,7 @@ class _$ReservationOcrResultModelCopyWithImpl<$Res>
 
 /// Create a copy of ReservationOcrResultModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? platform = freezed,Object? customerName = freezed,Object? customerPhone = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? isAllDay = freezed,Object? headCount = freezed,Object? memo = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? platform = freezed,Object? customerName = freezed,Object? customerPhone = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? isAllDay = freezed,Object? headCount = freezed,Object? memo = freezed,Object? storeName = freezed,Object? spaceName = freezed,}) {
   return _then(_self.copyWith(
 platform: freezed == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as ReservationPlatform?,customerName: freezed == customerName ? _self.customerName : customerName // ignore: cast_nullable_to_non_nullable
@@ -75,6 +75,8 @@ as DateTime?,endTime: freezed == endTime ? _self.endTime : endTime // ignore: ca
 as DateTime?,isAllDay: freezed == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
 as bool?,headCount: freezed == headCount ? _self.headCount : headCount // ignore: cast_nullable_to_non_nullable
 as int?,memo: freezed == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String?,storeName: freezed == storeName ? _self.storeName : storeName // ignore: cast_nullable_to_non_nullable
+as String?,spaceName: freezed == spaceName ? _self.spaceName : spaceName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -160,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'platform', fromJson: _parsePlatform)  ReservationPlatform? platform,  String? customerName,  String? customerPhone, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? startTime, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? endTime,  bool? isAllDay,  int? headCount,  String? memo)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'platform', fromJson: _parsePlatform)  ReservationPlatform? platform,  String? customerName,  String? customerPhone, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? startTime, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? endTime,  bool? isAllDay,  int? headCount,  String? memo,  String? storeName,  String? spaceName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReservationOcrResultModel() when $default != null:
-return $default(_that.platform,_that.customerName,_that.customerPhone,_that.startTime,_that.endTime,_that.isAllDay,_that.headCount,_that.memo);case _:
+return $default(_that.platform,_that.customerName,_that.customerPhone,_that.startTime,_that.endTime,_that.isAllDay,_that.headCount,_that.memo,_that.storeName,_that.spaceName);case _:
   return orElse();
 
 }
@@ -181,10 +183,10 @@ return $default(_that.platform,_that.customerName,_that.customerPhone,_that.star
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'platform', fromJson: _parsePlatform)  ReservationPlatform? platform,  String? customerName,  String? customerPhone, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? startTime, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? endTime,  bool? isAllDay,  int? headCount,  String? memo)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'platform', fromJson: _parsePlatform)  ReservationPlatform? platform,  String? customerName,  String? customerPhone, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? startTime, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? endTime,  bool? isAllDay,  int? headCount,  String? memo,  String? storeName,  String? spaceName)  $default,) {final _that = this;
 switch (_that) {
 case _ReservationOcrResultModel():
-return $default(_that.platform,_that.customerName,_that.customerPhone,_that.startTime,_that.endTime,_that.isAllDay,_that.headCount,_that.memo);case _:
+return $default(_that.platform,_that.customerName,_that.customerPhone,_that.startTime,_that.endTime,_that.isAllDay,_that.headCount,_that.memo,_that.storeName,_that.spaceName);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +203,10 @@ return $default(_that.platform,_that.customerName,_that.customerPhone,_that.star
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'platform', fromJson: _parsePlatform)  ReservationPlatform? platform,  String? customerName,  String? customerPhone, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? startTime, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? endTime,  bool? isAllDay,  int? headCount,  String? memo)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'platform', fromJson: _parsePlatform)  ReservationPlatform? platform,  String? customerName,  String? customerPhone, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? startTime, @JsonKey(fromJson: _parseDateTimeNullable)  DateTime? endTime,  bool? isAllDay,  int? headCount,  String? memo,  String? storeName,  String? spaceName)?  $default,) {final _that = this;
 switch (_that) {
 case _ReservationOcrResultModel() when $default != null:
-return $default(_that.platform,_that.customerName,_that.customerPhone,_that.startTime,_that.endTime,_that.isAllDay,_that.headCount,_that.memo);case _:
+return $default(_that.platform,_that.customerName,_that.customerPhone,_that.startTime,_that.endTime,_that.isAllDay,_that.headCount,_that.memo,_that.storeName,_that.spaceName);case _:
   return null;
 
 }
@@ -216,7 +218,7 @@ return $default(_that.platform,_that.customerName,_that.customerPhone,_that.star
 @JsonSerializable()
 
 class _ReservationOcrResultModel extends ReservationOcrResultModel {
-  const _ReservationOcrResultModel({@JsonKey(name: 'platform', fromJson: _parsePlatform) this.platform, this.customerName, this.customerPhone, @JsonKey(fromJson: _parseDateTimeNullable) this.startTime, @JsonKey(fromJson: _parseDateTimeNullable) this.endTime, this.isAllDay, this.headCount, this.memo}): super._();
+  const _ReservationOcrResultModel({@JsonKey(name: 'platform', fromJson: _parsePlatform) this.platform, this.customerName, this.customerPhone, @JsonKey(fromJson: _parseDateTimeNullable) this.startTime, @JsonKey(fromJson: _parseDateTimeNullable) this.endTime, this.isAllDay, this.headCount, this.memo, this.storeName, this.spaceName}): super._();
   factory _ReservationOcrResultModel.fromJson(Map<String, dynamic> json) => _$ReservationOcrResultModelFromJson(json);
 
 @override@JsonKey(name: 'platform', fromJson: _parsePlatform) final  ReservationPlatform? platform;
@@ -227,6 +229,8 @@ class _ReservationOcrResultModel extends ReservationOcrResultModel {
 @override final  bool? isAllDay;
 @override final  int? headCount;
 @override final  String? memo;
+@override final  String? storeName;
+@override final  String? spaceName;
 
 /// Create a copy of ReservationOcrResultModel
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.spaceName, spaceName) || other.spaceName == spaceName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo);
+int get hashCode => Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo,storeName,spaceName);
 
 @override
 String toString() {
-  return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo)';
+  return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo, storeName: $storeName, spaceName: $spaceName)';
 }
 
 
@@ -261,7 +265,7 @@ abstract mixin class _$ReservationOcrResultModelCopyWith<$Res> implements $Reser
   factory _$ReservationOcrResultModelCopyWith(_ReservationOcrResultModel value, $Res Function(_ReservationOcrResultModel) _then) = __$ReservationOcrResultModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'platform', fromJson: _parsePlatform) ReservationPlatform? platform, String? customerName, String? customerPhone,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? startTime,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? endTime, bool? isAllDay, int? headCount, String? memo
+@JsonKey(name: 'platform', fromJson: _parsePlatform) ReservationPlatform? platform, String? customerName, String? customerPhone,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? startTime,@JsonKey(fromJson: _parseDateTimeNullable) DateTime? endTime, bool? isAllDay, int? headCount, String? memo, String? storeName, String? spaceName
 });
 
 
@@ -278,7 +282,7 @@ class __$ReservationOcrResultModelCopyWithImpl<$Res>
 
 /// Create a copy of ReservationOcrResultModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? platform = freezed,Object? customerName = freezed,Object? customerPhone = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? isAllDay = freezed,Object? headCount = freezed,Object? memo = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? platform = freezed,Object? customerName = freezed,Object? customerPhone = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? isAllDay = freezed,Object? headCount = freezed,Object? memo = freezed,Object? storeName = freezed,Object? spaceName = freezed,}) {
   return _then(_ReservationOcrResultModel(
 platform: freezed == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as ReservationPlatform?,customerName: freezed == customerName ? _self.customerName : customerName // ignore: cast_nullable_to_non_nullable
@@ -288,6 +292,8 @@ as DateTime?,endTime: freezed == endTime ? _self.endTime : endTime // ignore: ca
 as DateTime?,isAllDay: freezed == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
 as bool?,headCount: freezed == headCount ? _self.headCount : headCount // ignore: cast_nullable_to_non_nullable
 as int?,memo: freezed == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String?,storeName: freezed == storeName ? _self.storeName : storeName // ignore: cast_nullable_to_non_nullable
+as String?,spaceName: freezed == spaceName ? _self.spaceName : spaceName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

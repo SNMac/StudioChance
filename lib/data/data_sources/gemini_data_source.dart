@@ -45,6 +45,8 @@ class GeminiDataSourceImpl implements GeminiDataSource {
 5. isAllDay: '종일' 이용권이거나 '00:00~24:00' 등 하루 전체 예약임이 명확한 경우에만 true, 그 외에는 false.
 6. headCount: '사용인원수', '인원수', '인원' 옆에 적힌 숫자를 추출하여 정수로 변환하십시오.
 7. memo: '요청사항', '사용목적' 또는 특이사항 문구를 추출하되, 없을 경우 null로 반환하세요. 이미지 내부의 청소/입실 옵션 안내문은 memo에 포함하지 마십시오.
+8. storeName: 이 공간을 운영하는 업체(점포) 이름. 예약 확인 화면에 표시되는 공간 운영 업체명. 예약 플랫폼(네이버, 스페이스클라우드 등) 이름은 여기에 포함하지 마십시오. 없으면 null.
+9. spaceName: 예약된 특정 공간 이름 (예: A룸, 스튜디오1, B홀). 공간 구분이 없거나 명시되지 않으면 null.
 
 [출력 포맷 스키마]
 {
@@ -55,7 +57,9 @@ class GeminiDataSourceImpl implements GeminiDataSource {
   "endTime": string | null,
   "isAllDay": boolean,
   "headCount": integer,
-  "memo": string | null
+  "memo": string | null,
+  "storeName": string | null,
+  "spaceName": string | null
 }''';
 
   static String _detectMimeType(Uint8List bytes) {

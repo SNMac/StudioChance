@@ -120,6 +120,7 @@ class _ReservationDetailModalState
   List<SpaceOption>? _spaceOptions;
   String? _spaceOptionId;
   int _calculatedPrice = 0;
+  String? _pendingSpaceNameFromOcr;
 
   // ── 방문 횟수 ─────────────────────────────────────────────────────────────
   int _reservationCount = 1;
@@ -266,21 +267,33 @@ class _ReservationDetailModalState
 
   // ── 가격 계산 ─────────────────────────────────────────────────────────────
 
-  void _loadSpaceOptions(String storeId) {
+  void _loadSpaceOptions(String storeId, {List<String> ocrUnmatched = const []}) {
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getStoreSpaceOptions(storeId)
         .then((spaces) {
           if (!mounted) return;
+          final pending = _pendingSpaceNameFromOcr;
+          final unmatched = List<String>.from(ocrUnmatched);
           setState(() {
             _spaceOptions = spaces;
-            if (spaces != null &&
-                spaces.isNotEmpty &&
-                _spaceOptionId == null) {
-              _spaceOptionId = spaces.first.id;
+            if (spaces != null && spaces.isNotEmpty) {
+              if (pending != null) {
+                final matched = spaces.where((s) => _nameMatches(pending, s.name)).firstOrNull;
+                if (matched != null) {
+                  _spaceOptionId = matched.id;
+                } else {
+                  _spaceOptionId ??= spaces.first.id;
+                  unmatched.add('공간');
+                }
+              } else {
+                _spaceOptionId ??= spaces.first.id;
+              }
             }
+            _pendingSpaceNameFromOcr = null;
           });
           _recalculatePrice();
+          _showOcrUnmatchedAlert(unmatched);
         });
   }
 
@@ -332,24 +345,88 @@ class _ReservationDetailModalState
     );
   }
 
+  bool _nameMatches(String ocrName, String actualName) {
+    final ocrLower = ocrName.toLowerCase().trim();
+    final actualLower = actualName.toLowerCase().trim();
+    return actualLower.contains(ocrLower) || ocrLower.contains(actualLower);
+  }
+
+  void _showOcrUnmatchedAlert(List<String> unmatched) {
+    if (unmatched.isEmpty || !mounted) return;
+    showCustomAlertDialog(
+      context: context,
+      title: '자동 입력 확인 필요',
+      content: '다음 항목을 직접 확인해 주세요:\n${unmatched.join(', ')}',
+      showCancel: false,
+    );
+  }
+
   void _applyOcrResult(ReservationOcrResult result) {
+    final unmatched = <String>[];
+
     setState(() {
       if (result.customerName != null) {
         _nameController.text = result.customerName!;
+      } else {
+        unmatched.add('예약자명');
       }
       if (result.customerPhone != null) {
         _phoneController.text = result.customerPhone!.formattedPhone;
+      } else {
+        unmatched.add('연락처');
       }
       if (result.headCount != null) {
         _headCountController.text = result.headCount.toString();
       }
-      if (result.startTime != null) _startTime = result.startTime!;
+      if (result.startTime != null) {
+        _startTime = result.startTime!;
+      } else {
+        unmatched.add('시작 시간');
+      }
       if (result.endTime != null) _endTime = result.endTime!;
       if (result.isAllDay != null) _isAllDay = result.isAllDay!;
       if (result.platform != null) _platform = result.platform!;
       if (result.memo != null) _memoController.text = result.memo!;
     });
-    _recalculatePrice();
+
+    final ocrStoreName = result.storeName;
+    StoreSummary? matchedStore;
+    if (ocrStoreName != null && _availableStores.length > 1) {
+      matchedStore = _availableStores
+          .where((s) => _nameMatches(ocrStoreName, s.name))
+          .firstOrNull;
+      if (matchedStore != null) {
+        setState(() {
+          _storeSummary = matchedStore!;
+          _spaceOptions = null;
+          _spaceOptionId = null;
+        });
+      } else {
+        unmatched.add('점포');
+      }
+    }
+
+    if (matchedStore != null) {
+      _pendingSpaceNameFromOcr = result.spaceName;
+      _loadSpaceOptions(matchedStore.id, ocrUnmatched: unmatched);
+    } else {
+      final ocrSpaceName = result.spaceName;
+      if (ocrSpaceName != null) {
+        final spaces = _spaceOptions;
+        if (spaces != null && spaces.isNotEmpty) {
+          final matched = spaces
+              .where((s) => _nameMatches(ocrSpaceName, s.name))
+              .firstOrNull;
+          if (matched != null) {
+            setState(() => _spaceOptionId = matched.id);
+          } else {
+            unmatched.add('공간');
+          }
+        }
+      }
+      _recalculatePrice();
+      _showOcrUnmatchedAlert(unmatched);
+    }
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
