@@ -45,7 +45,7 @@ class ReservationOcrController extends _$ReservationOcrController {
       final result = await ref
           .read(reservationOcrUseCaseProvider)
           .execute(bytes, storeSpaceMap: storeSpaceMap);
-      if (_generation != myGeneration) return;
+      if (_generation != myGeneration || !ref.mounted) return;
       result.fold(
         (e) {
           _logger.e('OCR 실패', error: e);
@@ -54,7 +54,7 @@ class ReservationOcrController extends _$ReservationOcrController {
         (ocrResult) => state = AsyncData(ocrResult),
       );
     } catch (e, st) {
-      if (_generation != myGeneration) return;
+      if (_generation != myGeneration || !ref.mounted) return;
       _logger.e('OCR 분석 실패', error: e, stackTrace: st);
       state = AsyncError(OcrUnknownException(e.toString()), st);
     }

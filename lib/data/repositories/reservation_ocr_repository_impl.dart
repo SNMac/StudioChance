@@ -38,6 +38,7 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
           OcrNetworkException(e.toString(), code: code),
         FormatException() || TypeError() =>
           OcrParsingException(e.toString()),
+        OcrException() => e,
         _ => OcrUnknownException(e.toString()),
       };
       return left(exception);
