@@ -86,6 +86,9 @@ class _HomeTabBarState extends State<HomeTabBar> {
                       tab.label,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: color,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                     ),
                   ],
