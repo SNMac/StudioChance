@@ -13,6 +13,11 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - 한국어로 커밋 메시지, 주석 작성
 - 앱 내에서 ID를 자체 생성할 때는 `uuid` 패키지의 `const Uuid().v4()` 사용 (`DateTime.now().millisecondsSinceEpoch` 금지)
 
+## 라이브러리 문서 조회
+- 라이브러리/API 문서 확인, 코드 생성, 설정·구성 단계가 필요할 때는 명시적으로 요청하지 않아도 항상 Context7 MCP로 최신 문서를 조회할 것
+- Deprecated API 사용은 지양 — 항상 최신 권장 API/패턴으로 구현할 것
+- Context7 MCP가 응답하지 않거나 사용량 초과 등으로 사용 불가한 상태여도 작업을 멈추지 말고, 기존 지식으로 진행할 것. 단, 기존 지식만으로 해결이 어려우면 공식 문서를 별도로 확인할 것
+
 ## 아키텍처
 - `/lib/common`: 모든 계층에서 사용되는 로직
   - `/utils/exception_utils.dart`: `toException()` — catch 블록 Object → Exception 변환 헬퍼

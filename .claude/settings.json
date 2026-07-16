@@ -21,5 +21,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "firebase@claude-plugins-official": true
   }
 }
