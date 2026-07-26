@@ -115,6 +115,37 @@ void main() {
   });
 
   // =========================================================================
+  // legacy fallback (spaceOptions 없는 구버전 점포)
+  // =========================================================================
+
+  group('legacy spaceOptions fallback', () {
+    test('spaceOptions가 없는 점포를 조회하면 legacy_default 공간 하나로 채워진다', () async {
+      final uid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, uid);
+      // spaceOptions 필드 자체가 없던 구버전 문서를 직접 시뮬레이션
+      final storeId = FirestoreEmulatorHelper.generateId();
+      await fakeFirestore.collection('stores').doc(storeId).set(<String, dynamic>{
+        'name': '레거시 점포',
+        'address': '서울',
+        'addressDetail': '',
+        'addressGuide': '',
+        'memberById': <String, dynamic>{
+          uid: <String, dynamic>{'role': 'ADMIN'},
+        },
+        'waitingMemberById': <String, dynamic>{},
+        'spaceOptions': <dynamic>[],
+      });
+
+      final fetched = await repository.getStore(storeId);
+
+      final store = fetched.getRight().toNullable()!;
+      expect(store.spaceOptions.length, 1);
+      expect(store.spaceOptions.first.id, 'legacy_default');
+      expect(store.spaceOptions.first.name, '기본 공간');
+    });
+  });
+
+  // =========================================================================
   // updateStore
   // =========================================================================
 

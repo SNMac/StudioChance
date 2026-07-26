@@ -10,6 +10,8 @@ import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
@@ -61,7 +63,8 @@ class StoreRepositoryImpl implements StoreRepository {
       );
 
       return right(
-        createdModel.toEntity(
+        _toStoreEntity(
+          createdModel,
           memberInfos: store.memberInfos,
           waitingMemberInfos: store.waitingMemberInfos,
         ),
@@ -88,7 +91,8 @@ class StoreRepositoryImpl implements StoreRepository {
       final waitingInfos = await waitingInfosFuture;
 
       return right(
-        storeModel.toEntity(
+        _toStoreEntity(
+          storeModel,
           memberInfos: memberInfos,
           waitingMemberInfos: waitingInfos,
         ),
@@ -211,7 +215,8 @@ class StoreRepositoryImpl implements StoreRepository {
       final waitingInfos = await waitingInfosFuture;
 
       return right(
-        storeModel.toEntity(
+        _toStoreEntity(
+          storeModel,
           memberInfos: memberInfos,
           waitingMemberInfos: waitingInfos,
         ),
@@ -301,6 +306,31 @@ class StoreRepositoryImpl implements StoreRepository {
   // ===========================================================================
   // Private Helpers
   // ===========================================================================
+
+  /// StoreModel → Store 변환 + legacy fallback 적용
+  /// - spaceOptions가 비어있는 구버전 점포 문서는 기본 공간 1건으로 채워 반환한다.
+  ///   (이 판단은 Data Model이 아닌 Repository의 책임이다)
+  Store _toStoreEntity(
+    StoreModel model, {
+    required List<StoreMemberInfo> memberInfos,
+    required List<StoreMemberInfo> waitingMemberInfos,
+  }) {
+    final store = model.toEntity(
+      memberInfos: memberInfos,
+      waitingMemberInfos: waitingMemberInfos,
+    );
+    if (store.spaceOptions.isNotEmpty) return store;
+
+    return store.copyWith(
+      spaceOptions: [
+        SpaceOption(
+          id: 'legacy_default',
+          name: '기본 공간',
+          priceSetting: PriceSetting.empty(),
+        ),
+      ],
+    );
+  }
 
   /// StoreMemberInfoModel Map을 받아 StoreMemberInfo Entity 목록으로 변환
   /// - input: `Map<UserID, StoreMemberInfoModel>`
