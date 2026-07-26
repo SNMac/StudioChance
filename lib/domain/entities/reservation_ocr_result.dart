@@ -14,5 +14,7 @@ abstract class ReservationOcrResult with _$ReservationOcrResult {
     bool? isAllDay,
     int? headCount,
     String? memo,
+    String? storeName,
+    String? spaceName,
   }) = _ReservationOcrResult;
 }

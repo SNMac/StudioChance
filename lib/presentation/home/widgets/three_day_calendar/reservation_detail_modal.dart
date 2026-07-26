@@ -120,6 +120,7 @@ class _ReservationDetailModalState
   List<SpaceOption>? _spaceOptions;
   String? _spaceOptionId;
   int _calculatedPrice = 0;
+  String? _pendingSpaceNameFromOcr;
 
   // ── 방문 횟수 ─────────────────────────────────────────────────────────────
   int _reservationCount = 1;
@@ -266,21 +267,33 @@ class _ReservationDetailModalState
 
   // ── 가격 계산 ─────────────────────────────────────────────────────────────
 
-  void _loadSpaceOptions(String storeId) {
+  void _loadSpaceOptions(String storeId, {List<String> ocrUnmatched = const []}) {
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getStoreSpaceOptions(storeId)
         .then((spaces) {
           if (!mounted) return;
+          final pending = _pendingSpaceNameFromOcr;
+          final unmatched = List<String>.from(ocrUnmatched);
           setState(() {
             _spaceOptions = spaces;
-            if (spaces != null &&
-                spaces.isNotEmpty &&
-                _spaceOptionId == null) {
-              _spaceOptionId = spaces.first.id;
+            if (spaces != null && spaces.isNotEmpty) {
+              if (pending != null) {
+                final matched = spaces.where((s) => s.name == pending).firstOrNull;
+                if (matched != null) {
+                  _spaceOptionId = matched.id;
+                } else {
+                  _spaceOptionId ??= spaces.first.id;
+                  unmatched.add('공간');
+                }
+              } else {
+                _spaceOptionId ??= spaces.first.id;
+              }
             }
+            _pendingSpaceNameFromOcr = null;
           });
           _recalculatePrice();
+          _showOcrUnmatchedAlert(unmatched);
         });
   }
 
@@ -332,24 +345,87 @@ class _ReservationDetailModalState
     );
   }
 
+  void _showOcrUnmatchedAlert(List<String> unmatched) {
+    if (unmatched.isEmpty || !mounted) return;
+    showCustomAlertDialog(
+      context: context,
+      title: '자동 입력 확인 필요',
+      content: '다음 항목을 직접 확인해 주세요:\n${unmatched.join(', ')}',
+      showCancel: false,
+    );
+  }
+
   void _applyOcrResult(ReservationOcrResult result) {
+    final unmatched = <String>[];
+
     setState(() {
       if (result.customerName != null) {
         _nameController.text = result.customerName!;
+      } else {
+        unmatched.add('예약자명');
       }
       if (result.customerPhone != null) {
         _phoneController.text = result.customerPhone!.formattedPhone;
+      } else {
+        unmatched.add('연락처');
       }
       if (result.headCount != null) {
         _headCountController.text = result.headCount.toString();
       }
-      if (result.startTime != null) _startTime = result.startTime!;
+      if (result.startTime != null) {
+        _startTime = result.startTime!;
+      } else {
+        unmatched.add('시작 시간');
+      }
       if (result.endTime != null) _endTime = result.endTime!;
       if (result.isAllDay != null) _isAllDay = result.isAllDay!;
       if (result.platform != null) _platform = result.platform!;
       if (result.memo != null) _memoController.text = result.memo!;
     });
-    _recalculatePrice();
+
+    final ocrStoreName = result.storeName;
+    StoreSummary? matchedStore;
+    if (ocrStoreName != null && _availableStores.length > 1) {
+      // 동일 이름 점포가 2개 이상이면 어느 쪽인지 특정할 수 없으므로 모호한 매칭으로 처리
+      final candidates =
+          _availableStores.where((s) => s.name == ocrStoreName).toList();
+      matchedStore = candidates.length == 1 ? candidates.first : null;
+      if (matchedStore != null) {
+        setState(() {
+          _storeSummary = matchedStore!;
+          _spaceOptions = null;
+          _spaceOptionId = null;
+        });
+      } else {
+        unmatched.add('점포');
+      }
+    }
+
+    if (matchedStore != null) {
+      _pendingSpaceNameFromOcr = result.spaceName;
+      _loadSpaceOptions(matchedStore.id, ocrUnmatched: unmatched);
+    } else {
+      final ocrSpaceName = result.spaceName;
+      final spaces = _spaceOptions;
+      if (ocrSpaceName != null && spaces == null) {
+        // 초기 공간 옵션 로딩이 아직 끝나지 않음 — 로딩 완료 시점에 매칭되도록 위임
+        _pendingSpaceNameFromOcr = ocrSpaceName;
+        _loadSpaceOptions(_storeSummary.id, ocrUnmatched: unmatched);
+      } else {
+        if (ocrSpaceName != null && spaces != null && spaces.isNotEmpty) {
+          final matched = spaces
+              .where((s) => s.name == ocrSpaceName)
+              .firstOrNull;
+          if (matched != null) {
+            setState(() => _spaceOptionId = matched.id);
+          } else {
+            unmatched.add('공간');
+          }
+        }
+        _recalculatePrice();
+        _showOcrUnmatchedAlert(unmatched);
+      }
+    }
   }
 
   // ── 액션 ─────────────────────────────────────────────────────────────────
@@ -694,7 +770,32 @@ class _ReservationDetailModalState
     if (bytes == null || !mounted) return;
     final confirmed = await showImagePreviewPage(context, bytes);
     if (!confirmed || !mounted) return;
-    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(bytes);
+
+    // 이미지 확정 후 모든 점포의 공간 옵션 병렬 조회
+    final notifier = ref.read(homeReservationActionsControllerProvider.notifier);
+    final allSpaceOptions = await Future.wait(
+      _availableStores.map((s) => notifier.getStoreSpaceOptions(s.id)),
+    );
+    if (!mounted) return;
+
+    // 점포명이 프롬프트의 매칭 키이므로, 이름이 중복되면 목록 전달 자체를 생략
+    final storeNames = _availableStores.map((s) => s.name).toList();
+    final hasDuplicateStoreNames = storeNames.toSet().length != storeNames.length;
+
+    final storeSpaceMap = <String, List<String>>{};
+    if (!hasDuplicateStoreNames) {
+      for (var i = 0; i < _availableStores.length; i++) {
+        final spaces = allSpaceOptions[i];
+        if (spaces != null && spaces.isNotEmpty) {
+          storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+        }
+      }
+    }
+
+    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(
+      bytes,
+      storeSpaceMap: storeSpaceMap.isNotEmpty ? storeSpaceMap : null,
+    );
   }
 
   Widget _buildOcrButton() {

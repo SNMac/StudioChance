@@ -6,7 +6,10 @@ import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_ocr_repository.dart';
 
 abstract interface class ReservationOcrUseCase {
-  Future<Either<Exception, ReservationOcrResult>> execute(Uint8List imageBytes);
+  Future<Either<Exception, ReservationOcrResult>> execute(
+    Uint8List imageBytes, {
+    Map<String, List<String>>? storeSpaceMap,
+  });
 }
 
 class ReservationOcrUseCaseImpl implements ReservationOcrUseCase {
@@ -17,9 +20,13 @@ class ReservationOcrUseCaseImpl implements ReservationOcrUseCase {
 
   @override
   Future<Either<Exception, ReservationOcrResult>> execute(
-    Uint8List imageBytes,
-  ) async {
-    final result = await _repository.analyzeReservationImage(imageBytes);
+    Uint8List imageBytes, {
+    Map<String, List<String>>? storeSpaceMap,
+  }) async {
+    final result = await _repository.analyzeReservationImage(
+      imageBytes,
+      storeSpaceMap: storeSpaceMap,
+    );
     return result.fold(
       left,
       (ocrResult) {

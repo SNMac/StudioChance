@@ -35,12 +35,17 @@ class ReservationOcrController extends _$ReservationOcrController {
   }
 
   /// 확인된 이미지 bytes로 OCR을 실행한다.
-  Future<void> analyzeImage(Uint8List bytes) async {
+  Future<void> analyzeImage(
+    Uint8List bytes, {
+    Map<String, List<String>>? storeSpaceMap,
+  }) async {
     final myGeneration = ++_generation;
     state = const AsyncLoading();
     try {
-      final result = await ref.read(reservationOcrUseCaseProvider).execute(bytes);
-      if (_generation != myGeneration) return;
+      final result = await ref
+          .read(reservationOcrUseCaseProvider)
+          .execute(bytes, storeSpaceMap: storeSpaceMap);
+      if (_generation != myGeneration || !ref.mounted) return;
       result.fold(
         (e) {
           _logger.e('OCR 실패', error: e);
@@ -49,7 +54,7 @@ class ReservationOcrController extends _$ReservationOcrController {
         (ocrResult) => state = AsyncData(ocrResult),
       );
     } catch (e, st) {
-      if (_generation != myGeneration) return;
+      if (_generation != myGeneration || !ref.mounted) return;
       _logger.e('OCR 분석 실패', error: e, stackTrace: st);
       state = AsyncError(OcrUnknownException(e.toString()), st);
     }

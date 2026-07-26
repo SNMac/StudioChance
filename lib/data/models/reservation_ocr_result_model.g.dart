@@ -17,6 +17,8 @@ _ReservationOcrResultModel _$ReservationOcrResultModelFromJson(
   isAllDay: json['isAllDay'] as bool?,
   headCount: (json['headCount'] as num?)?.toInt(),
   memo: json['memo'] as String?,
+  storeName: json['storeName'] as String?,
+  spaceName: json['spaceName'] as String?,
 );
 
 Map<String, dynamic> _$ReservationOcrResultModelToJson(
@@ -30,6 +32,8 @@ Map<String, dynamic> _$ReservationOcrResultModelToJson(
   'isAllDay': instance.isAllDay,
   'headCount': instance.headCount,
   'memo': instance.memo,
+  'storeName': instance.storeName,
+  'spaceName': instance.spaceName,
 };
 
 const _$ReservationPlatformEnumMap = {

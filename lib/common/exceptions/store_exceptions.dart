@@ -24,6 +24,10 @@ sealed class StoreException extends AppException {
     // 5. 앱 버전/파싱 문제
     StoreDataParsingException() => '데이터 형식이 일치하지 않습니다',
 
+    // 7. 중복 검증
+    StoreNameDuplicateException() => '이미 사용 중인 점포명입니다',
+    SpaceNameDuplicateException() => '중복된 공간명이 있습니다',
+
     // 6. 유효성 검사 / 알 수 없는 에러
     StoreValidationException() ||
     StoreUnknownException() => '에러가 발생했습니다',
@@ -52,6 +56,12 @@ sealed class StoreException extends AppException {
     StoreDataParsingException() =>
       '스토어에서 최신 버전으로 업데이트해주세요.\n문제가 지속되면 개발자에게 문의해 주세요.',
 
+    // 7. 중복 검증
+    StoreNameDuplicateException() =>
+      '이미 보유하신 다른 점포와 이름이 같습니다.\n다른 점포명으로 입력해 주세요.',
+    SpaceNameDuplicateException() =>
+      '같은 점포 안에서는 공간명을 중복해서 사용할 수 없습니다.\n공간명을 다르게 입력해 주세요.',
+
     // 6. 유효성 검사 / 알 수 없는 에러
     StoreValidationException() ||
     StoreUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
@@ -68,6 +78,8 @@ sealed class StoreException extends AppException {
     StoreTransactionException() ||
     StoreDataParsingException() ||
     StoreValidationException() ||
+    StoreNameDuplicateException() ||
+    SpaceNameDuplicateException() ||
     StoreUnknownException() => false,
   };
 }
@@ -154,5 +166,17 @@ class StoreCancelledException extends StoreException {
 /// 점포 등록, 수정 시 형식에 맞지 않는 데이터가 있을 때 발생하는 예외
 class StoreValidationException extends StoreException {
   StoreValidationException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 이미 보유한 다른 점포와 이름이 중복될 때 발생하는 예외
+class StoreNameDuplicateException extends StoreException {
+  StoreNameDuplicateException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 같은 점포 내에서 공간명이 중복될 때 발생하는 예외
+class SpaceNameDuplicateException extends StoreException {
+  SpaceNameDuplicateException({required String message, String? code})
     : super(message, code: code);
 }

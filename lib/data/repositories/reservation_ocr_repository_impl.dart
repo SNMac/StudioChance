@@ -19,10 +19,14 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
 
   @override
   Future<Either<Exception, ReservationOcrResult>> analyzeReservationImage(
-    Uint8List imageBytes,
-  ) async {
+    Uint8List imageBytes, {
+    Map<String, List<String>>? storeSpaceMap,
+  }) async {
     try {
-      final model = await _geminiDataSource.analyzeReservationImage(imageBytes);
+      final model = await _geminiDataSource.analyzeReservationImage(
+        imageBytes,
+        storeSpaceMap: storeSpaceMap,
+      );
       return right(model.toEntity());
     } catch (e) {
       _logger.e('OCR 분석 실패', error: e);
@@ -34,6 +38,7 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
           OcrNetworkException(e.toString(), code: code),
         FormatException() || TypeError() =>
           OcrParsingException(e.toString()),
+        OcrException() => e,
         _ => OcrUnknownException(e.toString()),
       };
       return left(exception);
