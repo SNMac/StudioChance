@@ -386,7 +386,12 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       await ref.set({'probe': FieldValue.serverTimestamp()});
       final snapshot = await ref.get(const GetOptions(source: Source.server));
       final probe = snapshot.data()?['probe'] as Timestamp?;
-      return probe?.toDate() ?? DateTime.now();
+      // 클라이언트 시각으로 조용히 폴백하면 이 메서드가 막으려는 취약점이 재발하므로,
+      // probe가 없으면 예외를 던져 handleFirestoreError로 흡수시킨다 (침묵 폴백 금지).
+      if (probe == null) {
+        throw StateError('서버 시각 조회 실패: probe 필드가 비어 있습니다.');
+      }
+      return probe.toDate();
     } catch (e) {
       throw handleFirestoreError(e);
     }
