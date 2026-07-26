@@ -247,25 +247,25 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       if (result.customerName != null) {
         _nameController.text = result.customerName!;
       } else {
+        _nameController.text = '';
         unmatched.add('예약자명');
       }
       if (result.customerPhone != null) {
         _phoneController.text = result.customerPhone!.formattedPhone;
       } else {
+        _phoneController.text = '';
         unmatched.add('연락처');
       }
-      if (result.headCount != null) {
-        _headCountController.text = result.headCount.toString();
-      }
+      _headCountController.text = result.headCount?.toString() ?? '';
       if (result.startTime != null) {
         _startTime = result.startTime!;
       } else {
         unmatched.add('시작 시간');
       }
       if (result.endTime != null) _endTime = result.endTime!;
-      if (result.isAllDay != null) _isAllDay = result.isAllDay!;
-      if (result.platform != null) _platform = result.platform!;
-      if (result.memo != null) _memoController.text = result.memo!;
+      _isAllDay = result.isAllDay ?? false;
+      _platform = result.platform ?? ReservationPlatform.other;
+      _memoController.text = result.memo ?? '';
     });
 
     final ocrStoreName = result.storeName;
