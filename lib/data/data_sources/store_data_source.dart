@@ -34,7 +34,9 @@ abstract interface class StoreDataSource {
   );
 
   /// 점포 삭제 (Soft Delete)
-  Future<void> softDeleteStore(String storeId);
+  /// - [memberUids]: 삭제 시점의 멤버+대기 멤버 uid 목록. 각 사용자의
+  ///   `storeById.{storeId}` 캐시를 함께 제거하여 데이터 불일치를 방지한다.
+  Future<void> softDeleteStore(String storeId, List<String> memberUids);
 
   /// 멤버 역할 수정
   Future<void> updateMemberRole(String storeId, String uid, String role);
@@ -286,17 +288,28 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> softDeleteStore(String storeId) async {
+  Future<void> softDeleteStore(String storeId, List<String> memberUids) async {
     try {
+      final batch = _firestore.batch();
       final hardDeleteDate = DateTime.now().add(
         const Duration(days: storeSoftDeleteDays),
       );
-      await _storeDocRef(storeId).update({
+
+      batch.update(_storeDocRef(storeId), {
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
         'inviteInfo': null,
       });
+
+      for (final uid in memberUids) {
+        batch.update(_firestore.collection('users').doc(uid), {
+          'storeById.$storeId': FieldValue.delete(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }

@@ -263,6 +263,50 @@ void main() {
       expect(fetched.isRight(), true);
       expect(fetched.getRight().toNullable(), isNull);
     });
+
+    test('softDeleteStore 후 멤버(staff)의 storeById 캐시도 제거된다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final staffUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      await _seedUserDoc(fakeFirestore, staffUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final created = await repository.createStore(
+        store: _testStoreEntity(ownerUid, adminUser),
+        color: StoreColor.blue,
+        memo: '',
+      );
+      final storeId = created.getRight().toNullable()!.id;
+
+      await repository.requestJoinStore(
+        storeId: storeId,
+        uid: staffUid,
+        role: UserRole.staff,
+        color: StoreColor.red,
+        storeAlias: '통합 테스트 점포',
+        memo: '',
+      );
+      await repository.approveMember(
+        storeId: storeId,
+        uid: staffUid,
+        role: UserRole.staff,
+      );
+
+      await repository.softDeleteStore(storeId);
+
+      final ownerDoc = await fakeFirestore.collection('users').doc(ownerUid).get();
+      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
+      final ownerStoreById = ownerDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(ownerStoreById?.containsKey(storeId), isFalse);
+      expect(staffStoreById?.containsKey(storeId), isFalse);
+    });
   });
 
   // =========================================================================
