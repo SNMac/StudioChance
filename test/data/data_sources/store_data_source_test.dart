@@ -386,6 +386,19 @@ void main() {
       final storeId = FirestoreEmulatorHelper.generateId();
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
+      await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+        'email': 'test@example.com',
+        'name': '테스트 유저',
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          storeId: <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'VIEWER',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
       final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
 
       await dataSource.approveMember(storeId, uid, memberInfo);
@@ -399,6 +412,19 @@ void main() {
       final storeId = FirestoreEmulatorHelper.generateId();
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
+      await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+        'email': 'test@example.com',
+        'name': '테스트 유저',
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          storeId: <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'VIEWER',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
       final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
 
       await dataSource.approveMember(storeId, uid, memberInfo);
@@ -407,6 +433,32 @@ void main() {
       final members = doc.data()?['memberById'] as Map<String, dynamic>?;
       expect(members?.containsKey(uid), isTrue);
       expect(members?[uid]['role'], 'STAFF');
+    });
+
+    test('승인 후 users 컬렉션의 storeById.{storeId}.role도 동기화된다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final uid = FirestoreEmulatorHelper.generateId();
+      await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
+      await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+        'email': 'test@example.com',
+        'name': '테스트 유저',
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          storeId: <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'VIEWER',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
+      final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
+
+      await dataSource.approveMember(storeId, uid, memberInfo);
+
+      final userDoc = await fakeFirestore.collection('users').doc(uid).get();
+      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(storeById?[storeId]['role'], 'STAFF');
     });
   });
 

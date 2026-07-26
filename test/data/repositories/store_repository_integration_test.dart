@@ -437,6 +437,12 @@ void main() {
       final store = fetched.getRight().toNullable()!;
       final memberIds = store.memberInfos.map((m) => m.user.id).toList();
       expect(memberIds.contains(memberUid), isTrue);
+
+      final memberUserDoc =
+          await fakeFirestore.collection('users').doc(memberUid).get();
+      final memberStoreById =
+          memberUserDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(memberStoreById?[storeId]['role'], 'STAFF');
     });
   });
 

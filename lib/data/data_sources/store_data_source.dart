@@ -51,6 +51,7 @@ abstract interface class StoreDataSource {
   );
 
   /// 가입 승인 (waitingMemberById → memberById 이동)
+  /// - 승인된 역할을 users/{uid}.storeById.{storeId}.role에도 동기화한다.
   Future<void> approveMember(
     String storeId,
     String uid,
@@ -264,11 +265,21 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
     StoreMemberInfoModel memberInfo,
   ) async {
     try {
-      await _storeDocRef(storeId).update({
+      final batch = _firestore.batch();
+      final roleJson = memberInfo.toJson()['role'];
+
+      batch.update(_storeDocRef(storeId), {
         'waitingMemberById.$uid': FieldValue.delete(),
         'memberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      batch.update(_firestore.collection('users').doc(uid), {
+        'storeById.$storeId.role': roleJson,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }
