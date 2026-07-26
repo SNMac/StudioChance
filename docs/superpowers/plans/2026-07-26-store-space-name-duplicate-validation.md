@@ -31,7 +31,7 @@
 - Consumes: `StoreUseCaseImpl._userRepository` (기존), `User.storeInfos: List<UserStoreInfo>` (기존, `UserStoreInfo.id`/`UserStoreInfo.name` 사용)
 - Produces: `StoreException? _findDuplicateNameError({required Store store, required User currentUser})` — Task 2에서 이 메서드를 확장한다. `StoreNameDuplicateException`, `SpaceNameDuplicateException` 클래스(Task 2는 후자를 사용).
 
-- [ ] **Step 1: 예외 클래스 2개를 한 번에 추가 (스캐폴딩)**
+- [x] **Step 1: 예외 클래스 2개를 한 번에 추가 (스캐폴딩)**
 
 `lib/common/exceptions/store_exceptions.dart`의 `title` getter switch에서 마지막 그룹(`// 6. 유효성 검사 / 알 수 없는 에러`) 앞에 새 그룹 추가:
 
@@ -95,12 +95,12 @@ class SpaceNameDuplicateException extends StoreException {
 }
 ```
 
-- [ ] **Step 2: `dart analyze`로 sealed class exhaustiveness 확인**
+- [x] **Step 2: `dart analyze`로 sealed class exhaustiveness 확인**
 
 Run: `dart analyze lib/common/exceptions/store_exceptions.dart`
 Expected: `No issues found!` (이 시점엔 `SpaceNameDuplicateException`이 아직 어디서도 throw되지 않아도 sealed switch가 모든 서브타입을 다뤘으므로 에러 없음)
 
-- [ ] **Step 3: 실패하는 테스트 작성 — createStore 점포명 중복**
+- [x] **Step 3: 실패하는 테스트 작성 — createStore 점포명 중복**
 
 `test/domain/use_cases/store_use_case_test.dart` 상단 import에 추가:
 
@@ -141,7 +141,7 @@ import 'package:studio_chance/common/exceptions/store_exceptions.dart';
     });
 ```
 
-- [ ] **Step 4: 실패하는 테스트 작성 — updateStore 점포명 중복 + 자기 자신 예외 처리**
+- [x] **Step 4: 실패하는 테스트 작성 — updateStore 점포명 중복 + 자기 자신 예외 처리**
 
 `test/domain/use_cases/store_use_case_update_test.dart` 상단 import에 추가:
 
@@ -216,12 +216,12 @@ import 'package:studio_chance/domain/enums/user_role.dart';
     });
 ```
 
-- [ ] **Step 5: 테스트 실행 → 실패 확인**
+- [x] **Step 5: 테스트 실행 → 실패 확인**
 
 Run: `flutter test test/domain/use_cases/store_use_case_test.dart test/domain/use_cases/store_use_case_update_test.dart`
 Expected: FAIL — 새로 추가한 3개 테스트가 실패 (아직 중복 검증 로직이 없어 `result.isLeft()`가 `false`이거나 `mockStoreRepo.createStore/updateStore`가 호출됨). 기존 테스트는 모두 PASS 유지.
 
-- [ ] **Step 6: `store_use_case.dart`에 중복 검증 로직 구현**
+- [x] **Step 6: `store_use_case.dart`에 중복 검증 로직 구현**
 
 상단 import 추가:
 
@@ -320,17 +320,17 @@ import 'package:studio_chance/domain/entities/user.dart';
   }
 ```
 
-- [ ] **Step 7: 테스트 실행 → 통과 확인**
+- [x] **Step 7: 테스트 실행 → 통과 확인**
 
 Run: `flutter test test/domain/use_cases/store_use_case_test.dart test/domain/use_cases/store_use_case_update_test.dart`
 Expected: PASS — 기존 테스트 전부 + 새로 추가한 3개 테스트 모두 통과.
 
-- [ ] **Step 8: `dart analyze`**
+- [x] **Step 8: `dart analyze`**
 
 Run: `dart analyze`
 Expected: `No issues found!`
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add lib/common/exceptions/store_exceptions.dart lib/domain/use_cases/store_use_case.dart test/domain/use_cases/store_use_case_test.dart test/domain/use_cases/store_use_case_update_test.dart
