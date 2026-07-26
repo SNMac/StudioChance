@@ -88,10 +88,12 @@ class StoreUseCaseImpl implements StoreUseCase {
       return StoreNameDuplicateException(message: '중복된 점포명: $trimmedStoreName');
     }
 
-    final spaceNames = store.spaceOptions.map((s) => s.name.trim()).toList();
-    final hasDuplicateSpaceName = spaceNames.toSet().length != spaceNames.length;
-    if (hasDuplicateSpaceName) {
-      return SpaceNameDuplicateException(message: '중복된 공간명: ${store.name}');
+    final seenSpaceNames = <String>{};
+    for (final space in store.spaceOptions) {
+      final trimmed = space.name.trim();
+      if (!seenSpaceNames.add(trimmed)) {
+        return SpaceNameDuplicateException(message: '중복된 공간명: $trimmed');
+      }
     }
 
     return null;
