@@ -3,6 +3,8 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
@@ -156,6 +158,47 @@ void main() {
       result.fold(
         (e) => expect(e, isA<StoreNameDuplicateException>()),
         (_) => fail('중복된 점포명인데 성공 처리됨'),
+      );
+      verifyNever(
+        () => mockStoreRepo.createStore(
+          store: any(named: 'store'),
+          color: any(named: 'color'),
+          memo: any(named: 'memo'),
+        ),
+      );
+    });
+
+    test('같은 점포 내 공간명이 중복되면 left(SpaceNameDuplicateException)를 반환하고 Repository를 호출하지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+
+      final duplicateSpaceStore = fakeStore.copyWith(
+        id: '',
+        name: '새 점포',
+        spaceOptions: [
+          SpaceOption(
+            id: 'space-1',
+            name: '공간A',
+            priceSetting: PriceSetting.empty(),
+          ),
+          SpaceOption(
+            id: 'space-2',
+            name: '공간A',
+            priceSetting: PriceSetting.empty(),
+          ),
+        ],
+      );
+
+      final result = await useCase.createStore(
+        store: duplicateSpaceStore,
+        color: StoreColor.blue,
+        memo: '메모',
+      );
+
+      expect(result.isLeft(), true);
+      result.fold(
+        (e) => expect(e, isA<SpaceNameDuplicateException>()),
+        (_) => fail('중복된 공간명인데 성공 처리됨'),
       );
       verifyNever(
         () => mockStoreRepo.createStore(

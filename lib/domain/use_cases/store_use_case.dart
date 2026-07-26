@@ -75,6 +75,7 @@ class StoreUseCaseImpl implements StoreUseCase {
   /// 현재 유저가 보유한 다른 점포와 이름이 중복되는지 검증한다.
   /// [store.id]가 [currentUser.storeInfos] 항목과 일치하면 자기 자신이므로 제외한다.
   /// (신규 생성 시 store.id는 빈 문자열이라 자연히 아무 항목도 제외되지 않는다)
+  /// 또한 같은 점포 내 공간명 중복을 검증한다.
   StoreException? _findDuplicateNameError({
     required Store store,
     required User currentUser,
@@ -86,6 +87,13 @@ class StoreUseCaseImpl implements StoreUseCase {
     if (hasDuplicateStoreName) {
       return StoreNameDuplicateException(message: '중복된 점포명: $trimmedStoreName');
     }
+
+    final spaceNames = store.spaceOptions.map((s) => s.name.trim()).toList();
+    final hasDuplicateSpaceName = spaceNames.toSet().length != spaceNames.length;
+    if (hasDuplicateSpaceName) {
+      return SpaceNameDuplicateException(message: '중복된 공간명: ${store.name}');
+    }
+
     return null;
   }
 
