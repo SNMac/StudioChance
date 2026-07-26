@@ -139,15 +139,18 @@ class ReservationRepositoryImpl implements ReservationRepository {
     required DateTime start,
     required DateTime end,
   }) {
+    // currentUser는 구독 도중 거의 변경되지 않으므로 스트림 최초 이벤트에서만 조회하고 캐싱한다.
+    UserModel? cachedCurrentUserModel;
+
     return _reservationDataSource
         .watchReservationsByDateRange(storeId, start, end)
         .asyncMap((models) async {
           if (models.isEmpty) return <Reservation>[];
 
-          final currentUserModel = await _userDataSource.getUser(currentUid);
+          cachedCurrentUserModel ??= await _userDataSource.getUser(currentUid);
           final storeSummary = _buildStoreSummary(
             storeId: storeId,
-            currentUserModel: currentUserModel,
+            currentUserModel: cachedCurrentUserModel,
           );
 
           final writerIds = models.map((m) => m.writerId).toSet().toList();
@@ -159,21 +162,26 @@ class ReservationRepositoryImpl implements ReservationRepository {
               if (writerModels[i] != null) writerIds[i]: writerModels[i]!,
           };
 
-          return models.map((model) {
-            final writerModel = writerById[model.writerId];
-            if (writerModel == null) {
-              throw ReservationNotFoundException(
-                message: '작성자 정보를 찾을 수 없습니다. writerId: ${model.writerId}',
-              );
-            }
-            return model.toEntity(
-              storeSummary,
-              _buildWriter(
-                writerUserModel: writerModel,
-                writerRole: model.writerRole,
-              ),
-            );
-          }).toList();
+          return models
+              .map((model) {
+                final writerModel = writerById[model.writerId];
+                if (writerModel == null) {
+                  _logger.w(
+                    '작성자 정보를 찾을 수 없어 예약을 건너뜁니다.'
+                    '\nreservationId: ${model.id}, writerId: ${model.writerId}',
+                  );
+                  return null;
+                }
+                return model.toEntity(
+                  storeSummary,
+                  _buildWriter(
+                    writerUserModel: writerModel,
+                    writerRole: model.writerRole,
+                  ),
+                );
+              })
+              .whereType<Reservation>()
+              .toList();
         });
   }
 
@@ -224,9 +232,11 @@ class ReservationRepositoryImpl implements ReservationRepository {
       await _reservationDataSource.updateReservation(
         storeId,
         reservationId,
-        {'status': status.name},
+        {'status': status.jsonValue},
       );
-      _logger.i('예약 상태 변경 완료\nid: $reservationId, status: ${status.name}');
+      _logger.i(
+        '예약 상태 변경 완료\nid: $reservationId, status: ${status.jsonValue}',
+      );
       return right(null);
     } catch (e) {
       _logger.e('예약 상태 변경 실패');

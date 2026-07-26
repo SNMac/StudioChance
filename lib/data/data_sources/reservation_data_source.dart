@@ -171,7 +171,9 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
               data['id'] = doc.id;
               return ReservationModel.fromJson(data);
             }).toList())
-        .handleError((Object e) => throw handleFirestoreError(e));
+        .handleError((Object e, StackTrace stackTrace) {
+          Error.throwWithStackTrace(handleFirestoreError(e, stackTrace), stackTrace);
+        });
   }
 
   @override

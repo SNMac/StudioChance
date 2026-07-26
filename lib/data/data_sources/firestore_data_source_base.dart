@@ -24,8 +24,8 @@ abstract class FirestoreDataSourceBase {
   /// [code]: FirebaseException.code, 또는 비-Firebase 예외의 경우 `''`
   Exception mapFirebaseCode(String code, String message);
 
-  Exception handleFirestoreError(Object e) {
-    logger.e(errorLogTag, error: e);
+  Exception handleFirestoreError(Object e, [StackTrace? stackTrace]) {
+    logger.e(errorLogTag, error: e, stackTrace: stackTrace);
 
     if (isDomainException(e)) return e as Exception;
 

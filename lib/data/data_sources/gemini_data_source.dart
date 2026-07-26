@@ -9,6 +9,17 @@ import 'package:studio_chance/domain/enums/reservation_platform.dart';
 
 part 'gemini_data_source.g.dart';
 
+/// Gemini 파싱 결과에서 핵심 필드(customerName, customerPhone, startTime)가
+/// 모두 null이면 파싱 실패로 간주하고 예외를 던진다.
+void validateOcrRequiredFields(Map<String, dynamic> json) {
+  final hasCustomerName = json['customerName'] != null;
+  final hasCustomerPhone = json['customerPhone'] != null;
+  final hasStartTime = json['startTime'] != null;
+  if (!hasCustomerName && !hasCustomerPhone && !hasStartTime) {
+    throw OcrParsingException('핵심 필드를 추출하지 못했습니다.');
+  }
+}
+
 abstract interface class GeminiDataSource {
   Future<ReservationOcrResultModel> analyzeReservationImage(
     Uint8List imageBytes, {
@@ -131,6 +142,7 @@ $rules89
     if (json['isReservationImage'] != true) {
       throw OcrNotReservationException('예약 이미지 아님');
     }
+    validateOcrRequiredFields(json);
     return ReservationOcrResultModel.fromJson(json);
   }
 }

@@ -118,22 +118,23 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
     try {
       final docSnapshot = await _userDocRef(uid).get();
 
-      if (docSnapshot.exists && docSnapshot.data() != null) {
-        final data = docSnapshot.data()!;
+      if (!docSnapshot.exists || docSnapshot.data() == null) {
+        return null;
+      }
+
+      final data = docSnapshot.data()!;
+
+      if (data['deletedAt'] == null) {
         data['id'] = docSnapshot.id;
-
-        if (data['deletedAt'] != null) {
-          logger.i('탈퇴 계정 감지: $uid');
-
-          await restoreUser(uid);
-
-          data.remove('deletedAt');
-          data.remove('expiresAt');
-        }
-
         return UserModel.fromJson(data);
       }
-      return null;
+
+      logger.i('탈퇴 계정 감지: $uid');
+      await restoreUser(uid);
+
+      // restoreUser가 실패 없이 완료된 뒤에만 도달 — 로컬에서 필드를 지우는 대신
+      // Firestore에 실제로 반영된 최신 상태를 재조회하여 상태 불일치를 방지한다.
+      return getUser(uid);
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -143,6 +144,9 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   Future<void> createUser(UserModel userModel) async {
     try {
       final json = userModel.toJson();
+      // fcmTokens는 @JsonKey(includeToJson: false)로 일반 toJson()에서 제외되므로
+      // (updateUser 등에서 storeById와 함께 실수로 덮어쓰이지 않도록) 생성 시에만 명시적으로 주입한다.
+      json['fcmTokens'] = userModel.fcmTokens;
       json['createdAt'] = FieldValue.serverTimestamp();
       json['updatedAt'] = FieldValue.serverTimestamp();
       json['lastLoginAt'] = FieldValue.serverTimestamp();

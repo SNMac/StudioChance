@@ -209,7 +209,7 @@ void main() {
   // =========================================================================
 
   group('updateReservationStatus', () {
-    test('status.name을 포함한 데이터로 DataSource를 호출한다', () async {
+    test('status를 대문자 JSON 값(jsonValue)으로 DataSource에 전달한다', () async {
       Map<String, dynamic>? capturedData;
       when(
         () => mockReservationDs.updateReservation(any(), any(), any()),
@@ -225,7 +225,7 @@ void main() {
       );
 
       expect(result.isRight(), true);
-      expect(capturedData?['status'], ReservationStatus.confirmed.name);
+      expect(capturedData?['status'], 'CONFIRMED');
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {
@@ -240,6 +240,77 @@ void main() {
       );
 
       expect(result.isLeft(), true);
+    });
+  });
+
+  // =========================================================================
+  // watchReservationsByDateRange
+  // =========================================================================
+
+  group('watchReservationsByDateRange', () {
+    test('currentUser는 스트림 구독 중 최초 1회만 조회된다', () async {
+      // writer를 currentUser와 다르게 설정해야 currentUser 캐싱만 검증 가능
+      final testReservationModel = fakeReservationModel.copyWith(
+        writerId: 'different-writer-id',
+      );
+      when(
+        () =>
+            mockReservationDs.watchReservationsByDateRange(any(), any(), any()),
+      ).thenAnswer(
+        (_) => Stream.fromIterable([
+          [testReservationModel],
+          [testReservationModel],
+        ]),
+      );
+      when(
+        () => mockUserDs.getUser('user-123'),
+      ).thenAnswer((_) async => fakeUserModel);
+      when(
+        () => mockUserDs.getUser('different-writer-id'),
+      ).thenAnswer((_) async => fakeUserModel);
+
+      final results = await repository
+          .watchReservationsByDateRange(
+            storeId: 'store-123',
+            currentUid: 'user-123',
+            start: DateTime(2026, 5, 1),
+            end: DateTime(2026, 5, 31),
+          )
+          .toList();
+
+      expect(results.length, 2);
+      verify(() => mockUserDs.getUser('user-123')).called(1);
+    });
+
+    test('작성자 정보를 찾을 수 없는 예약은 건너뛰고 나머지는 반환한다', () async {
+      final missingWriterModel = fakeReservationModel.copyWith(
+        id: 'res-missing-writer',
+        writerId: 'ghost-uid',
+      );
+      when(
+        () =>
+            mockReservationDs.watchReservationsByDateRange(any(), any(), any()),
+      ).thenAnswer(
+        (_) => Stream.value([fakeReservationModel, missingWriterModel]),
+      );
+      when(
+        () => mockUserDs.getUser('user-123'),
+      ).thenAnswer((_) async => fakeUserModel);
+      when(
+        () => mockUserDs.getUser('ghost-uid'),
+      ).thenAnswer((_) async => null);
+
+      final result = await repository
+          .watchReservationsByDateRange(
+            storeId: 'store-123',
+            currentUid: 'user-123',
+            start: DateTime(2026, 5, 1),
+            end: DateTime(2026, 5, 31),
+          )
+          .first;
+
+      expect(result.length, 1);
+      expect(result.first.id, 'res-001');
     });
   });
 }

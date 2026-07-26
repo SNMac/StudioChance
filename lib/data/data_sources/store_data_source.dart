@@ -34,7 +34,9 @@ abstract interface class StoreDataSource {
   );
 
   /// 점포 삭제 (Soft Delete)
-  Future<void> softDeleteStore(String storeId);
+  /// - [memberUids]: 삭제 시점의 멤버+대기 멤버 uid 목록. 각 사용자의
+  ///   `storeById.{storeId}` 캐시를 함께 제거하여 데이터 불일치를 방지한다.
+  Future<void> softDeleteStore(String storeId, List<String> memberUids);
 
   /// 멤버 역할 수정
   Future<void> updateMemberRole(String storeId, String uid, String role);
@@ -51,6 +53,7 @@ abstract interface class StoreDataSource {
   );
 
   /// 가입 승인 (waitingMemberById → memberById 이동)
+  /// - 승인된 역할을 users/{uid}.storeById.{storeId}.role에도 동기화한다.
   Future<void> approveMember(
     String storeId,
     String uid,
@@ -65,6 +68,10 @@ abstract interface class StoreDataSource {
 
   /// 초대 코드로 점포 조회 (만료 검증 없이 단순 조회)
   Future<StoreModel?> getStoreByInviteCode(String inviteCode);
+
+  /// 클라이언트 기기 시각을 신뢰할 수 없는 시각 비교 로직(초대 코드 만료 등)에서
+  /// 사용할 Firestore 서버 시각을 조회한다.
+  Future<DateTime> getServerTime();
 }
 
 class StoreFirestoreDataSource extends FirestoreDataSourceBase
@@ -264,28 +271,49 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
     StoreMemberInfoModel memberInfo,
   ) async {
     try {
-      await _storeDocRef(storeId).update({
+      final batch = _firestore.batch();
+      final roleJson = memberInfo.toJson()['role'];
+
+      batch.update(_storeDocRef(storeId), {
         'waitingMemberById.$uid': FieldValue.delete(),
         'memberById.$uid': memberInfo.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      batch.update(_firestore.collection('users').doc(uid), {
+        'storeById.$storeId.role': roleJson,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }
   }
 
   @override
-  Future<void> softDeleteStore(String storeId) async {
+  Future<void> softDeleteStore(String storeId, List<String> memberUids) async {
     try {
+      final batch = _firestore.batch();
       final hardDeleteDate = DateTime.now().add(
         const Duration(days: storeSoftDeleteDays),
       );
-      await _storeDocRef(storeId).update({
+
+      batch.update(_storeDocRef(storeId), {
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
         'inviteInfo': null,
       });
+
+      for (final uid in memberUids) {
+        batch.update(_firestore.collection('users').doc(uid), {
+          'storeById.$storeId': FieldValue.delete(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -346,6 +374,24 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final data = docSnapshot.data();
       data['id'] = docSnapshot.id;
       return StoreModel.fromJson(data);
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<DateTime> getServerTime() async {
+    try {
+      final ref = _firestore.collection('system').doc('serverTime');
+      await ref.set({'probe': FieldValue.serverTimestamp()});
+      final snapshot = await ref.get(const GetOptions(source: Source.server));
+      final probe = snapshot.data()?['probe'] as Timestamp?;
+      // 클라이언트 시각으로 조용히 폴백하면 이 메서드가 막으려는 취약점이 재발하므로,
+      // probe가 없으면 예외를 던져 handleFirestoreError로 흡수시킨다 (침묵 폴백 금지).
+      if (probe == null) {
+        throw StateError('서버 시각 조회 실패: probe 필드가 비어 있습니다.');
+      }
+      return probe.toDate();
     } catch (e) {
       throw handleFirestoreError(e);
     }

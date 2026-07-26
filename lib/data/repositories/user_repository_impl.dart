@@ -7,9 +7,11 @@ import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/user_model.dart';
+import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/domain/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
 part 'user_repository_impl.g.dart';
@@ -133,7 +135,14 @@ class UserRepositoryImpl implements UserRepository {
       final Map<String, dynamic> data = {};
 
       if (name != null) data['name'] = name;
-      if (color != null) data['color'] = color.name;
+      if (color != null) {
+        // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
+        // (store_repository_impl.dart의 updateStore와 동일한 패턴)
+        final colorJson = UserStoreInfoModel(
+          name: '', role: UserRole.none, color: color, memo: '',
+        ).toJson()['color'] as String;
+        data['color'] = colorJson;
+      }
 
       if (data.isEmpty) return right(null);
 

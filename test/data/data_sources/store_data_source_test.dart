@@ -283,7 +283,7 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
 
-      await dataSource.softDeleteStore(created.id);
+      await dataSource.softDeleteStore(created.id, []);
 
       final result = await dataSource.getStore(created.id);
       expect(result, isNull);
@@ -294,10 +294,48 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
 
-      await dataSource.softDeleteStore(created.id);
+      await dataSource.softDeleteStore(created.id, []);
 
       final doc = await fakeFirestore.collection('stores').doc(created.id).get();
       expect(doc.data()?.containsKey('deletedAt'), true);
+    });
+
+    test('전달된 memberUids의 storeById.{storeId} 캐시가 모두 삭제된다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final memberUid = FirestoreEmulatorHelper.generateId();
+      final waitingUid = FirestoreEmulatorHelper.generateId();
+      for (final uid in [memberUid, waitingUid]) {
+        await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+          'email': 'test@example.com',
+          'name': '테스트 유저',
+          'authProviders': <String>[],
+          'storeById': <String, dynamic>{
+            storeId: <String, dynamic>{
+              'name': '테스트 점포',
+              'role': 'STAFF',
+              'color': 'RED',
+              'memo': '',
+            },
+          },
+        });
+      }
+      await fakeFirestore.collection('stores').doc(storeId).set(<String, dynamic>{
+        'name': '테스트 점포',
+        'address': '서울',
+        'addressDetail': '',
+        'addressGuide': '',
+        'memberById': <String, dynamic>{},
+        'waitingMemberById': <String, dynamic>{},
+        'spaceOptions': <dynamic>[],
+      });
+
+      await dataSource.softDeleteStore(storeId, [memberUid, waitingUid]);
+
+      for (final uid in [memberUid, waitingUid]) {
+        final doc = await fakeFirestore.collection('users').doc(uid).get();
+        final storeById = doc.data()?['storeById'] as Map<String, dynamic>?;
+        expect(storeById?.containsKey(storeId), isFalse);
+      }
     });
   });
 
@@ -367,7 +405,7 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
       final invite = await dataSource.createInviteCode(created.id);
-      await dataSource.softDeleteStore(created.id);
+      await dataSource.softDeleteStore(created.id, []);
 
       final result = await dataSource.getStoreByInviteCode(invite.inviteCode);
 
@@ -386,6 +424,19 @@ void main() {
       final storeId = FirestoreEmulatorHelper.generateId();
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
+      await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+        'email': 'test@example.com',
+        'name': '테스트 유저',
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          storeId: <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'VIEWER',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
       final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
 
       await dataSource.approveMember(storeId, uid, memberInfo);
@@ -399,6 +450,19 @@ void main() {
       final storeId = FirestoreEmulatorHelper.generateId();
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
+      await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+        'email': 'test@example.com',
+        'name': '테스트 유저',
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          storeId: <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'VIEWER',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
       final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
 
       await dataSource.approveMember(storeId, uid, memberInfo);
@@ -407,6 +471,32 @@ void main() {
       final members = doc.data()?['memberById'] as Map<String, dynamic>?;
       expect(members?.containsKey(uid), isTrue);
       expect(members?[uid]['role'], 'STAFF');
+    });
+
+    test('승인 후 users 컬렉션의 storeById.{storeId}.role도 동기화된다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final uid = FirestoreEmulatorHelper.generateId();
+      await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
+      await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
+        'email': 'test@example.com',
+        'name': '테스트 유저',
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          storeId: <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'VIEWER',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
+      final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
+
+      await dataSource.approveMember(storeId, uid, memberInfo);
+
+      final userDoc = await fakeFirestore.collection('users').doc(uid).get();
+      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(storeById?[storeId]['role'], 'STAFF');
     });
   });
 
@@ -532,6 +622,22 @@ void main() {
       final stores = userDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(stores?.containsKey(storeId), isTrue);
       expect(stores?[storeId]['role'], 'STAFF');
+    });
+  });
+
+  // =========================================================================
+  // getServerTime
+  // =========================================================================
+
+  group('getServerTime', () {
+    test('현재 시각과 근접한 DateTime을 반환한다', () async {
+      final before = DateTime.now();
+
+      final serverTime = await dataSource.getServerTime();
+
+      final after = DateTime.now();
+      expect(serverTime.isAfter(before.subtract(const Duration(seconds: 5))), true);
+      expect(serverTime.isBefore(after.add(const Duration(seconds: 5))), true);
     });
   });
 }

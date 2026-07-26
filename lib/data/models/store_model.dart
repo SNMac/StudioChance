@@ -3,8 +3,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/space_option_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
-import 'package:studio_chance/domain/entities/price_setting.dart';
-import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 
@@ -87,21 +85,13 @@ abstract class StoreModel with _$StoreModel {
     required List<StoreMemberInfo> memberInfos,
     required List<StoreMemberInfo> waitingMemberInfos,
   }) {
-    final List<SpaceOption> entitySpaceOptions = spaceOptions.isEmpty
-        ? [SpaceOption(
-            id: 'legacy_default',
-            name: '기본 공간',
-            priceSetting: PriceSetting.empty(),
-          )]
-        : spaceOptions.map((s) => s.toEntity()).toList();
-
     return Store(
       id: id,
       name: name,
       address: address,
       addressDetail: addressDetail,
       addressGuide: addressGuide,
-      spaceOptions: entitySpaceOptions,
+      spaceOptions: spaceOptions.map((s) => s.toEntity()).toList(),
       memberInfos: memberInfos,
       waitingMemberInfos: waitingMemberInfos,
       inviteInfo: inviteInfoModel?.toEntity(),

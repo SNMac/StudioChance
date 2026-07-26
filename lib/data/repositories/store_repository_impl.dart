@@ -10,6 +10,8 @@ import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
@@ -61,7 +63,8 @@ class StoreRepositoryImpl implements StoreRepository {
       );
 
       return right(
-        createdModel.toEntity(
+        _toStoreEntity(
+          createdModel,
           memberInfos: store.memberInfos,
           waitingMemberInfos: store.waitingMemberInfos,
         ),
@@ -81,15 +84,17 @@ class StoreRepositoryImpl implements StoreRepository {
         return right(null);
       }
 
-      final results = await Future.wait([
-        _fetchMembersWithRoles(storeModel.memberById),
-        _fetchMembersWithRoles(storeModel.waitingMemberById),
-      ]);
+      final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
+      final waitingInfosFuture =
+          _fetchMembersWithRoles(storeModel.waitingMemberById);
+      final memberInfos = await memberInfosFuture;
+      final waitingInfos = await waitingInfosFuture;
 
       return right(
-        storeModel.toEntity(
-          memberInfos: results[0],
-          waitingMemberInfos: results[1],
+        _toStoreEntity(
+          storeModel,
+          memberInfos: memberInfos,
+          waitingMemberInfos: waitingInfos,
         ),
       );
     } catch (e) {
@@ -139,7 +144,15 @@ class StoreRepositoryImpl implements StoreRepository {
   @override
   Future<Either<Exception, void>> softDeleteStore(String storeId) async {
     try {
-      await _storeDataSource.softDeleteStore(storeId);
+      final storeModel = await _storeDataSource.getStore(storeId);
+      if (storeModel == null) return right(null);
+
+      final memberUids = {
+        ...storeModel.memberById.keys,
+        ...storeModel.waitingMemberById.keys,
+      }.toList();
+
+      await _storeDataSource.softDeleteStore(storeId, memberUids);
       _logger.i('점포 삭제 완료\nid: $storeId');
       return right(null);
     } catch (e) {
@@ -159,7 +172,8 @@ class StoreRepositoryImpl implements StoreRepository {
         if (existing != null && existing.createdAt != null) {
           final expiresAt = existing.createdAt!
               .add(const Duration(minutes: storeInviteCodeAvailableMin));
-          if (DateTime.now().isBefore(expiresAt)) {
+          final serverNow = await _storeDataSource.getServerTime();
+          if (serverNow.isBefore(expiresAt)) {
             _logger.i('유효한 초대 코드 재사용\nstoreId: $storeId');
             return right(existing.toEntity());
           }
@@ -190,7 +204,8 @@ class StoreRepositoryImpl implements StoreRepository {
       }
       final expiresAt = inviteData.createdAt!
           .add(const Duration(minutes: storeInviteCodeAvailableMin));
-      if (DateTime.now().isAfter(expiresAt)) {
+      final serverNow = await _storeDataSource.getServerTime();
+      if (serverNow.isAfter(expiresAt)) {
         return left(StoreValidationException(message: '만료된 초대 코드입니다.'));
       }
 
@@ -200,7 +215,8 @@ class StoreRepositoryImpl implements StoreRepository {
       final waitingInfos = await waitingInfosFuture;
 
       return right(
-        storeModel.toEntity(
+        _toStoreEntity(
+          storeModel,
           memberInfos: memberInfos,
           waitingMemberInfos: waitingInfos,
         ),
@@ -290,6 +306,31 @@ class StoreRepositoryImpl implements StoreRepository {
   // ===========================================================================
   // Private Helpers
   // ===========================================================================
+
+  /// StoreModel → Store 변환 + legacy fallback 적용
+  /// - spaceOptions가 비어있는 구버전 점포 문서는 기본 공간 1건으로 채워 반환한다.
+  ///   (이 판단은 Data Model이 아닌 Repository의 책임이다)
+  Store _toStoreEntity(
+    StoreModel model, {
+    required List<StoreMemberInfo> memberInfos,
+    required List<StoreMemberInfo> waitingMemberInfos,
+  }) {
+    final store = model.toEntity(
+      memberInfos: memberInfos,
+      waitingMemberInfos: waitingMemberInfos,
+    );
+    if (store.spaceOptions.isNotEmpty) return store;
+
+    return store.copyWith(
+      spaceOptions: [
+        SpaceOption(
+          id: 'legacy_default',
+          name: '기본 공간',
+          priceSetting: PriceSetting.empty(),
+        ),
+      ],
+    );
+  }
 
   /// StoreMemberInfoModel Map을 받아 StoreMemberInfo Entity 목록으로 변환
   /// - input: `Map<UserID, StoreMemberInfoModel>`
