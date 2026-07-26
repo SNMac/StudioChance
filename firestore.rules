@@ -19,6 +19,20 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == uid;
+
+      // 점포 멤버 관리(승인/역할변경/추방/점포삭제) 시 관리자가 대상 멤버 문서의
+      // storeById 캐시를 갱신/삭제해야 하므로 완화.
+      // - storeById/updatedAt 외 필드(email, name, deletedAt 등)는 여전히 본인만 쓸 수 있음
+      // - storeById는 role/color/name의 "캐시"일 뿐이며, 실제 점포 접근 권한 판정은 항상
+      //   stores/{storeId}.memberById를 직접 조회하여 이뤄지므로(위 reservations 규칙 참고)
+      //   이 필드를 위변조해도 곧바로 권한 상승으로 이어지지 않음
+      // TODO: Firestore Rules는 Map diff에서 바뀐 키(어느 storeId인지)를 프로그래밍적으로
+      //   추출할 수 없어 "그 storeId의 ADMIN인지"까지는 검증하지 못한다 — 정밀 검증이
+      //   필요해지면 클라이언트가 대상 storeId를 별도 스칼라 필드로 함께 써서 Rules가
+      //   직접 대조하도록 리팩터링 검토 (approveMember/updateMemberRole/removeMember/
+      //   softDeleteStore에서 사용)
+      allow update: if request.auth != null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['storeById', 'updatedAt']);
     }
 
     // ─── stores 컬렉션 ───────────────────────────────────────────────────
@@ -44,6 +58,16 @@ service cloud.firestore {
       allow read:   if request.auth != null;
       allow create: if request.auth != null;
       allow update, delete: if isAdmin();
+
+      // 가입 신청(requestJoinWithBatch): 아직 멤버가 아닌 인증된 사용자가 스스로를
+      // waitingMemberById에 추가하는 것은 허용한다. isAdmin()은 이미 memberById에
+      // 속한 사용자만 통과하므로, 신청자 본인은 별도 규칙이 필요하다.
+      // - waitingMemberById/updatedAt 외 필드는 건드릴 수 없음
+      // - waitingMemberById 안에서도 본인(request.auth.uid) 항목만 바꿀 수 있음
+      allow update: if request.auth != null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['waitingMemberById', 'updatedAt'])
+          && resource.data.waitingMemberById.diff(request.resource.data.waitingMemberById)
+              .affectedKeys().hasOnly([request.auth.uid]);
 
       // ─── reservations 서브컬렉션 ─────────────────────────────────────
       // 경로: stores/{storeId}/reservations/{reservationId}
@@ -82,10 +106,19 @@ service cloud.firestore {
     // 클라이언트 기기 시각은 조작되거나 부정확할 수 있어 초대 코드 만료 검증 등에
     // 그대로 신뢰할 수 없다. FieldValue.serverTimestamp()를 기록한 뒤 즉시
     // 서버에서 재조회하는 왕복 조회(round-trip)로 신뢰 가능한 "현재 시각"을 얻기
-    // 위한 스크래치 문서이며, 민감 데이터를 저장하지 않으므로 인증된 사용자에게
-    // 전체 허용한다.
+    // 위한 스크래치 문서이다.
+    //
+    // probe 필드는 반드시 실제 서버 시각(request.time)과 정확히 일치해야만 쓰기가
+    // 허용되므로, 다른 사용자가 임의의(미래/과거) 시각 값을 주입해 다른 사람의
+    // 초대 코드 만료 판정을 조작하는 것이 불가능하다 — 모든 성공한 쓰기는
+    // "진짜 현재 시각"만 담을 수 있다.
+    // TODO: 모든 사용자가 문서 하나를 공유하므로 동시 요청이 잦아지면 Firestore의
+    //   문서당 쓰기 속도 제한에 걸릴 수 있다 — 트래픽이 늘면 사용자별 분산(예:
+    //   system/serverTime/probes/{uid}) 검토
     match /system/serverTime {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+          && request.resource.data.probe == request.time;
     }
   }
 }
