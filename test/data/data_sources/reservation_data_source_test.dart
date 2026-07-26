@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
 import 'package:studio_chance/domain/enums/payment_method.dart';
@@ -243,6 +245,30 @@ void main() {
       final result = await stream.first;
 
       expect(result, isEmpty);
+    });
+
+    test('파싱 실패 시 도메인 예외로 변환되어 스트림 에러로 방출된다', () async {
+      // customerName 등 필수 필드가 없는 손상된 문서를 직접 주입하여
+      // ReservationModel.fromJson이 TypeError를 던지도록 유도한다.
+      await fakeFirestore
+          .collection('stores')
+          .doc(storeId)
+          .collection('reservations')
+          .doc('broken-doc')
+          .set({
+        'startTime': Timestamp.fromDate(DateTime(2026, 6, 15)),
+      });
+
+      final stream = dataSource.watchReservationsByDateRange(
+        storeId,
+        DateTime(2026, 6, 1),
+        DateTime(2026, 7, 1),
+      );
+
+      await expectLater(
+        stream,
+        emitsError(isA<ReservationDataParsingException>()),
+      );
     });
   });
 
