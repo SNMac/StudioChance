@@ -149,6 +149,56 @@ void main() {
       expect(fetched.getRight().toNullable()!.name, '변경된 점포명');
     });
 
+    test('점포명 변경 시 다른 멤버(staff)의 storeById.name 캐시도 함께 갱신된다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final staffUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      await _seedUserDoc(fakeFirestore, staffUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+
+      final created = await repository.createStore(
+        store: _testStoreEntity(ownerUid, adminUser),
+        color: StoreColor.blue,
+        memo: '',
+      );
+      final createdStore = created.getRight().toNullable()!;
+
+      await repository.requestJoinStore(
+        storeId: createdStore.id,
+        uid: staffUid,
+        role: UserRole.staff,
+        color: StoreColor.red,
+        storeAlias: '통합 테스트 점포',
+        memo: '',
+      );
+      await repository.approveMember(
+        storeId: createdStore.id,
+        uid: staffUid,
+        role: UserRole.staff,
+      );
+
+      final fetched = await repository.getStore(createdStore.id);
+      final storeWithStaff = fetched.getRight().toNullable()!;
+
+      await repository.updateStore(
+        store: storeWithStaff.copyWith(name: '변경된 점포명'),
+        uid: ownerUid,
+        color: StoreColor.green,
+        memo: '',
+      );
+
+      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
+      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
+    });
+
     test('updateStore 후 users 컬렉션의 storeById에 color, memo가 반영된다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);

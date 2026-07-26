@@ -25,7 +25,13 @@ abstract interface class StoreDataSource {
   Future<StoreModel?> getStore(String storeId);
 
   /// 점포 정보 수정
-  Future<void> updateStore(String storeId, Map<String, dynamic> data);
+  /// - `memberUids`: `data`에 `name`이 포함된 경우, 해당 uid 목록(멤버+대기 멤버)의
+  ///   `storeById.{storeId}.name` 캐시를 함께 동기화한다.
+  Future<void> updateStore(
+    String storeId,
+    Map<String, dynamic> data,
+    List<String> memberUids,
+  );
 
   /// 점포 삭제 (Soft Delete)
   Future<void> softDeleteStore(String storeId);
@@ -148,12 +154,29 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> updateStore(String storeId, Map<String, dynamic> data) async {
+  Future<void> updateStore(
+    String storeId,
+    Map<String, dynamic> data,
+    List<String> memberUids,
+  ) async {
     try {
+      final batch = _firestore.batch();
+
       final updates = Map<String, dynamic>.from(data);
       updates['updatedAt'] = FieldValue.serverTimestamp();
+      batch.update(_storeDocRef(storeId), updates);
 
-      await _storeDocRef(storeId).update(updates);
+      final newName = data['name'] as String?;
+      if (newName != null) {
+        for (final uid in memberUids) {
+          batch.update(_firestore.collection('users').doc(uid), {
+            'storeById.$storeId.name': newName,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }

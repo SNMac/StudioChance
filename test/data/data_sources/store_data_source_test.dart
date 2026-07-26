@@ -215,7 +215,7 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
 
-      await dataSource.updateStore(created.id, {'name': '변경된 점포명'});
+      await dataSource.updateStore(created.id, {'name': '변경된 점포명'}, []);
 
       final updated = await dataSource.getStore(created.id);
       expect(updated?.name, '변경된 점포명');
@@ -226,11 +226,50 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
 
-      await dataSource.updateStore(created.id, {'name': '변경된 점포명'});
+      await dataSource.updateStore(created.id, {'name': '변경된 점포명'}, []);
 
       final updated = await dataSource.getStore(created.id);
       expect(updated?.address, '서울시 강남구 테헤란로 1');
       expect(updated?.addressDetail, '101호');
+    });
+
+    test('memberUids로 전달된 유저들의 storeById.name 캐시가 함께 갱신된다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final adminUid = FirestoreEmulatorHelper.generateId();
+      final staffUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserWithStore(fakeFirestore, adminUid, storeId);
+      await _seedUserWithStore(fakeFirestore, staffUid, storeId);
+      await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
+
+      await dataSource.updateStore(
+        storeId,
+        {'name': '변경된 점포명'},
+        [adminUid, staffUid],
+      );
+
+      final adminDoc = await fakeFirestore.collection('users').doc(adminUid).get();
+      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
+      final adminStoreById = adminDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(adminStoreById?[storeId]['name'], '변경된 점포명');
+      expect(staffStoreById?[storeId]['name'], '변경된 점포명');
+    });
+
+    test('data에 name이 없으면 memberUids의 storeById.name을 건드리지 않는다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final staffUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserWithStore(fakeFirestore, staffUid, storeId);
+      await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
+
+      await dataSource.updateStore(
+        storeId,
+        {'address': '변경된 주소'},
+        [staffUid],
+      );
+
+      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
+      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(staffStoreById?[storeId]['name'], '테스트 점포');
     });
   });
 
