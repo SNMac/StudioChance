@@ -64,13 +64,19 @@ abstract class ReservationModel with _$ReservationModel {
     );
   }
 
-  /// 예약 수정 가능 필드만 반환 (storeId, writerId, writerRole 불변 필드 제외)
+  /// 예약 수정 가능 필드만 반환 (allowlist 방식)
+  /// - 새 불변 필드가 추가되어도 여기 명시하지 않는 한 자동으로 제외된다.
   Map<String, dynamic> toUpdateJson() {
     final json = toJson();
-    json.remove('storeId');
-    json.remove('writerId');
-    json.remove('writerRole');
-    return json;
+    const editableFields = {
+      'status', 'customerName', 'headCount', 'customerPhone', 'memo',
+      'isAllDay', 'startTime', 'endTime', 'platform', 'paymentMethod',
+      'calculatedPrice', 'priceAdjustment', 'totalPrice', 'spaceOptionId',
+    };
+    return {
+      for (final entry in json.entries)
+        if (editableFields.contains(entry.key)) entry.key: entry.value,
+    };
   }
 
   Reservation toEntity(StoreSummary storeSummary, StoreMemberInfo writer) {
