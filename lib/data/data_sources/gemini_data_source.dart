@@ -128,7 +128,7 @@ $rules89
     final jsonString = response.text ?? '{}';
     _logger.d('Gemini 응답: $jsonString');
     final json = jsonDecode(jsonString) as Map<String, dynamic>;
-    if (json['isReservationImage'] == false) {
+    if (json['isReservationImage'] != true) {
       throw OcrNotReservationException('예약 이미지 아님');
     }
     return ReservationOcrResultModel.fromJson(json);

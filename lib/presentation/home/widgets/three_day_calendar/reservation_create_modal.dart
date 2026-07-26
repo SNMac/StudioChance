@@ -182,7 +182,10 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   void _applySpaceOptions(List<SpaceOption>? spaces, {List<String> ocrUnmatched = const []}) {
     final loaded = spaces ?? const [];
     if (loaded.isEmpty) {
-      setState(() => _isLoadingSpaceOptions = false);
+      setState(() {
+        _isLoadingSpaceOptions = false;
+        _pendingSpaceNameFromOcr = null;
+      });
       showCustomAlertDialog(
         context: context,
         title: '공간 정보 오류',
@@ -291,18 +294,24 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       _loadSpaceOptions(matchedStore.id, ocrUnmatched: unmatched);
     } else {
       final ocrSpaceName = result.spaceName;
-      if (ocrSpaceName != null && _spaceOptions.isNotEmpty) {
-        final matched = _spaceOptions
-            .where((s) => s.name == ocrSpaceName)
-            .firstOrNull;
-        if (matched != null) {
-          setState(() => _spaceOptionId = matched.id);
-        } else {
-          unmatched.add('공간');
+      if (ocrSpaceName != null && _isLoadingSpaceOptions) {
+        // 초기 공간 옵션 로딩이 아직 끝나지 않음 — 로딩 완료 시점에 매칭되도록 위임
+        _pendingSpaceNameFromOcr = ocrSpaceName;
+        _loadSpaceOptions(_storeSummary.id, ocrUnmatched: unmatched);
+      } else {
+        if (ocrSpaceName != null && _spaceOptions.isNotEmpty) {
+          final matched = _spaceOptions
+              .where((s) => s.name == ocrSpaceName)
+              .firstOrNull;
+          if (matched != null) {
+            setState(() => _spaceOptionId = matched.id);
+          } else {
+            unmatched.add('공간');
+          }
         }
+        _recalculatePrice();
+        _showOcrUnmatchedAlert(unmatched);
       }
-      _recalculatePrice();
-      _showOcrUnmatchedAlert(unmatched);
     }
   }
 
@@ -474,11 +483,17 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     );
     if (!mounted) return;
 
+    // 점포명이 프롬프트의 매칭 키이므로, 이름이 중복되면 목록 전달 자체를 생략
+    final storeNames = _availableStores.map((s) => s.name).toList();
+    final hasDuplicateStoreNames = storeNames.toSet().length != storeNames.length;
+
     final storeSpaceMap = <String, List<String>>{};
-    for (var i = 0; i < _availableStores.length; i++) {
-      final spaces = allSpaceOptions[i];
-      if (spaces != null && spaces.isNotEmpty) {
-        storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+    if (!hasDuplicateStoreNames) {
+      for (var i = 0; i < _availableStores.length; i++) {
+        final spaces = allSpaceOptions[i];
+        if (spaces != null && spaces.isNotEmpty) {
+          storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+        }
       }
     }
 

@@ -405,9 +405,13 @@ class _ReservationDetailModalState
       _loadSpaceOptions(matchedStore.id, ocrUnmatched: unmatched);
     } else {
       final ocrSpaceName = result.spaceName;
-      if (ocrSpaceName != null) {
-        final spaces = _spaceOptions;
-        if (spaces != null && spaces.isNotEmpty) {
+      final spaces = _spaceOptions;
+      if (ocrSpaceName != null && spaces == null) {
+        // 초기 공간 옵션 로딩이 아직 끝나지 않음 — 로딩 완료 시점에 매칭되도록 위임
+        _pendingSpaceNameFromOcr = ocrSpaceName;
+        _loadSpaceOptions(_storeSummary.id, ocrUnmatched: unmatched);
+      } else {
+        if (ocrSpaceName != null && spaces != null && spaces.isNotEmpty) {
           final matched = spaces
               .where((s) => s.name == ocrSpaceName)
               .firstOrNull;
@@ -417,9 +421,9 @@ class _ReservationDetailModalState
             unmatched.add('공간');
           }
         }
+        _recalculatePrice();
+        _showOcrUnmatchedAlert(unmatched);
       }
-      _recalculatePrice();
-      _showOcrUnmatchedAlert(unmatched);
     }
   }
 
@@ -773,11 +777,17 @@ class _ReservationDetailModalState
     );
     if (!mounted) return;
 
+    // 점포명이 프롬프트의 매칭 키이므로, 이름이 중복되면 목록 전달 자체를 생략
+    final storeNames = _availableStores.map((s) => s.name).toList();
+    final hasDuplicateStoreNames = storeNames.toSet().length != storeNames.length;
+
     final storeSpaceMap = <String, List<String>>{};
-    for (var i = 0; i < _availableStores.length; i++) {
-      final spaces = allSpaceOptions[i];
-      if (spaces != null && spaces.isNotEmpty) {
-        storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+    if (!hasDuplicateStoreNames) {
+      for (var i = 0; i < _availableStores.length; i++) {
+        final spaces = allSpaceOptions[i];
+        if (spaces != null && spaces.isNotEmpty) {
+          storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+        }
       }
     }
 
