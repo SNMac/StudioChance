@@ -350,7 +350,7 @@ git commit -m "feat: #17 - 점포명 중복 등록/수정 방지 검증 추가"
 - Consumes: Task 1의 `_findDuplicateNameError({required Store store, required User currentUser})`, `SpaceNameDuplicateException`(Task 1에서 이미 정의됨), `Store.spaceOptions: List<SpaceOption>`(기존)
 - Produces: 없음 (이 플랜의 마지막 태스크)
 
-- [ ] **Step 1: 실패하는 테스트 작성 — createStore 공간명 중복**
+- [x] **Step 1: 실패하는 테스트 작성 — createStore 공간명 중복**
 
 `test/domain/use_cases/store_use_case_test.dart` 상단 import에 추가:
 
@@ -404,7 +404,7 @@ import 'package:studio_chance/domain/entities/price_setting.dart';
     });
 ```
 
-- [ ] **Step 2: 실패하는 테스트 작성 — updateStore 공간명 중복**
+- [x] **Step 2: 실패하는 테스트 작성 — updateStore 공간명 중복**
 
 `test/domain/use_cases/store_use_case_update_test.dart` 상단 import에 추가:
 
@@ -457,12 +457,12 @@ import 'package:studio_chance/domain/entities/price_setting.dart';
     });
 ```
 
-- [ ] **Step 3: 테스트 실행 → 실패 확인**
+- [x] **Step 3: 테스트 실행 → 실패 확인**
 
 Run: `flutter test test/domain/use_cases/store_use_case_test.dart test/domain/use_cases/store_use_case_update_test.dart`
 Expected: FAIL — 새로 추가한 2개 테스트가 실패. 나머지(Task 1 포함 기존 테스트)는 PASS 유지.
 
-- [ ] **Step 4: `_findDuplicateNameError`에 공간명 중복 검증 추가**
+- [x] **Step 4: `_findDuplicateNameError`에 공간명 중복 검증 추가**
 
 `lib/domain/use_cases/store_use_case.dart`의 `_findDuplicateNameError` 메서드를 다음과 같이 수정 (점포명 체크 뒤에 공간명 체크 추가):
 
@@ -491,22 +491,22 @@ Expected: FAIL — 새로 추가한 2개 테스트가 실패. 나머지(Task 1 �
 
 `createStore`/`updateStore` 본문은 Task 1에서 이미 이 헬퍼를 호출하도록 연결되어 있으므로 추가 수정 불필요.
 
-- [ ] **Step 5: 테스트 실행 → 통과 확인**
+- [x] **Step 5: 테스트 실행 → 통과 확인**
 
 Run: `flutter test test/domain/use_cases/store_use_case_test.dart test/domain/use_cases/store_use_case_update_test.dart`
 Expected: PASS — 전체 테스트(기존 + Task 1 + Task 2) 모두 통과.
 
-- [ ] **Step 6: `dart analyze`**
+- [x] **Step 6: `dart analyze`**
 
 Run: `dart analyze`
 Expected: `No issues found!`
 
-- [ ] **Step 7: 전체 회귀 테스트**
+- [x] **Step 7: 전체 회귀 테스트**
 
 Run: `flutter test`
 Expected: 모든 테스트 PASS (다른 기능에 영향 없음 확인).
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add lib/domain/use_cases/store_use_case.dart test/domain/use_cases/store_use_case_test.dart test/domain/use_cases/store_use_case_update_test.dart
