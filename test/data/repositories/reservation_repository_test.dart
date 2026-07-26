@@ -209,7 +209,7 @@ void main() {
   // =========================================================================
 
   group('updateReservationStatus', () {
-    test('status.name을 포함한 데이터로 DataSource를 호출한다', () async {
+    test('status를 대문자 JSON 값(jsonValue)으로 DataSource에 전달한다', () async {
       Map<String, dynamic>? capturedData;
       when(
         () => mockReservationDs.updateReservation(any(), any(), any()),
@@ -225,7 +225,7 @@ void main() {
       );
 
       expect(result.isRight(), true);
-      expect(capturedData?['status'], ReservationStatus.confirmed.name);
+      expect(capturedData?['status'], 'CONFIRMED');
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {

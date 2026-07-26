@@ -224,9 +224,11 @@ class ReservationRepositoryImpl implements ReservationRepository {
       await _reservationDataSource.updateReservation(
         storeId,
         reservationId,
-        {'status': status.name},
+        {'status': status.jsonValue},
       );
-      _logger.i('예약 상태 변경 완료\nid: $reservationId, status: ${status.name}');
+      _logger.i(
+        '예약 상태 변경 완료\nid: $reservationId, status: ${status.jsonValue}',
+      );
       return right(null);
     } catch (e) {
       _logger.e('예약 상태 변경 실패');
