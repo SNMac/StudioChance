@@ -242,4 +242,44 @@ void main() {
       expect(result.isLeft(), true);
     });
   });
+
+  // =========================================================================
+  // watchReservationsByDateRange
+  // =========================================================================
+
+  group('watchReservationsByDateRange', () {
+    test('currentUser는 스트림 구독 중 최초 1회만 조회된다', () async {
+      // writer를 currentUser와 다르게 설정해야 currentUser 캐싱만 검증 가능
+      final testReservationModel = fakeReservationModel.copyWith(
+        writerId: 'different-writer-id',
+      );
+      when(
+        () =>
+            mockReservationDs.watchReservationsByDateRange(any(), any(), any()),
+      ).thenAnswer(
+        (_) => Stream.fromIterable([
+          [testReservationModel],
+          [testReservationModel],
+        ]),
+      );
+      when(
+        () => mockUserDs.getUser('user-123'),
+      ).thenAnswer((_) async => fakeUserModel);
+      when(
+        () => mockUserDs.getUser('different-writer-id'),
+      ).thenAnswer((_) async => fakeUserModel);
+
+      final results = await repository
+          .watchReservationsByDateRange(
+            storeId: 'store-123',
+            currentUid: 'user-123',
+            start: DateTime(2026, 5, 1),
+            end: DateTime(2026, 5, 31),
+          )
+          .toList();
+
+      expect(results.length, 2);
+      verify(() => mockUserDs.getUser('user-123')).called(1);
+    });
+  });
 }

@@ -139,15 +139,18 @@ class ReservationRepositoryImpl implements ReservationRepository {
     required DateTime start,
     required DateTime end,
   }) {
+    // currentUser는 구독 도중 거의 변경되지 않으므로 스트림 최초 이벤트에서만 조회하고 캐싱한다.
+    UserModel? cachedCurrentUserModel;
+
     return _reservationDataSource
         .watchReservationsByDateRange(storeId, start, end)
         .asyncMap((models) async {
           if (models.isEmpty) return <Reservation>[];
 
-          final currentUserModel = await _userDataSource.getUser(currentUid);
+          cachedCurrentUserModel ??= await _userDataSource.getUser(currentUid);
           final storeSummary = _buildStoreSummary(
             storeId: storeId,
-            currentUserModel: currentUserModel,
+            currentUserModel: cachedCurrentUserModel,
           );
 
           final writerIds = models.map((m) => m.writerId).toSet().toList();
