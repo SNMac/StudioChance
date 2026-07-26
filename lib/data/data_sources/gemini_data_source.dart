@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/ocr_exceptions.dart';
 import 'package:studio_chance/data/models/reservation_ocr_result_model.dart';
@@ -16,6 +17,7 @@ abstract interface class GeminiDataSource {
 }
 
 class GeminiDataSourceImpl implements GeminiDataSource {
+  final Logger _logger = Logger();
   late final GenerativeModel _model;
 
   GeminiDataSourceImpl() {
@@ -124,6 +126,7 @@ $rules89
       ]),
     ]);
     final jsonString = response.text ?? '{}';
+    _logger.d('Gemini 응답: $jsonString');
     final json = jsonDecode(jsonString) as Map<String, dynamic>;
     if (json['isReservationImage'] == false) {
       throw OcrNotReservationException('예약 이미지 아님');
