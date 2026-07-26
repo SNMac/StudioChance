@@ -172,7 +172,7 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
               return ReservationModel.fromJson(data);
             }).toList())
         .handleError((Object e, StackTrace stackTrace) {
-          throw handleFirestoreError(e);
+          Error.throwWithStackTrace(handleFirestoreError(e, stackTrace), stackTrace);
         });
   }
 

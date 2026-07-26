@@ -270,6 +270,38 @@ void main() {
         emitsError(isA<ReservationDataParsingException>()),
       );
     });
+
+    test('스트림 에러 전파 시 원본 StackTrace(파싱 실패 지점)가 보존된다', () async {
+      // handleFirestoreError가 새 스택트레이스로 throw하지 않고
+      // Error.throwWithStackTrace로 원본 StackTrace를 그대로 전달하는지 검증한다.
+      await fakeFirestore
+          .collection('stores')
+          .doc(storeId)
+          .collection('reservations')
+          .doc('broken-doc')
+          .set({
+        'startTime': Timestamp.fromDate(DateTime(2026, 6, 15)),
+      });
+
+      final stream = dataSource.watchReservationsByDateRange(
+        storeId,
+        DateTime(2026, 6, 1),
+        DateTime(2026, 7, 1),
+      );
+
+      StackTrace? capturedStackTrace;
+      try {
+        await stream.first;
+        fail('예외가 발생해야 합니다');
+      } catch (_, st) {
+        capturedStackTrace = st;
+      }
+
+      // 원본 StackTrace라면 fromJson 파싱 실패 지점의 프레임을 포함해야 한다.
+      // handleFirestoreError 내부 throw 지점에서 새로 생성된 스택트레이스라면
+      // 이 프레임은 남아있지 않는다.
+      expect(capturedStackTrace.toString(), contains('ReservationModel'));
+    });
   });
 
   // =========================================================================
