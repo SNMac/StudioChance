@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:fpdart/fpdart.dart';
-import 'package:studio_chance/common/exceptions/ocr_exceptions.dart';
 import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_ocr_repository.dart';
 
@@ -23,20 +22,9 @@ class ReservationOcrUseCaseImpl implements ReservationOcrUseCase {
     Uint8List imageBytes, {
     Map<String, List<String>>? storeSpaceMap,
   }) async {
-    final result = await _repository.analyzeReservationImage(
+    return _repository.analyzeReservationImage(
       imageBytes,
       storeSpaceMap: storeSpaceMap,
-    );
-    return result.fold(
-      left,
-      (ocrResult) {
-        if (ocrResult.customerName == null &&
-            ocrResult.customerPhone == null &&
-            ocrResult.startTime == null) {
-          return left(OcrParsingException('핵심 필드 미추출'));
-        }
-        return right(ocrResult);
-      },
     );
   }
 }
