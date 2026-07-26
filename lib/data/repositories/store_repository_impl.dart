@@ -81,15 +81,16 @@ class StoreRepositoryImpl implements StoreRepository {
         return right(null);
       }
 
-      final results = await Future.wait([
-        _fetchMembersWithRoles(storeModel.memberById),
-        _fetchMembersWithRoles(storeModel.waitingMemberById),
-      ]);
+      final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
+      final waitingInfosFuture =
+          _fetchMembersWithRoles(storeModel.waitingMemberById);
+      final memberInfos = await memberInfosFuture;
+      final waitingInfos = await waitingInfosFuture;
 
       return right(
         storeModel.toEntity(
-          memberInfos: results[0],
-          waitingMemberInfos: results[1],
+          memberInfos: memberInfos,
+          waitingMemberInfos: waitingInfos,
         ),
       );
     } catch (e) {
