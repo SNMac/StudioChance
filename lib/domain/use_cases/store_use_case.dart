@@ -1,5 +1,7 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
+import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
@@ -70,6 +72,23 @@ class StoreUseCaseImpl implements StoreUseCase {
   }) : _storeRepository = storeRepository,
        _userRepository = userRepository;
 
+  /// 현재 유저가 보유한 다른 점포와 이름이 중복되는지 검증한다.
+  /// [store.id]가 [currentUser.storeInfos] 항목과 일치하면 자기 자신이므로 제외한다.
+  /// (신규 생성 시 store.id는 빈 문자열이라 자연히 아무 항목도 제외되지 않는다)
+  StoreException? _findDuplicateNameError({
+    required Store store,
+    required User currentUser,
+  }) {
+    final trimmedStoreName = store.name.trim();
+    final hasDuplicateStoreName = currentUser.storeInfos.any(
+      (info) => info.id != store.id && info.name.trim() == trimmedStoreName,
+    );
+    if (hasDuplicateStoreName) {
+      return StoreNameDuplicateException(message: '중복된 점포명: $trimmedStoreName');
+    }
+    return null;
+  }
+
   @override
   Future<Either<Exception, Store>> createStore({
     required Store store,
@@ -77,6 +96,14 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String memo,
   }) {
     return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      final duplicateError = _findDuplicateNameError(
+        store: store,
+        currentUser: currentUser,
+      );
+      if (duplicateError != null) {
+        return TaskEither<Exception, Store>.left(duplicateError);
+      }
+
       final adminMemberInfo = StoreMemberInfo(
         user: currentUser,
         role: UserRole.admin,
@@ -167,6 +194,14 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String memo,
   }) {
     return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      final duplicateError = _findDuplicateNameError(
+        store: store,
+        currentUser: currentUser,
+      );
+      if (duplicateError != null) {
+        return TaskEither<Exception, void>.left(duplicateError);
+      }
+
       return TaskEither(
         () => _storeRepository.updateStore(
           store: store,

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
@@ -134,6 +135,35 @@ void main() {
       );
 
       expect(result.isLeft(), true);
+    });
+
+    test('보유한 다른 점포와 이름이 중복되면 left(StoreNameDuplicateException)를 반환하고 Repository를 호출하지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+
+      final duplicateNameStore = fakeStore.copyWith(
+        id: '',
+        name: fakeUser.storeInfos.first.name,
+      );
+
+      final result = await useCase.createStore(
+        store: duplicateNameStore,
+        color: StoreColor.blue,
+        memo: '메모',
+      );
+
+      expect(result.isLeft(), true);
+      result.fold(
+        (e) => expect(e, isA<StoreNameDuplicateException>()),
+        (_) => fail('중복된 점포명인데 성공 처리됨'),
+      );
+      verifyNever(
+        () => mockStoreRepo.createStore(
+          store: any(named: 'store'),
+          color: any(named: 'color'),
+          memo: any(named: 'memo'),
+        ),
+      );
     });
   });
 
