@@ -45,6 +45,15 @@ void main() {
       expect(doc.data()?['name'], user.name);
       expect(doc.data()?['nickname'], user.nickname);
     });
+
+    test('fcmTokens가 Firestore 문서에 저장된다', () async {
+      final user = _testUser().copyWith(fcmTokens: ['token-abc']);
+
+      await dataSource.createUser(user);
+
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      expect(doc.data()?['fcmTokens'], ['token-abc']);
+    });
   });
 
   // =========================================================================

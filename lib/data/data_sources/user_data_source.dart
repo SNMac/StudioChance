@@ -144,6 +144,9 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   Future<void> createUser(UserModel userModel) async {
     try {
       final json = userModel.toJson();
+      // fcmTokens는 @JsonKey(includeToJson: false)로 일반 toJson()에서 제외되므로
+      // (updateUser 등에서 storeById와 함께 실수로 덮어쓰이지 않도록) 생성 시에만 명시적으로 주입한다.
+      json['fcmTokens'] = userModel.fcmTokens;
       json['createdAt'] = FieldValue.serverTimestamp();
       json['updatedAt'] = FieldValue.serverTimestamp();
       json['lastLoginAt'] = FieldValue.serverTimestamp();
