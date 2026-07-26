@@ -274,9 +274,10 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     final ocrStoreName = result.storeName;
     StoreSummary? matchedStore;
     if (ocrStoreName != null && _availableStores.length > 1) {
-      matchedStore = _availableStores
-          .where((s) => s.name == ocrStoreName)
-          .firstOrNull;
+      // 동일 이름 점포가 2개 이상이면 어느 쪽인지 특정할 수 없으므로 모호한 매칭으로 처리
+      final candidates =
+          _availableStores.where((s) => s.name == ocrStoreName).toList();
+      matchedStore = candidates.length == 1 ? candidates.first : null;
       if (matchedStore != null) {
         setState(() {
           _storeSummary = matchedStore!;
