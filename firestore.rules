@@ -75,5 +75,17 @@ service cloud.firestore {
         allow write: if isStaffOrAbove();
       }
     }
+
+    // ─── system 컬렉션 (서버 시각 동기화 전용) ──────────────────────────────
+    // 경로: system/serverTime
+    //
+    // 클라이언트 기기 시각은 조작되거나 부정확할 수 있어 초대 코드 만료 검증 등에
+    // 그대로 신뢰할 수 없다. FieldValue.serverTimestamp()를 기록한 뒤 즉시
+    // 서버에서 재조회하는 왕복 조회(round-trip)로 신뢰 가능한 "현재 시각"을 얻기
+    // 위한 스크래치 문서이며, 민감 데이터를 저장하지 않으므로 인증된 사용자에게
+    // 전체 허용한다.
+    match /system/serverTime {
+      allow read, write: if request.auth != null;
+    }
   }
 }

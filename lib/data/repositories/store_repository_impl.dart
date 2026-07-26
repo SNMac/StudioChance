@@ -168,7 +168,8 @@ class StoreRepositoryImpl implements StoreRepository {
         if (existing != null && existing.createdAt != null) {
           final expiresAt = existing.createdAt!
               .add(const Duration(minutes: storeInviteCodeAvailableMin));
-          if (DateTime.now().isBefore(expiresAt)) {
+          final serverNow = await _storeDataSource.getServerTime();
+          if (serverNow.isBefore(expiresAt)) {
             _logger.i('유효한 초대 코드 재사용\nstoreId: $storeId');
             return right(existing.toEntity());
           }
@@ -199,7 +200,8 @@ class StoreRepositoryImpl implements StoreRepository {
       }
       final expiresAt = inviteData.createdAt!
           .add(const Duration(minutes: storeInviteCodeAvailableMin));
-      if (DateTime.now().isAfter(expiresAt)) {
+      final serverNow = await _storeDataSource.getServerTime();
+      if (serverNow.isAfter(expiresAt)) {
         return left(StoreValidationException(message: '만료된 초대 코드입니다.'));
       }
 

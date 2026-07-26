@@ -68,6 +68,10 @@ abstract interface class StoreDataSource {
 
   /// 초대 코드로 점포 조회 (만료 검증 없이 단순 조회)
   Future<StoreModel?> getStoreByInviteCode(String inviteCode);
+
+  /// 클라이언트 기기 시각을 신뢰할 수 없는 시각 비교 로직(초대 코드 만료 등)에서
+  /// 사용할 Firestore 서버 시각을 조회한다.
+  Future<DateTime> getServerTime();
 }
 
 class StoreFirestoreDataSource extends FirestoreDataSourceBase
@@ -370,6 +374,19 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final data = docSnapshot.data();
       data['id'] = docSnapshot.id;
       return StoreModel.fromJson(data);
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<DateTime> getServerTime() async {
+    try {
+      final ref = _firestore.collection('system').doc('serverTime');
+      await ref.set({'probe': FieldValue.serverTimestamp()});
+      final snapshot = await ref.get(const GetOptions(source: Source.server));
+      final probe = snapshot.data()?['probe'] as Timestamp?;
+      return probe?.toDate() ?? DateTime.now();
     } catch (e) {
       throw handleFirestoreError(e);
     }

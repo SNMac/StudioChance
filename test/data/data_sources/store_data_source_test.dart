@@ -624,4 +624,20 @@ void main() {
       expect(stores?[storeId]['role'], 'STAFF');
     });
   });
+
+  // =========================================================================
+  // getServerTime
+  // =========================================================================
+
+  group('getServerTime', () {
+    test('현재 시각과 근접한 DateTime을 반환한다', () async {
+      final before = DateTime.now();
+
+      final serverTime = await dataSource.getServerTime();
+
+      final after = DateTime.now();
+      expect(serverTime.isAfter(before.subtract(const Duration(seconds: 5))), true);
+      expect(serverTime.isBefore(after.add(const Duration(seconds: 5))), true);
+    });
+  });
 }
