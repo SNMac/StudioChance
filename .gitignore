@@ -371,8 +371,11 @@ fabric.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,androidstudio,flutter,android,xcode,swift,firebase,obsidian
 
-.claude/cache
+# AI
+.claude/cache/
 .claude/settings.local.json
+.superpowers/
+
 firebase.json
 firebase_options.dart
 firebase_options_dev.dart
