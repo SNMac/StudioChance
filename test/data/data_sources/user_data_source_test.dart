@@ -209,6 +209,29 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('복구된 사용자는 갱신된 문서를 재조회하여 반환한다 (deletedAt/expiresAt 없이)', () async {
+      final user = _testUser();
+      await fakeFirestore.collection('users').doc(user.id).set({
+        'email': user.email,
+        'name': user.name,
+        'nickname': user.nickname,
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{},
+        'deletedAt': Timestamp.now(),
+        'expiresAt': Timestamp.now(),
+      });
+
+      final result = await dataSource.fetchUserWithRestoration(user.id);
+
+      // 재조회 결과이므로 로컬에서 임의로 지운 필드가 아니라
+      // Firestore에 실제로 반영된 상태를 기반으로 파싱된 모델이어야 한다.
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      expect(doc.data()?.containsKey('deletedAt'), false);
+      expect(doc.data()?.containsKey('expiresAt'), false);
+      expect(result, isNotNull);
+      expect(result!.id, user.id);
+    });
   });
 
   // =========================================================================
