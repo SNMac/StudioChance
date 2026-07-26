@@ -108,7 +108,17 @@ class StoreRepositoryImpl implements StoreRepository {
     try {
       final storeModel = StoreModel.fromEntity(store);
 
-      await _storeDataSource.updateStore(store.id, storeModel.toEditableJson());
+      // 점포명 변경이 전체 멤버(승인+대기)의 storeById.name 캐시에 반영되도록 uid 목록 전달
+      final memberUids = {
+        ...store.memberInfos.map((info) => info.user.id),
+        ...store.waitingMemberInfos.map((info) => info.user.id),
+      }.toList();
+
+      await _storeDataSource.updateStore(
+        store.id,
+        storeModel.toEditableJson(),
+        memberUids,
+      );
 
       // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
       final colorJson = UserStoreInfoModel(

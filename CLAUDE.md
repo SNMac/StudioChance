@@ -5,6 +5,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - Firebase 서비스: Firestore, Authentication, Crashlytics, Cloud Message, Analytics, App Check
 - 소셜 로그인: Google, Apple
   - 정식 출시 후 Naver, Kakao 추가 예정
+- **배포 예정 시점**: 2026-08 말 ~ 2026-09 초 (아직 정식 출시 전, 프로덕션 데이터 없음)
 
 ## 코드 스타일
 - Flutter/Dart 사용
@@ -144,6 +145,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
 
 ## 중요 사항
+- 정식 출시 전(배포 예정 2026-08 말 ~ 2026-09 초)이므로 Firestore 스키마 변경 시 기존 데이터 마이그레이션은 고려하지 않아도 됨
 - API Key 관련 문자열은 gitignore 처리되어있는 별도 파일로 분리하고 import하여 사용
 - `Future.wait([f1, f2])` — f1, f2의 **반환 타입이 다르면** `List<Object?>`로 추론됨 → 타입별 별도 Future 변수로 분리할 것
   ```dart
