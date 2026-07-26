@@ -281,5 +281,36 @@ void main() {
       expect(results.length, 2);
       verify(() => mockUserDs.getUser('user-123')).called(1);
     });
+
+    test('작성자 정보를 찾을 수 없는 예약은 건너뛰고 나머지는 반환한다', () async {
+      final missingWriterModel = fakeReservationModel.copyWith(
+        id: 'res-missing-writer',
+        writerId: 'ghost-uid',
+      );
+      when(
+        () =>
+            mockReservationDs.watchReservationsByDateRange(any(), any(), any()),
+      ).thenAnswer(
+        (_) => Stream.value([fakeReservationModel, missingWriterModel]),
+      );
+      when(
+        () => mockUserDs.getUser('user-123'),
+      ).thenAnswer((_) async => fakeUserModel);
+      when(
+        () => mockUserDs.getUser('ghost-uid'),
+      ).thenAnswer((_) async => null);
+
+      final result = await repository
+          .watchReservationsByDateRange(
+            storeId: 'store-123',
+            currentUid: 'user-123',
+            start: DateTime(2026, 5, 1),
+            end: DateTime(2026, 5, 31),
+          )
+          .first;
+
+      expect(result.length, 1);
+      expect(result.first.id, 'res-001');
+    });
   });
 }

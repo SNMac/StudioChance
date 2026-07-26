@@ -162,21 +162,26 @@ class ReservationRepositoryImpl implements ReservationRepository {
               if (writerModels[i] != null) writerIds[i]: writerModels[i]!,
           };
 
-          return models.map((model) {
-            final writerModel = writerById[model.writerId];
-            if (writerModel == null) {
-              throw ReservationNotFoundException(
-                message: '작성자 정보를 찾을 수 없습니다. writerId: ${model.writerId}',
-              );
-            }
-            return model.toEntity(
-              storeSummary,
-              _buildWriter(
-                writerUserModel: writerModel,
-                writerRole: model.writerRole,
-              ),
-            );
-          }).toList();
+          return models
+              .map((model) {
+                final writerModel = writerById[model.writerId];
+                if (writerModel == null) {
+                  _logger.w(
+                    '작성자 정보를 찾을 수 없어 예약을 건너뜁니다.'
+                    '\nreservationId: ${model.id}, writerId: ${model.writerId}',
+                  );
+                  return null;
+                }
+                return model.toEntity(
+                  storeSummary,
+                  _buildWriter(
+                    writerUserModel: writerModel,
+                    writerRole: model.writerRole,
+                  ),
+                );
+              })
+              .whereType<Reservation>()
+              .toList();
         });
   }
 
