@@ -516,7 +516,10 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                           // 요일/일자 헤더
                           SizedBox(
                             height: threeDayHeaderHeight,
-                            child: _DayHeaderCell(date: date),
+                            child: _DayHeaderCell(
+                              date: date,
+                              isToday: _isToday(date),
+                            ),
                           ),
                           Container(
                               height: calendarDividerThickness,
@@ -585,19 +588,13 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
 // ─── 헤더 셀 ────────────────────────────────────────────────────────────────
 
 class _DayHeaderCell extends StatelessWidget {
-  const _DayHeaderCell({required this.date});
+  const _DayHeaderCell({required this.date, required this.isToday});
 
   final DateTime date;
+  final bool isToday;
 
   static const _weekdayLabels = ['월', '화', '수', '목', '금', '토', '일'];
   String get _weekdayLabel => _weekdayLabels[date.weekday - 1];
-
-  bool get _isToday {
-    final now = DateTime.now();
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
-  }
 
   bool get _isSaturday => date.weekday == DateTime.saturday;
   bool get _isSunday => date.weekday == DateTime.sunday;
@@ -623,7 +620,7 @@ class _DayHeaderCell extends StatelessWidget {
   }
 
   Color _weekdayTextColor(BuildContext context) {
-    if (_isToday) return context.label;
+    if (isToday) return context.label;
     if (_isSaturday) return context.systemBlue;
     if (_isSunday) return context.systemRed;
     return context.secondaryLabel;
@@ -637,7 +634,7 @@ class _DayHeaderCell extends StatelessWidget {
 
   Widget _buildDayNumber(BuildContext context) {
     final dayText = date.day.toString();
-    if (_isToday) {
+    if (isToday) {
       return Container(
         width: 20,
         height: 20,
