@@ -81,6 +81,18 @@ class MyApp extends ConsumerWidget {
       child: MaterialApp.router(
         routerConfig: router,
 
+        // 기기 시스템 글자 크기 설정을 따르면 24×24 오늘 날짜 버튼, 60px 고정
+        // leadingWidth의 취소 버튼 등 고정 크기 위젯에서 텍스트가 넘치거나
+        // 줄바꿈되어 레이아웃이 깨짐 → 배율을 1.0으로 고정해 기기 설정 전체 무시
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.noScaling),
+            child: child!,
+          );
+        },
+
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
