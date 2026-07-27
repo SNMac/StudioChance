@@ -106,6 +106,12 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - iOS Keychain은 앱 삭제 후에도 인증 토큰이 잔존 → 재설치 후 로그인 없이 진입하는 문제 방지
 - `main_dev.dart`, `main_prod.dart`의 `_checkFirstLaunchAndClearData()`에 구현
 
+### 단순 위임 UseCase 허용 (D10)
+`UserUseCaseImpl`처럼 모든 메서드가 Repository에 단일 라인으로 위임하는 UseCase도 의도적으로 허용.
+- 목적: Presentation → UseCase → Repository 계층 규칙을 지키기 위함 (Presentation이 Repository를 직접 호출하지 않도록 강제)
+- 현재 비즈니스 로직이 없다는 이유로 UseCase 계층 자체를 생략하지 않음 — 향후 검증/가공 로직이 필요해지면 이 계층에 추가
+- 관련 이슈: [#15](https://github.com/SNMac/StudioChance/issues/15) [M-3]
+
 ## Either / TaskEither 패턴
 
 - 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)
