@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 
-import 'package:studio_chance/domain/use_cases/user_use_case_provider.dart';
+import 'package:studio_chance/domain/use_cases/auth_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/auth_provider.dart';
 
 part 'app_auth_controller.g.dart';
@@ -19,8 +19,8 @@ Future<User?> currentUser(Ref ref) async {
 
   if (authInfo == null) return null;
 
-  final userUseCase = ref.watch(userUseCaseProvider);
-  final result = await userUseCase.fetchOrCreateUser(authInfo);
+  final authUseCase = ref.watch(authUseCaseProvider);
+  final result = await authUseCase.fetchOrCreateUser(authInfo);
 
   return result.fold((error) => throw error, (user) => user);
 }

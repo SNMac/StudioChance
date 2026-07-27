@@ -11,6 +11,11 @@ abstract interface class AuthUseCase {
   /// 로그인 상태 변경 `Stream`
   Stream<AuthInfo?> authStateChanges();
 
+  /// 인증 정보를 바탕으로 유저 조회/생성
+  /// 앱 시작/로그인 상태 변경 시 Firebase Auth 세션과 Firestore User 문서를 연결하는
+  /// 유일한 진입점. (AppAuthController에서 사용)
+  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo);
+
   /// Google 로그인
   Future<Either<Exception, User>> signInWithGoogle();
 
@@ -43,6 +48,11 @@ class AuthUseCaseImpl implements AuthUseCase {
   @override
   Stream<AuthInfo?> authStateChanges() {
     return _authRepository.authStateChanges();
+  }
+
+  @override
+  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo) {
+    return _userRepository.fetchOrCreateUser(authInfo);
   }
 
   @override

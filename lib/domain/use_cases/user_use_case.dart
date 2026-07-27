@@ -1,14 +1,9 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/enums/store_color.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
 abstract interface class UserUseCase {
-  /// 인증 정보를 바탕으로 유저 조회/생성
-  /// AppAuthController에서 로그인 상태 분기 처리를 위해 사용됨
-  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo);
-
   /// 현재 로그인된 사용자 정보 반환
   /// - 로그인 상태가 아니거나 DB에 정보가 없으면 null 반환
   Future<Either<Exception, User?>> getCurrentUser();
@@ -35,11 +30,6 @@ class UserUseCaseImpl implements UserUseCase {
   final UserRepository _repository;
 
   const UserUseCaseImpl(this._repository);
-
-  @override
-  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo) {
-    return _repository.fetchOrCreateUser(authInfo);
-  }
 
   @override
   Future<Either<Exception, User?>> getCurrentUser() {

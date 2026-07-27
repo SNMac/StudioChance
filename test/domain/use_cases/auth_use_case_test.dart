@@ -44,6 +44,32 @@ void main() {
   });
 
   // =========================================================================
+  // fetchOrCreateUser
+  // =========================================================================
+
+  group('fetchOrCreateUser', () {
+    test('Repository.fetchOrCreateUser를 위임하고 User를 반환한다', () async {
+      when(() => mockUserRepo.fetchOrCreateUser(fakeAuthInfo))
+          .thenAnswer((_) async => right(fakeUser));
+
+      final result = await useCase.fetchOrCreateUser(fakeAuthInfo);
+
+      expect(result.isRight(), true);
+      expect(result.getRight().toNullable(), fakeUser);
+      verify(() => mockUserRepo.fetchOrCreateUser(fakeAuthInfo)).called(1);
+    });
+
+    test('Repository 실패를 그대로 전파한다', () async {
+      when(() => mockUserRepo.fetchOrCreateUser(any()))
+          .thenAnswer((_) async => left(Exception('유저 조회/생성 실패')));
+
+      final result = await useCase.fetchOrCreateUser(fakeAuthInfo);
+
+      expect(result.isLeft(), true);
+    });
+  });
+
+  // =========================================================================
   // signInWithGoogle
   // =========================================================================
 
