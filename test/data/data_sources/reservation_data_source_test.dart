@@ -346,17 +346,7 @@ void main() {
   // =========================================================================
 
   group('deleteReservation', () {
-    test('예약 문서를 삭제한다', () async {
-      final reservation = _testReservation(storeId: storeId);
-      final created = await dataSource.createReservation(reservation);
-
-      await dataSource.deleteReservation(storeId, created.id);
-
-      final result = await dataSource.getReservation(storeId, created.id);
-      expect(result, isNull);
-    });
-
-    test('삭제 후 Firestore 문서가 존재하지 않는다', () async {
+    test('예약 문서를 삭제하면 Firestore에서 문서가 사라진다', () async {
       final reservation = _testReservation(storeId: storeId);
       final created = await dataSource.createReservation(reservation);
 
