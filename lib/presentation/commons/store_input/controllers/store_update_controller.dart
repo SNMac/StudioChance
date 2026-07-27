@@ -85,9 +85,10 @@ class StoreUpdateController extends _$StoreUpdateController
         color: data.color,
         memo: data.memo,
       );
+      final stackTrace = StackTrace.current;
       result.fold(
         (exception) =>
-            state = state.copyWith(status: AsyncError(exception, StackTrace.current)),
+            state = state.copyWith(status: AsyncError(exception, stackTrace)),
         (_) => state = state.copyWith(status: const AsyncData(null)),
       );
     } catch (e, st) {
