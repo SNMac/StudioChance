@@ -2,9 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 예약 가격 계산 시 공휴일 여부를 실제로 판정하여 `PriceSetting.calculatePrice(isHoliday: ...)`에 실제 값을 전달한다. 현재는 모든 호출부에서 `isHoliday: false`로 고정되어 있어 공휴일 요금 그룹(`Weekday.holiday`)이 절대 적용되지 않는다.
+**Goal:** 예약 가격 계산 시 공휴일 여부를 실제로 판정하여 `PriceSetting.calculatePrice(isHoliday: ...)`에 실제 값을 전달한다. 현재는 모든 호출부에서 `isHoliday: (date) => false`로 고정되어 있어 공휴일 요금 그룹(`Weekday.holiday`)이 절대 적용되지 않는다.
 
-**Architecture:** Clean Architecture 4계층으로 신규 `Holiday` 수직 슬라이스를 추가한다. `HolidayDataSource`(공공데이터포털 HTTP 호출) → `HolidayRepositoryImpl`(월별 캐시) → `HolidayUseCase`(단순 위임) → `isHolidayProvider`(Riverpod). `ReservationUseCaseImpl`은 `HolidayRepository`를 직접 주입받아 가격 계산 시점에 공휴일 여부를 조회한다(기존 `StoreRepository` 주입과 동일한 패턴, D3).
+> **⚠️ #15 [C-1] 이후 재검토 완료 (2026-07-27):** 이 플랜은 최초 작성 시 `calculatePrice(isHoliday: bool)`(단일 bool) 시그니처를 전제로 설계되었다. 이후 #15 [C-1]에서 다일 예약의 날짜별 공휴일 반영을 위해 시그니처가 `bool Function(DateTime date)?`(날짜별 동기 콜백)로 변경되었다. 아래 내용은 이 새 시그니처에 맞춰 전면 갱신된 버전이다 — `HolidayRepository`/`HolidayUseCase`는 단일 날짜 대신 **예약 기간 전체의 공휴일 날짜 Set**을 비동기로 미리 조회한 뒤, 그 Set을 캡처하는 동기 콜백을 `calculatePrice`에 전달하는 방식으로 재설계했다.
+
+**Architecture:** Clean Architecture 4계층으로 신규 `Holiday` 수직 슬라이스를 추가한다. `HolidayDataSource`(공공데이터포털 HTTP 호출, 월별 단위) → `HolidayRepositoryImpl`(월별 캐시 + 기간 병합) → `HolidayUseCase`(단순 위임) → `holidaysInRangeProvider`(Riverpod, 예약 기간의 공휴일 `Set<DateTime>` 반환). `ReservationUseCaseImpl`은 `HolidayRepository`를 직접 주입받아 가격 계산 시점에 예약 기간의 공휴일 Set을 조회하고, 그 Set을 캡처하는 동기 콜백을 `calculatePrice(isHoliday: ...)`에 전달한다(기존 `StoreRepository` 주입과 동일한 패턴, D3).
 
 **Tech Stack:** `http: ^1.6.0`(이미 pubspec.yaml에 존재, 추가 설치 불필요), `fpdart` Either, `riverpod_generator`, `mocktail`.
 
@@ -14,24 +16,26 @@
 - 발급처: https://www.data.go.kr/data/15012690/openapi.do — 이 플랜을 실행하는 사람이 사전에 서비스 키를 발급받아야 한다 (승인까지 통상 1~2시간 소요, 공공데이터포털 특성)
 - API 키는 `.gitignore` 처리된 `lib/constants/api_keys.dart`에만 저장 — 절대 커밋 금지 (CLAUDE.md "중요 사항")
 - `Either<Exception, T>` 반환 패턴, 프로덕션 코드에서 `isLeft()/isRight()` 명령형 스타일 금지 — `fold`/`getOrElse` 사용 (테스트 코드는 기존 관례상 `isLeft()/isRight()` 허용)
-- 공휴일 조회 실패는 예약 흐름을 막지 않고 `isHoliday: false`로 조용히 폴백한다 (silent — 사용자에게 별도 알림 없음)
+- 공휴일 조회 실패는 예약 흐름을 막지 않고 빈 `Set<DateTime>`(=모든 날짜를 공휴일 아님으로 처리)으로 조용히 폴백한다 (silent — 사용자에게 별도 알림 없음)
 - 콘솔 출력은 `logger` 라이브러리 사용
 - 커밋 메시지는 한국어. 이슈 번호는 아직 GitHub에 생성되지 않았으므로 각 커밋 예시의 `#XX`는 실제 이슈 번호로 치환할 것 (CLAUDE.md Git 컨벤션: `feat/#<이슈번호>-<설명>` 브랜치, `<type>: #<이슈번호> - <설명>` 커밋)
 - `dart run build_runner build --delete-conflicting-outputs`는 `@riverpod`/`@Riverpod` 어노테이션이 추가된 파일을 만들 때마다 실행
 
 ---
 
-### 현재 상태 (연구 결과)
+### 현재 상태 (2026-07-27 갱신)
 
 | 파일 | 현재 상태 |
 |------|-----------|
-| `lib/domain/entities/price_setting.dart` | `calculatePrice(isHoliday: bool)` 파라미터 이미 구현 완료 — 공휴일 판정 로직 자체는 손댈 필요 없음 |
-| `lib/domain/enums/weekday.dart` | `Weekday.holiday`(`@JsonValue(8)`) 이미 정의됨 |
-| `lib/domain/use_cases/reservation_use_case.dart:221` | `isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달` |
-| `lib/presentation/.../reservation_create_modal.dart:228` | 동일 TODO |
-| `lib/presentation/.../reservation_detail_modal.dart:327,344` | 동일 TODO (2곳: `_recalculatePrice`, `_applyInitialPrice`) |
+| `lib/domain/entities/price_setting.dart` | `calculatePrice({..., bool Function(DateTime date)? isHoliday})` — 날짜별 동기 콜백으로 이미 구현 완료(#15 [C-1]). 생략 시 모든 날짜를 공휴일 아님으로 처리. 공휴일 판정 로직 자체는 손댈 필요 없음 |
+| `lib/common/enums/weekday.dart` | `Weekday.holiday`(`@JsonValue(8)`) 이미 정의됨 (#15 [I-1]에서 `domain/enums`→`common/enums`로 이동) |
+| `lib/domain/use_cases/reservation_use_case.dart:254` | `isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달` |
+| `lib/presentation/.../reservation_create_modal.dart:232` | 동일 TODO |
+| `lib/presentation/.../reservation_detail_modal.dart:328,345` | 동일 TODO (2곳: `_recalculatePrice`, `_applyInitialPrice`) |
 | `pubspec.yaml` | `http: ^1.6.0` 이미 존재하나 `lib/` 어디서도 아직 사용되지 않음 (이번이 첫 사용처) |
 | `lib/constants/api_keys.dart` | 존재하지 않음 — 이번 플랜에서 최초 생성 |
+
+> `isHoliday`가 `bool Function(DateTime date)?` 콜백이므로, `HolidayRepository`/`HolidayUseCase`는 "단일 날짜 하나가 공휴일인지"가 아니라 "예약 기간에 걸친 날짜들 중 공휴일인 날짜의 `Set<DateTime>`"을 비동기로 반환하도록 설계한다(아래 Task 2/3). 호출부는 그 Set을 캡처하는 동기 콜백 `(date) => holidays.contains(...)`을 만들어 `calculatePrice`에 전달한다.
 
 이 프로젝트에 외부 HTTP API를 호출하는 기존 DataSource가 없으므로(기존 `gemini_data_source.dart`는 Firebase AI SDK를 사용, Firestore DataSource는 `FirestoreDataSourceBase` 상속), `http.Client`를 직접 사용하는 패턴을 이번에 새로 도입한다. 테스트 용이성을 위해 `http.Client`를 생성자 주입받는다(mocktail로 목킹).
 
@@ -428,9 +432,11 @@ git commit -m "feat: #XX - 공휴일 API HolidayDataSource 구현"
 **Interfaces:**
 - Consumes: `HolidayDataSource.getHolidays({required int year, required int month}) → Future<Set<DateTime>>` (Task 1), `holidayDataSourceProvider`
 - Produces:
-  - `abstract interface class HolidayRepository { Future<Either<Exception, bool>> isHoliday(DateTime date); }`
+  - `abstract interface class HolidayRepository { Future<Either<Exception, Set<DateTime>>> getHolidaysInRange({required DateTime start, required DateTime end}); }`
   - `class HolidayRepositoryImpl implements HolidayRepository` — 생성자 `HolidayRepositoryImpl({required HolidayDataSource dataSource})`
   - `@Riverpod(keepAlive: true) HolidayRepository holidayRepository(Ref ref)`
+
+`isHoliday(DateTime)` 대신 `getHolidaysInRange`로 설계한 이유: `PriceSetting.calculatePrice`의 `isHoliday` 파라미터가 `bool Function(DateTime date)?`(동기 콜백)이므로, 호출부는 예약 기간 전체의 공휴일 날짜를 미리 비동기로 조회해 `Set<DateTime>`으로 받은 뒤 그 Set을 캡처하는 동기 콜백을 만들어야 한다. 단일 날짜만 조회하는 API로는 다일(allDay) 예약에서 날짜마다 반복 조회가 필요해 비효율적이고, 콜백 자체를 동기로 유지할 수 없다.
 
 - [ ] **Step 1: 인터페이스 작성**
 
@@ -440,8 +446,12 @@ git commit -m "feat: #XX - 공휴일 API HolidayDataSource 구현"
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class HolidayRepository {
-  /// [date]가 공휴일인지 여부를 반환한다. 조회 실패 시 Left.
-  Future<Either<Exception, bool>> isHoliday(DateTime date);
+  /// [start] 이상 [end] 미만 범위에 포함된 날짜 중 공휴일인 날짜(자정 기준)의 Set을 반환한다.
+  /// 조회 실패 시 Left.
+  Future<Either<Exception, Set<DateTime>>> getHolidaysInRange({
+    required DateTime start,
+    required DateTime end,
+  });
 }
 ```
 
@@ -466,31 +476,48 @@ void main() {
     repository = HolidayRepositoryImpl(dataSource: mockDataSource);
   });
 
-  group('isHoliday', () {
-    test('DataSource가 반환한 날짜와 일치하면 true를 반환한다', () async {
+  group('getHolidaysInRange', () {
+    test('단일 월 범위 — DataSource가 반환한 공휴일 Set을 그대로 반환한다', () async {
       when(() => mockDataSource.getHolidays(year: 2026, month: 3))
           .thenAnswer((_) async => {DateTime(2026, 3, 1)});
 
-      final result = await repository.isHoliday(DateTime(2026, 3, 1, 14, 30));
+      final result = await repository.getHolidaysInRange(
+        start: DateTime(2026, 3, 1, 10, 0),
+        end: DateTime(2026, 3, 1, 12, 0),
+      );
 
-      expect(result.getOrElse((_) => false), isTrue);
+      expect(result.getOrElse((_) => {}), {DateTime(2026, 3, 1)});
     });
 
-    test('DataSource가 반환한 날짜와 불일치하면 false를 반환한다', () async {
+    test('두 달에 걸친 범위 — 두 달의 DataSource 결과를 병합한다', () async {
+      when(() => mockDataSource.getHolidays(year: 2026, month: 2))
+          .thenAnswer((_) async => {DateTime(2026, 2, 28)});
       when(() => mockDataSource.getHolidays(year: 2026, month: 3))
           .thenAnswer((_) async => {DateTime(2026, 3, 1)});
 
-      final result = await repository.isHoliday(DateTime(2026, 3, 2));
+      final result = await repository.getHolidaysInRange(
+        start: DateTime(2026, 2, 27),
+        end: DateTime(2026, 3, 2),
+      );
 
-      expect(result.getOrElse((_) => true), isFalse);
+      expect(
+        result.getOrElse((_) => {}),
+        {DateTime(2026, 2, 28), DateTime(2026, 3, 1)},
+      );
     });
 
     test('같은 월을 다시 조회하면 DataSource를 재호출하지 않는다 (캐시)', () async {
       when(() => mockDataSource.getHolidays(year: 2026, month: 3))
           .thenAnswer((_) async => {DateTime(2026, 3, 1)});
 
-      await repository.isHoliday(DateTime(2026, 3, 1));
-      await repository.isHoliday(DateTime(2026, 3, 15));
+      await repository.getHolidaysInRange(
+        start: DateTime(2026, 3, 1),
+        end: DateTime(2026, 3, 2),
+      );
+      await repository.getHolidaysInRange(
+        start: DateTime(2026, 3, 15),
+        end: DateTime(2026, 3, 16),
+      );
 
       verify(() => mockDataSource.getHolidays(year: 2026, month: 3)).called(1);
     });
@@ -499,7 +526,10 @@ void main() {
       when(() => mockDataSource.getHolidays(year: 2026, month: 3))
           .thenThrow(Exception('network error'));
 
-      final result = await repository.isHoliday(DateTime(2026, 3, 1));
+      final result = await repository.getHolidaysInRange(
+        start: DateTime(2026, 3, 1),
+        end: DateTime(2026, 3, 2),
+      );
 
       expect(result.isLeft(), isTrue);
     });
@@ -537,19 +567,36 @@ class HolidayRepositoryImpl implements HolidayRepository {
       : _dataSource = dataSource;
 
   @override
-  Future<Either<Exception, bool>> isHoliday(DateTime date) async {
-    final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+  Future<Either<Exception, Set<DateTime>>> getHolidaysInRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
     try {
-      var holidays = _cache[key];
-      if (holidays == null) {
-        holidays = await _dataSource.getHolidays(
-          year: date.year,
-          month: date.month,
-        );
-        _cache[key] = holidays;
+      // [start, end] 사이에 걸친 연-월 쌍을 모두 구한다 (end는 보통 다음 날 자정이므로
+      // 포함 관계를 안전하게 처리하기 위해 end를 그대로 순회 상한에 포함시킨다).
+      final months = <String>{};
+      var cursor = DateTime(start.year, start.month);
+      final endMonth = DateTime(end.year, end.month);
+      while (!cursor.isAfter(endMonth)) {
+        months.add('${cursor.year}-${cursor.month.toString().padLeft(2, '0')}');
+        cursor = DateTime(cursor.year, cursor.month + 1);
       }
-      final normalized = DateTime(date.year, date.month, date.day);
-      return right(holidays.contains(normalized));
+
+      final merged = <DateTime>{};
+      for (final key in months) {
+        var holidays = _cache[key];
+        if (holidays == null) {
+          final parts = key.split('-');
+          holidays = await _dataSource.getHolidays(
+            year: int.parse(parts[0]),
+            month: int.parse(parts[1]),
+          );
+          _cache[key] = holidays;
+        }
+        merged.addAll(holidays);
+      }
+
+      return right(merged);
     } catch (e) {
       _logger.e('공휴일 조회 실패', error: e);
       return left(toException(e));
@@ -592,9 +639,9 @@ git commit -m "feat: #XX - HolidayRepositoryImpl 월별 캐시 구현"
 - Test: `test/domain/use_cases/holiday_use_case_test.dart`
 
 **Interfaces:**
-- Consumes: `HolidayRepository.isHoliday(DateTime) → Future<Either<Exception, bool>>` (Task 2), `holidayRepositoryProvider`
+- Consumes: `HolidayRepository.getHolidaysInRange({required DateTime start, required DateTime end}) → Future<Either<Exception, Set<DateTime>>>` (Task 2), `holidayRepositoryProvider`
 - Produces:
-  - `abstract interface class HolidayUseCase { Future<Either<Exception, bool>> isHoliday(DateTime date); }`
+  - `abstract interface class HolidayUseCase { Future<Either<Exception, Set<DateTime>>> getHolidaysInRange({required DateTime start, required DateTime end}); }`
   - `class HolidayUseCaseImpl implements HolidayUseCase` — 생성자 `HolidayUseCaseImpl({required HolidayRepository holidayRepository})`
   - `@riverpod HolidayUseCase holidayUseCase(Ref ref)`
 
@@ -621,19 +668,33 @@ void main() {
   });
 
   test('Repository의 결과를 그대로 반환한다', () async {
-    when(() => mockRepository.isHoliday(DateTime(2026, 3, 1)))
-        .thenAnswer((_) async => right(true));
+    when(
+      () => mockRepository.getHolidaysInRange(
+        start: DateTime(2026, 3, 1),
+        end: DateTime(2026, 3, 2),
+      ),
+    ).thenAnswer((_) async => right({DateTime(2026, 3, 1)}));
 
-    final result = await useCase.isHoliday(DateTime(2026, 3, 1));
+    final result = await useCase.getHolidaysInRange(
+      start: DateTime(2026, 3, 1),
+      end: DateTime(2026, 3, 2),
+    );
 
-    expect(result.getOrElse((_) => false), isTrue);
+    expect(result.getOrElse((_) => {}), {DateTime(2026, 3, 1)});
   });
 
   test('Repository가 Left를 반환하면 그대로 전달한다', () async {
-    when(() => mockRepository.isHoliday(DateTime(2026, 3, 1)))
-        .thenAnswer((_) async => left(Exception('실패')));
+    when(
+      () => mockRepository.getHolidaysInRange(
+        start: DateTime(2026, 3, 1),
+        end: DateTime(2026, 3, 2),
+      ),
+    ).thenAnswer((_) async => left(Exception('실패')));
 
-    final result = await useCase.isHoliday(DateTime(2026, 3, 1));
+    final result = await useCase.getHolidaysInRange(
+      start: DateTime(2026, 3, 1),
+      end: DateTime(2026, 3, 2),
+    );
 
     expect(result.isLeft(), isTrue);
   });
@@ -654,8 +715,11 @@ import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/domain/repository_interfaces/holiday_repository.dart';
 
 abstract interface class HolidayUseCase {
-  /// [date]가 공휴일인지 여부를 반환한다.
-  Future<Either<Exception, bool>> isHoliday(DateTime date);
+  /// [start] 이상 [end] 미만 범위의 공휴일 날짜 Set을 반환한다.
+  Future<Either<Exception, Set<DateTime>>> getHolidaysInRange({
+    required DateTime start,
+    required DateTime end,
+  });
 }
 
 class HolidayUseCaseImpl implements HolidayUseCase {
@@ -665,8 +729,11 @@ class HolidayUseCaseImpl implements HolidayUseCase {
       : _holidayRepository = holidayRepository;
 
   @override
-  Future<Either<Exception, bool>> isHoliday(DateTime date) {
-    return _holidayRepository.isHoliday(date);
+  Future<Either<Exception, Set<DateTime>>> getHolidaysInRange({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _holidayRepository.getHolidaysInRange(start: start, end: end);
   }
 }
 ```
@@ -710,15 +777,17 @@ git commit -m "feat: #XX - HolidayUseCase 및 Provider 배선"
 ### Task 4: ReservationUseCaseImpl에 HolidayRepository 연동
 
 **Files:**
-- Modify: `lib/domain/use_cases/reservation_use_case.dart:1-79` (import, 필드, 생성자), `:204-224` (`_applyCalculatedPrice`)
+- Modify: `lib/domain/use_cases/reservation_use_case.dart` (import, 필드, 생성자, `_applyCalculatedPrice`)
 - Modify: `lib/domain/use_cases/reservation_use_case_provider.dart`
 - Modify: `test/domain/use_cases/reservation_use_case_test.dart`
 
 **Interfaces:**
-- Consumes: `HolidayRepository.isHoliday(DateTime) → Future<Either<Exception, bool>>` (Task 2), `holidayRepositoryProvider`
-- Produces: `ReservationUseCaseImpl`의 `_applyCalculatedPrice`가 실제 공휴일 여부를 `PriceSetting.calculatePrice(isHoliday:)`에 전달 (이후 태스크에서 참조 없음 — 최종 소비 지점)
+- Consumes: `HolidayRepository.getHolidaysInRange({required DateTime start, required DateTime end}) → Future<Either<Exception, Set<DateTime>>>` (Task 2), `holidayRepositoryProvider`
+- Produces: `ReservationUseCaseImpl`의 `_applyCalculatedPrice`가 예약 기간의 공휴일 Set을 조회한 뒤, 그 Set을 캡처하는 동기 콜백을 `PriceSetting.calculatePrice(isHoliday:)`에 전달 (이후 태스크에서 참조 없음 — 최종 소비 지점)
 
 - [ ] **Step 1: 실패하는 테스트 추가**
+
+> **참고:** #15에서 이 테스트 파일에 `auth_exceptions.dart` import와 `watchReservationsByDateRange`(#15 [I-3]) 테스트 그룹이 이미 추가되어 있다. 아래 "기존" 블록은 이번 태스크와 무관한 그 변경들은 생략하고 이번 태스크가 실제로 건드리는 import/선언부만 발췌한 것이다 — 실제 적용 시 파일 전체를 열어 정확한 현재 상태를 확인한 뒤 아래 diff의 의도(신규 import·mock·그룹 추가)만 반영할 것.
 
 `test/domain/use_cases/reservation_use_case_test.dart`의 import 블록 교체:
 
@@ -728,8 +797,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
@@ -758,9 +827,9 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 import 'package:studio_chance/domain/repository_interfaces/holiday_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
@@ -801,7 +870,7 @@ void main() {
   late MockHolidayRepository mockHolidayRepo;
 ```
 
-`setUpAll`/`setUp` 블록 교체:
+`setUpAll`/`setUp` 블록 교체 (`registerFallbackValue(DateTime(2026))`는 `getHolidaysInRange`의 named 파라미터 `any(named: 'start'/'end')` 매칭에 필요):
 
 ```dart
 // 기존
@@ -845,10 +914,13 @@ void main() {
     when(
       () => mockStoreRepo.getStore(any()),
     ).thenAnswer((_) async => right(null));
-    // 기본값: 공휴일 조회 실패/미설정 시 평일로 취급
+    // 기본값: 공휴일 조회 실패/미설정 시 공휴일 없음(평일)으로 취급
     when(
-      () => mockHolidayRepo.isHoliday(any()),
-    ).thenAnswer((_) async => right(false));
+      () => mockHolidayRepo.getHolidaysInRange(
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((_) async => right(<DateTime>{}));
     useCase = ReservationUseCaseImpl(
       reservationRepository: mockReservationRepo,
       userRepository: mockUserRepo,
@@ -857,8 +929,6 @@ void main() {
     );
   });
 ```
-
-`late` 변수 선언에도 `late MockHolidayRepository mockHolidayRepo;` 추가 (`late MockStoreRepository mockStoreRepo;` 바로 아래).
 
 파일 맨 끝(마지막 `}` 직전)에 새 그룹 추가:
 
@@ -943,18 +1013,26 @@ void main() {
       endTime: DateTime(2026, 3, 1, 11, 0),
     );
 
-    test('공휴일이면 공휴일 요금(30000원)이 적용된다', () async {
-      when(() => mockHolidayRepo.isHoliday(any()))
-          .thenAnswer((_) async => right(true));
+    test('예약 시작일이 공휴일 Set에 포함되면 공휴일 요금(30000원)이 적용된다', () async {
+      when(
+        () => mockHolidayRepo.getHolidaysInRange(
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer((_) async => right({DateTime(2026, 3, 1)}));
 
       final result = await useCase.createReservation(reservation: reservation);
 
       expect(result.getOrElse((_) => fakeReservation).calculatedPrice, 30000);
     });
 
-    test('평일(공휴일 아님)이면 평일 요금(10000원)이 적용된다', () async {
-      when(() => mockHolidayRepo.isHoliday(any()))
-          .thenAnswer((_) async => right(false));
+    test('공휴일 Set에 포함되지 않으면 평일 요금(10000원)이 적용된다', () async {
+      when(
+        () => mockHolidayRepo.getHolidaysInRange(
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer((_) async => right(<DateTime>{}));
 
       final result = await useCase.createReservation(reservation: reservation);
 
@@ -962,8 +1040,12 @@ void main() {
     });
 
     test('공휴일 조회 실패 시 평일 요금으로 폴백한다', () async {
-      when(() => mockHolidayRepo.isHoliday(any()))
-          .thenAnswer((_) async => left(Exception('네트워크 오류')));
+      when(
+        () => mockHolidayRepo.getHolidaysInRange(
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer((_) async => left(Exception('네트워크 오류')));
 
       final result = await useCase.createReservation(reservation: reservation);
 
@@ -993,8 +1075,9 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   final ReservationRepository _reservationRepository;
   final UserRepository _userRepository;
   final StoreRepository _storeRepository;
+  final Logger _logger = Logger();
 
-  const ReservationUseCaseImpl({
+  ReservationUseCaseImpl({
     required ReservationRepository reservationRepository,
     required UserRepository userRepository,
     required StoreRepository storeRepository,
@@ -1010,8 +1093,9 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   final UserRepository _userRepository;
   final StoreRepository _storeRepository;
   final HolidayRepository _holidayRepository;
+  final Logger _logger = Logger();
 
-  const ReservationUseCaseImpl({
+  ReservationUseCaseImpl({
     required ReservationRepository reservationRepository,
     required UserRepository userRepository,
     required StoreRepository storeRepository,
@@ -1022,68 +1106,115 @@ class ReservationUseCaseImpl implements ReservationUseCase {
        _holidayRepository = holidayRepository;
 ```
 
-`_applyCalculatedPrice` 교체:
+> **주의:** #15 [C-2]에서 `ReservationUseCaseImpl`의 생성자가 이미 `const`에서 일반 생성자로 바뀌고 `final Logger _logger = Logger();` 필드가 추가되어 있다. 실제 파일을 열어 정확한 현재 필드/생성자 구성을 확인한 뒤 `HolidayRepository` 필드/파라미터만 추가할 것 — 위 코드 블록은 예시이며 그대로 덮어쓰지 말 것.
+
+`_applyCalculatedPrice` 교체 (#15 [C-1]/[C-2] 반영 후 실제 현재 형태 기준):
 
 ```dart
-// 기존
-  Future<Reservation> _applyCalculatedPrice(Reservation reservation) async {
+// 기존 (#15 반영 후 현재 코드)
+  Future<Either<Exception, Reservation>> _applyCalculatedPrice(
+    Reservation reservation,
+  ) async {
     final storeResult = await _storeRepository.getStore(
       reservation.storeSummary.id,
     );
 
-    final store = storeResult.toOption().toNullable();
-    if (store == null) return reservation;
+    return storeResult.fold(
+      (error) {
+        _logger.w(
+          '가격 계산을 위한 Store 조회 실패 — storeId: ${reservation.storeSummary.id}',
+          error: error,
+        );
+        return left(error);
+      },
+      (store) {
+        if (store == null) return right(reservation);
 
-    final priceSetting = store.priceSettingForSpace(reservation.spaceOptionId);
-    if (priceSetting == null) return reservation;
+        final priceSetting = store.priceSettingForSpace(
+          reservation.spaceOptionId,
+        );
+        if (priceSetting == null) return right(reservation);
 
-    final calculatedPrice = priceSetting.calculatePrice(
-      start: reservation.startTime,
-      end: reservation.endTime,
-      headCount: reservation.headCount,
-      isAllDay: reservation.isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
-    );
+        final calculatedPrice = priceSetting.calculatePrice(
+          start: reservation.startTime,
+          end: reservation.endTime,
+          headCount: reservation.headCount,
+          isAllDay: reservation.isAllDay,
+          isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
+        );
 
-    return reservation.copyWith(
-      calculatedPrice: calculatedPrice,
-      totalPrice: calculatedPrice + reservation.priceAdjustment,
+        return right(
+          reservation.copyWith(
+            calculatedPrice: calculatedPrice,
+            totalPrice: calculatedPrice + reservation.priceAdjustment,
+          ),
+        );
+      },
     );
   }
 ```
 
 ```dart
 // 신규
-  Future<Reservation> _applyCalculatedPrice(Reservation reservation) async {
+  Future<Either<Exception, Reservation>> _applyCalculatedPrice(
+    Reservation reservation,
+  ) async {
     final storeResult = await _storeRepository.getStore(
       reservation.storeSummary.id,
     );
 
-    final store = storeResult.toOption().toNullable();
-    if (store == null) return reservation;
+    return storeResult.fold(
+      (error) {
+        _logger.w(
+          '가격 계산을 위한 Store 조회 실패 — storeId: ${reservation.storeSummary.id}',
+          error: error,
+        );
+        return left(error);
+      },
+      (store) async {
+        if (store == null) return right(reservation);
 
-    final priceSetting = store.priceSettingForSpace(reservation.spaceOptionId);
-    if (priceSetting == null) return reservation;
+        final priceSetting = store.priceSettingForSpace(
+          reservation.spaceOptionId,
+        );
+        if (priceSetting == null) return right(reservation);
 
-    final isHolidayResult = await _holidayRepository.isHoliday(
-      reservation.startTime,
-    );
-    final isHoliday = isHolidayResult.getOrElse((_) => false);
+        // 예약 기간의 공휴일 Set을 미리 비동기로 조회한 뒤, 그 Set을 캡처하는
+        // 동기 콜백을 calculatePrice에 전달한다. 조회 실패 시 빈 Set(=공휴일 없음)으로
+        // 조용히 폴백한다 (HolidayException.isSilentable=true, Global Constraints 참고).
+        final holidaysResult = await _holidayRepository.getHolidaysInRange(
+          start: reservation.startTime,
+          end: reservation.endTime,
+        );
+        final holidays = holidaysResult.getOrElse((_) => <DateTime>{});
 
-    final calculatedPrice = priceSetting.calculatePrice(
-      start: reservation.startTime,
-      end: reservation.endTime,
-      headCount: reservation.headCount,
-      isAllDay: reservation.isAllDay,
-      isHoliday: isHoliday,
-    );
+        final calculatedPrice = priceSetting.calculatePrice(
+          start: reservation.startTime,
+          end: reservation.endTime,
+          headCount: reservation.headCount,
+          isAllDay: reservation.isAllDay,
+          isHoliday: (date) =>
+              holidays.contains(DateTime(date.year, date.month, date.day)),
+        );
 
-    return reservation.copyWith(
-      calculatedPrice: calculatedPrice,
-      totalPrice: calculatedPrice + reservation.priceAdjustment,
+        return right(
+          reservation.copyWith(
+            calculatedPrice: calculatedPrice,
+            totalPrice: calculatedPrice + reservation.priceAdjustment,
+          ),
+        );
+      },
     );
   }
 ```
+
+> **주의:** `fold`의 두 번째 분기가 `async`로 바뀌면서 전체 `fold` 호출의 반환 타입이 `Future<Either<...>>`가 되므로, 첫 번째 분기(`(error) { ... return left(error); }`)도 `Future<Either<Exception, Reservation>>`을 반환하도록 `Future.value(left(error))`로 감싸야 컴파일된다 (fold의 두 콜백은 동일한 반환 타입 `C`를 가져야 함 — #15 PR의 다른 태스크에서 이미 사용한 패턴, `auth_use_case.dart`의 `delete()` 참고). 실제로 적용할 때는 첫 번째 분기도 다음과 같이 고칠 것:
+> ```dart
+> (error) {
+>   _logger.w(...);
+>   return Future.value(left(error));
+> },
+> ```
 
 `lib/domain/use_cases/reservation_use_case_provider.dart` 전체 교체:
 
@@ -1132,19 +1263,19 @@ git commit -m "feat: #XX - ReservationUseCase에 HolidayRepository 연동, 공�
 
 ---
 
-### Task 5: 프레젠테이션 계층 isHolidayProvider
+### Task 5: 프레젠테이션 계층 holidaysInRangeProvider
 
 **Files:**
-- Create: `lib/presentation/providers/is_holiday_provider.dart`
-- Test: `test/presentation/providers/is_holiday_provider_test.dart`
+- Create: `lib/presentation/providers/holidays_in_range_provider.dart`
+- Test: `test/presentation/providers/holidays_in_range_provider_test.dart`
 
 **Interfaces:**
-- Consumes: `HolidayUseCase.isHoliday(DateTime) → Future<Either<Exception, bool>>` (Task 3), `holidayUseCaseProvider`
-- Produces: `@riverpod Future<bool> isHoliday(Ref ref, DateTime date)` → `isHolidayProvider(DateTime date)` (Task 6, 7에서 `ref.read(isHolidayProvider(date).future)`로 사용)
+- Consumes: `HolidayUseCase.getHolidaysInRange({required DateTime start, required DateTime end}) → Future<Either<Exception, Set<DateTime>>>` (Task 3), `holidayUseCaseProvider`
+- Produces: `@riverpod Future<Set<DateTime>> holidaysInRange(Ref ref, DateTime start, DateTime end)` → `holidaysInRangeProvider(start, end)` (Task 6, 7에서 `ref.read(holidaysInRangeProvider(start, end).future)`로 사용)
 
 - [ ] **Step 1: 실패하는 테스트 작성**
 
-`test/presentation/providers/is_holiday_provider_test.dart`:
+`test/presentation/providers/holidays_in_range_provider_test.dart`:
 
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1153,7 +1284,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/domain/use_cases/holiday_use_case.dart';
 import 'package:studio_chance/domain/use_cases/holiday_use_case_provider.dart';
-import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
+import 'package:studio_chance/presentation/providers/holidays_in_range_provider.dart';
 
 class MockHolidayUseCase extends Mock implements HolidayUseCase {}
 
@@ -1174,73 +1305,87 @@ void main() {
     );
   }
 
-  test('UseCase가 true를 반환하면 true를 반환한다', () async {
-    when(() => mockUseCase.isHoliday(DateTime(2026, 3, 1)))
-        .thenAnswer((_) async => right(true));
+  test('UseCase가 반환한 Set을 그대로 반환한다', () async {
+    when(
+      () => mockUseCase.getHolidaysInRange(
+        start: DateTime(2026, 3, 1),
+        end: DateTime(2026, 3, 2),
+      ),
+    ).thenAnswer((_) async => right({DateTime(2026, 3, 1)}));
     final container = createContainer();
     addTearDown(container.dispose);
 
-    final sub = container.listen(isHolidayProvider(DateTime(2026, 3, 1)), (_, _) {});
+    final provider = holidaysInRangeProvider(DateTime(2026, 3, 1), DateTime(2026, 3, 2));
+    final sub = container.listen(provider, (_, _) {});
     addTearDown(sub.close);
-    final result = await container.read(isHolidayProvider(DateTime(2026, 3, 1)).future);
+    final result = await container.read(provider.future);
 
-    expect(result, isTrue);
+    expect(result, {DateTime(2026, 3, 1)});
   });
 
-  test('UseCase가 Left를 반환하면 false로 폴백한다', () async {
-    when(() => mockUseCase.isHoliday(DateTime(2026, 3, 1)))
-        .thenAnswer((_) async => left(Exception('실패')));
+  test('UseCase가 Left를 반환하면 빈 Set으로 폴백한다', () async {
+    when(
+      () => mockUseCase.getHolidaysInRange(
+        start: DateTime(2026, 3, 1),
+        end: DateTime(2026, 3, 2),
+      ),
+    ).thenAnswer((_) async => left(Exception('실패')));
     final container = createContainer();
     addTearDown(container.dispose);
 
-    final sub = container.listen(isHolidayProvider(DateTime(2026, 3, 1)), (_, _) {});
+    final provider = holidaysInRangeProvider(DateTime(2026, 3, 1), DateTime(2026, 3, 2));
+    final sub = container.listen(provider, (_, _) {});
     addTearDown(sub.close);
-    final result = await container.read(isHolidayProvider(DateTime(2026, 3, 1)).future);
+    final result = await container.read(provider.future);
 
-    expect(result, isFalse);
+    expect(result, isEmpty);
   });
 }
 ```
 
 - [ ] **Step 2: 테스트 실패 확인**
 
-Run: `flutter test test/presentation/providers/is_holiday_provider_test.dart`
-Expected: FAIL — `Error: Target of URI doesn't exist: 'package:studio_chance/presentation/providers/is_holiday_provider.dart'`
+Run: `flutter test test/presentation/providers/holidays_in_range_provider_test.dart`
+Expected: FAIL — `Error: Target of URI doesn't exist: 'package:studio_chance/presentation/providers/holidays_in_range_provider.dart'`
 
-- [ ] **Step 3: isHolidayProvider 구현**
+- [ ] **Step 3: holidaysInRangeProvider 구현**
 
-`lib/presentation/providers/is_holiday_provider.dart`:
+`lib/presentation/providers/holidays_in_range_provider.dart`:
 
 ```dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/domain/use_cases/holiday_use_case_provider.dart';
 
-part 'is_holiday_provider.g.dart';
+part 'holidays_in_range_provider.g.dart';
 
-/// [date]가 공휴일인지 여부를 반환한다. 조회 실패 시 false로 폴백한다.
+/// [start] 이상 [end] 미만 범위의 공휴일 날짜 Set을 반환한다. 조회 실패 시 빈 Set으로 폴백한다.
 @riverpod
-Future<bool> isHoliday(Ref ref, DateTime date) async {
+Future<Set<DateTime>> holidaysInRange(
+  Ref ref,
+  DateTime start,
+  DateTime end,
+) async {
   final useCase = ref.watch(holidayUseCaseProvider);
-  final result = await useCase.isHoliday(date);
-  return result.getOrElse((_) => false);
+  final result = await useCase.getHolidaysInRange(start: start, end: end);
+  return result.getOrElse((_) => <DateTime>{});
 }
 ```
 
 - [ ] **Step 4: 코드 생성**
 
 Run: `dart run build_runner build --delete-conflicting-outputs`
-Expected: `lib/presentation/providers/is_holiday_provider.g.dart` 생성됨
+Expected: `lib/presentation/providers/holidays_in_range_provider.g.dart` 생성됨
 
 - [ ] **Step 5: 테스트 통과 확인**
 
-Run: `flutter test test/presentation/providers/is_holiday_provider_test.dart`
+Run: `flutter test test/presentation/providers/holidays_in_range_provider_test.dart`
 Expected: PASS (2 tests)
 
 - [ ] **Step 6: 커밋**
 
 ```bash
-git add lib/presentation/providers/is_holiday_provider.dart lib/presentation/providers/is_holiday_provider.g.dart test/presentation/providers/is_holiday_provider_test.dart
-git commit -m "feat: #XX - isHolidayProvider 추가"
+git add lib/presentation/providers/holidays_in_range_provider.dart lib/presentation/providers/holidays_in_range_provider.g.dart test/presentation/providers/holidays_in_range_provider_test.dart
+git commit -m "feat: #XX - holidaysInRangeProvider 추가"
 ```
 
 ---
@@ -1248,26 +1393,26 @@ git commit -m "feat: #XX - isHolidayProvider 추가"
 ### Task 6: ReservationCreateModal 연동
 
 **Files:**
-- Modify: `lib/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart:216-230`
+- Modify: `lib/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart` (`_recalculatePrice()`, 현재 220행 부근 — #15 이후 정확한 줄 번호는 실제 파일에서 재확인할 것)
 
 **Interfaces:**
-- Consumes: `isHolidayProvider(DateTime) → Future<bool>` (Task 5)
+- Consumes: `holidaysInRangeProvider(DateTime start, DateTime end) → Future<Set<DateTime>>` (Task 5)
 - Produces: 없음 (UI 최종 소비 지점, 자동화 테스트 대상 아님 — 화면 레벨 수동 검증으로 대체)
 
-이 모달은 `ConsumerStatefulWidget`이므로 `_recalculatePrice()`는 `ref`에 접근 가능하다. 기존 코드베이스는 "State 변경이 필요한 비동기 조회"를 `async/await`로 함수 시그니처를 바꾸는 대신, 같은 파일의 `_loadReservationCount()`처럼 `.then()` 콜백 + `if (!mounted) return;` 패턴을 쓴다 (`reservation_detail_modal.dart:309-312` 참고). `_recalculatePrice()`는 7곳에서 `await` 없이 호출되므로, 시그니처를 유지한 채 내부만 비동기로 바꾸는 이 방식이 호출부 변경을 요구하지 않아 가장 안전하다.
+이 모달은 `ConsumerStatefulWidget`이므로 `_recalculatePrice()`는 `ref`에 접근 가능하다. 기존 코드베이스는 "State 변경이 필요한 비동기 조회"를 `async/await`로 함수 시그니처를 바꾸는 대신, 같은 파일의 `_loadReservationCount()`처럼 `.then()` 콜백 + `if (!mounted) return;` 패턴을 쓴다(`reservation_detail_modal.dart`의 유사 패턴 참고). `_recalculatePrice()`는 여러 곳에서 `await` 없이 호출되므로, 시그니처를 유지한 채 내부만 비동기로 바꾸는 이 방식이 호출부 변경을 요구하지 않아 가장 안전하다.
 
 - [ ] **Step 1: import 추가**
 
 `lib/presentation/home/widgets/three_day_calendar/reservation_create_modal.dart` 상단에 추가:
 
 ```dart
-import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
+import 'package:studio_chance/presentation/providers/holidays_in_range_provider.dart';
 ```
 
 - [ ] **Step 2: `_recalculatePrice()` 교체**
 
 ```dart
-// 기존
+// 기존 (#15 [C-1] 반영 후 현재 코드, 232행 부근)
   void _recalculatePrice() {
     final spaces = _spaceOptions;
     if (spaces.isEmpty) return;
@@ -1280,7 +1425,7 @@ import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
     setState(() => _calculatedPrice = price);
   }
@@ -1299,14 +1444,15 @@ import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
     final start = _startTime;
     final end = _endTime;
     final isAllDay = _isAllDay;
-    ref.read(isHolidayProvider(start).future).then((isHoliday) {
+    ref.read(holidaysInRangeProvider(start, end).future).then((holidays) {
       if (!mounted) return;
       final price = priceSetting.calculatePrice(
         start: start,
         end: end,
         headCount: headCount,
         isAllDay: isAllDay,
-        isHoliday: isHoliday,
+        isHoliday: (date) =>
+            holidays.contains(DateTime(date.year, date.month, date.day)),
       );
       setState(() => _calculatedPrice = price);
     });
@@ -1330,20 +1476,20 @@ git commit -m "feat: #XX - 예약 생성 모달에 공휴일 요금 반영"
 ### Task 7: ReservationDetailModal 연동
 
 **Files:**
-- Modify: `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart:172-176` (`initState`), `:315-330` (`_recalculatePrice`)
+- Modify: `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` (`initState`, `_recalculatePrice()`, `_applyInitialPrice()` — #15 이후 정확한 줄 번호는 실제 파일에서 재확인할 것. `_recalculatePrice()`는 현재 316행, `_applyInitialPrice()`는 334행, `isHoliday: (date) => false` TODO는 328/345행 부근)
 
 **Interfaces:**
-- Consumes: `isHolidayProvider(DateTime) → Future<bool>` (Task 5)
+- Consumes: `holidaysInRangeProvider(DateTime start, DateTime end) → Future<Set<DateTime>>` (Task 5)
 - Produces: 없음 (UI 최종 소비 지점)
 
-`_applyInitialPrice()`는 "initState에서 setState 호출 불가"라는 이유로 존재하는 동기 함수이므로 그대로 둔다(첫 프레임에 즉시 대략적인 가격을 보여주는 역할, `isHoliday: false` 고정은 유지). 대신 `initState` 마지막에 `_recalculatePrice()`를 추가로 호출해 마운트 직후 공휴일 여부를 반영한 값으로 자동 보정한다.
+`_applyInitialPrice()`는 "initState에서 setState 호출 불가"라는 이유로 존재하는 동기 함수이므로 그대로 둔다(첫 프레임에 즉시 대략적인 가격을 보여주는 역할, `isHoliday: (date) => false` 고정은 유지). 대신 `initState` 마지막에 `_recalculatePrice()`를 추가로 호출해 마운트 직후 공휴일 여부를 반영한 값으로 자동 보정한다.
 
 - [ ] **Step 1: import 추가**
 
 `lib/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart` 상단에 추가:
 
 ```dart
-import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
+import 'package:studio_chance/presentation/providers/holidays_in_range_provider.dart';
 ```
 
 - [ ] **Step 2: `initState`에서 보정 호출 추가**
@@ -1381,7 +1527,7 @@ import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
 - [ ] **Step 3: `_recalculatePrice()` 교체**
 
 ```dart
-// 기존
+// 기존 (#15 [C-1] 반영 후 현재 코드, 316행 부근)
   void _recalculatePrice() {
     final spaces = _spaceOptions;
     if (spaces == null || spaces.isEmpty) return;
@@ -1394,7 +1540,7 @@ import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
     setState(() => _calculatedPrice = price);
   }
@@ -1412,14 +1558,15 @@ import 'package:studio_chance/presentation/providers/is_holiday_provider.dart';
     final start = _startTime;
     final end = _endTime;
     final isAllDay = _isAllDay;
-    ref.read(isHolidayProvider(start).future).then((isHoliday) {
+    ref.read(holidaysInRangeProvider(start, end).future).then((holidays) {
       if (!mounted) return;
       final price = priceSetting.calculatePrice(
         start: start,
         end: end,
         headCount: headCount,
         isAllDay: isAllDay,
-        isHoliday: isHoliday,
+        isHoliday: (date) =>
+            holidays.contains(DateTime(date.year, date.month, date.day)),
       );
       setState(() => _calculatedPrice = price);
     });
