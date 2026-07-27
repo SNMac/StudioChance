@@ -244,4 +244,31 @@ void main() {
       expect(result.isLeft(), true);
     });
   });
+
+  // =========================================================================
+  // softDeleteStore
+  // =========================================================================
+
+  group('softDeleteStore', () {
+    test('Repository.softDeleteStore를 그대로 위임한다', () async {
+      when(
+        () => mockStoreRepo.softDeleteStore(any()),
+      ).thenAnswer((_) async => right(null));
+
+      final result = await useCase.softDeleteStore('store-123');
+
+      expect(result.isRight(), true);
+      verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
+    });
+
+    test('Repository 실패 시 left를 전파한다', () async {
+      when(
+        () => mockStoreRepo.softDeleteStore(any()),
+      ).thenAnswer((_) async => left(Exception('삭제 실패')));
+
+      final result = await useCase.softDeleteStore('store-123');
+
+      expect(result.isLeft(), true);
+    });
+  });
 }

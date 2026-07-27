@@ -60,6 +60,9 @@ abstract interface class StoreUseCase {
     String storeId, {
     bool forceRegenerate = false,
   });
+
+  /// 점포 삭제 (Soft Delete)
+  Future<Either<Exception, void>> softDeleteStore(String storeId);
 }
 
 class StoreUseCaseImpl implements StoreUseCase {
@@ -232,5 +235,10 @@ class StoreUseCaseImpl implements StoreUseCase {
       storeId,
       forceRegenerate: forceRegenerate,
     );
+  }
+
+  @override
+  Future<Either<Exception, void>> softDeleteStore(String storeId) {
+    return _storeRepository.softDeleteStore(storeId);
   }
 }
