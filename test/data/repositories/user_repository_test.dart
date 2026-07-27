@@ -50,4 +50,25 @@ void main() {
       expect(capturedData?['color'], 'GREEN');
     });
   });
+
+  group('softDeleteUser', () {
+    test('성공 시 right(null)을 반환한다', () async {
+      when(() => mockUserDs.softDeleteUser(any())).thenAnswer((_) async {});
+
+      final result = await repository.softDeleteUser('user-123');
+
+      expect(result.isRight(), true);
+      verify(() => mockUserDs.softDeleteUser('user-123')).called(1);
+    });
+
+    test('DataSource 실패 시 left를 반환한다', () async {
+      when(
+        () => mockUserDs.softDeleteUser(any()),
+      ).thenThrow(Exception('탈퇴 실패'));
+
+      final result = await repository.softDeleteUser('user-123');
+
+      expect(result.isLeft(), true);
+    });
+  });
 }

@@ -170,15 +170,15 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<void> softDeleteUser(String uid) async {
+  Future<Either<Exception, void>> softDeleteUser(String uid) async {
     try {
       await _userDataSource.softDeleteUser(uid);
 
       _logger.i('사용자 Soft Delete 완료 (회원 탈퇴)\nuid: $uid');
+      return right(null);
     } catch (e) {
       _logger.e('사용자 Soft Delete 실패');
-      // 탈퇴 실패는 호출부(UseCase)까지 예외를 전파하여 사용자에게 알림 (의도적 throw)
-      throw toException(e);
+      return left(toException(e));
     }
   }
 }

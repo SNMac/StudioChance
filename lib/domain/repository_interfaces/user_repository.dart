@@ -35,5 +35,5 @@ abstract interface class UserRepository {
   Future<void> removeCurrentDeviceFcmToken(String uid);
 
   /// 유저 데이터를 Soft Delete 처리 (탈퇴용)
-  Future<void> softDeleteUser(String uid);
+  Future<Either<Exception, void>> softDeleteUser(String uid);
 }
