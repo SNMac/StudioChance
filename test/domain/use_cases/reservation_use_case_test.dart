@@ -71,7 +71,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isRight(), true);
+      result.fold((error) => fail(error.toString()), (_) {});
       expect(capturedReservation?.writer.user.id, fakeUser.id);
     });
 
@@ -103,7 +103,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
       verifyNever(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -119,7 +119,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
@@ -135,7 +135,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
 
     test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
@@ -147,7 +147,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
       verifyNever(() => mockUserRepo.getCurrentUser());
       verifyNever(
         () => mockReservationRepo.createReservation(
@@ -183,7 +183,7 @@ void main() {
         end: end,
       );
 
-      expect(result.isRight(), true);
+      result.fold((error) => fail(error.toString()), (_) {});
       verify(
         () => mockReservationRepo.getReservationsByDateRange(
           storeId: 'store-123',
@@ -204,7 +204,7 @@ void main() {
         end: end,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
@@ -225,7 +225,7 @@ void main() {
         end: end,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
   });
 
@@ -245,7 +245,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isRight(), true);
+      result.fold((error) => fail(error.toString()), (_) {});
       verify(
         () => mockReservationRepo.updateReservation(
           reservation: fakeReservation,
@@ -264,7 +264,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
 
     test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
@@ -276,7 +276,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
       verifyNever(
         () => mockReservationRepo.updateReservation(
           reservation: any(named: 'reservation'),
@@ -303,7 +303,7 @@ void main() {
         reservationId: 'res-001',
       );
 
-      expect(result.isRight(), true);
+      result.fold((error) => fail(error.toString()), (_) {});
       verify(
         () => mockReservationRepo.deleteReservation(
           storeId: 'store-123',
@@ -325,7 +325,7 @@ void main() {
         reservationId: 'res-001',
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
   });
 
@@ -349,7 +349,7 @@ void main() {
         status: ReservationStatus.canceled,
       );
 
-      expect(result.isRight(), true);
+      result.fold((error) => fail(error.toString()), (_) {});
       verify(
         () => mockReservationRepo.updateReservationStatus(
           storeId: 'store-123',
@@ -374,7 +374,7 @@ void main() {
         status: ReservationStatus.canceled,
       );
 
-      expect(result.isLeft(), true);
+      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
   });
 
