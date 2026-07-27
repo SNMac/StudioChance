@@ -136,6 +136,24 @@ void main() {
 
       expect(result.isLeft(), true);
     });
+
+    test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => left(Exception('Store 조회 실패')));
+
+      final result = await useCase.createReservation(
+        reservation: fakeReservation,
+      );
+
+      expect(result.isLeft(), true);
+      verifyNever(() => mockUserRepo.getCurrentUser());
+      verifyNever(
+        () => mockReservationRepo.createReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      );
+    });
   });
 
   // =========================================================================
@@ -246,6 +264,23 @@ void main() {
       );
 
       expect(result.isLeft(), true);
+    });
+
+    test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => left(Exception('Store 조회 실패')));
+
+      final result = await useCase.updateReservation(
+        reservation: fakeReservation,
+      );
+
+      expect(result.isLeft(), true);
+      verifyNever(
+        () => mockReservationRepo.updateReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      );
     });
   });
 
