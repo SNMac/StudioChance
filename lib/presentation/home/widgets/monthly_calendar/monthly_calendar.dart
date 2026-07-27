@@ -16,8 +16,8 @@ class MonthlyCalendar extends ConsumerStatefulWidget {
 
 class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
   static const _initialPage = 10000;
-  final _referenceMonth =
-      DateTime(DateTime.now().year, DateTime.now().month, 1);
+  static DateTime get _now => DateTime.now();
+  final _referenceMonth = DateTime(_now.year, _now.month, 1);
   late final PageController _pageController;
 
   /// animateToPage 진행 중 플래그
