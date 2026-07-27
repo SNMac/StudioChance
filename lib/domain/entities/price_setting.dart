@@ -20,13 +20,19 @@ abstract class PriceSetting with _$PriceSetting {
   ///
   /// 예약 구간과 겹치는 모든 TimeSlot을 순회하여 겹치는 시간만큼 각각 계산 후 합산.
   /// DayGroup/TimeSlot이 매칭되지 않으면 0 반환.
+  ///
+  /// [isHoliday]는 날짜별 공휴일 여부를 판단하는 콜백이다. 다일(allDay) 예약은
+  /// 날짜마다 다른 결과를 받을 수 있어야 하므로 단일 `bool`이 아닌 함수로 받는다.
+  /// 생략 시 모든 날짜를 공휴일이 아닌 것으로 처리한다.
   int calculatePrice({
     required DateTime start,
     required DateTime end,
     required int headCount,
     bool isAllDay = false,
-    bool isHoliday = false,
+    bool Function(DateTime date)? isHoliday,
   }) {
+    final holidayChecker = isHoliday ?? (_) => false;
+
     // 1. 하루종일 예약: 날짜별로 DayGroup을 찾아 합산
     //    - isHourly=false 다일 예약 시 일 수 반영
     //    - 날짜 경계를 넘는 다일 예약 시 각 날짜의 DayGroup 적용
@@ -37,8 +43,8 @@ abstract class PriceSetting with _$PriceSetting {
 
       for (int dayOffset = 0; dayOffset < numberOfDays; dayOffset++) {
         final dayDate = start.add(Duration(days: dayOffset));
-        // isHoliday=true이면 해당 날을 공휴일로 처리 (공휴일 감지는 호출부 책임)
-        final dayWeekday = isHoliday
+        // holidayChecker(dayDate)가 true이면 해당 날짜만 공휴일로 처리
+        final dayWeekday = holidayChecker(dayDate)
             ? Weekday.holiday
             : Weekday.values.firstWhere(
                 (w) => w.index + 1 == dayDate.weekday,
@@ -75,8 +81,8 @@ abstract class PriceSetting with _$PriceSetting {
     }
 
     // 2. 시간 지정 예약: 예약 요일의 DayGroup 탐색
-    // isHoliday=true이면 Weekday.holiday 그룹 우선 적용 (공휴일 감지는 호출부 책임)
-    final weekday = isHoliday
+    // holidayChecker(start)가 true이면 Weekday.holiday 그룹 우선 적용
+    final weekday = holidayChecker(start)
         ? Weekday.holiday
         : Weekday.values.firstWhere(
             (w) => w.index + 1 == start.weekday, // Weekday.monday.index = 0, weekday = 1

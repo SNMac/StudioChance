@@ -218,7 +218,7 @@ class ReservationUseCaseImpl implements ReservationUseCase {
       end: reservation.endTime,
       headCount: reservation.headCount,
       isAllDay: reservation.isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
 
     return reservation.copyWith(

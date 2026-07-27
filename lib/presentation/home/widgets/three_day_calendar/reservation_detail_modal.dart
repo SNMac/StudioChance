@@ -324,7 +324,7 @@ class _ReservationDetailModalState
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
     setState(() => _calculatedPrice = price);
   }
@@ -341,7 +341,7 @@ class _ReservationDetailModalState
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: false,
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
   }
 
