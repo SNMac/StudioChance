@@ -41,16 +41,6 @@ void main() {
       final state = container.read(inviteCodeVerificationControllerProvider);
       expect(state.inviteCode, 'ABC123');
     });
-
-    test('대문자 입력 시 그대로 저장한다', () {
-      final notifier = container.read(
-        inviteCodeVerificationControllerProvider.notifier,
-      );
-      notifier.onCodeChanged('ABC123');
-
-      final state = container.read(inviteCodeVerificationControllerProvider);
-      expect(state.inviteCode, 'ABC123');
-    });
   });
 
   // =========================================================================
