@@ -48,4 +48,4 @@ final class AuthUseCaseProvider
   }
 }
 
-String _$authUseCaseHash() => r'95c5af7bb72209870d718ce5255ce7e3fcc8703a';
+String _$authUseCaseHash() => r'73d2277e2879a024e0375f8a49198cf754b32848';
