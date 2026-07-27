@@ -94,12 +94,11 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `StoreFormMixin`: 공통 로직(setter, SpaceOption/DayGroup/TimeSlot CRUD)을 Mixin으로 재사용
 - 신규 점포 폼 컨트롤러 추가 시 두 파일 모두 참고: `store_form_controllerable.dart`
 
-### 공휴일 요금 — isHoliday 파라미터 패턴 (D8)
-`PriceSetting.calculatePrice(isHoliday: bool)`로 공휴일 판단을 호출부에 위임.
+### 공휴일 요금 — isHoliday 콜백 패턴 (D8)
+`PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함, #15 [C-1]).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
-- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: false` 고정 (TODO 주석)
-- 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 값 전달
-- 구현 상세: `dev/active/holiday-pricing/holiday-pricing-context.md` 참고
+- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
+- 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 날짜별 판단 결과를 콜백으로 전달
 
 ### 앱 최초 실행 인증 데이터 삭제 (D9)
 `SharedPreferences` `hasLaunchedBefore` 플래그로 앱 최초 설치 실행을 감지하여 기존 인증 데이터 삭제.
