@@ -28,9 +28,11 @@ class OnboardingNicknameController extends _$OnboardingNicknameController {
       final userUseCase = ref.read(userUseCaseProvider);
       final userResult = await userUseCase.getCurrentUser();
 
-      if (userResult.isLeft()) throw userResult.getLeft().toNullable()!;
+      final currentUser = userResult.fold(
+        (error) => throw error,
+        (user) => user,
+      );
 
-      final currentUser = userResult.getRight().toNullable();
       if (currentUser == null) {
         throw UserNotFoundException(message: '로그인 정보를 찾을 수 없습니다.');
       }
@@ -40,7 +42,10 @@ class OnboardingNicknameController extends _$OnboardingNicknameController {
         nickname: nickname,
       );
 
-      if (updateResult.isLeft()) throw updateResult.getLeft().toNullable()!;
+      updateResult.fold(
+        (error) => throw error,
+        (_) {},
+      );
     });
   }
 }

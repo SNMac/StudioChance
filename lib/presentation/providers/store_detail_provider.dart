@@ -6,6 +6,6 @@ part 'store_detail_provider.g.dart';
 
 @riverpod
 Future<Store?> storeDetail(Ref ref, String storeId) async {
-  final result = await ref.read(storeUseCaseProvider).getStore(storeId);
+  final result = await ref.watch(storeUseCaseProvider).getStore(storeId);
   return result.fold((_) => null, (store) => store);
 }

@@ -74,10 +74,11 @@ class StoreCreationController extends _$StoreCreationController
         color: data.color,
         memo: data.memo,
       );
+      final stackTrace = StackTrace.current;
 
       result.fold(
         (exception) =>
-            state = state.copyWith(status: AsyncError(exception, StackTrace.current)),
+            state = state.copyWith(status: AsyncError(exception, stackTrace)),
         (_) {
           ref.invalidate(currentUserProvider);
           state = state.copyWith(status: const AsyncData(null));

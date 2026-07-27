@@ -20,10 +20,11 @@ class HomeReservationActionsController
     final result = await ref
         .read(reservationUseCaseProvider)
         .updateReservation(reservation: reservation);
+    final stackTrace = StackTrace.current;
     result.fold(
       (e) {
         _logger.e('예약 수정 실패', error: e);
-        state = AsyncError(e, StackTrace.current);
+        state = AsyncError(e, stackTrace);
       },
       (_) {},
     );
@@ -33,10 +34,11 @@ class HomeReservationActionsController
     final result = await ref
         .read(reservationUseCaseProvider)
         .createReservation(reservation: reservation);
+    final stackTrace = StackTrace.current;
     result.fold(
       (e) {
         _logger.e('예약 생성 실패', error: e);
-        state = AsyncError(e, StackTrace.current);
+        state = AsyncError(e, stackTrace);
       },
       (_) {},
     );
@@ -61,10 +63,11 @@ class HomeReservationActionsController
           storeId: reservation.storeSummary.id,
           reservationId: reservation.id,
         );
+    final stackTrace = StackTrace.current;
     result.fold(
       (e) {
         _logger.e('예약 삭제 실패', error: e);
-        state = AsyncError(e, StackTrace.current);
+        state = AsyncError(e, stackTrace);
       },
       (_) {},
     );

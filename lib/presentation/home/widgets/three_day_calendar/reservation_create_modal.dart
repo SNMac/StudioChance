@@ -15,6 +15,7 @@ import 'package:studio_chance/presentation/commons/extensions/context_colors.dar
 import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -366,17 +367,6 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     _recalculatePrice();
   }
 
-  // ── 날짜/시간 포맷 헬퍼 ──────────────────────────────────────────────────
-
-  String _formatDateTime(DateTime dt, {bool dateOnly = false}) {
-    const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
-    final weekday = weekdays[dt.weekday - 1];
-    final date =
-        '${dt.year}. ${dt.month.toString().padLeft(2, '0')}. ${dt.day.toString().padLeft(2, '0')}. ($weekday)';
-    if (dateOnly) return date;
-    return '$date ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
   // ── 빌드 ─────────────────────────────────────────────────────────────────
 
   @override
@@ -652,7 +642,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         ),
         TitleDateTimeButton(
           title: _isAllDay ? '입실 일' : '입실 일시',
-          content: _formatDateTime(_startTime, dateOnly: _isAllDay),
+          content: _startTime.formattedDateTime(dateOnly: _isAllDay),
           isOpen: _isStartPickerOpen,
           onPressed: () => setState(() {
             _isStartPickerOpen = !_isStartPickerOpen;
@@ -675,7 +665,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         ),
         TitleDateTimeButton(
           title: _isAllDay ? '퇴실 일' : '퇴실 일시',
-          content: _formatDateTime(displayEndTime, dateOnly: _isAllDay),
+          content: displayEndTime.formattedDateTime(dateOnly: _isAllDay),
           isOpen: _isEndPickerOpen,
           onPressed: () => setState(() {
             _isEndPickerOpen = !_isEndPickerOpen;

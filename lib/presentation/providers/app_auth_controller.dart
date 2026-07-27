@@ -1,3 +1,4 @@
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 
@@ -27,6 +28,8 @@ Future<User?> currentUser(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 class AppAuthController extends _$AppAuthController {
+  final _logger = Logger();
+
   @override
   Future<AppStatus> build() async {
     try {
@@ -42,6 +45,7 @@ class AppAuthController extends _$AppAuthController {
 
       return AppStatus.authenticated;
     } catch (e) {
+      _logger.e('앱 인증 상태 확인 실패 — AppStatus.error로 진입', error: e);
       return AppStatus.error;
     }
   }
