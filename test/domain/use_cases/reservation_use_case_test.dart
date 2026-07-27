@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/enums/reservation_status.dart';
 import 'package:studio_chance/domain/enums/user_role.dart';
@@ -374,6 +375,62 @@ void main() {
       );
 
       expect(result.isLeft(), true);
+    });
+  });
+
+  // =========================================================================
+  // watchReservationsByDateRange
+  // =========================================================================
+
+  group('watchReservationsByDateRange', () {
+    final start = DateTime(2026, 5, 1);
+    final end = DateTime(2026, 5, 31);
+
+    test('유저 조회 실패 시 스트림이 에러를 방출한다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => left(Exception('유저 없음')));
+
+      final stream = useCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: start,
+        end: end,
+      );
+
+      await expectLater(stream, emitsError(isA<Exception>()));
+    });
+
+    test('유저가 null이면 스트림이 AuthUserNotFoundException을 방출한다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(null));
+
+      final stream = useCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: start,
+        end: end,
+      );
+
+      await expectLater(stream, emitsError(isA<AuthUserNotFoundException>()));
+    });
+
+    test('유저 조회 성공 시 Repository 스트림을 그대로 전달한다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockReservationRepo.watchReservationsByDateRange(
+          storeId: any(named: 'storeId'),
+          currentUid: any(named: 'currentUid'),
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer((_) => Stream.value([fakeReservation]));
+
+      final stream = useCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: start,
+        end: end,
+      );
+
+      await expectLater(stream, emits([fakeReservation]));
     });
   });
 }

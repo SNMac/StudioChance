@@ -32,7 +32,17 @@ abstract interface class ReservationUseCase {
 
   /// 날짜 범위 예약 실시간 구독
   ///
-  /// 에러는 스트림 에러로 전파됩니다.
+  /// 내부적으로 최초 구독 시점에 현재 로그인 유저를 1회 조회하여 이후
+  /// Repository 스트림에 고정 전달한다. 조회 시점에 로그인 상태가 아직
+  /// 확정되지 않았다면([AuthUserNotFoundException]) 스트림은 에러를 1회
+  /// 방출한 뒤 영구 종료된다 — 자동 재구독은 하지 않는다.
+  ///
+  /// 따라서 호출부는 인증 상태가 확정된 이후에만 구독을 시작해야 한다.
+  /// (`home_reservations_provider.dart`의 `homeReservations`는
+  /// `currentUserProvider.future`를 먼저 await한 뒤 구독을 시작하여
+  /// 이 경쟁 조건을 회피한다.)
+  ///
+  /// 에러는 스트림 에러로 전파된다.
   Stream<List<Reservation>> watchReservationsByDateRange({
     required String storeId,
     required DateTime start,
