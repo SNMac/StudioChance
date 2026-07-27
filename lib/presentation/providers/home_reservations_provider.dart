@@ -38,7 +38,7 @@ Stream<List<Reservation>> homeReservations(Ref ref, DateTime month) async* {
     return;
   }
 
-  final useCase = ref.read(reservationUseCaseProvider);
+  final useCase = ref.watch(reservationUseCaseProvider);
   final start = DateTime(month.year, month.month, 1);
   final end = DateTime(month.year, month.month + 1, 1);
 
