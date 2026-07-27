@@ -4,6 +4,7 @@ import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 
 // ── 예약 셀 표시용 데이터 ─────────────────────────────────────────────────────
 
