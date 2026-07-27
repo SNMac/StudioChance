@@ -42,11 +42,14 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
   static final _referenceDate = DateTime(2001, 1, 1);
 
   // 기준일(2001.01.01) 기준 오늘의 페이지 인덱스
-  static final _initialPage = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-    DateTime.now().day,
-  ).difference(_referenceDate).inDays;
+  static final _initialPage = _todayPageIndex();
+
+  static int _todayPageIndex() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day)
+        .difference(_referenceDate)
+        .inDays;
+  }
 
   late final PageController _pageController;
   late final ScrollController _timeColumnScrollController;
