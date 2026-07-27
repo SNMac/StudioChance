@@ -7,7 +7,6 @@ import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/payment_method.dart';
@@ -185,6 +184,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     List<UserStoreInfo> storeInfos,
     DateTime selectedStartDate,
   ) async {
+    final currentUser = ref.read(currentUserProvider).value;
+    if (currentUser == null) return;
+
     if (_isLoadingForModal) return;
 
     final creatableInfos = storeInfos
@@ -211,14 +213,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       id: '',
       storeSummary: defaultStoreSummary,
       writer: StoreMemberInfo(
-        user: const User(
-          id: '',
-          name: '',
-          email: '',
-          nickname: null,
-          authProviders: [],
-          storeInfos: [],
-        ),
+        user: currentUser,
         role: defaultInfo.role,
       ),
       status: ReservationStatus.pending,
