@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
 
 part 'reservation_ocr_result.freezed.dart';
 

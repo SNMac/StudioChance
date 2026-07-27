@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 
 part 'store_member_info_model.freezed.dart';
 part 'store_member_info_model.g.dart';

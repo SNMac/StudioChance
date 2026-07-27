@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 
 part 'day_group.freezed.dart';
 

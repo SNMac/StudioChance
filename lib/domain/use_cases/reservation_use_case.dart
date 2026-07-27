@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:logger/logger.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
@@ -31,7 +32,17 @@ abstract interface class ReservationUseCase {
 
   /// 날짜 범위 예약 실시간 구독
   ///
-  /// 에러는 스트림 에러로 전파됩니다.
+  /// 내부적으로 최초 구독 시점에 현재 로그인 유저를 1회 조회하여 이후
+  /// Repository 스트림에 고정 전달한다. 조회 시점에 로그인 상태가 아직
+  /// 확정되지 않았다면([AuthUserNotFoundException]) 스트림은 에러를 1회
+  /// 방출한 뒤 영구 종료된다 — 자동 재구독은 하지 않는다.
+  ///
+  /// 따라서 호출부는 인증 상태가 확정된 이후에만 구독을 시작해야 한다.
+  /// (`home_reservations_provider.dart`의 `homeReservations`는
+  /// `currentUserProvider.future`를 먼저 await한 뒤 구독을 시작하여
+  /// 이 경쟁 조건을 회피한다.)
+  ///
+  /// 에러는 스트림 에러로 전파된다.
   Stream<List<Reservation>> watchReservationsByDateRange({
     required String storeId,
     required DateTime start,
@@ -68,8 +79,9 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   final ReservationRepository _reservationRepository;
   final UserRepository _userRepository;
   final StoreRepository _storeRepository;
+  final Logger _logger = Logger();
 
-  const ReservationUseCaseImpl({
+  ReservationUseCaseImpl({
     required ReservationRepository reservationRepository,
     required UserRepository userRepository,
     required StoreRepository storeRepository,
@@ -81,19 +93,23 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   Future<Either<Exception, Reservation>> createReservation({
     required Reservation reservation,
   }) async {
-    final priced = await _applyCalculatedPrice(reservation);
+    final pricedResult = await _applyCalculatedPrice(reservation);
 
-    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
-      final reservationWithWriter = priced.copyWith(
-        writer: priced.writer.copyWith(user: currentUser),
-      );
+    return pricedResult.fold(
+      (error) => Future.value(left(error)),
+      (priced) =>
+          getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+            final reservationWithWriter = priced.copyWith(
+              writer: priced.writer.copyWith(user: currentUser),
+            );
 
-      return TaskEither(
-        () => _reservationRepository.createReservation(
-          reservation: reservationWithWriter,
-        ),
-      );
-    }).run();
+            return TaskEither(
+              () => _reservationRepository.createReservation(
+                reservation: reservationWithWriter,
+              ),
+            );
+          }).run(),
+    );
   }
 
   @override
@@ -154,8 +170,12 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
   }) async {
-    final priced = await _applyCalculatedPrice(reservation);
-    return _reservationRepository.updateReservation(reservation: priced);
+    final pricedResult = await _applyCalculatedPrice(reservation);
+
+    return pricedResult.fold(
+      (error) => Future.value(left(error)),
+      (priced) => _reservationRepository.updateReservation(reservation: priced),
+    );
   }
 
   @override
@@ -201,29 +221,46 @@ class ReservationUseCaseImpl implements ReservationUseCase {
 
   /// Store의 PriceSetting으로 calculatedPrice, totalPrice를 계산하여 반영한 예약 반환.
   ///
-  /// Store 조회 실패 또는 PriceSetting 매칭 실패 시 기존 값을 유지한다.
-  Future<Reservation> _applyCalculatedPrice(Reservation reservation) async {
+  /// Store 조회 자체가 실패(네트워크 등)하면 에러를 그대로 전파한다.
+  /// Store가 존재하지 않거나 PriceSetting 매칭에 실패하면 기존 값을 유지한다.
+  Future<Either<Exception, Reservation>> _applyCalculatedPrice(
+    Reservation reservation,
+  ) async {
     final storeResult = await _storeRepository.getStore(
       reservation.storeSummary.id,
     );
 
-    final store = storeResult.toOption().toNullable();
-    if (store == null) return reservation;
+    return storeResult.fold(
+      (error) {
+        _logger.w(
+          '가격 계산을 위한 Store 조회 실패 — storeId: ${reservation.storeSummary.id}',
+          error: error,
+        );
+        return left(error);
+      },
+      (store) {
+        if (store == null) return right(reservation);
 
-    final priceSetting = store.priceSettingForSpace(reservation.spaceOptionId);
-    if (priceSetting == null) return reservation;
+        final priceSetting = store.priceSettingForSpace(
+          reservation.spaceOptionId,
+        );
+        if (priceSetting == null) return right(reservation);
 
-    final calculatedPrice = priceSetting.calculatePrice(
-      start: reservation.startTime,
-      end: reservation.endTime,
-      headCount: reservation.headCount,
-      isAllDay: reservation.isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
-    );
+        final calculatedPrice = priceSetting.calculatePrice(
+          start: reservation.startTime,
+          end: reservation.endTime,
+          headCount: reservation.headCount,
+          isAllDay: reservation.isAllDay,
+          isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
+        );
 
-    return reservation.copyWith(
-      calculatedPrice: calculatedPrice,
-      totalPrice: calculatedPrice + reservation.priceAdjustment,
+        return right(
+          reservation.copyWith(
+            calculatedPrice: calculatedPrice,
+            totalPrice: calculatedPrice + reservation.priceAdjustment,
+          ),
+        );
+      },
     );
   }
 }

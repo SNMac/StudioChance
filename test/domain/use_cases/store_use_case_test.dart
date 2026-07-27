@@ -5,8 +5,8 @@ import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
@@ -240,6 +240,33 @@ void main() {
           .thenAnswer((_) async => left(Exception('초대 코드 오류')));
 
       final result = await useCase.getStoreByInviteCode('INVALD');
+
+      expect(result.isLeft(), true);
+    });
+  });
+
+  // =========================================================================
+  // softDeleteStore
+  // =========================================================================
+
+  group('softDeleteStore', () {
+    test('Repository.softDeleteStore를 그대로 위임한다', () async {
+      when(
+        () => mockStoreRepo.softDeleteStore(any()),
+      ).thenAnswer((_) async => right(null));
+
+      final result = await useCase.softDeleteStore('store-123');
+
+      expect(result.isRight(), true);
+      verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
+    });
+
+    test('Repository 실패 시 left를 전파한다', () async {
+      when(
+        () => mockStoreRepo.softDeleteStore(any()),
+      ).thenAnswer((_) async => left(Exception('삭제 실패')));
+
+      final result = await useCase.softDeleteStore('store-123');
 
       expect(result.isLeft(), true);
     });

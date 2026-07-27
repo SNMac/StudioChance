@@ -5,8 +5,8 @@ import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 
 /// 생성/수정 컨트롤러가 공통으로 구현해야 할 인터페이스

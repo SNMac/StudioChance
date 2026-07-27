@@ -15,8 +15,8 @@ import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 
 part 'store_repository_impl.g.dart';

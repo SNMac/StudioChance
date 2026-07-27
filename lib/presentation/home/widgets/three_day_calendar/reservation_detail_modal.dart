@@ -9,14 +9,15 @@ import 'package:studio_chance/router/router_path.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/domain/enums/payment_method.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/payment_method.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
@@ -324,7 +325,7 @@ class _ReservationDetailModalState
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: false, // TODO: 공휴일 API 연동 후 실제 값 전달
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
     setState(() => _calculatedPrice = price);
   }
@@ -341,7 +342,7 @@ class _ReservationDetailModalState
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: false,
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
   }
 

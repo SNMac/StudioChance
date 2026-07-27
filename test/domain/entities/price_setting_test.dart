@@ -3,7 +3,7 @@ import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 
 // 평일(월~금) 단일 DayGroup 설정 — 시간 지정 예약 테스트용
 PriceSetting _makeWeekdaySetting({
@@ -99,6 +99,63 @@ PriceSetting _makeWeekendSplitSetting({
           startTime: 0,
           endTime: 1440,
           price: weekendPrice,
+          isHourly: isHourly,
+          isPerPerson: false,
+        ),
+      ],
+    ),
+  ]);
+}
+
+// 평일 DayGroup + Weekday.holiday DayGroup — isHoliday 콜백 테스트용
+PriceSetting _makeHolidaySplitSetting({
+  required int weekdayPrice,
+  required int holidayPrice,
+  bool isAllDay = false,
+  bool isHourly = false,
+  int startTime = 0,
+  int endTime = 1440,
+}) {
+  return PriceSetting(dayGroups: [
+    DayGroup(
+      days: [
+        Weekday.monday,
+        Weekday.tuesday,
+        Weekday.wednesday,
+        Weekday.thursday,
+        Weekday.friday,
+      ],
+      headcountRule: HeadcountRule(
+        headcountBase: 999,
+        headcountExtraPrice: 0,
+        isHeadcountHourly: false,
+        isHeadcountPerPerson: false,
+      ),
+      timeSlots: [
+        TimeSlot(
+          isAllDay: isAllDay,
+          startTime: startTime,
+          endTime: endTime,
+          price: weekdayPrice,
+          isHourly: isHourly,
+          isPerPerson: false,
+        ),
+      ],
+    ),
+    DayGroup(
+      days: [Weekday.holiday],
+      headcountRule: HeadcountRule(
+        headcountBase: 999,
+        headcountExtraPrice: 0,
+        isHeadcountHourly: false,
+        isHeadcountPerPerson: false,
+      ),
+      timeSlots: [
+        TimeSlot(
+          isAllDay: isAllDay,
+          startTime: startTime,
+          endTime: endTime,
+          price: holidayPrice,
           isHourly: isHourly,
           isPerPerson: false,
         ),
@@ -453,6 +510,53 @@ void main() {
         isAllDay: true,
       );
       expect(result, 133000); // 51,000 + 82,000
+    });
+  });
+
+  group('calculatePrice — isHoliday 콜백', () {
+    test('isHoliday 콜백이 true를 반환하면 Weekday.holiday DayGroup을 사용한다', () {
+      final setting = _makeHolidaySplitSetting(
+        weekdayPrice: 10000,
+        holidayPrice: 30000,
+      );
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 18, 10, 0), // 월요일
+        end: DateTime(2026, 5, 18, 12, 0),
+        headCount: 1,
+        isHoliday: (date) => true,
+      );
+      expect(result, 30000);
+    });
+
+    test('isHoliday를 생략하면 모든 날짜가 공휴일이 아닌 것으로 처리된다', () {
+      final setting = _makeHolidaySplitSetting(
+        weekdayPrice: 10000,
+        holidayPrice: 30000,
+      );
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 18, 10, 0), // 월요일
+        end: DateTime(2026, 5, 18, 12, 0),
+        headCount: 1,
+      );
+      expect(result, 10000);
+    });
+
+    test('다일 예약에서 isHoliday 콜백이 날짜별로 다르게 적용된다 (C-1 회귀 테스트)', () {
+      // 이전 버그: 단일 bool이 모든 날짜에 일괄 적용되어 날짜별로 다른
+      // 결과(평일 50,000 + 공휴일 90,000 = 140,000)를 만들 수 없었음
+      final setting = _makeHolidaySplitSetting(
+        weekdayPrice: 50000,
+        holidayPrice: 90000,
+        isAllDay: true,
+      );
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 18), // 월요일
+        end: DateTime(2026, 5, 20), // 2일: 5/18(월), 5/19(화)
+        headCount: 1,
+        isAllDay: true,
+        isHoliday: (date) => date.day == 19, // 5/19(화)만 공휴일로 지정
+      );
+      expect(result, 140000); // 월 50,000(평일) + 화 90,000(공휴일)
     });
   });
 }

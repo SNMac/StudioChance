@@ -10,8 +10,8 @@ import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
 part 'user_repository_impl.g.dart';
@@ -170,15 +170,15 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<void> softDeleteUser(String uid) async {
+  Future<Either<Exception, void>> softDeleteUser(String uid) async {
     try {
       await _userDataSource.softDeleteUser(uid);
 
       _logger.i('사용자 Soft Delete 완료 (회원 탈퇴)\nuid: $uid');
+      return right(null);
     } catch (e) {
       _logger.e('사용자 Soft Delete 실패');
-      // 탈퇴 실패는 호출부(UseCase)까지 예외를 전파하여 사용자에게 알림 (의도적 throw)
-      throw toException(e);
+      return left(toException(e));
     }
   }
 }

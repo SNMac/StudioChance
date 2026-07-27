@@ -1,14 +1,20 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
-import 'package:studio_chance/common/exceptions/user_exceptions.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
+import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 abstract interface class AuthUseCase {
   /// 로그인 상태 변경 `Stream`
   Stream<AuthInfo?> authStateChanges();
+
+  /// 인증 정보를 바탕으로 유저 조회/생성
+  /// 앱 시작/로그인 상태 변경 시 Firebase Auth 세션과 Firestore User 문서를 연결하는
+  /// 유일한 진입점. (AppAuthController에서 사용)
+  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo);
 
   /// Google 로그인
   Future<Either<Exception, User>> signInWithGoogle();
@@ -29,16 +35,24 @@ abstract interface class AuthUseCase {
 class AuthUseCaseImpl implements AuthUseCase {
   final AuthRepository _authRepository;
   final UserRepository _userRepository;
+  final StoreUseCase _storeUseCase;
 
   const AuthUseCaseImpl({
     required AuthRepository authRepository,
     required UserRepository userRepository,
+    required StoreUseCase storeUseCase,
   }) : _authRepository = authRepository,
-       _userRepository = userRepository;
+       _userRepository = userRepository,
+       _storeUseCase = storeUseCase;
 
   @override
   Stream<AuthInfo?> authStateChanges() {
     return _authRepository.authStateChanges();
+  }
+
+  @override
+  Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo) {
+    return _userRepository.fetchOrCreateUser(authInfo);
   }
 
   @override
@@ -83,22 +97,36 @@ class AuthUseCaseImpl implements AuthUseCase {
     final currentUserResult = await _userRepository.getCurrentUser();
 
     return currentUserResult.fold(
-      (error) async => left(error),
-      (currentUser) async {
+      (error) => Future.value(left(error)),
+      (currentUser) {
         if (currentUser == null) {
-          return left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'));
-        }
-
-        try {
-          await _userRepository.softDeleteUser(currentUser.id);
-        } catch (e) {
-          return left(
-            e is Exception ? e : UserUnknownException(message: e.toString()),
+          return Future.value(
+            left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
           );
         }
 
-        return _authRepository.delete();
+        return TaskEither(() => _userRepository.softDeleteUser(currentUser.id))
+            .flatMap((_) => _softDeleteAdminStores(currentUser))
+            .flatMap((_) => TaskEither(() => _authRepository.delete()))
+            .run();
       },
+    );
+  }
+
+  /// 사용자가 관리자(admin)로 속한 모든 점포를 Soft Delete 처리한다.
+  ///
+  /// 계정 삭제 시 관리자 소유 점포 레코드가 Firestore에 잔존하지 않도록
+  /// 순회하며 삭제하고, 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
+  TaskEither<Exception, void> _softDeleteAdminStores(User currentUser) {
+    final adminStoreIds = currentUser.storeInfos
+        .where((info) => info.role == UserRole.admin)
+        .map((info) => info.id);
+
+    return adminStoreIds.fold(
+      TaskEither<Exception, void>.right(null),
+      (acc, storeId) => acc.flatMap(
+        (_) => TaskEither(() => _storeUseCase.softDeleteStore(storeId)),
+      ),
     );
   }
 

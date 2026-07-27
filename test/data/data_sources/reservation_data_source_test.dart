@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
-import 'package:studio_chance/domain/enums/payment_method.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/payment_method.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
 

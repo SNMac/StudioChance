@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/role_selection/controllers/role_selection_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';

@@ -23,6 +23,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - `/lib/common`: 모든 계층에서 사용되는 로직
   - `/utils/exception_utils.dart`: `toException()` — catch 블록 Object → Exception 변환 헬퍼
   - `/converters/timestamp_converter.dart`: `TimestampConverter` — Firestore `Timestamp` ↔ `DateTime` 변환. Data Model에 `@TimestampConverter()` 어노테이션으로 사용
+  - `/enums`: 모든 계층에서 사용되는 enum (`@JsonEnum`/`@JsonValue`로 Firestore 직렬화 값 포함)
 - `/lib/constants`: 모든 계층에서 사용되는 상수값
 - `/lib/data`: Data 계층
   - `/data_sources`: DB 연결 로직
@@ -32,7 +33,6 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   - `/repositories`: Data 로직 구현체
 - `/lib/domain`: Domain(비즈니스 로직) 계층
   - `/entities`: Domain 엔티티
-  - `/enums`: Domain 관련 enum
   - `/repository_interfaces`: Domain에서 필요로 하는 Data 로직 인터페이스
   - `/use_cases`: 비즈니스 로직 단위
     - `use_case_helpers.dart`: `getCurrentUserOrThrow(UserRepository)` 공통 헬퍼
@@ -94,17 +94,22 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `StoreFormMixin`: 공통 로직(setter, SpaceOption/DayGroup/TimeSlot CRUD)을 Mixin으로 재사용
 - 신규 점포 폼 컨트롤러 추가 시 두 파일 모두 참고: `store_form_controllerable.dart`
 
-### 공휴일 요금 — isHoliday 파라미터 패턴 (D8)
-`PriceSetting.calculatePrice(isHoliday: bool)`로 공휴일 판단을 호출부에 위임.
+### 공휴일 요금 — isHoliday 콜백 패턴 (D8)
+`PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함, #15 [C-1]).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
-- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: false` 고정 (TODO 주석)
-- 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 값 전달
-- 구현 상세: `dev/active/holiday-pricing/holiday-pricing-context.md` 참고
+- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
+- 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 날짜별 판단 결과를 콜백으로 전달
 
 ### 앱 최초 실행 인증 데이터 삭제 (D9)
 `SharedPreferences` `hasLaunchedBefore` 플래그로 앱 최초 설치 실행을 감지하여 기존 인증 데이터 삭제.
 - iOS Keychain은 앱 삭제 후에도 인증 토큰이 잔존 → 재설치 후 로그인 없이 진입하는 문제 방지
 - `main_dev.dart`, `main_prod.dart`의 `_checkFirstLaunchAndClearData()`에 구현
+
+### 단순 위임 UseCase 허용 (D10)
+`UserUseCaseImpl`처럼 모든 메서드가 Repository에 단일 라인으로 위임하는 UseCase도 의도적으로 허용.
+- 목적: Presentation → UseCase → Repository 계층 규칙을 지키기 위함 (Presentation이 Repository를 직접 호출하지 않도록 강제)
+- 현재 비즈니스 로직이 없다는 이유로 UseCase 계층 자체를 생략하지 않음 — 향후 검증/가공 로직이 필요해지면 이 계층에 추가
+- 관련 이슈: [#15](https://github.com/SNMac/StudioChance/issues/15) [M-3]
 
 ## Either / TaskEither 패턴
 
@@ -139,8 +144,8 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ## Reservation 도메인 구조
 
 - **Firestore 경로**: `stores/{storeId}/reservations/{reservationId}` (서브컬렉션)
-- `platform: ReservationPlatform` enum (`lib/domain/enums/reservation_platform.dart`)
-- `paymentMethod: PaymentMethod` enum (`lib/domain/enums/payment_method.dart`)
+- `platform: ReservationPlatform` enum (`lib/common/enums/reservation_platform.dart`)
+- `paymentMethod: PaymentMethod` enum (`lib/common/enums/payment_method.dart`)
 - Repository 조회 시 `currentUid` 필요 — StoreSummary의 color를 user의 `storeById[storeId].color`에서 조회
 - color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
 

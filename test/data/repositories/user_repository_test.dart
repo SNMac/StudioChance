@@ -4,7 +4,7 @@ import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
 
 class MockAuthDataSource extends Mock implements AuthDataSource {}
 
@@ -48,6 +48,27 @@ void main() {
 
       expect(result.isRight(), true);
       expect(capturedData?['color'], 'GREEN');
+    });
+  });
+
+  group('softDeleteUser', () {
+    test('성공 시 right(null)을 반환한다', () async {
+      when(() => mockUserDs.softDeleteUser(any())).thenAnswer((_) async {});
+
+      final result = await repository.softDeleteUser('user-123');
+
+      expect(result.isRight(), true);
+      verify(() => mockUserDs.softDeleteUser('user-123')).called(1);
+    });
+
+    test('DataSource 실패 시 left를 반환한다', () async {
+      when(
+        () => mockUserDs.softDeleteUser(any()),
+      ).thenThrow(Exception('탈퇴 실패'));
+
+      final result = await repository.softDeleteUser('user-123');
+
+      expect(result.isLeft(), true);
     });
   });
 }

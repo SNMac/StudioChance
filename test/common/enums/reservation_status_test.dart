@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
 
 void main() {
   group('ReservationStatus.jsonValue', () {

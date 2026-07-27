@@ -205,8 +205,8 @@ return $default(_that.inviteCode);case _:
 /// @nodoc
 
 
-class _InviteInfo extends InviteInfo {
-  const _InviteInfo({required this.inviteCode}): super._();
+class _InviteInfo implements InviteInfo {
+  const _InviteInfo({required this.inviteCode});
   
 
 @override final  String inviteCode;

@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
 
 abstract interface class UserRepository {
   /// 로그인 후 호출: DB 조회 후 없으면 생성, 있으면 갱신하여 반환
@@ -35,5 +35,5 @@ abstract interface class UserRepository {
   Future<void> removeCurrentDeviceFcmToken(String uid);
 
   /// 유저 데이터를 Soft Delete 처리 (탈퇴용)
-  Future<void> softDeleteUser(String uid);
+  Future<Either<Exception, void>> softDeleteUser(String uid);
 }
