@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 
 extension DayGroupFormatter on DayGroup {
   String get formattedDays {

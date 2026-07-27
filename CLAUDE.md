@@ -23,6 +23,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - `/lib/common`: 모든 계층에서 사용되는 로직
   - `/utils/exception_utils.dart`: `toException()` — catch 블록 Object → Exception 변환 헬퍼
   - `/converters/timestamp_converter.dart`: `TimestampConverter` — Firestore `Timestamp` ↔ `DateTime` 변환. Data Model에 `@TimestampConverter()` 어노테이션으로 사용
+  - `/enums`: 모든 계층에서 사용되는 enum (`@JsonEnum`/`@JsonValue`로 Firestore 직렬화 값 포함)
 - `/lib/constants`: 모든 계층에서 사용되는 상수값
 - `/lib/data`: Data 계층
   - `/data_sources`: DB 연결 로직
@@ -32,7 +33,6 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
   - `/repositories`: Data 로직 구현체
 - `/lib/domain`: Domain(비즈니스 로직) 계층
   - `/entities`: Domain 엔티티
-  - `/enums`: Domain 관련 enum
   - `/repository_interfaces`: Domain에서 필요로 하는 Data 로직 인터페이스
   - `/use_cases`: 비즈니스 로직 단위
     - `use_case_helpers.dart`: `getCurrentUserOrThrow(UserRepository)` 공통 헬퍼
@@ -139,8 +139,8 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ## Reservation 도메인 구조
 
 - **Firestore 경로**: `stores/{storeId}/reservations/{reservationId}` (서브컬렉션)
-- `platform: ReservationPlatform` enum (`lib/domain/enums/reservation_platform.dart`)
-- `paymentMethod: PaymentMethod` enum (`lib/domain/enums/payment_method.dart`)
+- `platform: ReservationPlatform` enum (`lib/common/enums/reservation_platform.dart`)
+- `paymentMethod: PaymentMethod` enum (`lib/common/enums/payment_method.dart`)
 - Repository 조회 시 `currentUid` 필요 — StoreSummary의 color를 user의 `storeById[storeId].color`에서 조회
 - color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
 

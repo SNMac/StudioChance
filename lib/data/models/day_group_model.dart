@@ -4,7 +4,7 @@ import 'package:studio_chance/data/models/headcount_rule_model.dart';
 import 'package:studio_chance/data/models/time_slot_model.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 
 part 'day_group_model.freezed.dart';
 part 'day_group_model.g.dart';

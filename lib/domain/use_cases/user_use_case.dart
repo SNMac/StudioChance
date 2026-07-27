@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
 abstract interface class UserUseCase {

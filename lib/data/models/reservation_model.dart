@@ -5,10 +5,10 @@ import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/domain/enums/payment_method.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/payment_method.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 
 part 'reservation_model.freezed.dart';
 part 'reservation_model.g.dart';

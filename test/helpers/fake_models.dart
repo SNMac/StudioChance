@@ -3,11 +3,11 @@ import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/payment_method.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/payment_method.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 
 final fakeReservationModel = ReservationModel(
   id: 'res-001',

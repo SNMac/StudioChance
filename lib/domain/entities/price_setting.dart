@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/domain/entities/day_group.dart';
-import 'package:studio_chance/domain/enums/weekday.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
 
 part 'price_setting.freezed.dart';
 

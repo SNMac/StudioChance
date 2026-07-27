@@ -5,7 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/ocr_exceptions.dart';
 import 'package:studio_chance/data/models/reservation_ocr_result_model.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
 
 part 'gemini_data_source.g.dart';
 

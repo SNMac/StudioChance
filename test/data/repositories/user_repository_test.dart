@@ -4,7 +4,7 @@ import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
 
 class MockAuthDataSource extends Mock implements AuthDataSource {}
 

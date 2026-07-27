@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
 
 abstract interface class ReservationRepository {
   /// 예약 생성

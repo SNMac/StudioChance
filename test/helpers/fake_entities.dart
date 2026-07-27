@@ -6,11 +6,11 @@ import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
-import 'package:studio_chance/domain/enums/payment_method.dart';
-import 'package:studio_chance/domain/enums/reservation_platform.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/payment_method.dart';
+import 'package:studio_chance/common/enums/reservation_platform.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 
 final fakeAuthInfo = AuthInfo(
   uid: 'user-123',

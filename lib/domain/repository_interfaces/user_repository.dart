@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
 
 abstract interface class UserRepository {
   /// 로그인 후 호출: DB 조회 후 없으면 생성, 있으면 갱신하여 반환

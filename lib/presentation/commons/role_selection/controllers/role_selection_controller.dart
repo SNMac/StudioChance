@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart' show currentUserProvider;
 
 part 'role_selection_controller.g.dart';

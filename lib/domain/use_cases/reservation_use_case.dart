@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';

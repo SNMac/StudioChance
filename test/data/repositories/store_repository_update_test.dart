@@ -8,8 +8,8 @@ import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
-import 'package:studio_chance/domain/enums/store_color.dart';
-import 'package:studio_chance/domain/enums/user_role.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/fake_data.dart';
 

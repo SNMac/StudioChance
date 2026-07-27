@@ -4,7 +4,7 @@ import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
 import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
-import 'package:studio_chance/domain/enums/reservation_status.dart';
+import 'package:studio_chance/common/enums/reservation_status.dart';
 
 import '../../helpers/fake_data.dart';
 
