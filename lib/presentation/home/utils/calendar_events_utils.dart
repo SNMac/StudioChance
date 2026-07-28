@@ -87,16 +87,19 @@ List<ReservationDisplayData> eventsForDate(
 /// 종일 이벤트를 배지 대표 이벤트 선정을 위해 정렬한다.
 ///
 /// TimeGrid `_computePositions`의 z-order 규칙과 동일: 시작 시각이 빠른 것 우선,
-/// 같으면 기간이 짧은 것 우선. 원본 리스트는 변경하지 않는다.
+/// 같으면 기간이 짧은 것 우선. 시작 시각→기간→id 순으로 정렬해 동점 시에도 결과가
+/// 결정적이다. 원본 리스트는 변경하지 않는다.
 List<ReservationDisplayData> sortAllDayEventsForDisplay(
     List<ReservationDisplayData> events) {
   final sorted = [...events];
   sorted.sort((a, b) {
     final startCmp = a.summary.startTime.compareTo(b.summary.startTime);
     if (startCmp != 0) return startCmp;
-    return a.summary.endTime
+    final durationCmp = a.summary.endTime
         .difference(a.summary.startTime)
         .compareTo(b.summary.endTime.difference(b.summary.startTime));
+    if (durationCmp != 0) return durationCmp;
+    return a.summary.id.compareTo(b.summary.id);
   });
   return sorted;
 }

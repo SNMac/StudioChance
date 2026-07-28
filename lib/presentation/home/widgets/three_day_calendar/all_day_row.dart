@@ -91,6 +91,9 @@ class _AllDayCellState extends State<AllDayCell> {
                             clipContent: hasOverflow,
                             isHighlighted: _highlightedId ==
                                 sortedEvents.first.summary.id,
+                            contentRightInset: hasOverflow
+                                ? allDayOverflowBadgeReservedWidth
+                                : 0,
                           ),
                           if (hasOverflow)
                             Positioned(

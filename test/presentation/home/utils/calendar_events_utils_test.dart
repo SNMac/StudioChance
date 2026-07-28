@@ -289,5 +289,24 @@ void main() {
       final result = sortAllDayEventsForDisplay([]);
       expect(result, isEmpty);
     });
+
+    test('시작 시각과 기간이 모두 같으면 id 오름차순으로 정렬한다', () {
+      final b = _makeEvent(
+        id: 'b',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+      );
+      final a = _makeEvent(
+        id: 'a',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+      );
+
+      final result = sortAllDayEventsForDisplay([b, a]);
+
+      expect(result.map((e) => e.summary.id).toList(), ['a', 'b']);
+    });
   });
 }

@@ -35,6 +35,7 @@ class ReservationCell extends StatelessWidget {
     required this.data,
     this.clipContent = false,
     this.isHighlighted = false,
+    this.contentRightInset = 0,
   });
 
   final ReservationDisplayData data;
@@ -45,6 +46,9 @@ class ReservationCell extends StatelessWidget {
 
   /// true: 배경 = foregroundColor, 스트립 = foregroundColor, 라벨 = white
   final bool isHighlighted;
+
+  /// `clipContent=true`일 때 우측에 추가로 확보할 여백 (배지 등과 겹치지 않도록)
+  final double contentRightInset;
 
   BorderRadius get _cellBorderRadius {
     const r = Radius.circular(4);
@@ -107,7 +111,7 @@ class ReservationCell extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.only(
                         top: 1.5,
-                        right: clipContent ? 0 : 4,
+                        right: clipContent ? contentRightInset : 4,
                       ),
                       child: clipContent
                           ? _buildClipContent(context, lblColor)

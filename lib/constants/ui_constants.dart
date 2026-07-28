@@ -16,6 +16,9 @@ const double homeNavBarHeight = 44.0;
 const double timeColumnWidth = 44.0;
 const double allDayRowHeight = 40.0;
 const double allDayOverflowBadgeHeight = 14.0;
+/// 종일 셀 초과 배지가 차지하는 가로 공간 — ReservationCell 콘텐츠가 배지와
+/// 겹치지 않도록 이 만큼 우측 여백을 추가로 확보한다.
+const double allDayOverflowBadgeReservedWidth = 24.0;
 const double defaultHourHeight = 40.0;
 const double minHourHeight = 36.0;
 const double maxHourHeight = 72.0;
