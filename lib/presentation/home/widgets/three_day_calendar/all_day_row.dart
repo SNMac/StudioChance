@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/home/utils/calendar_events_utils.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_list_modal.dart';
 
 /// 3일 캘린더 종일 이벤트 셀 (날짜 1열)
 class AllDayCell extends StatefulWidget {
@@ -41,32 +44,96 @@ class _AllDayCellState extends State<AllDayCell> {
     setState(() => _highlightedId = null);
   }
 
+  /// N≥2 겹침 셀 탭 — 목록 모달 → 선택 → 상세 모달.
+  /// TimeGrid._onCellTap의 groupEvents 분기(N≥4 그룹 처리)와 동일한 흐름.
+  Future<void> _onGroupTap(List<ReservationDisplayData> events) async {
+    final selected = await showReservationListModal(context, events);
+    if (selected == null || !mounted) return;
+    setState(() => _highlightedId = selected.id);
+    final reservation = widget.reservations[selected.id];
+    if (reservation == null) {
+      setState(() => _highlightedId = null);
+      return;
+    }
+    if (!mounted) return;
+    await widget.onOpenDetailModal(reservation);
+    if (!mounted) return;
+    setState(() => _highlightedId = null);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sortedEvents = sortAllDayEventsForDisplay(widget.events);
+    final hasOverflow = sortedEvents.length >= 2;
+
     return AbsorbPointer(
       absorbing: widget.isInteractionBlocked,
       child: SizedBox(
-      height: allDayRowHeight,
-      child: Stack(
-        // TODO: 다중 이벤트 겹침 처리 미구현 — 현재는 단순 Stack (겹쳐 보임)
-        children: [
-          for (final event in widget.events)
-            Positioned(
-              left: 1,
-              right: 8,
-              top: 1,
-              bottom: 4,
-              child: GestureDetector(
-                onTap: () => _onCellTap(event),
-                child: ReservationCell(
-                  data: event,
-                  isHighlighted: _highlightedId == event.summary.id,
-                ),
+        height: allDayRowHeight,
+        child: sortedEvents.isEmpty
+            ? const SizedBox.shrink()
+            : Stack(
+                children: [
+                  Positioned(
+                    left: 1,
+                    right: 8,
+                    top: 1,
+                    bottom: 4,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => hasOverflow
+                          ? _onGroupTap(sortedEvents)
+                          : _onCellTap(sortedEvents.first),
+                      child: Stack(
+                        children: [
+                          ReservationCell(
+                            data: sortedEvents.first,
+                            clipContent: hasOverflow,
+                            isHighlighted: _highlightedId ==
+                                sortedEvents.first.summary.id,
+                          ),
+                          if (hasOverflow)
+                            Positioned(
+                              top: 2,
+                              right: 4,
+                              child: _OverflowBadge(
+                                count: sortedEvents.length - 1,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-        ],
       ),
-    ),
+    );
+  }
+}
+
+/// 종일 셀 겹침 초과 배지 ("+N"). N = 화면에 표시되지 않은 나머지 이벤트 수.
+class _OverflowBadge extends StatelessWidget {
+  const _OverflowBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: allDayOverflowBadgeHeight,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: context.tertiarySystemFill,
+        borderRadius: BorderRadius.circular(allDayOverflowBadgeHeight / 2),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '+$count',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: context.secondaryLabel,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
     );
   }
 }

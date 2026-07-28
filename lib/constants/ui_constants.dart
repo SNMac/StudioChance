@@ -15,6 +15,7 @@ const double homeNavBarHeight = 44.0;
 // 홈 화면 - 캘린더
 const double timeColumnWidth = 44.0;
 const double allDayRowHeight = 40.0;
+const double allDayOverflowBadgeHeight = 14.0;
 const double defaultHourHeight = 40.0;
 const double minHourHeight = 36.0;
 const double maxHourHeight = 72.0;
