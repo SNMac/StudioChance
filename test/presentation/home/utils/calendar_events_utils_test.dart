@@ -221,4 +221,73 @@ void main() {
       expect(map.containsKey('res-002'), true);
     });
   });
+
+  // ===========================================================================
+  // sortAllDayEventsForDisplay
+  // ===========================================================================
+
+  group('sortAllDayEventsForDisplay', () {
+    test('시작 시각이 빠른 이벤트가 먼저 온다', () {
+      final later = _makeEvent(
+        id: 'later',
+        start: today.add(const Duration(hours: 2)),
+        end: today.add(const Duration(hours: 3)),
+        isAllDay: true,
+      );
+      final earlier = _makeEvent(
+        id: 'earlier',
+        start: today,
+        end: today.add(const Duration(hours: 1)),
+        isAllDay: true,
+      );
+
+      final result = sortAllDayEventsForDisplay([later, earlier]);
+
+      expect(result.map((e) => e.summary.id).toList(), ['earlier', 'later']);
+    });
+
+    test('시작 시각이 같으면 기간이 짧은 이벤트가 먼저 온다', () {
+      final long = _makeEvent(
+        id: 'long',
+        start: today,
+        end: today.add(const Duration(days: 2)),
+        isAllDay: true,
+      );
+      final short = _makeEvent(
+        id: 'short',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+      );
+
+      final result = sortAllDayEventsForDisplay([long, short]);
+
+      expect(result.map((e) => e.summary.id).toList(), ['short', 'long']);
+    });
+
+    test('원본 리스트를 변경하지 않는다', () {
+      final a = _makeEvent(
+        id: 'a',
+        start: today.add(const Duration(hours: 5)),
+        end: today.add(const Duration(hours: 6)),
+        isAllDay: true,
+      );
+      final b = _makeEvent(
+        id: 'b',
+        start: today,
+        end: today.add(const Duration(hours: 1)),
+        isAllDay: true,
+      );
+      final original = [a, b];
+
+      sortAllDayEventsForDisplay(original);
+
+      expect(original.map((e) => e.summary.id).toList(), ['a', 'b']);
+    });
+
+    test('빈 목록 입력 시 빈 목록을 반환한다', () {
+      final result = sortAllDayEventsForDisplay([]);
+      expect(result, isEmpty);
+    });
+  });
 }
