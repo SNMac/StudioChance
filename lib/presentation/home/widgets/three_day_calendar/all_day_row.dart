@@ -132,9 +132,13 @@ class _OverflowBadge extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         '+$count',
+        // labelSmall의 height:1.5(줄높이 15px)가 배지 높이(14px)보다 커서
+        // Align이 라인박스 전체를 기준으로 중앙 정렬하면 살짝 치우쳐 보인다.
+        // height:1.0으로 줄박스를 글자 크기에 맞게 좁혀 정확히 중앙에 오도록 한다.
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: context.secondaryLabel,
               fontWeight: FontWeight.w600,
+              height: 1.0,
             ),
       ),
     );

@@ -111,10 +111,11 @@ class ReservationCell extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.only(
                         top: 1.5,
-                        right: clipContent ? contentRightInset : 4,
+                        right: clipContent ? 0 : 4,
                       ),
                       child: clipContent
-                          ? _buildClipContent(context, lblColor)
+                          ? _buildClipContent(
+                              context, lblColor, contentRightInset)
                           : FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.topLeft,
@@ -130,7 +131,11 @@ class ReservationCell extends StatelessWidget {
     );
   }
 
-  Widget _buildClipContent(BuildContext context, Color lblColor) {
+  /// [topLineRightInset]: 첫 줄(이름·인원)에만 적용되는 추가 우측 여백.
+  /// 배지는 첫 줄 높이에만 겹치므로(all_day_row.dart _OverflowBadge),
+  /// 둘째 줄(연락처)은 이 여백 없이 전체 너비를 그대로 사용한다.
+  Widget _buildClipContent(
+      BuildContext context, Color lblColor, double topLineRightInset) {
     final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,11 +152,14 @@ class ReservationCell extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${data.summary.customerName} · ${data.summary.headCount}인',
-                style: style,
-                maxLines: 1,
-                overflow: TextOverflow.clip,
+              Padding(
+                padding: EdgeInsets.only(right: topLineRightInset),
+                child: Text(
+                  '${data.summary.customerName} · ${data.summary.headCount}인',
+                  style: style,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                ),
               ),
               Text(
                 data.summary.customerPhone.formattedPhone,
