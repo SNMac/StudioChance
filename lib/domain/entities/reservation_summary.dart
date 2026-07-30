@@ -17,5 +17,6 @@ abstract class ReservationSummary with _$ReservationSummary {
     required bool isAllDay,
     required DateTime startTime,
     required DateTime endTime,
+    DateTime? createdAt,
   }) = _ReservationSummary;
 }

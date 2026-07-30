@@ -10,18 +10,21 @@ ReservationDisplayData _makeEvent({
   required DateTime start,
   required DateTime end,
   bool isAllDay = false,
+  String customerName = '테스트',
+  DateTime? createdAt,
 }) {
   return ReservationDisplayData(
     summary: ReservationSummary(
       id: id,
       storeSummary: fakeStoreSummary,
       status: fakeReservation.status,
-      customerName: '테스트',
+      customerName: customerName,
       headCount: 1,
       customerPhone: '010-0000-0000',
       isAllDay: isAllDay,
       startTime: start,
       endTime: end,
+      createdAt: createdAt,
     ),
   );
 }
@@ -195,18 +198,22 @@ void main() {
     });
 
     test('ReservationSummary 필드가 Reservation의 해당 필드와 일치한다', () {
-      final (events, _) = buildEventsFromReservations([fakeReservation]);
+      final reservation = fakeReservation.copyWith(
+        createdAt: DateTime(2026, 4, 30, 9, 0),
+      );
+      final (events, _) = buildEventsFromReservations([reservation]);
 
       final summary = events.first.summary;
-      expect(summary.id, fakeReservation.id);
-      expect(summary.storeSummary, fakeReservation.storeSummary);
-      expect(summary.status, fakeReservation.status);
-      expect(summary.customerName, fakeReservation.customerName);
-      expect(summary.headCount, fakeReservation.headCount);
-      expect(summary.customerPhone, fakeReservation.customerPhone);
-      expect(summary.isAllDay, fakeReservation.isAllDay);
-      expect(summary.startTime, fakeReservation.startTime);
-      expect(summary.endTime, fakeReservation.endTime);
+      expect(summary.id, reservation.id);
+      expect(summary.storeSummary, reservation.storeSummary);
+      expect(summary.status, reservation.status);
+      expect(summary.customerName, reservation.customerName);
+      expect(summary.headCount, reservation.headCount);
+      expect(summary.customerPhone, reservation.customerPhone);
+      expect(summary.isAllDay, reservation.isAllDay);
+      expect(summary.startTime, reservation.startTime);
+      expect(summary.endTime, reservation.endTime);
+      expect(summary.createdAt, reservation.createdAt);
     });
 
     test('여러 Reservation 입력 시 모두 변환된다', () {
@@ -246,7 +253,7 @@ void main() {
       expect(result.map((e) => e.summary.id).toList(), ['earlier', 'later']);
     });
 
-    test('시작 시각이 같으면 기간이 짧은 이벤트가 먼저 온다', () {
+    test('시작 시각이 같으면 종료 시각이 빠른 이벤트가 먼저 온다', () {
       final long = _makeEvent(
         id: 'long',
         start: today,
@@ -263,6 +270,75 @@ void main() {
       final result = sortAllDayEventsForDisplay([long, short]);
 
       expect(result.map((e) => e.summary.id).toList(), ['short', 'long']);
+    });
+
+    test('시작·종료 시각이 같으면 예약자명 오름차순으로 정렬한다', () {
+      final bravo = _makeEvent(
+        id: 'bravo',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '나나',
+      );
+      final alpha = _makeEvent(
+        id: 'alpha',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '가가',
+      );
+
+      final result = sortAllDayEventsForDisplay([bravo, alpha]);
+
+      expect(result.map((e) => e.summary.id).toList(), ['alpha', 'bravo']);
+    });
+
+    test('시작·종료 시각·이름이 같으면 생성 시각(createdAt) 오름차순으로 정렬한다', () {
+      final later = _makeEvent(
+        id: 'later',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '동명',
+        createdAt: today.add(const Duration(hours: 2)),
+      );
+      final earlier = _makeEvent(
+        id: 'earlier',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '동명',
+        createdAt: today.add(const Duration(hours: 1)),
+      );
+
+      final result = sortAllDayEventsForDisplay([later, earlier]);
+
+      expect(result.map((e) => e.summary.id).toList(), ['earlier', 'later']);
+    });
+
+    test('createdAt이 null인 이벤트는 뒤로 밀린다', () {
+      final withCreatedAt = _makeEvent(
+        id: 'withCreatedAt',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '동명',
+        createdAt: today,
+      );
+      final withoutCreatedAt = _makeEvent(
+        id: 'withoutCreatedAt',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '동명',
+      );
+
+      final result = sortAllDayEventsForDisplay([withoutCreatedAt, withCreatedAt]);
+
+      expect(
+        result.map((e) => e.summary.id).toList(),
+        ['withCreatedAt', 'withoutCreatedAt'],
+      );
     });
 
     test('원본 리스트를 변경하지 않는다', () {

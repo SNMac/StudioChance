@@ -36,6 +36,7 @@ abstract class ReservationModel with _$ReservationModel {
     required int totalPrice,
     required UserRole writerRole,
     String? spaceOptionId,
+    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? createdAt,
   }) = _ReservationModel;
 
   factory ReservationModel.fromJson(Map<String, dynamic> json) =>
@@ -61,6 +62,7 @@ abstract class ReservationModel with _$ReservationModel {
       totalPrice: entity.totalPrice,
       writerRole: entity.writer.role,
       spaceOptionId: entity.spaceOptionId,
+      createdAt: entity.createdAt,
     );
   }
 
@@ -98,6 +100,7 @@ abstract class ReservationModel with _$ReservationModel {
       priceAdjustment: priceAdjustment,
       totalPrice: totalPrice,
       spaceOptionId: spaceOptionId,
+      createdAt: createdAt,
     );
   }
 }

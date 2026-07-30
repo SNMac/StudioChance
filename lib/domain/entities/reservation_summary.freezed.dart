@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ReservationSummary {
 
- String get id; StoreSummary get storeSummary; ReservationStatus get status; String get customerName; int get headCount; String get customerPhone; bool get isAllDay; DateTime get startTime; DateTime get endTime;
+ String get id; StoreSummary get storeSummary; ReservationStatus get status; String get customerName; int get headCount; String get customerPhone; bool get isAllDay; DateTime get startTime; DateTime get endTime; DateTime? get createdAt;
 /// Create a copy of ReservationSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ReservationSummaryCopyWith<ReservationSummary> get copyWith => _$ReservationSum
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,storeSummary,status,customerName,headCount,customerPhone,isAllDay,startTime,endTime);
+int get hashCode => Object.hash(runtimeType,id,storeSummary,status,customerName,headCount,customerPhone,isAllDay,startTime,endTime,createdAt);
 
 @override
 String toString() {
-  return 'ReservationSummary(id: $id, storeSummary: $storeSummary, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime)';
+  return 'ReservationSummary(id: $id, storeSummary: $storeSummary, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, createdAt: $createdAt)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ReservationSummaryCopyWith<$Res>  {
   factory $ReservationSummaryCopyWith(ReservationSummary value, $Res Function(ReservationSummary) _then) = _$ReservationSummaryCopyWithImpl;
 @useResult
 $Res call({
- String id, StoreSummary storeSummary, ReservationStatus status, String customerName, int headCount, String customerPhone, bool isAllDay, DateTime startTime, DateTime endTime
+ String id, StoreSummary storeSummary, ReservationStatus status, String customerName, int headCount, String customerPhone, bool isAllDay, DateTime startTime, DateTime endTime, DateTime? createdAt
 });
 
 
@@ -62,7 +62,7 @@ class _$ReservationSummaryCopyWithImpl<$Res>
 
 /// Create a copy of ReservationSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeSummary = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeSummary = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeSummary: null == storeSummary ? _self.storeSummary : storeSummary // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as int,customerPhone: null == customerPhone ? _self.customerPhone : customerPhon
 as String,isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
 as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as DateTime,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 /// Create a copy of ReservationSummary
@@ -167,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  bool isAllDay,  DateTime startTime,  DateTime endTime)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  bool isAllDay,  DateTime startTime,  DateTime endTime,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReservationSummary() when $default != null:
-return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.isAllDay,_that.startTime,_that.endTime);case _:
+return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.isAllDay,_that.startTime,_that.endTime,_that.createdAt);case _:
   return orElse();
 
 }
@@ -188,10 +189,10 @@ return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  bool isAllDay,  DateTime startTime,  DateTime endTime)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  bool isAllDay,  DateTime startTime,  DateTime endTime,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _ReservationSummary():
-return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.isAllDay,_that.startTime,_that.endTime);case _:
+return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.isAllDay,_that.startTime,_that.endTime,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +209,10 @@ return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  StoreSummary storeSummary,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  bool isAllDay,  DateTime startTime,  DateTime endTime)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  StoreSummary storeSummary,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  bool isAllDay,  DateTime startTime,  DateTime endTime,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ReservationSummary() when $default != null:
-return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.isAllDay,_that.startTime,_that.endTime);case _:
+return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.isAllDay,_that.startTime,_that.endTime,_that.createdAt);case _:
   return null;
 
 }
@@ -223,7 +224,7 @@ return $default(_that.id,_that.storeSummary,_that.status,_that.customerName,_tha
 
 
 class _ReservationSummary implements ReservationSummary {
-  const _ReservationSummary({required this.id, required this.storeSummary, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.isAllDay, required this.startTime, required this.endTime});
+  const _ReservationSummary({required this.id, required this.storeSummary, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.isAllDay, required this.startTime, required this.endTime, this.createdAt});
   
 
 @override final  String id;
@@ -235,6 +236,7 @@ class _ReservationSummary implements ReservationSummary {
 @override final  bool isAllDay;
 @override final  DateTime startTime;
 @override final  DateTime endTime;
+@override final  DateTime? createdAt;
 
 /// Create a copy of ReservationSummary
 /// with the given fields replaced by the non-null parameter values.
@@ -246,16 +248,16 @@ _$ReservationSummaryCopyWith<_ReservationSummary> get copyWith => __$Reservation
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,storeSummary,status,customerName,headCount,customerPhone,isAllDay,startTime,endTime);
+int get hashCode => Object.hash(runtimeType,id,storeSummary,status,customerName,headCount,customerPhone,isAllDay,startTime,endTime,createdAt);
 
 @override
 String toString() {
-  return 'ReservationSummary(id: $id, storeSummary: $storeSummary, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime)';
+  return 'ReservationSummary(id: $id, storeSummary: $storeSummary, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, createdAt: $createdAt)';
 }
 
 
@@ -266,7 +268,7 @@ abstract mixin class _$ReservationSummaryCopyWith<$Res> implements $ReservationS
   factory _$ReservationSummaryCopyWith(_ReservationSummary value, $Res Function(_ReservationSummary) _then) = __$ReservationSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, StoreSummary storeSummary, ReservationStatus status, String customerName, int headCount, String customerPhone, bool isAllDay, DateTime startTime, DateTime endTime
+ String id, StoreSummary storeSummary, ReservationStatus status, String customerName, int headCount, String customerPhone, bool isAllDay, DateTime startTime, DateTime endTime, DateTime? createdAt
 });
 
 
@@ -283,7 +285,7 @@ class __$ReservationSummaryCopyWithImpl<$Res>
 
 /// Create a copy of ReservationSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? storeSummary = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? storeSummary = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? createdAt = freezed,}) {
   return _then(_ReservationSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeSummary: null == storeSummary ? _self.storeSummary : storeSummary // ignore: cast_nullable_to_non_nullable
@@ -294,7 +296,8 @@ as int,customerPhone: null == customerPhone ? _self.customerPhone : customerPhon
 as String,isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
 as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as DateTime,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

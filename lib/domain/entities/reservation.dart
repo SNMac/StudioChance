@@ -28,5 +28,6 @@ abstract class Reservation with _$Reservation {
     required int priceAdjustment,
     required int totalPrice,
     String? spaceOptionId,
+    DateTime? createdAt,
   }) = _Reservation;
 }
