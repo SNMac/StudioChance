@@ -272,34 +272,13 @@ void main() {
       expect(result.map((e) => e.summary.id).toList(), ['short', 'long']);
     });
 
-    test('시작·종료 시각이 같으면 예약자명 오름차순으로 정렬한다', () {
-      final bravo = _makeEvent(
-        id: 'bravo',
-        start: today,
-        end: today.add(const Duration(days: 1)),
-        isAllDay: true,
-        customerName: '나나',
-      );
-      final alpha = _makeEvent(
-        id: 'alpha',
-        start: today,
-        end: today.add(const Duration(days: 1)),
-        isAllDay: true,
-        customerName: '가가',
-      );
-
-      final result = sortAllDayEventsForDisplay([bravo, alpha]);
-
-      expect(result.map((e) => e.summary.id).toList(), ['alpha', 'bravo']);
-    });
-
-    test('시작·종료 시각·이름이 같으면 생성 시각(createdAt) 오름차순으로 정렬한다', () {
+    test('시작·종료 시각이 같으면 생성 시각(createdAt) 오름차순으로 정렬한다 (이름보다 우선)', () {
       final later = _makeEvent(
         id: 'later',
         start: today,
         end: today.add(const Duration(days: 1)),
         isAllDay: true,
-        customerName: '동명',
+        customerName: '가가', // 이름만 보면 later가 먼저 와야 하지만 createdAt이 우선한다
         createdAt: today.add(const Duration(hours: 2)),
       );
       final earlier = _makeEvent(
@@ -307,7 +286,7 @@ void main() {
         start: today,
         end: today.add(const Duration(days: 1)),
         isAllDay: true,
-        customerName: '동명',
+        customerName: '나나',
         createdAt: today.add(const Duration(hours: 1)),
       );
 
@@ -316,13 +295,36 @@ void main() {
       expect(result.map((e) => e.summary.id).toList(), ['earlier', 'later']);
     });
 
-    test('createdAt이 null인 이벤트는 뒤로 밀린다', () {
+    test('시작·종료 시각·생성 시각이 같으면 예약자명 오름차순으로 정렬한다', () {
+      final bravo = _makeEvent(
+        id: 'bravo',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '나나',
+        createdAt: today,
+      );
+      final alpha = _makeEvent(
+        id: 'alpha',
+        start: today,
+        end: today.add(const Duration(days: 1)),
+        isAllDay: true,
+        customerName: '가가',
+        createdAt: today,
+      );
+
+      final result = sortAllDayEventsForDisplay([bravo, alpha]);
+
+      expect(result.map((e) => e.summary.id).toList(), ['alpha', 'bravo']);
+    });
+
+    test('createdAt이 null인 이벤트는 뒤로 밀린다 (이름 순서와 무관)', () {
       final withCreatedAt = _makeEvent(
         id: 'withCreatedAt',
         start: today,
         end: today.add(const Duration(days: 1)),
         isAllDay: true,
-        customerName: '동명',
+        customerName: '나나', // 이름만 보면 뒤에 와야 하지만 createdAt 존재 여부가 우선한다
         createdAt: today,
       );
       final withoutCreatedAt = _makeEvent(
@@ -330,7 +332,7 @@ void main() {
         start: today,
         end: today.add(const Duration(days: 1)),
         isAllDay: true,
-        customerName: '동명',
+        customerName: '가가',
       );
 
       final result = sortAllDayEventsForDisplay([withoutCreatedAt, withCreatedAt]);

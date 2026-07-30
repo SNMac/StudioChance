@@ -97,7 +97,7 @@ int _compareNullableDateTime(DateTime? a, DateTime? b) {
 
 /// 종일 이벤트를 배지 대표 이벤트 선정을 위해 정렬한다.
 ///
-/// 정렬 우선순위: 시작 시각 → 종료 시각 → 예약자명 → 생성 시각(createdAt) → id
+/// 정렬 우선순위: 시작 시각 → 종료 시각 → 생성 시각(createdAt) → 예약자명 → id
 /// (모두 오름차순). 앞 기준이 동점일 때만 다음 기준으로 넘어가며, id까지 동점인
 /// 경우는 사실상 없으므로 항상 결정적인 순서가 보장된다. 원본 리스트는 변경하지 않는다.
 List<ReservationDisplayData> sortAllDayEventsForDisplay(
@@ -108,11 +108,11 @@ List<ReservationDisplayData> sortAllDayEventsForDisplay(
     if (startCmp != 0) return startCmp;
     final endCmp = a.summary.endTime.compareTo(b.summary.endTime);
     if (endCmp != 0) return endCmp;
-    final nameCmp = a.summary.customerName.compareTo(b.summary.customerName);
-    if (nameCmp != 0) return nameCmp;
     final createdCmp =
         _compareNullableDateTime(a.summary.createdAt, b.summary.createdAt);
     if (createdCmp != 0) return createdCmp;
+    final nameCmp = a.summary.customerName.compareTo(b.summary.customerName);
+    if (nameCmp != 0) return nameCmp;
     return a.summary.id.compareTo(b.summary.id);
   });
   return sorted;
