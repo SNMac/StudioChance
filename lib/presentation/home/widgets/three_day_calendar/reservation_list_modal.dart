@@ -76,7 +76,9 @@ class _ReservationListModalState extends State<ReservationListModal>
 
   void _snapToNearest() {
     const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
-    _animateTo(_sheetController.value >= mid ? _kModalMaxSize : _kModalInitialSize);
+    _animateTo(
+      _sheetController.value >= mid ? _kModalMaxSize : _kModalInitialSize,
+    );
   }
 
   @override
@@ -106,8 +108,10 @@ class _ReservationListModalState extends State<ReservationListModal>
               },
               onPointerMove: (event) {
                 final delta = -event.delta.dy / widget.maxAvailableHeight;
-                _sheetController.value = (_sheetController.value + delta)
-                    .clamp(_kModalInitialSize, _kModalMaxSize);
+                _sheetController.value = (_sheetController.value + delta).clamp(
+                  _kModalInitialSize,
+                  _kModalMaxSize,
+                );
               },
               onPointerUp: (event) {
                 final totalDy = event.position.dy - _grabberDragStartY;
@@ -177,15 +181,19 @@ class _ReservationListModalState extends State<ReservationListModal>
                                 Expanded(
                                   child: Text(
                                     '${event.summary.customerName} · ${event.summary.headCount}인',
-                                    style: Theme.of(context).textTheme.bodyLarge,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                // 시간 범위
+                                // 시간 범위 (종일 예약은 '종일'로 표시)
                                 Text(
-                                  '${_timeFormat.format(event.summary.startTime)}~'
-                                  '${_timeFormat.format(event.summary.endTime)}',
+                                  event.summary.isAllDay
+                                      ? '종일'
+                                      : '${_timeFormat.format(event.summary.startTime)}~'
+                                            '${_timeFormat.format(event.summary.endTime)}',
                                   style: Theme.of(context).textTheme.bodyLarge
                                       ?.copyWith(
                                         fontWeight: FontWeight.normal,
@@ -195,7 +203,9 @@ class _ReservationListModalState extends State<ReservationListModal>
                                 const SizedBox(width: 12),
                                 // chevron
                                 ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 10),
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 10,
+                                  ),
                                   child: Icon(
                                     CupertinoIcons.chevron_forward,
                                     color: context.tertiaryLabel,
