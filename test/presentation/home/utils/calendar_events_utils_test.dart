@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/home/utils/calendar_events_utils.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
@@ -143,7 +144,11 @@ void main() {
           end: today.add(const Duration(hours: 12)),
         );
 
-        final result = eventsForDate([allDayEvent, timedEvent], today, allDay: true);
+        final result = eventsForDate(
+          [allDayEvent, timedEvent],
+          today,
+          allDay: true,
+        );
 
         expect(result.length, 1);
         expect(result.first.summary.id, 'allday');
@@ -335,12 +340,15 @@ void main() {
         customerName: '가가',
       );
 
-      final result = sortAllDayEventsForDisplay([withoutCreatedAt, withCreatedAt]);
+      final result = sortAllDayEventsForDisplay([
+        withoutCreatedAt,
+        withCreatedAt,
+      ]);
 
-      expect(
-        result.map((e) => e.summary.id).toList(),
-        ['withCreatedAt', 'withoutCreatedAt'],
-      );
+      expect(result.map((e) => e.summary.id).toList(), [
+        'withCreatedAt',
+        'withoutCreatedAt',
+      ]);
     });
 
     test('원본 리스트를 변경하지 않는다', () {
@@ -385,6 +393,47 @@ void main() {
       final result = sortAllDayEventsForDisplay([b, a]);
 
       expect(result.map((e) => e.summary.id).toList(), ['a', 'b']);
+    });
+  });
+
+  // ===========================================================================
+  // allDayRowHeightFor
+  // ===========================================================================
+
+  group('allDayRowHeightFor', () {
+    test('겹침이 없으면 펼침 여부와 무관하게 1칸이다', () {
+      expect(
+        allDayRowHeightFor(maxCount: 0, isExpanded: true),
+        allDayRowHeight,
+      );
+      expect(
+        allDayRowHeightFor(maxCount: 1, isExpanded: true),
+        allDayRowHeight,
+      );
+    });
+
+    test('접힘 상태는 겹침이 많아도 1칸이다', () {
+      expect(
+        allDayRowHeightFor(maxCount: 5, isExpanded: false),
+        allDayRowHeight,
+      );
+    });
+
+    test('펼침 상태는 겹침 수만큼 칸이 늘어난다', () {
+      expect(
+        allDayRowHeightFor(maxCount: 2, isExpanded: true),
+        allDayRowHeight * 2,
+      );
+      expect(
+        allDayRowHeightFor(maxCount: 3, isExpanded: true),
+        allDayRowHeight * 3,
+      );
+    });
+
+    test('펼침 상태에서 최대 칸 수를 넘어도 높이는 더 늘어나지 않는다', () {
+      final capped = allDayRowHeight * allDayMaxStackCount;
+      expect(allDayRowHeightFor(maxCount: 4, isExpanded: true), capped);
+      expect(allDayRowHeightFor(maxCount: 20, isExpanded: true), capped);
     });
   });
 }

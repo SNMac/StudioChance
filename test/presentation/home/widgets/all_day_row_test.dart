@@ -46,6 +46,7 @@ Future<void> _pumpAllDayCell(
   required List<ReservationDisplayData> events,
   required bool isExpanded,
   double? height,
+  void Function(Reservation)? onOpenDetailModal,
 }) async {
   final reservations = {
     for (final event in events) event.summary.id: _reservationFor(event),
@@ -60,7 +61,7 @@ Future<void> _pumpAllDayCell(
           child: AllDayCell(
             events: events,
             reservations: reservations,
-            onOpenDetailModal: (_) async {},
+            onOpenDetailModal: (r) async => onOpenDetailModal?.call(r),
             isInteractionBlocked: false,
             isExpanded: isExpanded,
           ),
@@ -96,6 +97,42 @@ void main() {
       expect(find.textContaining('고객2'), findsOneWidget);
       expect(find.textContaining('고객3'), findsNothing);
       expect(find.text('+2건 더보기'), findsOneWidget);
+    });
+
+    // allDayMaxStackCount 경계 — 여기서 더보기 행이 나오면 "+0건 더보기"가 된다.
+    testWidgets('펼침 상태에서 3건이면 전부 표시되고 더보기 행이 없다', (tester) async {
+      final events = [
+        for (int i = 1; i <= 3; i++)
+          _makeAllDayEvent(id: 'e$i', customerName: '고객$i', createdAtMinute: i),
+      ];
+
+      await _pumpAllDayCell(tester, events: events, isExpanded: true);
+
+      expect(find.textContaining('고객1'), findsOneWidget);
+      expect(find.textContaining('고객2'), findsOneWidget);
+      expect(find.textContaining('고객3'), findsOneWidget);
+      expect(find.textContaining('더보기'), findsNothing);
+    });
+
+    testWidgets('펼침 상태에서 셀을 탭하면 해당 예약으로 상세 모달을 연다', (tester) async {
+      final events = [
+        _makeAllDayEvent(id: 'e1', customerName: '가나다', createdAtMinute: 1),
+        _makeAllDayEvent(id: 'e2', customerName: '라마바', createdAtMinute: 2),
+      ];
+      final opened = <Reservation>[];
+
+      await _pumpAllDayCell(
+        tester,
+        events: events,
+        isExpanded: true,
+        onOpenDetailModal: opened.add,
+      );
+
+      await tester.tap(find.textContaining('라마바'));
+      await tester.pump();
+
+      expect(opened.length, 1);
+      expect(opened.single.id, 'e2');
     });
 
     testWidgets('접힘 상태에서는 대표 1건과 초과 배지만 표시된다', (tester) async {

@@ -310,20 +310,21 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     return maxCount;
   }
 
-  /// 종일 행 높이. 접혔거나 겹침이 없으면 1칸, 펼치면 [allDayMaxStackCount]칸까지.
-  double _allDayRowHeightFor(int maxCount) {
-    if (!_isAllDayExpanded || maxCount <= 1) return allDayRowHeight;
-    return allDayRowHeight *
-        (maxCount > allDayMaxStackCount ? allDayMaxStackCount : maxCount);
-  }
-
   void _toggleAllDayExpanded() {
     setState(() => _isAllDayExpanded = !_isAllDayExpanded);
   }
 
-  /// 종일 행이 커지면 TimeGrid의 viewport가 줄어 기존 오프셋이 maxScrollExtent를
-  /// 넘을 수 있다. 높이 전환이 끝난 뒤 오프셋을 유효 범위로 되돌린다.
+  /// 종일 행 높이가 바뀐 뒤 수직 오프셋을 유효 범위로 되돌린다.
+  ///
+  /// `maxScrollExtent = hourHeight * 24 - viewport` 이므로:
+  /// - 펼침(행 커짐) → viewport 축소 → maxScrollExtent 증가 → 기존 오프셋은 그대로 유효
+  /// - 접힘(행 작아짐) → viewport 확대 → maxScrollExtent 감소 → 기존 오프셋이 범위를 벗어날 수 있음
+  ///
+  /// 즉 실제로 보정이 필요한 쪽은 접힘이다. 방향에 관계없이 호출해도 무해하므로
+  /// 양방향 전환 완료 시점에 모두 실행한다.
   void _clampVerticalOffsetToExtent() {
+    // 모든 날짜 열의 TimeGrid는 콘텐츠 높이(hourHeight * 24)와 viewport가 동일하므로
+    // maxScrollExtent도 같다 → 붙어 있는 첫 컨트롤러 하나만 확인하면 충분하다.
     for (final ctrl in _dayScrollControllers.values) {
       if (!ctrl.hasClients) continue;
       final clamped = _currentVerticalOffset.clamp(
@@ -396,7 +397,10 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     // 종일 행 높이는 보이는 3일이 공유 — 열마다 다르면 행이 어긋난다.
     final maxAllDayCount = _visibleMaxAllDayCount(allEvents);
     final hasAllDayOverflow = maxAllDayCount >= 2;
-    final allDayRowHeightShared = _allDayRowHeightFor(maxAllDayCount);
+    final allDayRowHeightShared = allDayRowHeightFor(
+      maxCount: maxAllDayCount,
+      isExpanded: _isAllDayExpanded,
+    );
     final storeInfos = ref.watch(
       currentUserProvider.select((async) => async.asData?.value?.storeInfos),
     );
