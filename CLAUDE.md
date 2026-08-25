@@ -121,6 +121,8 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ## Git 컨벤션
 - 브랜치: `feat/#<이슈번호>-<설명>`, `bug/#<이슈번호>-<설명>`
 - 커밋: `<type>: #<이슈번호> - <한국어 설명>`
+- 포맷 전용 변경(`dart format`이 손대지 않은 기존 파일까지 재배치한 결과)은 기능 커밋에 섞지 말고 별도 `style:` 커밋으로 분리 — 리뷰 시 실제 변경을 가려내기 어려워짐
+  - `dart format`은 디렉터리 전체가 아니라 **수정한 파일만** 지정해서 실행할 것
 - 기본 브랜치: `develop` (PR 대상)
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
