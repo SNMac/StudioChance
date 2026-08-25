@@ -4,6 +4,8 @@
 
 **Goal:** 같은 날짜에 종일 예약이 2건 이상 겹칠 때, 현재의 단순 `Stack`(이벤트가 가려짐) 대신 대표 1건 + "+N" 초과 배지를 표시하고, 탭 시 목록 모달로 전체 이벤트를 확인할 수 있게 한다 ([#21](https://github.com/SNMac/StudioChance/issues/21)).
 
+> ⚠️ **이 플랜은 이후 설계가 변경되었다 (2026-08-25).** 아래 Architecture/Constraints는 최초 결정(대표 1건 + `+N` 배지) 기준으로 작성된 것이며, 현재 구현은 **노션 캘린더식 세로 스택 + 접기/펼치기 토글**이다. "대표 1건 + 배지"는 이제 *접힘* 상태로만 남아 있다. 변경 근거와 최종 동작은 [이슈 #21](https://github.com/SNMac/StudioChance/issues/21)과 커밋 `b578ba6`을 참고할 것.
+
 **Architecture:** `AllDayCell`은 `allDayRowHeight`(40px) 고정 높이의 단일 셀이라, `TimeGrid`가 사용하는 Union-Find + 그리디 인터벌 컬러링(시간축 좌우 stagger) 알고리즘은 적용 대상이 아니다 — `eventsForDate(date, allDay: true)`로 이미 특정 날짜로 필터링된 종일 이벤트는 전부 그 날짜를 공유하므로 항상 서로 겹치고, 시간축 자체가 없어 컬럼을 나눌 공간도 없다. 대신 TimeGrid에서 재사용 가능한 두 가지만 가져온다: (1) z-order 정렬 규칙(시작 시각 우선, 같으면 기간 짧은 것 우선)을 `calendar_events_utils.dart`의 공개 함수 `sortAllDayEventsForDisplay`로 추출해 테스트 가능하게 만들고, (2) TimeGrid의 N≥4 그룹 탭 처리(`showReservationListModal` 재사용)와 동일한 흐름을 `AllDayCell`의 N≥2 케이스에 적용한다. 정렬된 이벤트가 1건이면 기존과 동일하게 `ReservationCell` 전체를 표시하고, 2건 이상이면 대표 1건(정렬 결과의 첫 번째) + `_OverflowBadge`("+N-1")를 표시하며, 탭하면 `showReservationListModal` → 선택 → `onOpenDetailModal`로 이어지는, `TimeGrid._onCellTap`의 `groupEvents` 분기와 동일한 흐름을 사용한다.
 
 **Tech Stack:** Flutter, 기존 `reservation_list_modal.dart`(`showReservationListModal`) 재사용. 새 패키지 의존성 없음.
@@ -12,9 +14,10 @@
 
 - 커밋 메시지: 한국어, `<type>: #21 - <설명>` 형식
 - `dart analyze` 클린 유지 (freezed 필드 변경 없으므로 `build_runner` 재실행 불필요)
-- 이 프로젝트는 위젯 테스트(`testWidgets`)를 작성하지 않는 컨벤션을 따른다 (TimeGrid의 동등한 레이아웃 함수 `_computePositions`도 자동 테스트 없이 수동 시각 검증만 거쳤음). 따라서 순수 함수(`sortAllDayEventsForDisplay`)만 유닛 테스트하고, 위젯 렌더링/탭 동작은 이슈 체크리스트와 동일하게 `flutter run --target lib/main_dev.dart` 수동 검증으로 확인한다
+- ~~이 프로젝트는 위젯 테스트(`testWidgets`)를 작성하지 않는 컨벤션을 따른다~~ **정정 (2026-08-25):** 이 전제는 더 이상 유효하지 않다. 위젯 테스트를 작성하되 픽셀·색상·레이아웃 구조가 아닌 동작(behavior)만 검증하는 규칙이 CLAUDE.md "테스트 작성 규칙"으로 명문화되었다. 순수 함수는 유닛 테스트하고(`sortAllDayEventsForDisplay`, `allDayRowHeightFor`), 렌더링·탭 동작은 `all_day_row_test.dart`가 커버한다. 실기기 수동 검증은 그대로 병행한다
 - `all_day_row.dart`, `calendar_events_utils.dart`는 Presentation 레이어 — domain/data import 금지 규칙 준수 (기존과 동일, 이번 변경도 위반하지 않음)
 - 겹침 처리 방식은 사용자와 확인 완료: N=1은 기존 유지, N≥2는 전부 동일하게 "대표 1건 + `+N-1` 배지" 처리 (세로 분할 방식은 40px 고정 높이에 2줄 텍스트가 들어갈 공간이 부족해 배제)
+  - **정정 (2026-08-25):** 세로 분할은 이후 채택되었다. 행 높이를 고정하지 않고 보이는 3일 중 최대 종일 건수에 맞춰 최대 3칸까지 늘리는 방식으로 공간 문제를 해결했다 (`allDayRowHeightFor`). 배제 근거였던 "40px 고정"이라는 전제 자체가 바뀐 것이다.
 
 ---
 
