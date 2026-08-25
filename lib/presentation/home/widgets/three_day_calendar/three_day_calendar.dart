@@ -11,7 +11,6 @@ import 'package:studio_chance/presentation/commons/extensions/context_colors.dar
 import 'package:studio_chance/presentation/home/utils/calendar_events_utils.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/current_time_indicator.dart';
-import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/time_grid.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
@@ -297,14 +296,15 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
 
   /// 화면에 보이는 3일 중 가장 많은 종일 이벤트 수.
   /// 열마다 높이가 달라지면 종일 행이 어긋나므로 최대값으로 통일한다.
-  int _visibleMaxAllDayCount(List<ReservationDisplayData> allEvents) {
+  ///
+  /// [allDayCountByDate]는 [buildEventsFromReservations]가 미리 만들어 둔 맵이다 —
+  /// build마다(핀치 줌 중에는 매 프레임) 전체 이벤트를 다시 스캔하지 않기 위함.
+  int _visibleMaxAllDayCount(Map<DateTime, int> allDayCountByDate) {
     var maxCount = 0;
     for (int i = 0; i < threeDayVisibleColumnCount; i++) {
-      final count = eventsForDate(
-        allEvents,
-        _dateForPage(_visiblePage + i),
-        allDay: true,
-      ).length;
+      final date = _dateForPage(_visiblePage + i);
+      final count =
+          allDayCountByDate[DateTime(date.year, date.month, date.day)] ?? 0;
       if (count > maxCount) maxCount = count;
     }
     return maxCount;
@@ -391,11 +391,10 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         error: (_, _) => const <Reservation>[],
       ),
     ];
-    final (allEvents, reservationsMap) = buildEventsFromReservations(
-      reservationsList,
-    );
+    final (allEvents, reservationsMap, allDayCountByDate) =
+        buildEventsFromReservations(reservationsList);
     // 종일 행 높이는 보이는 3일이 공유 — 열마다 다르면 행이 어긋난다.
-    final maxAllDayCount = _visibleMaxAllDayCount(allEvents);
+    final maxAllDayCount = _visibleMaxAllDayCount(allDayCountByDate);
     final hasAllDayOverflow = maxAllDayCount >= 2;
     final allDayRowHeightShared = allDayRowHeightFor(
       maxCount: maxAllDayCount,

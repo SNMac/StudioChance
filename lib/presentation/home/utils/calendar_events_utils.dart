@@ -4,8 +4,13 @@ import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
 /// Reservation 목록을 화면 표시용 데이터 구조로 변환한다.
-/// 반환: (ReservationDisplayData 목록, id → Reservation 맵)
-(List<ReservationDisplayData>, Map<String, Reservation>)
+///
+/// 반환: (ReservationDisplayData 목록, id → Reservation 맵, 날짜 → 종일 예약 수 맵)
+///
+/// 세 번째 맵은 종일 행 높이 계산용이다. 날짜 키는 자정으로 정규화되며,
+/// [eventsForDate]의 종일 필터와 동일하게 시작일 기준으로 센다.
+/// 이미 도는 변환 루프에 편승시켜 호출부가 날짜마다 다시 스캔하지 않도록 한다.
+(List<ReservationDisplayData>, Map<String, Reservation>, Map<DateTime, int>)
 buildEventsFromReservations(List<Reservation> reservations) {
   final summaries = {
     for (final r in reservations)
@@ -23,13 +28,19 @@ buildEventsFromReservations(List<Reservation> reservations) {
       ),
   };
 
-  final events = summaries.values
-      .map((s) => ReservationDisplayData(summary: s))
-      .toList();
+  final events = <ReservationDisplayData>[];
+  final allDayCountByDate = <DateTime, int>{};
+
+  for (final s in summaries.values) {
+    events.add(ReservationDisplayData(summary: s));
+    if (!s.isAllDay) continue;
+    final date = DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
+    allDayCountByDate[date] = (allDayCountByDate[date] ?? 0) + 1;
+  }
 
   final reservationsMap = {for (final r in reservations) r.id: r};
 
-  return (events, reservationsMap);
+  return (events, reservationsMap, allDayCountByDate);
 }
 
 /// 특정 날짜에 표시할 이벤트를 필터링한다.

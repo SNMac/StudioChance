@@ -188,7 +188,7 @@ void main() {
 
   group('buildEventsFromReservations', () {
     test('Reservation을 ReservationDisplayData와 id→Reservation 맵으로 변환한다', () {
-      final (events, map) = buildEventsFromReservations([fakeReservation]);
+      final (events, map, _) = buildEventsFromReservations([fakeReservation]);
 
       expect(events.length, 1);
       expect(events.first.summary.id, fakeReservation.id);
@@ -196,17 +196,18 @@ void main() {
     });
 
     test('빈 목록 입력 시 빈 결과를 반환한다', () {
-      final (events, map) = buildEventsFromReservations([]);
+      final (events, map, allDayCounts) = buildEventsFromReservations([]);
 
       expect(events, isEmpty);
       expect(map, isEmpty);
+      expect(allDayCounts, isEmpty);
     });
 
     test('ReservationSummary 필드가 Reservation의 해당 필드와 일치한다', () {
       final reservation = fakeReservation.copyWith(
         createdAt: DateTime(2026, 4, 30, 9, 0),
       );
-      final (events, _) = buildEventsFromReservations([reservation]);
+      final (events, _, _) = buildEventsFromReservations([reservation]);
 
       final summary = events.first.summary;
       expect(summary.id, reservation.id);
@@ -221,11 +222,53 @@ void main() {
       expect(summary.createdAt, reservation.createdAt);
     });
 
+    test('종일 예약을 시작일 기준으로 세어 날짜별 건수를 반환한다', () {
+      final day = DateTime(2026, 8, 25);
+      final other = DateTime(2026, 8, 26);
+      final r1 = fakeReservation.copyWith(
+        id: 'a',
+        isAllDay: true,
+        startTime: day,
+        endTime: day.add(const Duration(hours: 23)),
+      );
+      final r2 = fakeReservation.copyWith(
+        id: 'b',
+        isAllDay: true,
+        startTime: day.add(const Duration(hours: 9)),
+        endTime: day.add(const Duration(hours: 23)),
+      );
+      final r3 = fakeReservation.copyWith(
+        id: 'c',
+        isAllDay: true,
+        startTime: other,
+        endTime: other.add(const Duration(hours: 23)),
+      );
+
+      final (_, _, allDayCounts) = buildEventsFromReservations([r1, r2, r3]);
+
+      expect(allDayCounts[day], 2);
+      expect(allDayCounts[other], 1);
+    });
+
+    test('시간대 예약은 날짜별 종일 건수에 포함하지 않는다', () {
+      final day = DateTime(2026, 8, 25);
+      final timed = fakeReservation.copyWith(
+        id: 'timed',
+        isAllDay: false,
+        startTime: day.add(const Duration(hours: 10)),
+        endTime: day.add(const Duration(hours: 12)),
+      );
+
+      final (_, _, allDayCounts) = buildEventsFromReservations([timed]);
+
+      expect(allDayCounts[day], isNull);
+    });
+
     test('여러 Reservation 입력 시 모두 변환된다', () {
       final r1 = fakeReservation.copyWith(id: 'res-001');
       final r2 = fakeReservation.copyWith(id: 'res-002');
 
-      final (events, map) = buildEventsFromReservations([r1, r2]);
+      final (events, map, _) = buildEventsFromReservations([r1, r2]);
 
       expect(events.length, 2);
       expect(map.length, 2);
