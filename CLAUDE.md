@@ -124,6 +124,11 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 포맷 전용 변경(`dart format`이 손대지 않은 기존 파일까지 재배치한 결과)은 기능 커밋에 섞지 말고 별도 `style:` 커밋으로 분리 — 리뷰 시 실제 변경을 가려내기 어려워짐
   - `dart format`은 디렉터리 전체가 아니라 **수정한 파일만** 지정해서 실행할 것
 - 기본 브랜치: `develop` (PR 대상)
+- PR 제목: `<Type>/#<이슈번호> <한국어 설명>` — 커밋 메시지 형식(`<type>: #N - ...`)과 다름에 주의
+  - Type: `Feature`, `Bug`, `Refactor` (첫 글자 대문자)
+  - 예: `Feature/#17 OCR 점포·공간 자동 선택`, `Bug/#35 시스템 글자 크기 설정에 따른 레이아웃 깨짐 방지`
+- PR 본문: `.github/PULL_REQUEST_TEMPLATE.md` 형식을 따를 것 (연관된 이슈 / 작업 내용 / 스크린샷)
+- 이슈 본문: `.github/ISSUE_TEMPLATE/issue_template.md` 형식을 따를 것 (이슈 내용 / 상세 내용 / 체크리스트)
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
 ## 빌드 및 실행
