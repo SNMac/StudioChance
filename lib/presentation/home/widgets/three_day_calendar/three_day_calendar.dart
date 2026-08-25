@@ -528,28 +528,26 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                       duration: allDayExpandDuration,
                       curve: Curves.easeOut,
                       height: allDayRowHeightShared,
-                      // 토글은 시간 레이블과 같은 우측 정렬, "종일" 텍스트는 중앙
-                      alignment: hasAllDayOverflow
-                          ? AlignmentDirectional.topEnd
-                          : Alignment.topCenter,
+                      // 토글은 시간 열 전체를 터치 영역으로 쓰고, 아이콘만 우측에 붙는다
+                      alignment: AlignmentDirectional.topStart,
                       onEnd: _clampVerticalOffsetToExtent,
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.only(
-                          top: 2,
-                          end: hasAllDayOverflow ? 2 : 0,
-                        ),
-                        child: hasAllDayOverflow
-                            ? _AllDayToggleButton(
-                                isExpanded: _isAllDayExpanded,
-                                onTap: _toggleAllDayExpanded,
-                              )
-                            : Text(
-                                '종일',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(color: context.secondaryLabel),
+                      child: hasAllDayOverflow
+                          ? _AllDayToggleButton(
+                              isExpanded: _isAllDayExpanded,
+                              onTap: _toggleAllDayExpanded,
+                            )
+                          : SizedBox(
+                              width: timeColumnWidth,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  '종일',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: context.secondaryLabel),
+                                ),
                               ),
-                      ),
+                            ),
                     ),
                     Container(
                       height: calendarDividerThickness,
@@ -740,10 +738,21 @@ class _AllDayToggleButton extends StatelessWidget {
       child: Semantics(
         button: true,
         label: isExpanded ? '종일 예약 접기' : '종일 예약 펼치기',
-        child: Icon(
-          CupertinoIcons.chevron_up_chevron_down,
-          size: allDayToggleIconSize,
-          color: context.secondaryLabel,
+        // 아이콘(14px)만으로는 터치 영역이 너무 좁다 — 시간 열 폭 전체를 히트 영역으로.
+        child: SizedBox(
+          width: timeColumnWidth,
+          height: allDayToggleHitHeight,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(top: 2, end: 2),
+            child: Align(
+              alignment: AlignmentDirectional.topEnd,
+              child: Icon(
+                CupertinoIcons.chevron_up_chevron_down,
+                size: allDayToggleIconSize,
+                color: context.secondaryLabel,
+              ),
+            ),
+          ),
         ),
       ),
     );

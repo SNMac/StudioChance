@@ -19,6 +19,9 @@ const double allDayRowHeight = 40.0;
 /// 종일 행 접기/펼치기 토글 아이콘 크기.
 const double allDayToggleIconSize = 14.0;
 
+/// 종일 행 접기/펼치기 토글의 터치 영역 높이 (행 높이에서 상단 여백 제외).
+const double allDayToggleHitHeight = allDayRowHeight - 2;
+
 /// 종일 행 접기/펼치기 전환 시간.
 const Duration allDayExpandDuration = Duration(milliseconds: 200);
 
