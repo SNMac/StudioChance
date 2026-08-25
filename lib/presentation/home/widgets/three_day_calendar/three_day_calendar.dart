@@ -646,8 +646,6 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
                               curve: Curves.easeOut,
                               height: allDayRowHeightShared,
                               alignment: Alignment.topCenter,
-                              clipBehavior: Clip.hardEdge,
-                              decoration: const BoxDecoration(),
                               child: AllDayCell(
                                 events: eventsForDate(
                                   allEvents,

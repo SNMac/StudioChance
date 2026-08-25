@@ -76,11 +76,21 @@ class _AllDayCellState extends State<AllDayCell> {
       return const SizedBox(height: allDayRowHeight);
     }
 
-    return AbsorbPointer(
-      absorbing: widget.isInteractionBlocked,
-      child: widget.isExpanded && hasOverflow
-          ? _buildExpanded(sortedEvents)
-          : _buildCollapsed(sortedEvents, hasOverflow: hasOverflow),
+    // 접기/펼치기 애니메이션 중에는 행 높이가 아직 내용보다 작다.
+    // OverflowBox로 내용을 자연 높이대로 배치하고 넘치는 부분만 잘라낸다
+    // (그냥 두면 Column이 RenderFlex 오버플로우 경고를 낸다).
+    return ClipRect(
+      child: OverflowBox(
+        alignment: Alignment.topCenter,
+        minHeight: 0,
+        maxHeight: double.infinity,
+        child: AbsorbPointer(
+          absorbing: widget.isInteractionBlocked,
+          child: widget.isExpanded && hasOverflow
+              ? _buildExpanded(sortedEvents)
+              : _buildCollapsed(sortedEvents, hasOverflow: hasOverflow),
+        ),
+      ),
     );
   }
 

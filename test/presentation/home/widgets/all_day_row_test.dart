@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
@@ -44,6 +45,7 @@ Future<void> _pumpAllDayCell(
   WidgetTester tester, {
   required List<ReservationDisplayData> events,
   required bool isExpanded,
+  double? height,
 }) async {
   final reservations = {
     for (final event in events) event.summary.id: _reservationFor(event),
@@ -54,6 +56,7 @@ Future<void> _pumpAllDayCell(
       home: Scaffold(
         body: SizedBox(
           width: 120,
+          height: height,
           child: AllDayCell(
             events: events,
             reservations: reservations,
@@ -106,6 +109,23 @@ void main() {
       expect(find.textContaining('가나다'), findsOneWidget);
       expect(find.textContaining('라마바'), findsNothing);
       expect(find.text('+1'), findsOneWidget);
+    });
+
+    // 접힘→펼침 애니메이션 중에는 행 높이가 아직 1칸인데 내용은 이미 펼침 상태다.
+    testWidgets('행 높이가 내용보다 작아도 오버플로우하지 않는다', (tester) async {
+      final events = [
+        for (int i = 1; i <= 4; i++)
+          _makeAllDayEvent(id: 'e$i', customerName: '고객$i', createdAtMinute: i),
+      ];
+
+      await _pumpAllDayCell(
+        tester,
+        events: events,
+        isExpanded: true,
+        height: allDayRowHeight,
+      );
+
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('펼침 상태여도 1건이면 더보기 행이 없다', (tester) async {
