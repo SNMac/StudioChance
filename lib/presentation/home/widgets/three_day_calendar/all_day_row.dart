@@ -14,6 +14,7 @@ class AllDayCell extends StatefulWidget {
     required this.reservations,
     required this.onOpenDetailModal,
     required this.isInteractionBlocked,
+    required this.isExpanded,
   });
 
   final List<ReservationDisplayData> events;
@@ -26,6 +27,11 @@ class AllDayCell extends StatefulWidget {
 
   /// true이면 셀 터치를 완전히 차단한다 (로딩 중 중복 탭 방지).
   final bool isInteractionBlocked;
+
+  /// true이면 겹친 종일 예약을 세로로 쌓아 표시한다.
+  /// false이면 대표 1건 + "+N" 배지로 접는다.
+  /// 행 높이는 3일 열이 공유하므로 부모(ThreeDayCalendar)가 결정한다.
+  final bool isExpanded;
 
   @override
   State<AllDayCell> createState() => _AllDayCellState();
@@ -66,49 +72,118 @@ class _AllDayCellState extends State<AllDayCell> {
     final sortedEvents = sortAllDayEventsForDisplay(widget.events);
     final hasOverflow = sortedEvents.length >= 2;
 
+    if (sortedEvents.isEmpty) {
+      return const SizedBox(height: allDayRowHeight);
+    }
+
     return AbsorbPointer(
       absorbing: widget.isInteractionBlocked,
-      child: SizedBox(
-        height: allDayRowHeight,
-        child: sortedEvents.isEmpty
-            ? const SizedBox.shrink()
-            : Stack(
-                children: [
-                  Positioned(
-                    left: 1,
-                    right: 8,
-                    top: 1,
-                    bottom: 4,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => hasOverflow
-                          ? _onGroupTap(sortedEvents)
-                          : _onCellTap(sortedEvents.first),
-                      child: Stack(
-                        children: [
-                          ReservationCell(
-                            data: sortedEvents.first,
-                            clipContent: hasOverflow,
-                            isHighlighted: _highlightedId ==
-                                sortedEvents.first.summary.id,
-                            contentRightInset: hasOverflow
-                                ? allDayOverflowBadgeReservedWidth
-                                : 0,
-                          ),
-                          if (hasOverflow)
-                            Positioned(
-                              top: 2,
-                              right: 4,
-                              child: _OverflowBadge(
-                                count: sortedEvents.length - 1,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      child: widget.isExpanded && hasOverflow
+          ? _buildExpanded(sortedEvents)
+          : _buildCollapsed(sortedEvents, hasOverflow: hasOverflow),
+    );
+  }
+
+  /// 대표 1건 + "+N" 배지 (1건이거나 접힘 상태).
+  Widget _buildCollapsed(
+    List<ReservationDisplayData> sortedEvents, {
+    required bool hasOverflow,
+  }) {
+    return _Slot(
+      onTap: () => hasOverflow
+          ? _onGroupTap(sortedEvents)
+          : _onCellTap(sortedEvents.first),
+      child: Stack(
+        children: [
+          ReservationCell(
+            data: sortedEvents.first,
+            clipContent: hasOverflow,
+            isHighlighted: _highlightedId == sortedEvents.first.summary.id,
+            contentRightInset: hasOverflow
+                ? allDayOverflowBadgeReservedWidth
+                : 0,
+          ),
+          if (hasOverflow)
+            Positioned(
+              top: 2,
+              right: 4,
+              child: _OverflowBadge(count: sortedEvents.length - 1),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 세로로 쌓기. [allDayMaxStackCount]칸을 넘으면 마지막 칸이 "+N건 더보기"가 된다.
+  Widget _buildExpanded(List<ReservationDisplayData> sortedEvents) {
+    final showsMoreRow = sortedEvents.length > allDayMaxStackCount;
+    final cellCount = showsMoreRow
+        ? allDayMaxStackCount - 1
+        : sortedEvents.length;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final event in sortedEvents.take(cellCount))
+          _Slot(
+            onTap: () => _onCellTap(event),
+            child: ReservationCell(
+              data: event,
+              isHighlighted: _highlightedId == event.summary.id,
+            ),
+          ),
+        if (showsMoreRow)
+          _Slot(
+            onTap: () => _onGroupTap(sortedEvents),
+            child: _MoreRow(count: sortedEvents.length - cellCount),
+          ),
+      ],
+    );
+  }
+}
+
+/// 종일 행의 한 칸 (높이 [allDayRowHeight], 셀 여백 포함).
+class _Slot extends StatelessWidget {
+  const _Slot({required this.child, required this.onTap});
+
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: allDayRowHeight,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(1, 1, 8, 4),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// 펼침 상태에서 최대 칸 수를 넘은 나머지를 안내하는 행. 탭하면 목록 모달.
+class _MoreRow extends StatelessWidget {
+  const _MoreRow({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 4),
+        child: Text(
+          '+$count건 더보기',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: context.secondaryLabel,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -136,10 +211,10 @@ class _OverflowBadge extends StatelessWidget {
         // Align이 라인박스 전체를 기준으로 중앙 정렬하면 살짝 치우쳐 보인다.
         // height:1.0으로 줄박스를 글자 크기에 맞게 좁혀 정확히 중앙에 오도록 한다.
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: context.secondaryLabel,
-              fontWeight: FontWeight.w600,
-              height: 1.0,
-            ),
+          color: context.secondaryLabel,
+          fontWeight: FontWeight.w600,
+          height: 1.0,
+        ),
       ),
     );
   }

@@ -77,8 +77,7 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
       _ReservationDetailModalState();
 }
 
-class _ReservationDetailModalState
-    extends ConsumerState<ReservationDetailModal>
+class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     with SingleTickerProviderStateMixin {
   // ── 모드 상태 ─────────────────────────────────────────────────────────────
   bool _isEditing = false;
@@ -208,7 +207,9 @@ class _ReservationDetailModalState
     _headCountController = TextEditingController(
       text: r.headCount > 0 ? r.headCount.toString() : '',
     );
-    _phoneController = TextEditingController(text: r.customerPhone.formattedPhone);
+    _phoneController = TextEditingController(
+      text: r.customerPhone.formattedPhone,
+    );
     _memoController = TextEditingController(text: r.memo);
     _calculatedPrice = r.calculatedPrice;
     _adjustmentController = TextEditingController(
@@ -231,13 +232,16 @@ class _ReservationDetailModalState
     _phoneController.text = r.customerPhone.formattedPhone;
     _memoController.text = r.memo;
     _calculatedPrice = r.calculatedPrice;
-    _adjustmentController.text =
-        r.priceAdjustment != 0 ? r.priceAdjustment.formattedPrice : '';
+    _adjustmentController.text = r.priceAdjustment != 0
+        ? r.priceAdjustment.formattedPrice
+        : '';
     _spaceOptionId = r.spaceOptionId;
   }
 
   void _onAdjustmentFocusChanged() {
-    final raw = _adjustmentController.text.replaceAll(',', '').replaceAll('원', '');
+    final raw = _adjustmentController.text
+        .replaceAll(',', '')
+        .replaceAll('원', '');
     if (_adjustmentFocusNode.hasFocus) {
       _adjustmentController.value = TextEditingValue(
         text: raw,
@@ -269,7 +273,10 @@ class _ReservationDetailModalState
 
   // ── 가격 계산 ─────────────────────────────────────────────────────────────
 
-  void _loadSpaceOptions(String storeId, {List<String> ocrUnmatched = const []}) {
+  void _loadSpaceOptions(
+    String storeId, {
+    List<String> ocrUnmatched = const [],
+  }) {
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getStoreSpaceOptions(storeId)
@@ -281,7 +288,9 @@ class _ReservationDetailModalState
             _spaceOptions = spaces;
             if (spaces != null && spaces.isNotEmpty) {
               if (pending != null) {
-                final matched = spaces.where((s) => s.name == pending).firstOrNull;
+                final matched = spaces
+                    .where((s) => s.name == pending)
+                    .firstOrNull;
                 if (matched != null) {
                   _spaceOptionId = matched.id;
                 } else {
@@ -318,7 +327,11 @@ class _ReservationDetailModalState
     final spaces = _spaceOptions;
     if (spaces == null || spaces.isEmpty) return;
     final priceSetting = _spaceOptionId != null
-        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        ? (spaces
+                  .where((s) => s.id == _spaceOptionId)
+                  .firstOrNull
+                  ?.priceSetting ??
+              spaces.first.priceSetting)
         : spaces.first.priceSetting;
     final headCount = int.tryParse(_headCountController.text) ?? 0;
     final price = priceSetting.calculatePrice(
@@ -335,7 +348,11 @@ class _ReservationDetailModalState
   void _applyInitialPrice(List<SpaceOption> spaces) {
     if (spaces.isEmpty) return;
     final priceSetting = _spaceOptionId != null
-        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        ? (spaces
+                  .where((s) => s.id == _spaceOptionId)
+                  .firstOrNull
+                  ?.priceSetting ??
+              spaces.first.priceSetting)
         : spaces.first.priceSetting;
     final headCount = int.tryParse(_headCountController.text) ?? 0;
     _calculatedPrice = priceSetting.calculatePrice(
@@ -389,8 +406,9 @@ class _ReservationDetailModalState
     StoreSummary? matchedStore;
     if (ocrStoreName != null && _availableStores.length > 1) {
       // 동일 이름 점포가 2개 이상이면 어느 쪽인지 특정할 수 없으므로 모호한 매칭으로 처리
-      final candidates =
-          _availableStores.where((s) => s.name == ocrStoreName).toList();
+      final candidates = _availableStores
+          .where((s) => s.name == ocrStoreName)
+          .toList();
       matchedStore = candidates.length == 1 ? candidates.first : null;
       if (matchedStore != null) {
         setState(() {
@@ -456,7 +474,10 @@ class _ReservationDetailModalState
     FocusScope.of(context).unfocus();
     final calculatedPrice = _calculatedPrice;
     final priceAdjustment =
-        int.tryParse(_adjustmentController.text.replaceAll(',', '').replaceAll('원', '')) ?? 0;
+        int.tryParse(
+          _adjustmentController.text.replaceAll(',', '').replaceAll('원', ''),
+        ) ??
+        0;
 
     final updated = widget.reservation.copyWith(
       storeSummary: _storeSummary,
@@ -524,8 +545,11 @@ class _ReservationDetailModalState
         );
         // iCal 관례: 종일 이벤트 endTime = 다음날 자정(exclusive).
         // _endTime.day 기준으로 설정하면 endTime이 이미 day+1일 때 2일짜리로 늘어나는 버그 발생.
-        _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
-            .add(const Duration(days: 1));
+        _endTime = DateTime(
+          _startTime.year,
+          _startTime.month,
+          _startTime.day,
+        ).add(const Duration(days: 1));
       }
       _isStartPickerOpen = false;
       _isEndPickerOpen = false;
@@ -590,11 +614,11 @@ class _ReservationDetailModalState
               },
               onPointerMove: (event) {
                 if (_isEditing) return;
-                final delta =
-                    -event.delta.dy / widget.maxAvailableHeight;
-                _sheetController.value =
-                    (_sheetController.value + delta)
-                        .clamp(_kModalInitialSize, _kModalMaxSize);
+                final delta = -event.delta.dy / widget.maxAvailableHeight;
+                _sheetController.value = (_sheetController.value + delta).clamp(
+                  _kModalInitialSize,
+                  _kModalMaxSize,
+                );
               },
               onPointerUp: (event) {
                 if (_isEditing) return;
@@ -707,8 +731,7 @@ class _ReservationDetailModalState
             offstage: _isEditing,
             child: SingleChildScrollView(
               controller: _readOnlyController,
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.manual,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
               child: _buildReadOnlyBody(textTheme),
             ),
           ),
@@ -718,8 +741,7 @@ class _ReservationDetailModalState
             offstage: !_isEditing,
             child: SingleChildScrollView(
               controller: _editController,
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: _buildEditBody(textTheme),
             ),
           ),
@@ -763,7 +785,9 @@ class _ReservationDetailModalState
     if (!confirmed || !mounted) return;
 
     // 이미지 확정 후 모든 점포의 공간 옵션 병렬 조회
-    final notifier = ref.read(homeReservationActionsControllerProvider.notifier);
+    final notifier = ref.read(
+      homeReservationActionsControllerProvider.notifier,
+    );
     final allSpaceOptions = await Future.wait(
       _availableStores.map((s) => notifier.getStoreSpaceOptions(s.id)),
     );
@@ -771,22 +795,27 @@ class _ReservationDetailModalState
 
     // 점포명이 프롬프트의 매칭 키이므로, 이름이 중복되면 목록 전달 자체를 생략
     final storeNames = _availableStores.map((s) => s.name).toList();
-    final hasDuplicateStoreNames = storeNames.toSet().length != storeNames.length;
+    final hasDuplicateStoreNames =
+        storeNames.toSet().length != storeNames.length;
 
     final storeSpaceMap = <String, List<String>>{};
     if (!hasDuplicateStoreNames) {
       for (var i = 0; i < _availableStores.length; i++) {
         final spaces = allSpaceOptions[i];
         if (spaces != null && spaces.isNotEmpty) {
-          storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+          storeSpaceMap[_availableStores[i].name] = spaces
+              .map((s) => s.name)
+              .toList();
         }
       }
     }
 
-    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(
-      bytes,
-      storeSpaceMap: storeSpaceMap.isNotEmpty ? storeSpaceMap : null,
-    );
+    ref
+        .read(reservationOcrControllerProvider.notifier)
+        .analyzeImage(
+          bytes,
+          storeSpaceMap: storeSpaceMap.isNotEmpty ? storeSpaceMap : null,
+        );
   }
 
   Widget _buildOcrButton() {
@@ -798,14 +827,14 @@ class _ReservationDetailModalState
       fontWeight: FontWeight.normal,
       onPressed: isLoading
           ? () => showCustomAlertDialog(
-                context: context,
-                title: '자동 입력 취소',
-                content: '스크린샷 분석을 중단할까요?',
-                confirmText: '중단',
-                cancelText: '계속',
-                onConfirmAfterPop: () =>
-                    ref.read(reservationOcrControllerProvider.notifier).cancel(),
-              )
+              context: context,
+              title: '자동 입력 취소',
+              content: '스크린샷 분석을 중단할까요?',
+              confirmText: '중단',
+              cancelText: '계속',
+              onConfirmAfterPop: () =>
+                  ref.read(reservationOcrControllerProvider.notifier).cancel(),
+            )
           : _handleOcrButtonTap,
     );
   }
@@ -846,7 +875,11 @@ class _ReservationDetailModalState
   Widget _buildSection1ReadOnly() {
     final spaceOptions = _spaceOptions;
     final spaceName = spaceOptions != null && spaceOptions.isNotEmpty
-        ? (spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull?.name ?? spaceOptions.first.name)
+        ? (spaceOptions
+                  .where((s) => s.id == _spaceOptionId)
+                  .firstOrNull
+                  ?.name ??
+              spaceOptions.first.name)
         : null;
     return GroupedFormContainer(
       children: [
@@ -863,14 +896,8 @@ class _ReservationDetailModalState
           ),
         ),
         if (spaceName != null)
-          TitleTextLabel(
-            title: '예약 공간',
-            content: spaceName,
-          ),
-        TitleTextLabel(
-          title: '예약 상태',
-          content: _status.displayName,
-        ),
+          TitleTextLabel(title: '예약 공간', content: spaceName),
+        TitleTextLabel(title: '예약 상태', content: _status.displayName),
       ],
     );
   }
@@ -913,7 +940,11 @@ class _ReservationDetailModalState
             ),
             child: TitlePopupButton<SpaceOption>(
               title: '예약 공간',
-              selectedValue: spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? spaceOptions.first,
+              selectedValue:
+                  spaceOptions
+                      .where((s) => s.id == _spaceOptionId)
+                      .firstOrNull ??
+                  spaceOptions.first,
               items: spaceOptions,
               itemLabelBuilder: (s) => s.name,
               onSelected: (s) {
@@ -943,14 +974,8 @@ class _ReservationDetailModalState
   Widget _buildSection2ReadOnly() {
     return GroupedFormContainer(
       children: [
-        TitleTextLabel(
-          title: '예약자명',
-          content: _nameController.text,
-        ),
-        TitleTextLabel(
-          title: '인원',
-          content: _headCountController.text,
-        ),
+        TitleTextLabel(title: '예약자명', content: _nameController.text),
+        TitleTextLabel(title: '인원', content: _headCountController.text),
         TitleTextLabel(
           title: '연락처',
           content: _phoneController.text, // 이미 하이픈 포맷 적용됨
@@ -991,9 +1016,7 @@ class _ReservationDetailModalState
           placeholder: '메모',
           controller: _memoController,
           maxLength: maxMemoCharCount,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(maxMemoCharCount),
-          ],
+          inputFormatters: [LengthLimitingTextInputFormatter(maxMemoCharCount)],
         ),
       ],
     );
@@ -1009,11 +1032,7 @@ class _ReservationDetailModalState
 
     return GroupedFormContainer(
       children: [
-        TitleSwitchButton(
-          title: '하루종일',
-          value: _isAllDay,
-          onChanged: null,
-        ),
+        TitleSwitchButton(title: '하루종일', value: _isAllDay, onChanged: null),
         TitleTextLabel(
           title: _isAllDay ? '입실 일' : '입실 일시',
           content: _startTime.formattedDateTime(dateOnly: _isAllDay),
@@ -1028,8 +1047,9 @@ class _ReservationDetailModalState
 
   Widget _buildSection3Edit() {
     // 종일 이벤트 picker 표시용: endTime은 다음날 자정(exclusive)이므로 -1일 보정
-    final displayEndTime =
-        _isAllDay ? _endTime.subtract(const Duration(days: 1)) : _endTime;
+    final displayEndTime = _isAllDay
+        ? _endTime.subtract(const Duration(days: 1))
+        : _endTime;
 
     return GroupedFormContainer(
       children: [
@@ -1097,25 +1117,16 @@ class _ReservationDetailModalState
 
   Widget _buildSection4ReadOnly() {
     final adjustment =
-        int.tryParse(_adjustmentController.text.replaceAll(',', '').replaceAll('원', '')) ?? 0;
+        int.tryParse(
+          _adjustmentController.text.replaceAll(',', '').replaceAll('원', ''),
+        ) ??
+        0;
     return GroupedFormContainer(
       children: [
-        TitleTextLabel(
-          title: '예약 플랫폼',
-          content: _platform.displayName,
-        ),
-        TitleTextLabel(
-          title: '결제 방식',
-          content: _paymentMethod.displayName,
-        ),
-        TitleTextLabel(
-          title: '요금',
-          content: _calculatedPrice.formattedPrice,
-        ),
-        TitleTextLabel(
-          title: '추가 요금/할인',
-          content: adjustment.formattedPrice,
-        ),
+        TitleTextLabel(title: '예약 플랫폼', content: _platform.displayName),
+        TitleTextLabel(title: '결제 방식', content: _paymentMethod.displayName),
+        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
+        TitleTextLabel(title: '추가 요금/할인', content: adjustment.formattedPrice),
         TitleTextLabel(
           title: '최종 요금',
           content: (_calculatedPrice + adjustment).formattedPrice,
@@ -1126,7 +1137,10 @@ class _ReservationDetailModalState
 
   Widget _buildSection4Edit(TextTheme textTheme) {
     final adjustment =
-        int.tryParse(_adjustmentController.text.replaceAll(',', '').replaceAll('원', '')) ?? 0;
+        int.tryParse(
+          _adjustmentController.text.replaceAll(',', '').replaceAll('원', ''),
+        ) ??
+        0;
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
@@ -1135,9 +1149,7 @@ class _ReservationDetailModalState
         ),
         child: Text(
           '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
-          style: textTheme.labelMedium?.copyWith(
-            color: context.secondaryLabel,
-          ),
+          style: textTheme.labelMedium?.copyWith(color: context.secondaryLabel),
         ),
       ),
       children: [
@@ -1165,17 +1177,16 @@ class _ReservationDetailModalState
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextLabel(
-          title: '요금',
-          content: _calculatedPrice.formattedPrice,
-        ),
+        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
           focusNode: _adjustmentFocusNode,
           onChanged: (_) => setState(() {}),
           keyboardType: const TextInputType.numberWithOptions(signed: true),
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[-0-9]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[-0-9]')),
+          ],
         ),
         TitleTextLabel(
           title: '최종 요금',
@@ -1196,9 +1207,7 @@ class _ReservationDetailModalState
         ),
         child: Text(
           '$_reservationCount번째 예약입니다.',
-          style: textTheme.bodyMedium?.copyWith(
-            color: context.secondaryLabel,
-          ),
+          style: textTheme.bodyMedium?.copyWith(color: context.secondaryLabel),
         ),
       ),
       children: [
