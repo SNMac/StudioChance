@@ -125,12 +125,17 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
 ## 빌드 및 실행
-- `flutter run --target lib/main_dev.dart` - dev 플레이버 실행 (App Check 항상 Debug Provider)
-- `flutter run --target lib/main_prod.dart` - prod 플레이버 실행 (릴리즈: Play Integrity / App Attest)
+- `flutter run --flavor dev --target lib/main_dev.dart` - dev 플레이버 실행 (App Check 항상 Debug Provider)
+- `flutter run --flavor prod --target lib/main_prod.dart` - prod 플레이버 실행 (릴리즈: Play Integrity / App Attest)
+  - `--flavor` 생략 시 Android 빌드가 APK를 찾지 못하고 실패한다 (productFlavors 정의됨)
 - `dart run build_runner build --delete-conflicting-outputs` - 코드 생성
 - `dart run build_runner watch` - 코드 생성 (watch 모드)
 - `flutter test` - 테스트 실행
 - `dart analyze` - 정적 분석
+
+## 테스트 작성 규칙
+- 위젯 테스트는 픽셀 크기·색상 hex·폰트 스타일·레이아웃 구조 등 UI 구현 디테일을 직접 assert하지 않음 — 상태 전이·콜백 호출·크래시 방지 등 동작(behavior)만 검증 (UI 리팩터링 시 무관한 테스트가 깨지는 것 방지)
+- 예외: 테스트 대상 자체가 색상 팔레트 등 디자인 토큰 lookup table인 경우(`store_color_extensions_test.dart`)는 정확한 값 검증이 불가피하므로 허용
 
 ## 폰트 및 디자인
 - 기본 폰트: Pretendard (400, 500, 600, 700)

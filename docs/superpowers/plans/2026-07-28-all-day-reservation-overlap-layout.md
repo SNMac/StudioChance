@@ -319,7 +319,7 @@ class _OverflowBadge extends StatelessWidget {
 Run: `dart analyze lib/presentation/home/widgets/three_day_calendar/all_day_row.dart lib/constants/ui_constants.dart`
 Expected: 에러 없음
 
-- [ ] **Step 4: 앱 실행 후 수동 검증**
+- [x] **Step 4: 앱 실행 후 수동 검증**
 
 Run: `flutter run --target lib/main_dev.dart`
 홈 화면(3일 캘린더) → 같은 날짜에 종일 예약을 1건/2건/4건 등록 후 다음을 확인한다 (이슈 #21 체크리스트와 동일):
@@ -328,7 +328,18 @@ Run: `flutter run --target lib/main_dev.dart`
 - 대표 셀 또는 배지 아무 곳이나 탭 → 예약 목록 모달이 열리고, 목록에서 항목 선택 → 상세 모달로 정상 연결된다
 - 로딩 중(`isInteractionBlocked=true`)에는 셀 탭이 차단된다 (기존 `AbsorbPointer` 동작 유지 확인)
 
-**미완료:** SDD 실행 환경(subagent 샌드박스)에 iOS/Android 시뮬레이터가 없어 이 단계는 수행하지 못했다. `dart analyze` 클린 확인과 브리프 코드 대 diff 1:1 대조로 구조적 정합성만 검증됨. 병합 전 사람이 직접 `flutter run --target lib/main_dev.dart`로 위 4가지 항목을 확인해야 한다.
+**완료 (2026-08-25, Android 실기기 SM-G977N):** 위 4가지 항목을 실기기에서 모두 확인했다.
+
+- 1건: `ReservationCell` 전체 표시, 배지 없음, 연락처 잘림 없음
+- 2건 / 4건: 대표 1건 + `+1` / `+3` 배지, 배지-텍스트 겹침 없음
+- 셀 탭·배지 탭 → 예약 목록 모달 → 항목 선택 → 상세 모달 정상 연결
+- 정렬은 생성 시각 순(`Charlie → Alice → Bob → Dave`)으로, 예약자명 순이 아님을 확인 (c4dca99 의도대로)
+
+**미검증 1건:** 로딩 중 탭 차단(`isInteractionBlocked=true`)은 타이밍상 실기기 재현이 어려워
+`all_day_row.dart`의 `AbsorbPointer(absorbing: widget.isInteractionBlocked)` 코드 확인으로 대체했다.
+
+**이후 설계 변경:** 이 플랜의 "대표 1건 + 배지"는 접힘 상태로 유지되고,
+기본 표시는 노션 캘린더식 세로 스택 + 접기/펼치기 토글로 바뀌었다 (b578ba6). 자세한 내용은 이슈 #21 참고.
 
 - [x] **Step 5: 커밋**
 
