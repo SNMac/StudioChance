@@ -35,9 +35,13 @@ class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
 
   void _scheduleNextUpdate() {
     final now = DateTime.now();
-    final nextMinute =
-        DateTime(now.year, now.month, now.day, now.hour, now.minute)
-            .add(const Duration(minutes: 1));
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 1));
     _timer = Timer(nextMinute.difference(now), () {
       if (!mounted) return;
       setState(() {});
@@ -73,10 +77,10 @@ class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
         child: Text(
           timeText,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 10,
-                height: 1.0,
-                color: context.white,
-              ),
+            fontSize: 10,
+            height: 1.0,
+            color: context.white,
+          ),
         ),
       ),
     );
@@ -111,9 +115,13 @@ class _CurrentTimeLineState extends State<CurrentTimeLine> {
 
   void _scheduleNextUpdate() {
     final now = DateTime.now();
-    final nextMinute =
-        DateTime(now.year, now.month, now.day, now.hour, now.minute)
-            .add(const Duration(minutes: 1));
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 1));
     _timer = Timer(nextMinute.difference(now), () {
       if (!mounted) return;
       setState(() {});
@@ -133,7 +141,8 @@ class _CurrentTimeLineState extends State<CurrentTimeLine> {
   @override
   Widget build(BuildContext context) {
     // 선의 top = 캡슐 top + capsuleHeight/2 (캡슐 중앙 = 선 y좌표)
-    final top = currentTimeTopPosition(widget.hourHeight) +
+    final top =
+        currentTimeTopPosition(widget.hourHeight) +
         currentTimeCapsuleHeight / 2;
     final color = widget.isToday
         ? context.systemRed

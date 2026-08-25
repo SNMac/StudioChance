@@ -1,11 +1,17 @@
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
 /// Reservation 목록을 화면 표시용 데이터 구조로 변환한다.
-/// 반환: (ReservationDisplayData 목록, id → Reservation 맵)
-(List<ReservationDisplayData>, Map<String, Reservation>) buildEventsFromReservations(
-    List<Reservation> reservations) {
+///
+/// 반환: (ReservationDisplayData 목록, id → Reservation 맵, 날짜 → 종일 예약 수 맵)
+///
+/// 세 번째 맵은 종일 행 높이 계산용이다. 날짜 키는 자정으로 정규화되며,
+/// [eventsForDate]의 종일 필터와 동일하게 시작일 기준으로 센다.
+/// 이미 도는 변환 루프에 편승시켜 호출부가 날짜마다 다시 스캔하지 않도록 한다.
+(List<ReservationDisplayData>, Map<String, Reservation>, Map<DateTime, int>)
+buildEventsFromReservations(List<Reservation> reservations) {
   final summaries = {
     for (final r in reservations)
       r.id: ReservationSummary(
@@ -18,16 +24,23 @@ import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reser
         isAllDay: r.isAllDay,
         startTime: r.startTime,
         endTime: r.endTime,
+        createdAt: r.createdAt,
       ),
   };
 
-  final events = summaries.values
-      .map((s) => ReservationDisplayData(summary: s))
-      .toList();
+  final events = <ReservationDisplayData>[];
+  final allDayCountByDate = <DateTime, int>{};
+
+  for (final s in summaries.values) {
+    events.add(ReservationDisplayData(summary: s));
+    if (!s.isAllDay) continue;
+    final date = DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
+    allDayCountByDate[date] = (allDayCountByDate[date] ?? 0) + 1;
+  }
 
   final reservationsMap = {for (final r in reservations) r.id: r};
 
-  return (events, reservationsMap);
+  return (events, reservationsMap, allDayCountByDate);
 }
 
 /// 특정 날짜에 표시할 이벤트를 필터링한다.
@@ -35,9 +48,9 @@ import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reser
 /// - [allDay]=true: 해당 날짜의 종일 이벤트만 반환
 /// - [allDay]=false: 해당 날짜에 걸쳐있는 시간대 이벤트 반환 (자정 넘김 분할 포함)
 List<ReservationDisplayData> eventsForDate(
-    List<ReservationDisplayData> allEvents,
-    DateTime date, {
-    required bool allDay,
+  List<ReservationDisplayData> allEvents,
+  DateTime date, {
+  required bool allDay,
 }) {
   final dateStart = DateTime(date.year, date.month, date.day);
   final dateMidnight = dateStart.add(const Duration(days: 1));
@@ -62,10 +75,12 @@ List<ReservationDisplayData> eventsForDate(
         start.month == date.month &&
         start.day == date.day) {
       if (end.isAfter(dateMidnight)) {
-        result.add(ReservationDisplayData(
-          summary: e.summary.copyWith(endTime: dateMidnight),
-          continuesNextDay: true,
-        ));
+        result.add(
+          ReservationDisplayData(
+            summary: e.summary.copyWith(endTime: dateMidnight),
+            continuesNextDay: true,
+          ),
+        );
       } else {
         result.add(e);
       }
@@ -74,12 +89,63 @@ List<ReservationDisplayData> eventsForDate(
 
     // 이전 날에 시작해서 이 날짜까지 이어지는 이벤트 → 연속 셀
     if (start.isBefore(dateStart) && end.isAfter(dateStart)) {
-      result.add(ReservationDisplayData(
-        summary: e.summary.copyWith(startTime: dateStart),
-        isContinuation: true,
-      ));
+      result.add(
+        ReservationDisplayData(
+          summary: e.summary.copyWith(startTime: dateStart),
+          isContinuation: true,
+        ),
+      );
     }
   }
 
   return result;
+}
+
+/// null을 가장 뒤로 보내는 널러블 DateTime 비교.
+/// createdAt은 서버 타임스탬프가 아직 로컬에 반영되지 않으면 일시적으로 null일 수 있어
+/// (예: 생성 직후) 방어적으로 처리한다.
+int _compareNullableDateTime(DateTime? a, DateTime? b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a.compareTo(b);
+}
+
+/// 종일 이벤트를 배지 대표 이벤트 선정을 위해 정렬한다.
+///
+/// 정렬 우선순위: 시작 시각 → 종료 시각 → 생성 시각(createdAt) → 예약자명 → id
+/// (모두 오름차순). 앞 기준이 동점일 때만 다음 기준으로 넘어가며, id까지 동점인
+/// 경우는 사실상 없으므로 항상 결정적인 순서가 보장된다. 원본 리스트는 변경하지 않는다.
+List<ReservationDisplayData> sortAllDayEventsForDisplay(
+  List<ReservationDisplayData> events,
+) {
+  final sorted = [...events];
+  sorted.sort((a, b) {
+    final startCmp = a.summary.startTime.compareTo(b.summary.startTime);
+    if (startCmp != 0) return startCmp;
+    final endCmp = a.summary.endTime.compareTo(b.summary.endTime);
+    if (endCmp != 0) return endCmp;
+    final createdCmp = _compareNullableDateTime(
+      a.summary.createdAt,
+      b.summary.createdAt,
+    );
+    if (createdCmp != 0) return createdCmp;
+    final nameCmp = a.summary.customerName.compareTo(b.summary.customerName);
+    if (nameCmp != 0) return nameCmp;
+    return a.summary.id.compareTo(b.summary.id);
+  });
+  return sorted;
+}
+
+/// 종일 행의 높이를 계산한다.
+///
+/// [maxCount]는 화면에 보이는 날짜 열들 중 가장 많은 종일 이벤트 수 —
+/// 열마다 높이가 다르면 행이 어긋나므로 최대값으로 통일한다.
+///
+/// 접혔거나 겹침이 없으면 1칸, 펼치면 [allDayMaxStackCount]칸까지만 늘어난다
+/// (그 이상은 마지막 칸이 "+N건 더보기"로 접히므로 높이가 더 커질 필요가 없다).
+double allDayRowHeightFor({required int maxCount, required bool isExpanded}) {
+  if (!isExpanded || maxCount <= 1) return allDayRowHeight;
+  final slots = maxCount > allDayMaxStackCount ? allDayMaxStackCount : maxCount;
+  return allDayRowHeight * slots;
 }

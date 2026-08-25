@@ -30,6 +30,10 @@ _ReservationModel _$ReservationModelFromJson(Map<String, dynamic> json) =>
       totalPrice: (json['totalPrice'] as num).toInt(),
       writerRole: $enumDecode(_$UserRoleEnumMap, json['writerRole']),
       spaceOptionId: json['spaceOptionId'] as String?,
+      createdAt: _$JsonConverterFromJson<Timestamp, DateTime>(
+        json['createdAt'],
+        const TimestampConverter().fromJson,
+      ),
     );
 
 Map<String, dynamic> _$ReservationModelToJson(_ReservationModel instance) =>
@@ -51,6 +55,10 @@ Map<String, dynamic> _$ReservationModelToJson(_ReservationModel instance) =>
       'totalPrice': instance.totalPrice,
       'writerRole': _$UserRoleEnumMap[instance.writerRole]!,
       'spaceOptionId': instance.spaceOptionId,
+      'createdAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
+        instance.createdAt,
+        const TimestampConverter().toJson,
+      ),
     };
 
 const _$ReservationStatusEnumMap = {
@@ -78,3 +86,13 @@ const _$UserRoleEnumMap = {
   UserRole.viewer: 'VIEWER',
   UserRole.none: 'NONE',
 };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);

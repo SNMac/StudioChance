@@ -54,12 +54,12 @@ class _PositionedItem {
 ///   5b. 위치 계산: left = 1 + col × stagger, right = 8 고정
 ///       - N≥4 컴포넌트: groupEvents 채우기 (탭 시 목록 모달)
 List<_PositionedItem> _computePositions(
-    List<ReservationDisplayData> events, double columnWidth) {
+  List<ReservationDisplayData> events,
+  double columnWidth,
+) {
   final usableWidth = columnWidth - 9.0; // 1(left) + 8(right)
 
-  final timeEvents = events
-      .where((e) => !e.summary.isAllDay)
-      .toList();
+  final timeEvents = events.where((e) => !e.summary.isAllDay).toList();
 
   if (timeEvents.isEmpty) return [];
 
@@ -107,8 +107,12 @@ List<_PositionedItem> _computePositions(
 
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
-      if (timeEvents[i].summary.startTime.isBefore(timeEvents[j].summary.endTime) &&
-          timeEvents[j].summary.startTime.isBefore(timeEvents[i].summary.endTime)) {
+      if (timeEvents[i].summary.startTime.isBefore(
+            timeEvents[j].summary.endTime,
+          ) &&
+          timeEvents[j].summary.startTime.isBefore(
+            timeEvents[i].summary.endTime,
+          )) {
         final pi = findRoot(i), pj = findRoot(j);
         if (pi != pj) parent[pi] = pj;
       }
@@ -136,10 +140,13 @@ List<_PositionedItem> _computePositions(
     var minDeltaMin = double.infinity;
     for (final a in col0) {
       for (final b in col1) {
-        if (timeEvents[a].summary.startTime.isBefore(timeEvents[b].summary.endTime) &&
-            timeEvents[b].summary.startTime.isBefore(timeEvents[a].summary.endTime)) {
-          final delta = timeEvents[b]
-              .summary.startTime
+        if (timeEvents[a].summary.startTime.isBefore(
+              timeEvents[b].summary.endTime,
+            ) &&
+            timeEvents[b].summary.startTime.isBefore(
+              timeEvents[a].summary.endTime,
+            )) {
+          final delta = timeEvents[b].summary.startTime
               .difference(timeEvents[a].summary.startTime)
               .inMinutes
               .abs()
@@ -149,8 +156,9 @@ List<_PositionedItem> _computePositions(
       }
     }
 
-    compStagger[root] =
-        minDeltaMin == 0 ? usableWidth / 2 : _differentStartStagger;
+    compStagger[root] = minDeltaMin == 0
+        ? usableWidth / 2
+        : _differentStartStagger;
   }
 
   // Step 5b: 위치 계산
@@ -172,13 +180,15 @@ List<_PositionedItem> _computePositions(
       }
     }
 
-    result.add(_PositionedItem(
-      event: timeEvents[i],
-      left: 1.0 + col * stagger,
-      right: 8.0,
-      clipContent: col > 0,
-      groupEvents: groupEvents,
-    ));
+    result.add(
+      _PositionedItem(
+        event: timeEvents[i],
+        left: 1.0 + col * stagger,
+        right: 8.0,
+        clipContent: col > 0,
+        groupEvents: groupEvents,
+      ),
+    );
   }
 
   return result;
@@ -226,7 +236,9 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
   String? _highlightedId;
 
   ({double top, double height}) _placementFor(
-      ReservationDisplayData event, double hourHeight) {
+    ReservationDisplayData event,
+    double hourHeight,
+  ) {
     final topGap = event.isContinuation ? 0.0 : 0.5;
     final bottomGap = event.continuesNextDay ? 0.0 : 1.5;
     final start = event.summary.startTime;
@@ -250,8 +262,10 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
   Future<void> _onCellTap(_PositionedItem item) async {
     if (item.groupEvents != null) {
       // ② N≥4 그룹 셀 탭 — 목록 모달 → 선택 → 상세 모달
-      final selected =
-          await showReservationListModal(context, item.groupEvents!);
+      final selected = await showReservationListModal(
+        context,
+        item.groupEvents!,
+      );
       if (selected == null || !mounted) return;
       setState(() {
         _highlightedId = selected.id;
@@ -328,75 +342,82 @@ class _TimeGridState extends ConsumerState<TimeGrid> {
     return AbsorbPointer(
       absorbing: widget.isInteractionBlocked,
       child: SingleChildScrollView(
-      controller: widget.scrollController,
-      physics: const BouncingScrollPhysics(),
-      child: SizedBox(
-        height: totalHeight,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final positioned =
-                _computePositions(widget.events, constraints.maxWidth);
+        controller: widget.scrollController,
+        physics: const BouncingScrollPhysics(),
+        child: SizedBox(
+          height: totalHeight,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final positioned = _computePositions(
+                widget.events,
+                constraints.maxWidth,
+              );
 
-            // z-순서: _selectedId 셀을 목록 맨 마지막(=맨 앞 z-순서)으로
-            final orderedPositioned = _selectedId == null
-                ? positioned
-                : () {
-                    final idx = positioned.indexWhere(
-                        (p) => p.event.summary.id == _selectedId);
-                    if (idx < 0) return positioned;
-                    final result = List<_PositionedItem>.from(positioned);
-                    result.add(result.removeAt(idx));
-                    return result;
-                  }();
+              // z-순서: _selectedId 셀을 목록 맨 마지막(=맨 앞 z-순서)으로
+              final orderedPositioned = _selectedId == null
+                  ? positioned
+                  : () {
+                      final idx = positioned.indexWhere(
+                        (p) => p.event.summary.id == _selectedId,
+                      );
+                      if (idx < 0) return positioned;
+                      final result = List<_PositionedItem>.from(positioned);
+                      result.add(result.removeAt(idx));
+                      return result;
+                    }();
 
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const SizedBox.expand(),
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const SizedBox.expand(),
 
-                // 수평 시간 구분선 (1~23시)
-                for (int hour = 1; hour < 24; hour++)
-                  Positioned(
-                    top: hourHeight * hour,
-                    left: 0,
-                    right: 0,
-                    child: Divider(
-                      height: 0,
-                      thickness: calendarDividerThickness,
-                      color: context.separator,
-                    ),
-                  ),
-
-                // 이벤트 셀 (z 순서 — 먼저 = 뒤에, 나중 = 앞에)
-                for (final item in orderedPositioned)
-                  Builder(builder: (context) {
-                    final p = _placementFor(item.event, hourHeight);
-                    return Positioned(
-                      top: p.top,
-                      left: item.left,
-                      right: item.right,
-                      height: p.height,
-                      child: GestureDetector(
-                        onTap: () => _onCellTap(item),
-                        child: ReservationCell(
-                          data: item.event,
-                          clipContent: item.clipContent,
-                          isHighlighted:
-                              effectiveHighlightId == item.event.summary.id,
-                        ),
+                  // 수평 시간 구분선 (1~23시)
+                  for (int hour = 1; hour < 24; hour++)
+                    Positioned(
+                      top: hourHeight * hour,
+                      left: 0,
+                      right: 0,
+                      child: Divider(
+                        height: 0,
+                        thickness: calendarDividerThickness,
+                        color: context.separator,
                       ),
-                    );
-                  }),
+                    ),
 
-                // 현재 시간선
-                CurrentTimeLine(hourHeight: hourHeight, isToday: widget.isToday),
-              ],
-            );
-          },
+                  // 이벤트 셀 (z 순서 — 먼저 = 뒤에, 나중 = 앞에)
+                  for (final item in orderedPositioned)
+                    Builder(
+                      builder: (context) {
+                        final p = _placementFor(item.event, hourHeight);
+                        return Positioned(
+                          top: p.top,
+                          left: item.left,
+                          right: item.right,
+                          height: p.height,
+                          child: GestureDetector(
+                            onTap: () => _onCellTap(item),
+                            child: ReservationCell(
+                              data: item.event,
+                              clipContent: item.clipContent,
+                              isHighlighted:
+                                  effectiveHighlightId == item.event.summary.id,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                  // 현재 시간선
+                  CurrentTimeLine(
+                    hourHeight: hourHeight,
+                    isToday: widget.isToday,
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
-    ),
     );
   }
 }
-

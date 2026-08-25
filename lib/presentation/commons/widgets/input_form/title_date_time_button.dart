@@ -92,6 +92,11 @@ class TitleDateTimeButton extends StatelessWidget {
                   SizedBox(
                     height: pickerHeight,
                     child: CupertinoDatePicker(
+                      // mode별로 서로 다른 내부 State 클래스를 사용하므로(Flutter 프레임워크
+                      // 제약), mode가 바뀔 때 key도 함께 바뀌어야 기존 State를 재사용하지
+                      // 않고 새로 mount된다. 그렇지 않으면 "mode cannot change once it's
+                      // built" 어설션이 발생한다.
+                      key: ValueKey(mode),
                       mode: mode,
                       initialDateTime: initialDateTime,
                       use24hFormat: use24hFormat,

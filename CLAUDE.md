@@ -121,16 +121,28 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ## Git 컨벤션
 - 브랜치: `feat/#<이슈번호>-<설명>`, `bug/#<이슈번호>-<설명>`
 - 커밋: `<type>: #<이슈번호> - <한국어 설명>`
+- 포맷 전용 변경(`dart format`이 손대지 않은 기존 파일까지 재배치한 결과)은 기능 커밋에 섞지 말고 별도 `style:` 커밋으로 분리 — 리뷰 시 실제 변경을 가려내기 어려워짐
+  - `dart format`은 디렉터리 전체가 아니라 **수정한 파일만** 지정해서 실행할 것
 - 기본 브랜치: `develop` (PR 대상)
+- PR 제목: `<Type>/#<이슈번호> <한국어 설명>` — 커밋 메시지 형식(`<type>: #N - ...`)과 다름에 주의
+  - Type: `Feature`, `Bug`, `Refactor` (첫 글자 대문자)
+  - 예: `Feature/#17 OCR 점포·공간 자동 선택`, `Bug/#35 시스템 글자 크기 설정에 따른 레이아웃 깨짐 방지`
+- PR 본문: `.github/PULL_REQUEST_TEMPLATE.md` 형식을 따를 것 (연관된 이슈 / 작업 내용 / 스크린샷)
+- 이슈 본문: `.github/ISSUE_TEMPLATE/issue_template.md` 형식을 따를 것 (이슈 내용 / 상세 내용 / 체크리스트)
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
 ## 빌드 및 실행
-- `flutter run --target lib/main_dev.dart` - dev 플레이버 실행 (App Check 항상 Debug Provider)
-- `flutter run --target lib/main_prod.dart` - prod 플레이버 실행 (릴리즈: Play Integrity / App Attest)
+- `flutter run --flavor dev --target lib/main_dev.dart` - dev 플레이버 실행 (App Check 항상 Debug Provider)
+- `flutter run --flavor prod --target lib/main_prod.dart` - prod 플레이버 실행 (릴리즈: Play Integrity / App Attest)
+  - `--flavor` 생략 시 Android 빌드가 APK를 찾지 못하고 실패한다 (productFlavors 정의됨)
 - `dart run build_runner build --delete-conflicting-outputs` - 코드 생성
 - `dart run build_runner watch` - 코드 생성 (watch 모드)
 - `flutter test` - 테스트 실행
 - `dart analyze` - 정적 분석
+
+## 테스트 작성 규칙
+- 위젯 테스트는 픽셀 크기·색상 hex·폰트 스타일·레이아웃 구조 등 UI 구현 디테일을 직접 assert하지 않음 — 상태 전이·콜백 호출·크래시 방지 등 동작(behavior)만 검증 (UI 리팩터링 시 무관한 테스트가 깨지는 것 방지)
+- 예외: 테스트 대상 자체가 색상 팔레트 등 디자인 토큰 lookup table인 경우(`store_color_extensions_test.dart`)는 정확한 값 검증이 불가피하므로 허용
 
 ## 폰트 및 디자인
 - 기본 폰트: Pretendard (400, 500, 600, 700)

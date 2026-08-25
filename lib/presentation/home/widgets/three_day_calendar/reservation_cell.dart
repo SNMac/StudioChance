@@ -35,6 +35,7 @@ class ReservationCell extends StatelessWidget {
     required this.data,
     this.clipContent = false,
     this.isHighlighted = false,
+    this.contentRightInset = 0,
   });
 
   final ReservationDisplayData data;
@@ -45,6 +46,9 @@ class ReservationCell extends StatelessWidget {
 
   /// true: 배경 = foregroundColor, 스트립 = foregroundColor, 라벨 = white
   final bool isHighlighted;
+
+  /// `clipContent=true`일 때 우측에 추가로 확보할 여백 (배지 등과 겹치지 않도록)
+  final double contentRightInset;
 
   BorderRadius get _cellBorderRadius {
     const r = Radius.circular(4);
@@ -63,7 +67,9 @@ class ReservationCell extends StatelessWidget {
         ? Color(storeColor.foregroundColorValue)
         : Color(storeColor.backgroundColorValue);
     final fgColor = Color(storeColor.foregroundColorValue);
-    final lblColor = isHighlighted ? Colors.white : Color(storeColor.labelColorValue);
+    final lblColor = isHighlighted
+        ? Colors.white
+        : Color(storeColor.labelColorValue);
     final borderRadius = _cellBorderRadius;
 
     return ClipRRect(
@@ -79,19 +85,13 @@ class ReservationCell extends StatelessWidget {
             left: 0,
             top: 0,
             bottom: 0,
-            child: SizedBox(
-              width: 4,
-              child: ColoredBox(color: fgColor),
-            ),
+            child: SizedBox(width: 4, child: ColoredBox(color: fgColor)),
           ),
 
           // 외곽선 overlay
           Container(
             decoration: BoxDecoration(
-              border: Border.all(
-                color: context.systemBackground,
-                width: 0.5,
-              ),
+              border: Border.all(color: context.systemBackground, width: 0.5),
               borderRadius: borderRadius,
             ),
           ),
@@ -110,7 +110,11 @@ class ReservationCell extends StatelessWidget {
                         right: clipContent ? 0 : 4,
                       ),
                       child: clipContent
-                          ? _buildClipContent(context, lblColor)
+                          ? _buildClipContent(
+                              context,
+                              lblColor,
+                              contentRightInset,
+                            )
                           : FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.topLeft,
@@ -126,8 +130,17 @@ class ReservationCell extends StatelessWidget {
     );
   }
 
-  Widget _buildClipContent(BuildContext context, Color lblColor) {
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: lblColor);
+  /// [topLineRightInset]: 첫 줄(이름·인원)에만 적용되는 추가 우측 여백.
+  /// 배지는 첫 줄 높이에만 겹치므로(all_day_row.dart _OverflowBadge),
+  /// 둘째 줄(연락처)은 이 여백 없이 전체 너비를 그대로 사용한다.
+  Widget _buildClipContent(
+    BuildContext context,
+    Color lblColor,
+    double topLineRightInset,
+  ) {
+    final style = Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -143,11 +156,14 @@ class ReservationCell extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${data.summary.customerName} · ${data.summary.headCount}인',
-                style: style,
-                maxLines: 1,
-                overflow: TextOverflow.clip,
+              Padding(
+                padding: EdgeInsets.only(right: topLineRightInset),
+                child: Text(
+                  '${data.summary.customerName} · ${data.summary.headCount}인',
+                  style: style,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                ),
               ),
               Text(
                 data.summary.customerPhone.formattedPhone,
@@ -163,7 +179,9 @@ class ReservationCell extends StatelessWidget {
   }
 
   Widget _buildContentRow(BuildContext context, Color lblColor) {
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: lblColor);
+    final style = Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -204,13 +222,11 @@ class _StatusIcon extends StatelessWidget {
   final Color color;
 
   static String _svgPath(ReservationStatus status) => switch (status) {
-        ReservationStatus.confirmed =>
-          'assets/images/icons/checkmark_circle_fill.svg',
-        ReservationStatus.pending =>
-          'assets/images/icons/circle_dashed.svg',
-        ReservationStatus.canceled =>
-          'assets/images/icons/circle_slash.svg',
-      };
+    ReservationStatus.confirmed =>
+      'assets/images/icons/checkmark_circle_fill.svg',
+    ReservationStatus.pending => 'assets/images/icons/circle_dashed.svg',
+    ReservationStatus.canceled => 'assets/images/icons/circle_slash.svg',
+  };
 
   @override
   Widget build(BuildContext context) {

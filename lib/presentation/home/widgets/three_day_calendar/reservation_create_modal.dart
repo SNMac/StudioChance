@@ -65,7 +65,8 @@ class ReservationCreateModal extends ConsumerStatefulWidget {
       _ReservationCreateModalState();
 }
 
-class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal> {
+class _ReservationCreateModalState
+    extends ConsumerState<ReservationCreateModal> {
   // ── 편집 상태 ─────────────────────────────────────────────────────────────
   late StoreSummary _storeSummary;
   late ReservationStatus _status;
@@ -148,7 +149,9 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     _headCountController = TextEditingController(
       text: r.headCount > 0 ? r.headCount.toString() : '',
     );
-    _phoneController = TextEditingController(text: r.customerPhone.formattedPhone);
+    _phoneController = TextEditingController(
+      text: r.customerPhone.formattedPhone,
+    );
     _memoController = TextEditingController(text: r.memo);
     _adjustmentController = TextEditingController(
       text: r.priceAdjustment != 0 ? r.priceAdjustment.formattedAmount : '',
@@ -157,7 +160,10 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
 
   // ── 가격 계산 ─────────────────────────────────────────────────────────────
 
-  void _loadSpaceOptions(String storeId, {List<String> ocrUnmatched = const []}) {
+  void _loadSpaceOptions(
+    String storeId, {
+    List<String> ocrUnmatched = const [],
+  }) {
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getStoreSpaceOptions(storeId)
@@ -165,7 +171,8 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           if (!mounted) return;
           final animation = ModalRoute.of(context)?.animation;
           // 모달 오픈 애니메이션이 진행 중이면 완료 후 setState 실행
-          if (animation != null && animation.status != AnimationStatus.completed) {
+          if (animation != null &&
+              animation.status != AnimationStatus.completed) {
             late final void Function(AnimationStatus) listener;
             listener = (status) {
               if (status == AnimationStatus.completed) {
@@ -181,7 +188,10 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         });
   }
 
-  void _applySpaceOptions(List<SpaceOption>? spaces, {List<String> ocrUnmatched = const []}) {
+  void _applySpaceOptions(
+    List<SpaceOption>? spaces, {
+    List<String> ocrUnmatched = const [],
+  }) {
     final loaded = spaces ?? const [];
     if (loaded.isEmpty) {
       setState(() {
@@ -222,7 +232,11 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     final spaces = _spaceOptions;
     if (spaces.isEmpty) return;
     final priceSetting = _spaceOptionId != null
-        ? (spaces.where((s) => s.id == _spaceOptionId).firstOrNull?.priceSetting ?? spaces.first.priceSetting)
+        ? (spaces
+                  .where((s) => s.id == _spaceOptionId)
+                  .firstOrNull
+                  ?.priceSetting ??
+              spaces.first.priceSetting)
         : spaces.first.priceSetting;
     final headCount = int.tryParse(_headCountController.text) ?? 0;
     final price = priceSetting.calculatePrice(
@@ -277,8 +291,9 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     StoreSummary? matchedStore;
     if (ocrStoreName != null && _availableStores.length > 1) {
       // 동일 이름 점포가 2개 이상이면 어느 쪽인지 특정할 수 없으므로 모호한 매칭으로 처리
-      final candidates =
-          _availableStores.where((s) => s.name == ocrStoreName).toList();
+      final candidates = _availableStores
+          .where((s) => s.name == ocrStoreName)
+          .toList();
       matchedStore = candidates.length == 1 ? candidates.first : null;
       if (matchedStore != null) {
         setState(() {
@@ -358,8 +373,11 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           _startTime.day,
         );
         // iCal 관례: 종일 이벤트 endTime = 다음날 자정(exclusive).
-        _endTime = DateTime(_startTime.year, _startTime.month, _startTime.day)
-            .add(const Duration(days: 1));
+        _endTime = DateTime(
+          _startTime.year,
+          _startTime.month,
+          _startTime.day,
+        ).add(const Duration(days: 1));
       }
       _isStartPickerOpen = false;
       _isEndPickerOpen = false;
@@ -469,7 +487,9 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
     if (!confirmed || !mounted) return;
 
     // 이미지 확정 후 모든 점포의 공간 옵션 병렬 조회
-    final notifier = ref.read(homeReservationActionsControllerProvider.notifier);
+    final notifier = ref.read(
+      homeReservationActionsControllerProvider.notifier,
+    );
     final allSpaceOptions = await Future.wait(
       _availableStores.map((s) => notifier.getStoreSpaceOptions(s.id)),
     );
@@ -477,22 +497,27 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
 
     // 점포명이 프롬프트의 매칭 키이므로, 이름이 중복되면 목록 전달 자체를 생략
     final storeNames = _availableStores.map((s) => s.name).toList();
-    final hasDuplicateStoreNames = storeNames.toSet().length != storeNames.length;
+    final hasDuplicateStoreNames =
+        storeNames.toSet().length != storeNames.length;
 
     final storeSpaceMap = <String, List<String>>{};
     if (!hasDuplicateStoreNames) {
       for (var i = 0; i < _availableStores.length; i++) {
         final spaces = allSpaceOptions[i];
         if (spaces != null && spaces.isNotEmpty) {
-          storeSpaceMap[_availableStores[i].name] = spaces.map((s) => s.name).toList();
+          storeSpaceMap[_availableStores[i].name] = spaces
+              .map((s) => s.name)
+              .toList();
         }
       }
     }
 
-    ref.read(reservationOcrControllerProvider.notifier).analyzeImage(
-      bytes,
-      storeSpaceMap: storeSpaceMap.isNotEmpty ? storeSpaceMap : null,
-    );
+    ref
+        .read(reservationOcrControllerProvider.notifier)
+        .analyzeImage(
+          bytes,
+          storeSpaceMap: storeSpaceMap.isNotEmpty ? storeSpaceMap : null,
+        );
   }
 
   Widget _buildOcrButton() {
@@ -504,14 +529,14 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
       fontWeight: FontWeight.normal,
       onPressed: isLoading
           ? () => showCustomAlertDialog(
-                context: context,
-                title: '자동 입력 취소',
-                content: '스크린샷 분석을 중단할까요?',
-                confirmText: '중단',
-                cancelText: '계속',
-                onConfirmAfterPop: () =>
-                    ref.read(reservationOcrControllerProvider.notifier).cancel(),
-              )
+              context: context,
+              title: '자동 입력 취소',
+              content: '스크린샷 분석을 중단할까요?',
+              confirmText: '중단',
+              cancelText: '계속',
+              onConfirmAfterPop: () =>
+                  ref.read(reservationOcrControllerProvider.notifier).cancel(),
+            )
           : _handleOcrButtonTap,
     );
   }
@@ -561,7 +586,11 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
                 ? const TitleTextLabel(title: '예약 공간', content: '—')
                 : TitlePopupButton<SpaceOption>(
                     title: '예약 공간',
-                    selectedValue: _spaceOptions.where((s) => s.id == _spaceOptionId).firstOrNull ?? _spaceOptions.first,
+                    selectedValue:
+                        _spaceOptions
+                            .where((s) => s.id == _spaceOptionId)
+                            .firstOrNull ??
+                        _spaceOptions.first,
                     items: _spaceOptions,
                     itemLabelBuilder: (s) => s.name,
                     onSelected: (s) {
@@ -619,9 +648,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           placeholder: '메모',
           controller: _memoController,
           maxLength: maxMemoCharCount,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(maxMemoCharCount),
-          ],
+          inputFormatters: [LengthLimitingTextInputFormatter(maxMemoCharCount)],
         ),
       ],
     );
@@ -630,8 +657,9 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
   // ── 섹션 3: 일시 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection3() {
-    final displayEndTime =
-        _isAllDay ? _endTime.subtract(const Duration(days: 1)) : _endTime;
+    final displayEndTime = _isAllDay
+        ? _endTime.subtract(const Duration(days: 1))
+        : _endTime;
 
     return GroupedFormContainer(
       children: [
@@ -704,9 +732,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         ),
         child: Text(
           '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
-          style: textTheme.labelMedium?.copyWith(
-            color: context.secondaryLabel,
-          ),
+          style: textTheme.labelMedium?.copyWith(color: context.secondaryLabel),
         ),
       ),
       children: [
@@ -734,10 +760,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextLabel(
-          title: '요금',
-          content: _calculatedPrice.formattedPrice,
-        ),
+        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
