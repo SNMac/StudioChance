@@ -181,6 +181,30 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}.fcmTokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
   - 배포: `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
   - 테스트: `cd functions && npm test` (Node 내장 `node:test`)
+  - `firebase.json`/`.firebaserc`는 gitignore 처리되어 저장소에 없음 — 새로 clone한 환경에서 배포하려면 아래 내용을 직접 만들어야 한다
+    ```json
+    // firebase.json (functions 배포에 필요한 부분만)
+    {
+      "functions": [
+        {
+          "source": "functions",
+          "codebase": "default",
+          "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"],
+          "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+        }
+      ]
+    }
+    ```
+    ```json
+    // .firebaserc (-P dev / -P prod 별칭)
+    {
+      "projects": {
+        "default": "studio-chance",
+        "dev": "studio-chance",
+        "prod": "studio-chance-prod"
+      }
+    }
+    ```
 - **수신**: `NotificationController`(`lib/presentation/providers/`)가 `MyApp`에서 watch되어 권한 요청·토큰 등록·스트림 구독·딥링크를 담당
   - 포그라운드는 FCM SDK가 알림을 표시하지 않으므로 `flutter_local_notifications`로 직접 표시
   - iOS `setForegroundNotificationPresentationOptions`는 켜지 않는다 — 켜면 시스템 배너와 로컬 알림이 중복된다
