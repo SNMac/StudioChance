@@ -266,7 +266,8 @@ class StoreRepositoryImpl implements StoreRepository {
       );
 
       _logger.i('점포 가입 신청 완료 (대기열 추가)\nstoreId: $storeId, uid: $uid');
-      // TODO: FCM 알림
+      // 관리자 FCM 알림은 Cloud Functions `notifyAdminsOnJoinRequest`가
+      // stores/{storeId}.waitingMemberById 변경을 감지해 발송한다 (functions/src/index.ts).
 
       return right(null);
     } catch (e) {
