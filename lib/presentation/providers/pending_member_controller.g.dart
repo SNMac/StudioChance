@@ -46,7 +46,7 @@ final class PendingMemberControllerProvider
 }
 
 String _$pendingMemberControllerHash() =>
-    r'5e0492ddec57f218e672c815180d6392564181a8';
+    r'8d089d546a4dcaaca28e0c038cf22e05025008c0';
 
 /// 승인 대기 멤버의 승인·거절 액션을 UseCase에 위임한다.
 ///

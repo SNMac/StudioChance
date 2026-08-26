@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
@@ -17,9 +18,31 @@ import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
 import 'package:studio_chance/presentation/onboarding/controllers/onboarding_nickname_controller.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
 import 'package:studio_chance/presentation/providers/sign_out_controller.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 import 'package:studio_chance/router/router_path.dart';
+
+/// [home_screen.dart]의 에러 다이얼로그 패턴과 동일하게, silentable하지 않은
+/// 에러만 사용자에게 알린다.
+void _showErrorDialog(BuildContext context, Object error) {
+  if (!context.mounted) return;
+  if (error is AppException && !error.isSilentable) {
+    showCustomAlertDialog(
+      context: context,
+      title: error.title,
+      content: error.content,
+      showCancel: false,
+    );
+  } else if (error is! AppException) {
+    showCustomAlertDialog(
+      context: context,
+      title: '오류',
+      content: '잠시 후 다시 시도해 주세요.',
+      showCancel: false,
+    );
+  }
+}
 
 class MyPageScreen extends ConsumerWidget {
   const MyPageScreen({super.key});
@@ -27,6 +50,18 @@ class MyPageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).asData?.value;
+
+    // 승인/거절·로그아웃 실패를 사용자에게 알린다.
+    // 모달(PendingMemberModal)은 사용자가 드래그로 먼저 닫아버릴 수 있어
+    // 리스너를 걸어도 결과가 도착했을 때 이미 dispose됐을 수 있다.
+    // MyPageScreen은 모달이 열려 있든 닫혀 있든 바텀시트 뒤에서 계속
+    // mounted 상태로 남아 있으므로 여기서 듣는다.
+    ref.listen(pendingMemberControllerProvider, (_, next) {
+      next.whenOrNull(error: (e, _) => _showErrorDialog(context, e));
+    });
+    ref.listen(signOutControllerProvider, (_, next) {
+      next.whenOrNull(error: (e, _) => _showErrorDialog(context, e));
+    });
 
     return Scaffold(
       backgroundColor: context.systemGroupedBackground,

@@ -116,6 +116,8 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
   Widget build(BuildContext context) {
     final storeAsync = ref.watch(storeDetailProvider(widget.storeId));
     final waitingInfos = storeAsync.asData?.value?.waitingMemberInfos ?? [];
+    // 승인/거절 처리 중에는 버튼을 비활성화해 같은 신청의 중복 제출을 막는다.
+    final isMutating = ref.watch(pendingMemberControllerProvider).isLoading;
 
     return AnimatedBuilder(
       animation: _sheetController,
@@ -196,6 +198,7 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                               _PendingMemberRow(
                                 name: _displayName(info),
                                 roleLabel: info.role.displayName,
+                                disabled: isMutating,
                                 onApprove: () => _onApprove(info),
                                 onReject: () => _onReject(info),
                               ),
@@ -218,12 +221,14 @@ class _PendingMemberRow extends StatelessWidget {
     required this.roleLabel,
     required this.onApprove,
     required this.onReject,
+    this.disabled = false,
   });
 
   final String name;
   final String roleLabel;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +261,7 @@ class _PendingMemberRow extends StatelessWidget {
             CupertinoButton(
               minimumSize: Size.zero,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              onPressed: onReject,
+              onPressed: disabled ? null : onReject,
               child: Text(
                 '거절',
                 style: textTheme.bodyLarge?.copyWith(
@@ -267,7 +272,7 @@ class _PendingMemberRow extends StatelessWidget {
             CupertinoButton(
               minimumSize: Size.zero,
               padding: const EdgeInsets.only(left: 8),
-              onPressed: onApprove,
+              onPressed: disabled ? null : onApprove,
               child: Text(
                 '승인',
                 style: textTheme.bodyLarge?.copyWith(color: context.systemBlue),
