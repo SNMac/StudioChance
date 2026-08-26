@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,8 +9,8 @@ import 'package:studio_chance/constants/notification_constants.dart';
 import 'package:studio_chance/data/models/push_message_mapper.dart';
 import 'package:studio_chance/domain/entities/push_message.dart';
 import 'package:studio_chance/domain/use_cases/notification_use_case_provider.dart';
+import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
-import 'package:studio_chance/presentation/providers/home_store_filter_controller.dart';
 import 'package:studio_chance/router/app_router.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -129,16 +130,26 @@ class NotificationController extends _$NotificationController {
 
     final status = ref.read(appAuthControllerProvider).value;
     if (status != AppStatus.authenticated) {
-      // 스플래시·온보딩 중이면 홈으로 보낼 수 없으므로 보류한다.
+      // 스플래시·온보딩 중이면 이동할 수 없으므로 보류한다.
       _pendingMessage = message;
       return;
     }
 
-    // TODO: 승인 대기 멤버 관리 화면이 생기면 홈 대신 그 화면으로 이동할 것 (#19)
-    ref
-        .read(homeStoreFilterControllerProvider.notifier)
-        .ensureSelected(storeId);
-    ref.read(goRouterProvider).go(SCRoute.home.path);
+    final router = ref.read(goRouterProvider);
+    router.go(SCRoute.myPage.path);
+
+    // go()는 선언적 이동이라 GoRouter가 다음 프레임에 Navigator의 페이지 목록을
+    // 실제로 갱신한다. 프레임 1회면 충분하다 — navigatorKey.currentContext는
+    // 루트 Navigator의 context로 앱 시작 후 계속 mount 상태이며(경로 전환과
+    // 무관하게 유지됨), addPostFrameCallback은 go() 호출로 예약된 바로 그 프레임의
+    // 빌드·레이아웃·페인트가 끝난 뒤 실행되므로 그 시점엔 마이페이지 라우트가
+    // Navigator에 반영돼 있다. 모달은 Navigator 위 Overlay로 열리므로 마이페이지가
+    // 전환 애니메이션 중이어도 문제없다. 그 이상 프레임을 기다릴 필요는 없다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = router.routerDelegate.navigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      showPendingMemberModal(context, storeId);
+    });
   }
 
   Future<void> _cancelSubscriptions() async {
