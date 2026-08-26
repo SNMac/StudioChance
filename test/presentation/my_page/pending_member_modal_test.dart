@@ -58,6 +58,34 @@ void main() {
     expect(find.text(UserRole.staff.displayName), findsOneWidget);
   });
 
+  testWidgets('로딩 중에는 "대기 중인 가입 신청이 없습니다" 문구를 보여주지 않는다', (tester) async {
+    final store = storeWithWaiting([]);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          // 완료되지 않는 Future로 AsyncLoading 상태를 고정한다.
+          storeDetailProvider(
+            store.id,
+          ).overrideWith((ref) => Completer<Store?>().future),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: store.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('대기 중인 가입 신청이 없습니다.'), findsNothing);
+  });
+
   testWidgets('대기자가 없으면 안내 문구를 보여준다', (tester) async {
     final store = storeWithWaiting([]);
 

@@ -116,6 +116,10 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
   Widget build(BuildContext context) {
     final storeAsync = ref.watch(storeDetailProvider(widget.storeId));
     final waitingInfos = storeAsync.asData?.value?.waitingMemberInfos ?? [];
+    final isLoadingStore = storeAsync.isLoading;
+    // storeDetailProvider는 조회 실패도 null로 흡수하므로(store_detail_provider.dart),
+    // value == null && !isLoading은 "정말 대기자가 없음"과 구분되는 조회 실패/미존재 상태다.
+    final hasLoadFailed = !isLoadingStore && storeAsync.asData?.value == null;
     // 승인/거절 처리 중에는 버튼을 비활성화해 같은 신청의 중복 제출을 막는다.
     final isMutating = ref.watch(pendingMemberControllerProvider).isLoading;
 
@@ -182,11 +186,20 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                     horizontalPadding,
                     8,
                   ),
-                  child: waitingInfos.isEmpty
+                  child: isLoadingStore
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32),
+                          child: Center(
+                            child: CircularProgressIndicator.adaptive(),
+                          ),
+                        )
+                      : hasLoadFailed || waitingInfos.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Text(
-                            '대기 중인 가입 신청이 없습니다.',
+                            hasLoadFailed
+                                ? '가입 신청 정보를 불러오지 못했습니다.'
+                                : '대기 중인 가입 신청이 없습니다.',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(color: context.secondaryLabel),
