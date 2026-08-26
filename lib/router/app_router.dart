@@ -18,6 +18,7 @@ import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/home/screens/confirmation_notice_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
 import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/sign_in/screens/sign_in_screen.dart';
@@ -163,6 +164,27 @@ GoRouter goRouter(Ref ref) {
             builder: (context, state) => ConfirmationNoticeScreen(
               reservation: state.extra as Reservation?,
             ),
+          ),
+        ],
+      ),
+
+      // 마이페이지
+      GoRoute(
+        path: SCRoute.myPage.path,
+        name: SCRoute.myPage.name,
+        pageBuilder: (context, state) =>
+            _fadePage(state: state, child: const MyPageScreen()),
+        routes: [
+          // 점포 추가 — 온보딩과 동일한 역할 선택 → 등록/초대 코드 플로우 재사용
+          GoRoute(
+            path: SCRoute.role.path,
+            builder: (context, state) => const RoleSelectionScreen(),
+            routes: _roleSubRoutes(),
+          ),
+          // 닉네임 변경
+          GoRoute(
+            path: SCRoute.nickname.path,
+            builder: (context, state) => const MyPageNicknameScreen(),
           ),
         ],
       ),
