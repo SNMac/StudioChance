@@ -33,13 +33,15 @@ test('일시적 오류는 제거 대상이 아니다', () => {
   assert.deepEqual(invalidTokensFrom(response, ['t1']), []);
 });
 
-test('형식이 잘못된 토큰도 제거 대상이다', () => {
+test('invalid-argument는 토큰이 아닌 메시지 전체에 대한 오류이므로 제거 대상이 아니다', () => {
   const response = batchResponse([
     'messaging/invalid-registration-token',
     'messaging/invalid-argument',
   ]);
 
-  assert.deepEqual(invalidTokensFrom(response, ['t1', 't2']), ['t1', 't2']);
+  // t1(형식 오류 토큰)만 제거 대상. t2는 공유 필드 오류 등으로 배치 전체가
+  // 함께 실패했을 가능성이 있어 정상 토큰을 지울 위험이 있으므로 남겨둔다.
+  assert.deepEqual(invalidTokensFrom(response, ['t1', 't2']), ['t1']);
 });
 
 test('모두 성공하면 빈 배열을 반환한다', () => {
