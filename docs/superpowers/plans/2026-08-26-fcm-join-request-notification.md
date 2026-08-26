@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 멤버가 점포 가입을 신청하면 해당 점포 관리자(ADMIN)의 모든 기기에 FCM 푸시 알림이 도착하고, 알림을 탭하면 홈 화면의 해당 점포가 표시된다.
+**Goal:** 멤버가 점포 가입을 신청하면 해당 점포 관리자(ADMIN)의 모든 기기에 FCM 푸시 알림이 도착하고, 알림을 탭하면 승인 대기 멤버 모달이 열려 그 자리에서 승인·거절할 수 있다. 알림을 놓쳐도 마이페이지에서 같은 모달에 접근할 수 있다.
 
-**Architecture:** 발송은 Cloud Functions v2 Firestore 트리거(`onDocumentUpdated('stores/{storeId}')`)가 `waitingMemberById`에 새로 추가된 키를 감지해 Admin SDK로 직접 보낸다 — 클라이언트는 발송에 관여하지 않으므로 서비스 계정 키가 앱에 들어가지 않는다. 수신측은 현재 토큰 수집만 하고 있어 알림이 표시조차 되지 않으므로, 권한 요청·토큰 갱신 반영·포그라운드 로컬 알림·알림 탭 라우팅을 `NotificationRepository` → `NotificationUseCase` → `NotificationController` 계층으로 새로 배선한다.
+**Architecture:** 발송은 Cloud Functions v2 Firestore 트리거(`onDocumentUpdated('stores/{storeId}')`)가 `waitingMemberById`에 새로 추가된 키를 감지해 Admin SDK로 직접 보낸다 — 클라이언트는 발송에 관여하지 않으므로 서비스 계정 키가 앱에 들어가지 않는다. 수신측은 현재 토큰 수집만 하고 있어 알림이 표시조차 되지 않으므로, 권한 요청·토큰 갱신 반영·포그라운드 로컬 알림·알림 탭 라우팅을 `NotificationRepository` → `NotificationUseCase` → `NotificationController` 계층으로 새로 배선한다. 착지점인 마이페이지는 `HomeTabBar`에 이미 그려져 있으나 라우팅이 없는 3번째 탭을 GoRouter에 연결해 신설하며, 점포 추가 플로우는 `_roleSubRoutes()`를, 닉네임 변경은 `NicknameFormScreen`을 그대로 재사용한다.
 
 **Tech Stack:** Cloud Functions v2 (TypeScript, Node 22, `firebase-functions` ^7, `firebase-admin` ^14), Firestore, FCM HTTP v1(Admin SDK), Flutter (`firebase_messaging` ^16.1.3, `flutter_local_notifications` ^22.3.0), Riverpod, GoRouter, freezed
 
@@ -19,8 +19,10 @@
 | FCM 발송 방식 결정 (Cloud Functions trigger vs. 클라이언트 HTTP v1 직접 호출) | **결정 완료**: Cloud Functions Firestore 트리거 (Task 1~4) |
 | 관리자 FCM 토큰 조회 로직 구현 | Task 3 (`adminUidsOf`), Task 4 (`users/{uid}.fcmTokens` 수집) |
 | 알림 페이로드(제목, 본문) 정의 | Task 3 (`buildJoinRequestMessages`) |
-| `store_repository_impl.dart` TODO 위치에 발송 로직 연결 | Task 10 (트리거 방식이므로 코드 연결 대신 TODO를 설명 주석으로 대체) |
-| 알림 수신 후 앱 내 이동 딥링크 처리 (선택) | Task 8, Task 9 |
+| `store_repository_impl.dart` TODO 위치에 발송 로직 연결 | Task 15 (트리거 방식이므로 코드 연결 대신 TODO를 설명 주석으로 대체) |
+| 알림 수신 후 앱 내 이동 딥링크 처리 (선택) | Task 8, Task 9(홈 착지) → Task 14(승인 대기 모달 착지) |
+
+**범위 확장 (이슈 본문 밖, 사용자 결정):** 딥링크 착지점을 실제로 쓸모 있게 만들기 위해 승인 대기 멤버 관리 UI와 그 진입점인 마이페이지를 이번 PR에 함께 포함한다 (Task 10~14). PR 규모가 커지는 점은 사전에 공유되었고 그대로 진행하기로 결정되었다.
 
 ---
 
@@ -42,9 +44,10 @@
 
 ## 알려진 한계 (실행 전 확인)
 
-1. **승인 대기 멤버 관리 UI가 존재하지 않는다.** 마이페이지가 미구현이라 관리자가 신청을 승인할 화면이 없다. 따라서 딥링크 착지점은 "홈 화면 + 해당 점포를 필터에 표시"까지가 최선이다. 승인 화면이 생기면 `NotificationController._handleMessage`의 이동 대상만 교체하면 된다 (Task 9에 TODO 주석으로 명시).
-2. **iOS 실기기 검증에는 APNs 인증 키가 필요하다.** Firebase 콘솔 → 프로젝트 설정 → 클라우드 메시징에 APNs 키(.p8)가 업로드되어 있지 않으면 iOS로는 한 건도 도착하지 않는다. Task 0에서 확인한다. iOS 시뮬레이터는 FCM 푸시를 받지 못하므로 실기기 필요.
-3. **관리자가 자기 자신에게 알림을 받는 경우**: 관리자는 이미 `memberById`에 있어 `waitingMemberById`에 들어갈 수 없지만, 방어적으로 신청자 본인 토큰은 발송 대상에서 제외한다 (Task 4).
+1. **예약 통계(`stats`) 탭은 여전히 화면이 없다.** `HomeTabBar`의 2번째 탭은 이번 작업 범위 밖이므로 탭해도 아무 일도 일어나지 않는 현재 동작을 유지한다 (Task 12).
+2. **Task 9는 홈에 착지하고, Task 14에서 모달 착지로 교체한다.** Task 9~13를 순차 실행하는 동안 딥링크는 홈까지만 동작하며 이는 의도된 중간 상태다.
+3. **iOS 실기기 검증에는 APNs 인증 키가 필요하다.** Firebase 콘솔 → 프로젝트 설정 → 클라우드 메시징에 APNs 키(.p8)가 업로드되어 있지 않으면 iOS로는 한 건도 도착하지 않는다. Task 0에서 확인한다. iOS 시뮬레이터는 FCM 푸시를 받지 못하므로 실기기 필요.
+4. **관리자가 자기 자신에게 알림을 받는 경우**: 관리자는 이미 `memberById`에 있어 `waitingMemberById`에 들어갈 수 없지만, 방어적으로 신청자 본인 토큰은 발송 대상에서 제외한다 (Task 4).
 
 ---
 
@@ -78,6 +81,9 @@
 | `lib/domain/use_cases/notification_use_case.dart` | 순수 Domain UseCase (interface + impl, 단순 위임 — D10) |
 | `lib/domain/use_cases/notification_use_case_provider.dart` | `@riverpod` DI 배선 (D5) |
 | `lib/presentation/providers/notification_controller.dart` | 권한 요청·토큰 등록·스트림 구독·딥링크 라우팅 |
+| `lib/presentation/providers/pending_member_controller.dart` | 승인/거절 액션을 UseCase에 위임 |
+| `lib/presentation/my_page/screens/my_page_screen.dart` | 마이페이지 — 프로필·내 점포 목록·로그아웃 |
+| `lib/presentation/my_page/widgets/pending_member_modal.dart` | 승인 대기 멤버 모달 (승인 시 역할 지정 / 거절) |
 
 ### 수정
 
@@ -91,7 +97,12 @@
 | `lib/presentation/providers/home_store_filter_controller.dart` | `ensureSelected(storeId)` 추가 |
 | `lib/my_app.dart` | `notificationControllerProvider` watch |
 | `lib/data/repositories/store_repository_impl.dart:231` | TODO 주석 → 설명 주석 |
-| `CLAUDE.md` | FCM 알림 아키텍처 섹션 추가 |
+| `lib/domain/repository_interfaces/store_repository.dart` | `removeMember` 선언 추가 |
+| `lib/data/repositories/store_repository_impl.dart` | `removeMember` 구현 추가 |
+| `lib/domain/use_cases/store_use_case.dart` | `removeMember` 선언·구현 추가 |
+| `lib/presentation/home/widgets/home_tab_bar.dart` | 로컬 `_selectedIndex` → 현재 라우트 기반 인덱스 + 실제 라우팅 |
+| `lib/router/app_router.dart` | `/my-page` 라우트 + `_roleSubRoutes()` 하위 등록 |
+| `CLAUDE.md` | FCM 알림 아키텍처 섹션 + 마이페이지 구조 추가 |
 
 ### 신규 테스트
 
@@ -100,6 +111,8 @@
 | `test/data/models/push_message_mapper_test.dart` | `RemoteMessage` → `PushMessage` 변환 |
 | `test/presentation/providers/notification_routing_test.dart` | `joinRequestStoreIdOf` 순수 함수 |
 | `test/presentation/providers/home_store_filter_controller_test.dart` | `ensureSelected` 동작 |
+| `test/data/repositories/store_repository_member_test.dart` | `removeMember` DataSource 위임 |
+| `test/presentation/my_page/pending_member_modal_test.dart` | 대기 멤버 렌더링·승인/거절 콜백 호출 |
 
 ---
 
@@ -2038,14 +2051,1357 @@ git commit -m "feat: #19 - 알림 권한 요청·토큰 등록·딥링크 컨트
 
 ---
 
-## Task 10: 실기기 검증 및 마무리
+## Task 10: 멤버 제거(거절) 도메인 배선
+
+**Files:**
+- Modify: `lib/domain/repository_interfaces/store_repository.dart`
+- Modify: `lib/data/repositories/store_repository_impl.dart`
+- Modify: `lib/domain/use_cases/store_use_case.dart`
+- Test: `test/data/repositories/store_repository_member_test.dart`
+
+**Interfaces:**
+- Consumes: `StoreDataSource.removeMember(String storeId, String uid)` (이미 구현되어 있음)
+- Produces:
+  - `StoreRepository.removeMember({required String storeId, required String uid})`
+  - `StoreUseCase.removeMember({required String storeId, required String targetUid})`
+
+**설계 노트:** `StoreFirestoreDataSource.removeMember`는 이미 `memberById.$uid` / `waitingMemberById.$uid` / `users/{uid}.storeById.$storeId`를 한 배치로 지운다. 승인 대기자 거절에 그대로 쓸 수 있으므로 새 DataSource 메서드를 만들지 않고 Repository·UseCase 위임만 추가한다. UseCase 파라미터명은 기존 `approveMember` / `updateMemberRole`과 맞춰 `targetUid`를 쓴다.
+
+- [ ] **Step 1: 실패하는 테스트 작성**
+
+`test/data/repositories/store_repository_member_test.dart`:
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+import 'package:studio_chance/data/data_sources/store_data_source.dart';
+import 'package:studio_chance/data/data_sources/user_data_source.dart';
+import 'package:studio_chance/data/repositories/store_repository_impl.dart';
+
+class MockStoreDataSource extends Mock implements StoreDataSource {}
+
+class MockUserDataSource extends Mock implements UserDataSource {}
+
+void main() {
+  late StoreRepositoryImpl repository;
+  late MockStoreDataSource mockStoreDataSource;
+  late MockUserDataSource mockUserDataSource;
+
+  setUp(() {
+    mockStoreDataSource = MockStoreDataSource();
+    mockUserDataSource = MockUserDataSource();
+    repository = StoreRepositoryImpl(
+      storeDataSource: mockStoreDataSource,
+      userDataSource: mockUserDataSource,
+    );
+  });
+
+  group('removeMember', () {
+    test('StoreDataSource.removeMember에 storeId와 uid를 그대로 전달한다', () async {
+      when(
+        () => mockStoreDataSource.removeMember(any(), any()),
+      ).thenAnswer((_) async {});
+
+      final result = await repository.removeMember(
+        storeId: 'store-123',
+        uid: 'user-456',
+      );
+
+      expect(result.isRight(), isTrue);
+      verify(
+        () => mockStoreDataSource.removeMember('store-123', 'user-456'),
+      ).called(1);
+    });
+
+    test('DataSource가 예외를 던지면 left를 반환한다', () async {
+      when(
+        () => mockStoreDataSource.removeMember(any(), any()),
+      ).thenThrow(Exception('삭제 실패'));
+
+      final result = await repository.removeMember(
+        storeId: 'store-123',
+        uid: 'user-456',
+      );
+
+      expect(result.isLeft(), isTrue);
+    });
+  });
+}
+```
+
+- [ ] **Step 2: 테스트가 실패하는지 확인**
+
+```bash
+flutter test test/data/repositories/store_repository_member_test.dart
+```
+
+기대: FAIL — `The method 'removeMember' isn't defined for the type 'StoreRepositoryImpl'`
+
+- [ ] **Step 3: Repository 인터페이스에 선언 추가**
+
+`lib/domain/repository_interfaces/store_repository.dart`의 `approveMember` 선언 **뒤에**(`/// 멤버 권한 변경` 주석 앞에) 추가한다.
+
+```dart
+
+  /// 멤버 제거 (승인 대기자 거절 / 기존 멤버 추방)
+  /// - `memberById`, `waitingMemberById`, `users/{uid}.storeById`에서 모두 제거된다.
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String uid,
+  });
+```
+
+- [ ] **Step 4: Repository 구현체에 구현 추가**
+
+`lib/data/repositories/store_repository_impl.dart`의 `approveMember` 구현 **뒤에**(`@override` + `updateMemberRole` 앞에) 추가한다.
+
+```dart
+
+  @override
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String uid,
+  }) async {
+    try {
+      await _storeDataSource.removeMember(storeId, uid);
+
+      _logger.i('멤버 제거 완료\nstoreId: $storeId, uid: $uid');
+      return right(null);
+    } catch (e) {
+      _logger.e('멤버 제거 실패');
+      return left(toException(e));
+    }
+  }
+```
+
+- [ ] **Step 5: UseCase 인터페이스에 선언 추가**
+
+`lib/domain/use_cases/store_use_case.dart`의 `approveMember` 선언 **뒤에**(`/// 멤버 권한 수정 (관리자용)` 앞에) 추가한다.
+
+```dart
+
+  /// 멤버 제거 (관리자용) — 승인 대기자 거절 및 기존 멤버 추방에 사용
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String targetUid,
+  });
+```
+
+- [ ] **Step 6: UseCase 구현 추가**
+
+같은 파일의 `approveMember` 구현 **뒤에**(`updateMemberRole` 구현 앞에) 추가한다.
+
+```dart
+
+  @override
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String targetUid,
+  }) {
+    return TaskEither(
+      () => _storeRepository.removeMember(storeId: storeId, uid: targetUid),
+    ).run();
+  }
+```
+
+- [ ] **Step 7: 테스트 통과 확인**
+
+```bash
+flutter test test/data/repositories/store_repository_member_test.dart
+```
+
+기대: PASS — 2개 테스트 통과
+
+- [ ] **Step 8: 전체 테스트 및 정적 분석**
+
+```bash
+dart format lib/domain/repository_interfaces/store_repository.dart lib/data/repositories/store_repository_impl.dart lib/domain/use_cases/store_use_case.dart test/data/repositories/store_repository_member_test.dart
+dart analyze
+flutter test
+```
+
+기대: 에러 0건, 전체 테스트 통과
+
+- [ ] **Step 9: 커밋**
+
+```bash
+git add lib/domain/repository_interfaces/store_repository.dart lib/data/repositories/store_repository_impl.dart lib/domain/use_cases/store_use_case.dart test/data/repositories/store_repository_member_test.dart
+git commit -m "feat: #19 - 멤버 제거(거절) Repository·UseCase 배선 추가"
+```
+
+---
+
+## Task 11: 승인 대기 멤버 모달
+
+**Files:**
+- Create: `lib/presentation/providers/pending_member_controller.dart`
+- Create: `lib/presentation/my_page/widgets/pending_member_modal.dart`
+- Test: `test/presentation/my_page/pending_member_modal_test.dart`
+
+**Interfaces:**
+- Consumes: `StoreUseCase.approveMember` / `removeMember` (Task 10), `storeDetailProvider(storeId)` (기존)
+- Produces:
+  - `pendingMemberControllerProvider` — `approve({storeId, uid, role})`, `reject({storeId, uid})`
+  - `Future<void> showPendingMemberModal(BuildContext context, String storeId)`
+
+**설계 노트:**
+- **승인 시 역할을 다시 고르지 않는다.** 신청자가 초대 코드 입력 단계에서 이미 역할을 선택해 `waitingMemberById.{uid}.role`에 저장했으므로, 그 역할 그대로 승인한다. 관리자가 역할을 바꾸고 싶으면 승인 후 `updateMemberRole`로 처리하며, 그 UI는 이번 범위 밖이다.
+- 모달 골격은 `lib/presentation/home/widgets/store_filter_modal.dart`를 그대로 따른다 (두 detent 시트, `Listener` 기반 드래그, `AnimationController(lowerBound: initialSize)`). CLAUDE.md "모달 시트 패턴" 준수 — `DraggableScrollableSheet` 금지.
+- 승인/거절 후 `ref.invalidate(storeDetailProvider(storeId))`로 목록을 갱신한다. 현재 관리자 본인의 `storeById`는 바뀌지 않으므로 `currentUserProvider`는 건드리지 않는다.
+
+- [ ] **Step 1: 실패하는 위젯 테스트 작성**
+
+프로젝트 테스트 규칙상 픽셀·색상·폰트는 검증하지 않고 렌더링 내용과 콜백 호출만 확인한다.
+
+`test/presentation/my_page/pending_member_modal_test.dart`:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/presentation/home/controllers/store_detail_provider.dart';
+import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
+
+import '../../helpers/fake_entities.dart';
+
+Store storeWithWaiting(List<StoreMemberInfo> waiting) =>
+    fakeStore.copyWith(waitingMemberInfos: waiting);
+
+Widget wrap(Widget child, {required Store store}) {
+  return ProviderScope(
+    overrides: [
+      storeDetailProvider(store.id).overrideWith((ref) async => store),
+    ],
+    child: MaterialApp(
+      home: Scaffold(
+        body: LayoutBuilder(
+          builder: (_, constraints) => child,
+        ),
+      ),
+    ),
+  );
+}
+
+void main() {
+  testWidgets('대기 중인 신청자의 닉네임과 신청 역할을 보여준다', (tester) async {
+    final store = storeWithWaiting([
+      StoreMemberInfo(
+        user: fakeUser.copyWith(id: 'applicant-1', nickname: '홍길동'),
+        role: UserRole.staff,
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      wrap(
+        PendingMemberModal(storeId: store.id, maxAvailableHeight: 600),
+        store: store,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('홍길동'), findsOneWidget);
+    expect(find.text(UserRole.staff.displayName), findsOneWidget);
+  });
+
+  testWidgets('대기자가 없으면 안내 문구를 보여준다', (tester) async {
+    final store = storeWithWaiting([]);
+
+    await tester.pumpWidget(
+      wrap(
+        PendingMemberModal(storeId: store.id, maxAvailableHeight: 600),
+        store: store,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('대기 중인 가입 신청이 없습니다.'), findsOneWidget);
+  });
+
+  testWidgets('닉네임이 없으면 이름으로 대체 표시한다', (tester) async {
+    final store = storeWithWaiting([
+      StoreMemberInfo(
+        user: fakeUser.copyWith(id: 'applicant-2', nickname: null, name: '김철수'),
+        role: UserRole.viewer,
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      wrap(
+        PendingMemberModal(storeId: store.id, maxAvailableHeight: 600),
+        store: store,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('김철수'), findsOneWidget);
+  });
+}
+```
+
+- [ ] **Step 2: 테스트가 실패하는지 확인**
+
+```bash
+flutter test test/presentation/my_page/pending_member_modal_test.dart
+```
+
+기대: FAIL — `Target of URI doesn't exist: '.../pending_member_modal.dart'`
+
+- [ ] **Step 3: 컨트롤러 작성**
+
+`lib/presentation/providers/pending_member_controller.dart`:
+
+```dart
+import 'package:logger/logger.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
+import 'package:studio_chance/presentation/home/controllers/store_detail_provider.dart';
+
+part 'pending_member_controller.g.dart';
+
+/// 승인 대기 멤버의 승인·거절 액션을 UseCase에 위임한다.
+///
+/// 위젯이 `*_use_case_provider.dart`를 직접 읽지 않도록 하기 위한 계층이다.
+/// (CLAUDE.md "Presentation → Domain 접근 규칙")
+@riverpod
+class PendingMemberController extends _$PendingMemberController {
+  final _logger = Logger();
+
+  @override
+  FutureOr<void> build() {}
+
+  /// 신청자를 승인한다. 역할은 신청 시 선택한 값을 그대로 사용한다.
+  Future<void> approve({
+    required String storeId,
+    required String uid,
+    required UserRole role,
+  }) async {
+    final result = await ref
+        .read(storeUseCaseProvider)
+        .approveMember(storeId: storeId, targetUid: uid, role: role);
+    final stackTrace = StackTrace.current;
+
+    result.fold(
+      (e) {
+        _logger.e('멤버 승인 실패', error: e);
+        state = AsyncError(e, stackTrace);
+      },
+      (_) => ref.invalidate(storeDetailProvider(storeId)),
+    );
+  }
+
+  /// 신청을 거절한다 (대기 명단 및 대상 사용자의 점포 정보에서 제거).
+  Future<void> reject({required String storeId, required String uid}) async {
+    final result = await ref
+        .read(storeUseCaseProvider)
+        .removeMember(storeId: storeId, targetUid: uid);
+    final stackTrace = StackTrace.current;
+
+    result.fold(
+      (e) {
+        _logger.e('가입 신청 거절 실패', error: e);
+        state = AsyncError(e, stackTrace);
+      },
+      (_) => ref.invalidate(storeDetailProvider(storeId)),
+    );
+  }
+}
+```
+
+- [ ] **Step 4: 모달 작성**
+
+`lib/presentation/my_page/widgets/pending_member_modal.dart`:
+
+```dart
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/presentation/colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
+import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/home/controllers/store_detail_provider.dart';
+import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
+
+const double _kModalInitialSize = 0.5;
+const double _kModalMaxSize = 1.0;
+
+/// 승인 대기 멤버 모달.
+///
+/// 각 항목: (닉네임) (신청 역할) (거절) (승인).
+/// 승인 시 역할은 신청자가 초대 코드 단계에서 선택한 값을 그대로 사용한다.
+///
+/// 두 detent 시트 구조는 [StoreFilterModal]과 동일하다 (CLAUDE.md "모달 시트 패턴").
+class PendingMemberModal extends ConsumerStatefulWidget {
+  const PendingMemberModal({
+    super.key,
+    required this.storeId,
+    required this.maxAvailableHeight,
+  });
+
+  final String storeId;
+  final double maxAvailableHeight;
+
+  @override
+  ConsumerState<PendingMemberModal> createState() => _PendingMemberModalState();
+}
+
+class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _sheetController;
+  double _grabberDragStartSize = _kModalInitialSize;
+  double _grabberDragStartY = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetController = AnimationController(
+      vsync: this,
+      value: _kModalInitialSize,
+      lowerBound: _kModalInitialSize,
+      upperBound: _kModalMaxSize,
+    );
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
+  }
+
+  void _dismissModal() => Navigator.pop(context);
+
+  void _animateTo(double target) {
+    _sheetController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _snapToNearest() {
+    const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
+    _animateTo(
+      _sheetController.value >= mid ? _kModalMaxSize : _kModalInitialSize,
+    );
+  }
+
+  String _displayName(StoreMemberInfo info) =>
+      info.user.nickname ?? info.user.name;
+
+  void _onApprove(StoreMemberInfo info) {
+    showCustomAlertDialog(
+      context: context,
+      title: '${_displayName(info)}님을 승인할까요?',
+      content: '${info.role.displayName} 역할로 점포에 참여하게 됩니다.',
+      onConfirmAfterPop: () {
+        ref
+            .read(pendingMemberControllerProvider.notifier)
+            .approve(
+              storeId: widget.storeId,
+              uid: info.user.id,
+              role: info.role,
+            );
+      },
+    );
+  }
+
+  void _onReject(StoreMemberInfo info) {
+    showCustomAlertDialog(
+      context: context,
+      title: '${_displayName(info)}님의 신청을 거절할까요?',
+      content: '거절한 신청은 되돌릴 수 없습니다.',
+      confirmText: '거절',
+      isDestructive: true,
+      onConfirmAfterPop: () {
+        ref
+            .read(pendingMemberControllerProvider.notifier)
+            .reject(storeId: widget.storeId, uid: info.user.id);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storeAsync = ref.watch(storeDetailProvider(widget.storeId));
+    final waitingInfos = storeAsync.asData?.value?.waitingMemberInfos ?? [];
+
+    return AnimatedBuilder(
+      animation: _sheetController,
+      builder: (ctx, child) => SizedBox(
+        height: widget.maxAvailableHeight * _sheetController.value,
+        child: child,
+      ),
+      child: Material(
+        color: context.systemGroupedBackground,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(modalTopCornerRadius),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) {
+                _grabberDragStartSize = _sheetController.value;
+                _grabberDragStartY = event.position.dy;
+              },
+              onPointerMove: (event) {
+                final delta = -event.delta.dy / widget.maxAvailableHeight;
+                _sheetController.value = (_sheetController.value + delta).clamp(
+                  _kModalInitialSize,
+                  _kModalMaxSize,
+                );
+              },
+              onPointerUp: (event) {
+                final totalDy = event.position.dy - _grabberDragStartY;
+                if (totalDy.abs() < 10) return;
+                if (totalDy > 30) {
+                  if (_grabberDragStartSize <= _kModalInitialSize + 0.05) {
+                    _dismissModal();
+                  } else {
+                    _animateTo(_kModalInitialSize);
+                  }
+                } else if (totalDy < -30) {
+                  _animateTo(_kModalMaxSize);
+                } else {
+                  _snapToNearest();
+                }
+              },
+              onPointerCancel: (_) => _snapToNearest(),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ModalGrabber(),
+                  ModalAppBar(title: '가입 신청'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: SafeAreaWithPadding(
+                  top: false,
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    horizontalPadding,
+                    16,
+                    horizontalPadding,
+                    8,
+                  ),
+                  child: waitingInfos.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Text(
+                            '대기 중인 가입 신청이 없습니다.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: context.secondaryLabel),
+                          ),
+                        )
+                      : GroupedFormContainer(
+                          children: [
+                            for (final info in waitingInfos)
+                              _PendingMemberRow(
+                                name: _displayName(info),
+                                roleLabel: info.role.displayName,
+                                onApprove: () => _onApprove(info),
+                                onReject: () => _onReject(info),
+                              ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 대기 멤버 한 줄: (닉네임) (신청 역할) (거절) (승인)
+class _PendingMemberRow extends StatelessWidget {
+  const _PendingMemberRow({
+    required this.name,
+    required this.roleLabel,
+    required this.onApprove,
+    required this.onReject,
+  });
+
+  final String name;
+  final String roleLabel;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return SizedBox(
+      height: inputFormComponentHeight,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: horizontalPadding,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                style: textTheme.bodyLarge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              roleLabel,
+              style: textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.normal,
+                color: context.secondaryLabel,
+              ),
+            ),
+            const SizedBox(width: 8),
+            CupertinoButton(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: onReject,
+              child: Text(
+                '거절',
+                style: textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ),
+            CupertinoButton(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.only(left: 8),
+              onPressed: onApprove,
+              child: Text(
+                '승인',
+                style: textTheme.bodyLarge?.copyWith(color: context.systemBlue),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 승인 대기 멤버 모달 표시.
+Future<void> showPendingMemberModal(BuildContext context, String storeId) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    enableDrag: false,
+    backgroundColor: Colors.transparent,
+    barrierColor: modalBarrierColor,
+    builder: (ctx) => LayoutBuilder(
+      builder: (_, constraints) => PendingMemberModal(
+        storeId: storeId,
+        maxAvailableHeight: constraints.maxHeight,
+      ),
+    ),
+  );
+}
+```
+
+- [ ] **Step 5: 코드 생성**
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+기대: `lib/presentation/providers/pending_member_controller.g.dart` 생성
+
+- [ ] **Step 6: 테스트 통과 확인**
+
+```bash
+flutter test test/presentation/my_page/pending_member_modal_test.dart
+```
+
+기대: PASS — 3개 테스트 통과
+
+`modalBarrierColor`를 찾지 못한다는 에러가 나면 `lib/presentation/colors.dart`에 정의되어 있는지 확인하고, `store_filter_modal.dart`의 import를 그대로 따른다.
+
+- [ ] **Step 7: 정적 분석 및 포맷**
+
+```bash
+dart format lib/presentation/providers/pending_member_controller.dart lib/presentation/my_page/widgets/pending_member_modal.dart test/presentation/my_page/pending_member_modal_test.dart
+dart analyze
+```
+
+기대: 에러 0건
+
+- [ ] **Step 8: 커밋**
+
+```bash
+git add lib/presentation/providers/pending_member_controller.dart lib/presentation/providers/pending_member_controller.g.dart lib/presentation/my_page/widgets/pending_member_modal.dart test/presentation/my_page/pending_member_modal_test.dart
+git commit -m "feat: #19 - 승인 대기 멤버 모달 및 승인·거절 컨트롤러 추가"
+```
+
+---
+
+## Task 12: 마이페이지 라우트 등록 및 탭바 배선
+
+**Files:**
+- Modify: `lib/router/app_router.dart`
+- Modify: `lib/presentation/home/widgets/home_tab_bar.dart`
+- Create: `lib/presentation/my_page/screens/my_page_screen.dart` (이 Task에서는 뼈대만)
+
+**Interfaces:**
+- Consumes: `SCRoute.myPage` (이미 enum에 존재), `_roleSubRoutes()` (이미 app_router에 존재)
+- Produces: `/my-page` 라우트, 탭 전환이 실제로 동작하는 `HomeTabBar`
+
+**설계 노트:**
+- `HomeTabBar`는 이미 3탭(홈 / 예약 통계 / 마이페이지)을 그리고 있으나 `_onTabTapped`이 로컬 `setState`만 하고 화면 전환이 없다. 로컬 상태를 없애고 **현재 라우트에서 인덱스를 파생**시키면 홈·마이페이지 두 화면이 같은 위젯을 공유하면서도 선택 상태가 어긋나지 않는다. `StatefulWidget` → `StatelessWidget`으로 바뀐다.
+- 예약 통계(`stats`)는 화면이 없으므로 탭해도 아무 동작도 하지 않는 현재 상태를 유지한다.
+- `_roleSubRoutes()`는 이미 온보딩에서 쓰는 재사용 함수다. `/my-page` 하위에 그대로 붙이면 점포 추가 플로우(역할 선택 → 점포 등록 / 초대 코드)가 완성된다. CLAUDE.md의 "`/commons`: 온보딩·마이페이지가 공유하는 플로우 화면" 설계 의도 그대로다.
+- 탭 전환은 `context.go`를 쓴다 (스택을 쌓지 않고 교체).
+
+- [ ] **Step 1: 마이페이지 화면 뼈대 작성**
+
+`lib/presentation/my_page/screens/my_page_screen.dart`:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
+
+class MyPageScreen extends ConsumerWidget {
+  const MyPageScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      backgroundColor: context.systemGroupedBackground,
+      appBar: const CustomAppBar(title: '마이페이지'),
+      body: const SafeAreaWithPadding(
+        top: false,
+        child: SizedBox.shrink(),
+      ),
+      bottomNavigationBar: const HomeTabBar(),
+    );
+  }
+}
+```
+
+- [ ] **Step 2: `HomeTabBar`를 라우트 기반으로 전환**
+
+`lib/presentation/home/widgets/home_tab_bar.dart` 전체를 아래로 교체한다. 아이콘·라벨·크기·색상 값은 기존과 동일하게 유지한다.
+
+```dart
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/router/router_path.dart';
+
+/// 홈·마이페이지가 공유하는 하단 탭바
+///
+/// 선택 상태는 로컬 state가 아니라 현재 라우트에서 파생한다.
+/// 두 화면이 같은 위젯을 쓰면서도 선택 표시가 어긋나지 않게 하기 위함이다.
+class HomeTabBar extends StatelessWidget {
+  const HomeTabBar({super.key});
+
+  /// 탭 항목 정의
+  static const List<_TabItem> _tabs = [
+    _TabItem(
+      label: '홈',
+      icon: CupertinoIcons.house,
+      activeIcon: CupertinoIcons.house_fill,
+    ),
+    _TabItem(
+      label: '예약 통계',
+      icon: CupertinoIcons.chart_bar,
+      activeIcon: CupertinoIcons.chart_bar_fill,
+    ),
+    _TabItem(
+      label: '마이페이지',
+      icon: CupertinoIcons.person,
+      activeIcon: CupertinoIcons.person_fill,
+    ),
+  ];
+
+  /// 현재 라우트로부터 선택된 탭 인덱스를 구한다.
+  int _selectedIndexOf(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    if (location.startsWith(SCRoute.myPage.path)) return 2;
+    if (location.startsWith(SCRoute.stats.path)) return 1;
+    return 0;
+  }
+
+  void _onTabTapped(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go(SCRoute.home.path);
+      case 2:
+        context.go(SCRoute.myPage.path);
+      // TODO: 예약 통계(stats) 화면 구현 후 연결 (#19 범위 밖)
+      default:
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+    // 비선택 아이콘/텍스트 색상
+    const Color inactiveColor = Color(0xFF999999);
+    // 선택된 아이콘/텍스트 색상
+    final Color activeColor = context.systemBlue;
+    final int selectedIndex = _selectedIndexOf(context);
+
+    return Container(
+      height: tabBarHeight + bottomPadding,
+      decoration: BoxDecoration(
+        color: context.systemBackground,
+        border: Border(
+          top: BorderSide(color: context.separator, width: 0.5),
+        ),
+      ),
+      child: Row(
+        children: List.generate(_tabs.length, (index) {
+          final tab = _tabs[index];
+          final bool isSelected = index == selectedIndex;
+          final Color color = isSelected ? activeColor : inactiveColor;
+
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _onTabTapped(context, index),
+              child: Padding(
+                // 하단 safe area 높이만큼 아이콘/텍스트를 위로 올림
+                padding: EdgeInsets.only(bottom: bottomPadding),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isSelected ? tab.activeIcon : tab.icon,
+                      size: 24,
+                      color: color,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tab.label,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: color,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// 탭 항목 데이터 모델
+class _TabItem {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+
+  const _TabItem({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
+}
+```
+
+- [ ] **Step 3: 라우터에 `/my-page` 등록**
+
+`lib/router/app_router.dart`의 import에 추가한다.
+
+```dart
+import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
+```
+
+`// 온보딩 섹션` 주석이 붙은 `GoRoute(path: '/onboarding', ...)` **바로 앞에** 아래 라우트를 추가한다.
+
+```dart
+      // 마이페이지
+      GoRoute(
+        path: SCRoute.myPage.path,
+        name: SCRoute.myPage.name,
+        pageBuilder: (context, state) =>
+            _fadePage(state: state, child: const MyPageScreen()),
+        routes: [
+          // 점포 추가 — 온보딩과 동일한 역할 선택 → 등록/초대 코드 플로우 재사용
+          GoRoute(
+            path: SCRoute.role.path,
+            builder: (context, state) => const RoleSelectionScreen(),
+            routes: _roleSubRoutes(),
+          ),
+          // 닉네임 변경
+          GoRoute(
+            path: SCRoute.nickname.path,
+            builder: (context, state) => const MyPageNicknameScreen(),
+          ),
+        ],
+      ),
+```
+
+`MyPageNicknameScreen`은 Task 13에서 만든다. 이 Task에서는 컴파일을 위해 아래 임시 위젯을 `my_page_screen.dart` 하단에 함께 둔다 (Task 13에서 실제 구현으로 교체).
+
+```dart
+/// 닉네임 변경 화면 — Task 13에서 `NicknameFormScreen` 재사용 구현으로 교체된다.
+class MyPageNicknameScreen extends ConsumerWidget {
+  const MyPageNicknameScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const Scaffold(body: SizedBox.shrink());
+  }
+}
+```
+
+`my_page_screen.dart`의 import에 위 위젯이 쓰는 것이 없으면 그대로 두고, `app_router.dart`에서 `MyPageNicknameScreen`을 import 하도록 한다 (같은 파일이므로 기존 import로 해결된다).
+
+- [ ] **Step 4: `redirect`가 마이페이지를 막지 않는지 확인**
+
+`app_router.dart`의 `redirect`는 `AppStatus.authenticated`일 때 `isSplash || isLoggingIn || isOnboarding`인 경우에만 홈으로 보낸다. `/my-page`는 셋 중 어느 것도 아니므로 통과한다. **코드 변경 불필요** — 확인만 한다.
+
+- [ ] **Step 5: 빌드 및 정적 분석**
+
+```bash
+dart format lib/router/app_router.dart lib/presentation/home/widgets/home_tab_bar.dart lib/presentation/my_page/screens/my_page_screen.dart
+dart analyze
+flutter test
+```
+
+기대: 에러 0건, 전체 테스트 통과
+
+- [ ] **Step 6: 수동 확인 — 탭 전환**
+
+```bash
+flutter run --flavor dev --target lib/main_dev.dart
+```
+
+홈 화면 하단 탭바에서 "마이페이지" 탭 → 빈 마이페이지 화면으로 이동하고 탭바의 선택 표시가 마이페이지로 바뀐다. "홈" 탭 → 홈으로 되돌아온다. "예약 통계" 탭 → 아무 일도 일어나지 않는다.
+
+- [ ] **Step 7: 커밋**
+
+```bash
+git add lib/router/app_router.dart lib/presentation/home/widgets/home_tab_bar.dart lib/presentation/my_page/screens/my_page_screen.dart
+git commit -m "feat: #19 - 마이페이지 라우트 등록 및 하단 탭바 라우팅 배선"
+```
+
+---
+
+## Task 13: 마이페이지 화면 구현
+
+**Files:**
+- Modify: `lib/presentation/my_page/screens/my_page_screen.dart`
+
+**Interfaces:**
+- Consumes: `currentUserProvider` (기존), `storeDetailProvider` (기존), `showPendingMemberModal` (Task 11), `NicknameFormScreen` (기존), `SCRoute.role` / `SCRoute.nickname` (기존)
+- Produces: 완성된 `MyPageScreen`, `MyPageNicknameScreen`
+
+**설계 노트:**
+- 구성: ① 프로필(닉네임·이메일, 탭하면 닉네임 변경) ② 내 점포 목록(색상 도트 + 점포명 + 역할, ADMIN 점포는 대기 인원 배지 → 탭하면 승인 대기 모달) ③ 점포 추가 ④ 로그아웃.
+- 행 위젯은 `TitleNavigationButton`(title + contentLeading + content + chevron)을 그대로 쓴다. 색상 도트를 `contentLeading`에 넣으면 점포 필터 모달과 같은 모양이 된다.
+- 대기 인원은 `storeDetailProvider(storeId)`를 ADMIN 점포에 대해서만 watch해 `waitingMemberInfos.length`로 구한다. VIEWER/STAFF 점포까지 조회하면 불필요한 Firestore 읽기가 발생하므로 역할로 먼저 거른다.
+- 로그아웃은 `showCustomAlertDialog(isDestructive: true)` 확인 후 `AuthUseCase.signOut()`. 위젯이 UseCase를 직접 읽지 않도록 `AppAuthController`가 아닌 별도 경로가 필요한지 확인하고, 기존에 로그아웃을 수행하는 컨트롤러(`RoleSelectionController.skipOnboarding` 등)의 패턴을 따른다. 적절한 컨트롤러가 없으면 `lib/presentation/providers/`에 `SignOutController`를 만든다.
+
+- [ ] **Step 1: 기존 로그아웃 경로 확인**
+
+```bash
+grep -rn "signOut" lib/presentation/ --include="*.dart" | grep -v "\.g\.dart"
+```
+
+이미 로그아웃을 수행하는 컨트롤러가 있으면 그것을 재사용한다. 없으면 Step 2에서 `SignOutController`를 만든다.
+
+- [ ] **Step 2: 필요 시 `SignOutController` 작성**
+
+Step 1에서 재사용할 컨트롤러를 찾지 못한 경우에만 `lib/presentation/providers/sign_out_controller.dart`를 만든다.
+
+```dart
+import 'package:logger/logger.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'package:studio_chance/domain/use_cases/auth_use_case_provider.dart';
+
+part 'sign_out_controller.g.dart';
+
+/// 로그아웃 액션을 UseCase에 위임한다.
+/// (CLAUDE.md "Presentation → Domain 접근 규칙")
+@riverpod
+class SignOutController extends _$SignOutController {
+  final _logger = Logger();
+
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> signOut() async {
+    try {
+      await ref.read(authUseCaseProvider).signOut();
+    } catch (e, stackTrace) {
+      _logger.e('로그아웃 실패', error: e);
+      state = AsyncError(e, stackTrace);
+    }
+  }
+}
+```
+
+- [ ] **Step 3: 마이페이지 화면 구현**
+
+`lib/presentation/my_page/screens/my_page_screen.dart` 전체를 아래로 교체한다.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/user_store_info.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
+import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_form_screen.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/home/controllers/store_detail_provider.dart';
+import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
+import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
+import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/sign_out_controller.dart';
+import 'package:studio_chance/router/router_path.dart';
+
+class MyPageScreen extends ConsumerWidget {
+  const MyPageScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider).asData?.value;
+
+    return Scaffold(
+      backgroundColor: context.systemGroupedBackground,
+      appBar: const CustomAppBar(title: '마이페이지'),
+      bottomNavigationBar: const HomeTabBar(),
+      body: SingleChildScrollView(
+        child: SafeAreaWithPadding(
+          top: false,
+          bottom: false,
+          padding: const EdgeInsetsDirectional.fromSTEB(
+            horizontalPadding,
+            16,
+            horizontalPadding,
+            16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 24,
+            children: [
+              // 프로필
+              GroupedFormContainer(
+                children: [
+                  TitleNavigationButton(
+                    title: '닉네임',
+                    content: user?.nickname ?? '',
+                    isChangeable: true,
+                    onPressed: () => SCRoute.nickname.pushChild(context),
+                  ),
+                  TitleNavigationButton(
+                    title: '이메일',
+                    content: user?.email ?? '',
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+
+              // 내 점포
+              GroupedFormContainer(
+                header: _SectionHeader(title: '내 점포'),
+                children: [
+                  for (final info in user?.storeInfos ?? <UserStoreInfo>[])
+                    _StoreRow(info: info),
+                  TitleNavigationButton(
+                    title: '점포 추가',
+                    isChangeable: true,
+                    onPressed: () => SCRoute.role.pushChild(context),
+                  ),
+                ],
+              ),
+
+              // 로그아웃
+              GroupedFormContainer(
+                children: [
+                  TitleNavigationButton(
+                    title: '로그아웃',
+                    onPressed: () => showCustomAlertDialog(
+                      context: context,
+                      title: '로그아웃할까요?',
+                      confirmText: '로그아웃',
+                      isDestructive: true,
+                      onConfirmAfterPop: () {
+                        ref.read(signOutControllerProvider.notifier).signOut();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 그룹 상단 라벨
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(horizontalPadding, 0, 0, 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: context.secondaryLabel,
+        ),
+      ),
+    );
+  }
+}
+
+/// 점포 한 줄. ADMIN 점포는 대기 인원을 함께 표시하고 탭하면 승인 대기 모달을 연다.
+class _StoreRow extends ConsumerWidget {
+  const _StoreRow({required this.info});
+
+  final UserStoreInfo info;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = info.role == UserRole.admin;
+
+    // 관리자인 점포만 대기 인원을 조회한다 (불필요한 Firestore 읽기 방지)
+    final waitingCount = isAdmin
+        ? ref
+                  .watch(storeDetailProvider(info.id))
+                  .asData
+                  ?.value
+                  ?.waitingMemberInfos
+                  .length ??
+              0
+        : 0;
+
+    final content = waitingCount > 0
+        ? '${info.role.displayName} · 신청 $waitingCount'
+        : info.role.displayName;
+
+    return TitleNavigationButton(
+      title: info.name,
+      content: content,
+      isChangeable: isAdmin,
+      contentLeading: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(info.color.foregroundColorValue),
+        ),
+      ),
+      onPressed: isAdmin
+          ? () => showPendingMemberModal(context, info.id)
+          : () {},
+    );
+  }
+}
+
+/// 마이페이지 닉네임 변경 화면 — 온보딩과 동일한 폼을 재사용한다.
+class MyPageNicknameScreen extends ConsumerWidget {
+  const MyPageNicknameScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider).asData?.value;
+
+    return NicknameFormScreen(
+      initialNickname: user?.nickname,
+      title: '닉네임 변경',
+      onComplete: (nickname) async {
+        if (context.mounted) context.pop();
+      },
+    );
+  }
+}
+```
+
+- [ ] **Step 4: 닉네임 저장 경로 확인 및 연결**
+
+`NicknameFormScreen`의 `onComplete`는 닉네임 문자열만 넘겨준다. 실제 저장은 `NicknameFormController` 또는 `UserUseCase.updateUser`가 담당하므로, 온보딩(`OnboardingNicknameScreen`)이 어떻게 저장하는지 확인해 같은 방식으로 연결한다.
+
+```bash
+cat lib/presentation/onboarding/screens/onboarding_nickname_screen.dart
+```
+
+확인한 저장 호출을 Step 3의 `onComplete` 안, `context.pop()` **앞에** 넣는다. 저장 후 `ref.invalidate(currentUserProvider)`로 마이페이지 표시를 갱신한다.
+
+- [ ] **Step 5: 코드 생성**
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+기대: `sign_out_controller.g.dart` 생성 (Step 2를 수행한 경우)
+
+- [ ] **Step 6: 정적 분석 및 전체 테스트**
+
+```bash
+dart format lib/presentation/my_page/screens/my_page_screen.dart lib/presentation/providers/sign_out_controller.dart
+dart analyze
+flutter test
+```
+
+기대: 에러 0건, 전체 테스트 통과. `_SectionHeader`가 `const` 생성자를 요구한다는 lint가 나면 `const _SectionHeader(title: '내 점포')`로 바꾼다.
+
+- [ ] **Step 7: 수동 확인**
+
+```bash
+flutter run --flavor dev --target lib/main_dev.dart
+```
+
+1. 마이페이지 탭 → 닉네임·이메일·내 점포·로그아웃이 보인다
+2. 관리자 점포 행을 탭 → 승인 대기 모달이 열린다 (대기자가 없으면 안내 문구)
+3. 다른 계정으로 가입 신청 후 다시 열면 신청자가 보이고, 승인/거절이 동작하며 목록이 갱신된다
+4. 닉네임 행 → 닉네임 변경 화면, 저장 후 마이페이지 표시가 갱신된다
+5. 점포 추가 → 역할 선택 화면으로 이동한다
+6. 로그아웃 → 확인 후 로그인 화면으로 이동한다
+
+- [ ] **Step 8: 커밋**
+
+```bash
+git add lib/presentation/my_page/screens/my_page_screen.dart lib/presentation/providers/sign_out_controller.dart lib/presentation/providers/sign_out_controller.g.dart
+git commit -m "feat: #19 - 마이페이지 화면 구현 (프로필·내 점포·승인 대기 진입·로그아웃)"
+```
+
+---
+
+## Task 14: 딥링크 착지점을 승인 대기 모달로 교체
+
+**Files:**
+- Modify: `lib/presentation/providers/notification_controller.dart`
+
+**Interfaces:**
+- Consumes: `showPendingMemberModal` (Task 11), `/my-page` 라우트 (Task 12)
+- Produces: 알림 탭 → 마이페이지 이동 + 승인 대기 모달 자동 오픈
+
+**설계 노트:** Task 9에서는 홈으로 보내고 점포 필터만 켰다. 이제 착지점이 생겼으므로 마이페이지로 이동한 뒤 해당 점포의 승인 대기 모달을 연다. 모달을 열려면 `BuildContext`가 필요한데 컨트롤러에는 없으므로, `GoRouter.routerDelegate.navigatorKey.currentContext`를 라우팅 완료 후 사용한다. 프레임이 끝난 뒤에 열어야 이동 중 `Navigator` 조작 충돌이 없으므로 `WidgetsBinding.instance.addPostFrameCallback`으로 감싼다.
+
+- [ ] **Step 1: import 교체**
+
+`lib/presentation/providers/notification_controller.dart`의 import에서 아래 두 줄을 제거한다.
+
+```dart
+import 'package:studio_chance/presentation/providers/home_store_filter_controller.dart';
+```
+
+아래 두 줄을 추가한다.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
+```
+
+- [ ] **Step 2: `_handleMessage` 교체**
+
+`_handleMessage` 메서드를 아래로 교체한다.
+
+```dart
+  void _handleMessage(PushMessage message) {
+    final storeId = joinRequestStoreIdOf(message);
+    if (storeId == null) return;
+
+    final status = ref.read(appAuthControllerProvider).valueOrNull;
+    if (status != AppStatus.authenticated) {
+      // 스플래시·온보딩 중이면 이동할 수 없으므로 보류한다.
+      _pendingMessage = message;
+      return;
+    }
+
+    final router = ref.read(goRouterProvider);
+    router.go(SCRoute.myPage.path);
+
+    // 라우팅이 반영된 다음 프레임에 모달을 연다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = router.routerDelegate.navigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      showPendingMemberModal(context, storeId);
+    });
+  }
+```
+
+- [ ] **Step 3: 정적 분석**
+
+```bash
+dart format lib/presentation/providers/notification_controller.dart
+dart analyze
+```
+
+기대: 에러 0건. `home_store_filter_controller.dart` import를 지운 뒤 `ensureSelected` 참조가 남아 있다는 에러가 나면 Step 2의 교체가 누락된 것이다.
+
+`ensureSelected`는 이제 호출부가 없어지지만, 향후 다른 알림에서 재사용할 수 있으므로 **삭제하지 않는다.** `dart analyze`가 미사용을 지적하지 않는 public 메서드이므로 그대로 둔다. Task 9의 테스트도 유지된다.
+
+- [ ] **Step 4: 전체 테스트**
+
+```bash
+flutter test
+```
+
+기대: 전체 통과 (`notification_routing_test.dart`의 `joinRequestStoreIdOf` 테스트는 변경 없음)
+
+- [ ] **Step 5: 커밋**
+
+```bash
+git add lib/presentation/providers/notification_controller.dart
+git commit -m "feat: #19 - 알림 딥링크 착지점을 승인 대기 모달로 연결"
+```
+
+---
+
+## Task 15: 실기기 검증 및 마무리
 
 **Files:**
 - Modify: `lib/data/repositories/store_repository_impl.dart` (231행 부근 TODO)
 - Modify: `CLAUDE.md`
 
 **Interfaces:**
-- Consumes: Task 1~9의 전체 결과
+- Consumes: Task 1~14의 전체 결과
 - Produces: 없음
 
 - [ ] **Step 1: 실기기 검증 — 백그라운드 알림**
@@ -2082,7 +3438,7 @@ firebase functions:log --only notifyAdminsOnJoinRequest -P dev
 2. 가입 신청을 발생시킨다.
 3. 도착한 알림을 탭한다.
 
-기대: 앱이 실행되고 로그인/스플래시를 거쳐 홈 화면에 도착하며, 해당 점포가 캘린더에 표시된다(필터에서 꺼져 있었다면 켜진다).
+기대: 앱이 실행되고 로그인/스플래시를 거쳐 마이페이지에 도착하며, 해당 점포의 승인 대기 모달이 자동으로 열리고 신청자가 목록에 보인다. 그 자리에서 승인·거절이 동작한다.
 
 백그라운드 상태에서 탭하는 경우도 동일하게 확인한다.
 
@@ -2130,6 +3486,14 @@ firebase functions:log --only notifyAdminsOnJoinRequest -P dev
   - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
   - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
 - **알려진 제약**: FCM Admin SDK가 registration token을 deprecated 처리하고 FID를 권장한다. 현행은 token 기반이며 FID 마이그레이션은 별도 이슈.
+
+## 마이페이지 / 하단 탭바
+
+- `HomeTabBar`(`lib/presentation/home/widgets/`)는 홈·마이페이지가 **공유**한다. 선택 인덱스는 로컬 state가 아니라 `GoRouterState.of(context).uri.path`에서 파생하므로 두 화면의 표시가 어긋나지 않는다.
+- 예약 통계(`stats`) 탭은 화면이 없어 탭해도 아무 동작도 하지 않는다 (`_onTabTapped`의 TODO).
+- `/my-page` 하위는 온보딩과 동일한 `_roleSubRoutes()`를 재사용한다 — 점포 추가 플로우를 중복 구현하지 않는다.
+- 승인 대기 멤버 관리는 `showPendingMemberModal(context, storeId)` 모달이며, 마이페이지의 ADMIN 점포 행과 FCM 알림 딥링크 두 곳에서 같은 모달을 연다.
+- 승인 시 역할은 **신청자가 초대 코드 단계에서 고른 값을 그대로** 쓴다. 관리자가 역할을 바꾸려면 승인 후 `updateMemberRole`을 쓴다 (해당 UI는 미구현).
 ````
 
 - [ ] **Step 7: 최종 검증**
@@ -2200,7 +3564,11 @@ gh pr create --repo SNMac/StudioChance --base develop \
 - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}.fcmTokens`에서 자동 제거
 - 알림 권한 요청 / FCM 토큰 등록 / 토큰 갱신 반영 — 기존에 호출부가 없어 동작하지 않던 부분을 `NotificationController`로 배선
 - 포그라운드 수신 시 `flutter_local_notifications`로 알림 표시 (FCM SDK는 포그라운드에서 표시하지 않음)
-- 알림 탭 시 홈 화면 이동 + 해당 점포를 캘린더 필터에 표시
+- 알림 탭 시 마이페이지 이동 + 해당 점포의 승인 대기 모달 자동 오픈
+- 승인 대기 멤버 모달 신설 — 신청자 목록·승인·거절 (승인 역할은 신청 시 선택한 값 사용)
+- 멤버 제거(거절) `StoreRepository`·`StoreUseCase` 배선 추가 (DataSource는 기존 `removeMember` 재사용)
+- 마이페이지 신설 — 프로필·닉네임 변경·내 점포 목록(대기 인원 표시)·점포 추가·로그아웃
+- `HomeTabBar`의 마이페이지 탭에 실제 라우팅 연결 (기존에는 로컬 state만 변경)
 - Android core library desugaring, `POST_NOTIFICATIONS` 권한, 기본 알림 채널(`sc_default`) 설정 추가
 
 <br>
@@ -2210,7 +3578,9 @@ gh pr create --repo SNMac/StudioChance --base develop \
 | :-------------: | :----------: |
 | 백그라운드 알림 수신 | <img src = "" width ="250"> |
 | 포그라운드 알림 수신 | <img src = "" width ="250"> |
-| 알림 탭 → 홈 이동 | <img src = "" width ="250"> |
+| 알림 탭 → 승인 대기 모달 | <img src = "" width ="250"> |
+| 마이페이지 | <img src = "" width ="250"> |
+| 승인 대기 멤버 승인·거절 | <img src = "" width ="250"> |
 
 <br>
 EOF
@@ -2234,7 +3604,14 @@ EOF
 | 6 | PushMessage 엔티티/매퍼 | 5 |
 | 7 | DataSource 확장 | 5, 6 |
 | 8 | Repository / UseCase | 7 |
-| 9 | Controller + 딥링크 | 8 |
-| 10 | 실기기 검증 + 마무리 | 4, 9 |
+| 9 | Controller + 딥링크(홈 착지) | 8 |
+| 10 | `removeMember` 도메인 배선 | — |
+| 11 | 승인 대기 멤버 모달 | 10 |
+| 12 | 마이페이지 라우트 + 탭바 배선 | — |
+| 13 | 마이페이지 화면 | 11, 12 |
+| 14 | 딥링크 → 승인 대기 모달 | 9, 11, 12 |
+| 15 | 실기기 검증 + 마무리 | 4, 14 |
 
-Task 1~4(Functions)와 Task 5~9(Flutter)는 서로 독립적이므로 병렬 진행 가능하다. Task 10은 양쪽이 모두 끝나야 한다.
+- Task 1~4(Cloud Functions)와 Task 5~9(Flutter 알림 수신)는 서로 독립적이므로 병렬 진행 가능하다.
+- Task 10과 Task 12는 선행 의존이 없어 언제든 시작할 수 있다.
+- Task 15는 양쪽 계통이 모두 끝나야 한다.
