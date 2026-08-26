@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/presentation/providers/notification_controller.dart';
 import 'package:studio_chance/router/app_router.dart';
 
 class MyApp extends ConsumerWidget {
@@ -12,6 +13,10 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final GoRouter router = ref.watch(goRouterProvider);
+
+    // 알림 권한 요청·토큰 등록·딥링크 처리를 앱 생명주기 동안 유지한다.
+    // (로그인 전에는 컨트롤러 내부에서 아무 동작도 하지 않는다)
+    ref.watch(notificationControllerProvider);
 
     final TextTheme textTheme = TextTheme(
       headlineLarge: TextStyle(
