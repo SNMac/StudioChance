@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
+import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 part 'invite_code_controller.g.dart';
 
@@ -40,9 +41,18 @@ class InviteCodeController extends _$InviteCodeController {
         .createInviteCode(storeId, forceRegenerate: forceRegenerate);
     final stackTrace = StackTrace.current;
 
-    result.fold((e) {
-      _logger.e('초대 코드 발급 실패', error: e);
-      state = AsyncError(e, stackTrace);
-    }, (info) => state = AsyncData(info));
+    result.fold(
+      (e) {
+        _logger.e('초대 코드 발급 실패', error: e);
+        state = AsyncError(e, stackTrace);
+      },
+      (info) {
+        state = AsyncData(info);
+        // 점포 문서의 inviteInfo가 바뀌었다. 무효화하지 않으면 모달을 다시 열 때
+        // 캐시에 남은 옛 코드를 보여준다 (마이페이지가 이 provider를 계속
+        // 구독하고 있어 autoDispose되지 않는다).
+        ref.invalidate(storeDetailProvider(storeId));
+      },
+    );
   }
 }

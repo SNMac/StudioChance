@@ -408,6 +408,22 @@ void main() {
       expect(inviteInfo.inviteCode.length, 6);
     });
 
+    test('반환된 모델에 서버가 확정한 createdAt이 담긴다', () async {
+      // serverTimestamp는 쓰기 시점에 값을 알 수 없어, 다시 읽지 않으면 null이
+      // 그대로 반환된다. 그러면 발급 직후 남은 유효 시간을 계산할 수 없다.
+      final uid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, uid);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
+
+      final inviteInfo = await dataSource.createInviteCode(created.id);
+
+      expect(inviteInfo.createdAt, isNotNull);
+    });
+
     test('getInviteInfo는 저장된 초대 코드를 반환한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);

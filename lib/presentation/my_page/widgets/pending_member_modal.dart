@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
@@ -205,6 +206,7 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                       _InviteCodeSection(
                         storeId: widget.storeId,
                         storeName: storeAsync.asData?.value?.name,
+                        savedInvite: storeAsync.asData?.value?.inviteInfo,
                       ),
                       if (isLoadingStore)
                         const Padding(
@@ -258,12 +260,20 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
 /// 유효 기간이 남아 있으면 Repository가 같은 코드를 되돌려주므로 발급을 눌러도
 /// 코드가 바뀌지 않는다.
 class _InviteCodeSection extends ConsumerStatefulWidget {
-  const _InviteCodeSection({required this.storeId, required this.storeName});
+  const _InviteCodeSection({
+    required this.storeId,
+    required this.storeName,
+    required this.savedInvite,
+  });
 
   final String storeId;
 
   /// 공유 문구에 넣을 점포명. 점포 조회 실패 시 null이며, 이때는 코드만 공유한다.
   final String? storeName;
+
+  /// 점포 문서에 이미 저장된 초대 코드. 유효 기간이 남아 있으면 모달을 열자마자
+  /// 보여준다 (발급을 다시 누르지 않아도 되도록).
+  final InviteInfo? savedInvite;
 
   @override
   ConsumerState<_InviteCodeSection> createState() => _InviteCodeSectionState();
@@ -277,6 +287,17 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   Timer? _copiedResetTimer;
 
   bool _didReset = false;
+
+  /// 남은 유효 시간 표시를 1초마다 갱신한다.
+  Timer? _tickTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -294,6 +315,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   @override
   void dispose() {
     _copiedResetTimer?.cancel();
+    _tickTimer?.cancel();
     super.dispose();
   }
 
@@ -332,6 +354,40 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     );
   }
 
+  /// 화면에 보여줄 초대 코드.
+  ///
+  /// 방금 발급한 코드([issued])는 만료 전까지 그대로 쓴다. 반대로 점포 문서에
+  /// 저장돼 있던 코드는 **만료 시각을 알 수 있을 때만** 쓴다 — `createdAt`이
+  /// 없으면 이미 만료됐는지 판단할 수 없어, 죽은 코드를 보여주느니 숨긴다.
+  InviteInfo? _visibleInvite(InviteInfo? issued) {
+    final now = DateTime.now();
+    if (issued != null) {
+      final expiresAt = issued.expiresAt;
+      return expiresAt == null || expiresAt.isAfter(now) ? issued : null;
+    }
+
+    final saved = widget.savedInvite;
+    final savedExpiresAt = saved?.expiresAt;
+    if (savedExpiresAt == null || !savedExpiresAt.isAfter(now)) return null;
+    return saved;
+  }
+
+  /// 남은 유효 시간 안내. 만료 시각을 모르면 고정 문구로 대체한다.
+  ///
+  /// 기준은 로컬 시계다. 만료 판정 자체는 서버 시각으로 하므로(`StoreRepositoryImpl`)
+  /// 여기의 오차는 표시에만 영향을 준다.
+  String _validityLabel(InviteInfo invite) {
+    final expiresAt = invite.expiresAt;
+    if (expiresAt == null) return '$storeInviteCodeAvailableMin분간 유효합니다';
+
+    final remaining = expiresAt.difference(DateTime.now());
+    if (remaining <= Duration.zero) return '만료됐습니다';
+
+    final minutes = remaining.inMinutes.toString().padLeft(2, '0');
+    final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds 남음';
+  }
+
   /// 초대 코드 행의 액션 아이콘.
   ///
   /// IconButton 기본 탭 영역(48)은 아이콘 사이를 28px 벌려 세 개가 나란히
@@ -359,10 +415,11 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     final inviteAsync = ref.watch(inviteCodeControllerProvider);
     // 발급 실패(AsyncError)는 MyPageScreen의 ref.listen이 다이얼로그로 알리므로
     // 여기서는 발급 전과 동일하게 다시 시도할 수 있는 상태로 둔다.
-    final code = inviteAsync.value?.inviteCode;
+    final invite = _visibleInvite(inviteAsync.value);
+    final code = invite?.inviteCode;
 
     return GroupedFormContainer(
-      footer: code == null
+      footer: invite == null
           ? null
           : Padding(
               padding: const EdgeInsetsDirectional.only(
@@ -370,7 +427,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                 top: 8,
               ),
               child: Text(
-                '$storeInviteCodeAvailableMin분간 유효합니다',
+                _validityLabel(invite),
                 style: textTheme.labelMedium?.copyWith(
                   color: context.secondaryLabel,
                 ),

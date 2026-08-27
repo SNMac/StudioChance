@@ -7,6 +7,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
@@ -334,5 +335,68 @@ void main() {
     verify(
       () => mockStoreUseCase.createInviteCode(store.id, forceRegenerate: true),
     ).called(1);
+  });
+
+  /// 저장된 초대 코드를 가진 점포로 모달을 띄운다.
+  Future<void> pumpWithSavedInvite(WidgetTester tester, Store store) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storeDetailProvider(store.id).overrideWith((ref) async => store),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: store.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('저장된 코드의 유효 기간이 남았으면 열자마자 보여준다', (tester) async {
+    final store = storeWithWaiting([]).copyWith(
+      inviteInfo: InviteInfo(
+        inviteCode: 'A7K2P9',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+    );
+
+    await pumpWithSavedInvite(tester, store);
+
+    expect(find.text('A7K2P9'), findsOneWidget);
+    expect(find.text('발급'), findsNothing);
+  });
+
+  testWidgets('저장된 코드가 만료됐으면 발급 상태로 시작한다', (tester) async {
+    final store = storeWithWaiting([]).copyWith(
+      inviteInfo: InviteInfo(
+        inviteCode: 'A7K2P9',
+        createdAt: DateTime.now().subtract(
+          const Duration(minutes: storeInviteCodeAvailableMin + 1),
+        ),
+      ),
+    );
+
+    await pumpWithSavedInvite(tester, store);
+
+    expect(find.text('A7K2P9'), findsNothing);
+    expect(find.text('발급'), findsOneWidget);
+  });
+
+  testWidgets('createdAt을 모르는 저장된 코드는 만료를 판단할 수 없어 숨긴다', (tester) async {
+    final store = storeWithWaiting(
+      [],
+    ).copyWith(inviteInfo: const InviteInfo(inviteCode: 'A7K2P9'));
+
+    await pumpWithSavedInvite(tester, store);
+
+    expect(find.text('A7K2P9'), findsNothing);
+    expect(find.text('발급'), findsOneWidget);
   });
 }
