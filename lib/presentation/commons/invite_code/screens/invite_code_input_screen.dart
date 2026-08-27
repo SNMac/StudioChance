@@ -54,25 +54,26 @@ class _InviteCodeInputScreenState extends ConsumerState<InviteCodeInputScreen> {
     final isLoading = state.status.isLoading;
 
     ref.listen(provider, (previous, next) {
-      // 로딩 중이었을 때만 data 처리 (초기 null과 "없음" null 구별)
-      if (previous?.status.isLoading == true) {
-        next.status.whenOrNull(
-          data: (store) {
-            if (store != null) {
-              SCRoute.inviteCodeVerified.pushChild(context);
-            } else {
-              showCustomAlertDialog(
-                context: context,
-                title: '점포를 찾을 수 없습니다',
-                content: '초대 코드에 해당하는 점포가 없어요.\n코드를 다시 확인해 주세요.',
-                showCancel: false,
-                confirmText: '확인',
-              );
-            }
-          },
-        );
-      }
+      // 로딩 중이었을 때만 처리한다 (초기 null과 "없음" null 구별).
+      // 이 컨트롤러의 state는 status 외에 코드 입력값도 들고 있어, 글자를 칠 때마다
+      // listen이 발화한다. 가드 없이 error를 처리하면 이전 에러가 status에 남아 있는
+      // 동안 입력할 때마다 같은 alert이 반복해서 뜬다.
+      if (previous?.status.isLoading != true) return;
+
       next.status.whenOrNull(
+        data: (store) {
+          if (store != null) {
+            SCRoute.inviteCodeVerified.pushChild(context);
+          } else {
+            showCustomAlertDialog(
+              context: context,
+              title: '점포를 찾을 수 없습니다',
+              content: '초대 코드에 해당하는 점포가 없어요.\n코드를 다시 확인해 주세요.',
+              showCancel: false,
+              confirmText: '확인',
+            );
+          }
+        },
         error: (error, _) {
           if (error is AppException) {
             showCustomAlertDialog(

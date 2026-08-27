@@ -16,15 +16,15 @@ import '../../helpers/firestore_emulator_helper.dart';
 // fake_cloud_firestore가 이를 Map<String, dynamic>으로 캐스팅하면 TypeError가 발생하므로,
 // 명시적으로 빈 컬렉션을 전달하여 _LinkedHashMap<String, T>/_GrowableList<T> 타입을 사용합니다.
 StoreModel _testStore() => StoreModel(
-      id: FirestoreEmulatorHelper.generateId(),
-      name: '테스트 점포',
-      address: '서울시 강남구 테헤란로 1',
-      addressDetail: '101호',
-      addressGuide: '정문으로 오세요',
-      memberById: <String, StoreMemberInfoModel>{},
-      waitingMemberById: <String, StoreMemberInfoModel>{},
-      spaceOptions: <SpaceOptionModel>[],
-    );
+  id: FirestoreEmulatorHelper.generateId(),
+  name: '테스트 점포',
+  address: '서울시 강남구 테헤란로 1',
+  addressDetail: '101호',
+  addressGuide: '정문으로 오세요',
+  memberById: <String, StoreMemberInfoModel>{},
+  waitingMemberById: <String, StoreMemberInfoModel>{},
+  spaceOptions: <SpaceOptionModel>[],
+);
 
 const _creatorInfo = UserStoreInfoModel(
   name: '테스트 점포',
@@ -137,7 +137,11 @@ void main() {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
 
-      final result = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final result = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       expect(result.id, isNotEmpty);
       expect(result.name, '테스트 점포');
@@ -147,7 +151,11 @@ void main() {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
 
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       final userDoc = await fakeFirestore.collection('users').doc(uid).get();
       final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
@@ -158,9 +166,16 @@ void main() {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
 
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
-      final doc = await fakeFirestore.collection('stores').doc(created.id).get();
+      final doc = await fakeFirestore
+          .collection('stores')
+          .doc(created.id)
+          .get();
       expect(doc.exists, true);
       expect(doc.data()?['name'], '테스트 점포');
     });
@@ -174,7 +189,11 @@ void main() {
     test('존재하는 점포를 반환한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       final result = await dataSource.getStore(created.id);
 
@@ -213,7 +232,11 @@ void main() {
     test('지정 필드를 업데이트한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       await dataSource.updateStore(created.id, {'name': '변경된 점포명'}, []);
 
@@ -224,7 +247,11 @@ void main() {
     test('업데이트 후 기존 필드는 변경되지 않는다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       await dataSource.updateStore(created.id, {'name': '변경된 점포명'}, []);
 
@@ -247,10 +274,18 @@ void main() {
         [adminUid, staffUid],
       );
 
-      final adminDoc = await fakeFirestore.collection('users').doc(adminUid).get();
-      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
-      final adminStoreById = adminDoc.data()?['storeById'] as Map<String, dynamic>?;
-      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final adminDoc = await fakeFirestore
+          .collection('users')
+          .doc(adminUid)
+          .get();
+      final staffDoc = await fakeFirestore
+          .collection('users')
+          .doc(staffUid)
+          .get();
+      final adminStoreById =
+          adminDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffStoreById =
+          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(adminStoreById?[storeId]['name'], '변경된 점포명');
       expect(staffStoreById?[storeId]['name'], '변경된 점포명');
     });
@@ -261,14 +296,14 @@ void main() {
       await _seedUserWithStore(fakeFirestore, staffUid, storeId);
       await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
 
-      await dataSource.updateStore(
-        storeId,
-        {'address': '변경된 주소'},
-        [staffUid],
-      );
+      await dataSource.updateStore(storeId, {'address': '변경된 주소'}, [staffUid]);
 
-      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
-      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffDoc = await fakeFirestore
+          .collection('users')
+          .doc(staffUid)
+          .get();
+      final staffStoreById =
+          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[storeId]['name'], '테스트 점포');
     });
   });
@@ -281,7 +316,11 @@ void main() {
     test('softDelete 후 getStore가 null을 반환한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       await dataSource.softDeleteStore(created.id, []);
 
@@ -292,11 +331,18 @@ void main() {
     test('softDelete 후 문서에 deletedAt 필드가 존재한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       await dataSource.softDeleteStore(created.id, []);
 
-      final doc = await fakeFirestore.collection('stores').doc(created.id).get();
+      final doc = await fakeFirestore
+          .collection('stores')
+          .doc(created.id)
+          .get();
       expect(doc.data()?.containsKey('deletedAt'), true);
     });
 
@@ -319,15 +365,18 @@ void main() {
           },
         });
       }
-      await fakeFirestore.collection('stores').doc(storeId).set(<String, dynamic>{
-        'name': '테스트 점포',
-        'address': '서울',
-        'addressDetail': '',
-        'addressGuide': '',
-        'memberById': <String, dynamic>{},
-        'waitingMemberById': <String, dynamic>{},
-        'spaceOptions': <dynamic>[],
-      });
+      await fakeFirestore
+          .collection('stores')
+          .doc(storeId)
+          .set(<String, dynamic>{
+            'name': '테스트 점포',
+            'address': '서울',
+            'addressDetail': '',
+            'addressGuide': '',
+            'memberById': <String, dynamic>{},
+            'waitingMemberById': <String, dynamic>{},
+            'spaceOptions': <dynamic>[],
+          });
 
       await dataSource.softDeleteStore(storeId, [memberUid, waitingUid]);
 
@@ -347,7 +396,11 @@ void main() {
     test('초대 코드를 생성하고 6자리 코드를 반환한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       final inviteInfo = await dataSource.createInviteCode(created.id);
 
@@ -358,7 +411,11 @@ void main() {
     test('getInviteInfo는 저장된 초대 코드를 반환한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
       final createdInvite = await dataSource.createInviteCode(created.id);
 
       final fetched = await dataSource.getInviteInfo(created.id);
@@ -370,7 +427,11 @@ void main() {
     test('초대 코드가 없으면 null을 반환한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
 
       final result = await dataSource.getInviteInfo(created.id);
       expect(result, isNull);
@@ -385,7 +446,11 @@ void main() {
     test('초대 코드로 점포를 조회한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
       final invite = await dataSource.createInviteCode(created.id);
 
       final result = await dataSource.getStoreByInviteCode(invite.inviteCode);
@@ -403,7 +468,11 @@ void main() {
     test('soft delete된 점포는 초대 코드 조회에서 제외된다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(_testStore(), uid, _creatorInfo);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
       final invite = await dataSource.createInviteCode(created.id);
       await dataSource.softDeleteStore(created.id, []);
 
@@ -411,6 +480,27 @@ void main() {
 
       // softDeleteStore는 inviteInfo를 null로 초기화하므로,
       // 코드가 삭제되어 조회 불가
+      expect(result, isNull);
+    });
+
+    test('deletedAt이 남아있으면 초대 코드가 유효해도 조회에서 제외된다', () async {
+      final uid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, uid);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
+      final invite = await dataSource.createInviteCode(created.id);
+      // inviteInfo는 남기고 deletedAt만 세팅 — 쿼리가 아닌 코드 가드가 걸러야 한다.
+      await fakeFirestore.collection('stores').doc(created.id).update(
+        <String, dynamic>{
+          'deletedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        },
+      );
+
+      final result = await dataSource.getStoreByInviteCode(invite.inviteCode);
+
       expect(result, isNull);
     });
   });
@@ -595,7 +685,12 @@ void main() {
         memo: '',
       );
 
-      await dataSource.requestJoinWithBatch(storeId, uid, memberInfo, userStoreInfo);
+      await dataSource.requestJoinWithBatch(
+        storeId,
+        uid,
+        memberInfo,
+        userStoreInfo,
+      );
 
       final doc = await fakeFirestore.collection('stores').doc(storeId).get();
       final waiting = doc.data()?['waitingMemberById'] as Map<String, dynamic>?;
@@ -616,7 +711,12 @@ void main() {
         memo: '',
       );
 
-      await dataSource.requestJoinWithBatch(storeId, uid, memberInfo, userStoreInfo);
+      await dataSource.requestJoinWithBatch(
+        storeId,
+        uid,
+        memberInfo,
+        userStoreInfo,
+      );
 
       final userDoc = await fakeFirestore.collection('users').doc(uid).get();
       final stores = userDoc.data()?['storeById'] as Map<String, dynamic>?;
@@ -636,7 +736,10 @@ void main() {
       final serverTime = await dataSource.getServerTime();
 
       final after = DateTime.now();
-      expect(serverTime.isAfter(before.subtract(const Duration(seconds: 5))), true);
+      expect(
+        serverTime.isAfter(before.subtract(const Duration(seconds: 5))),
+        true,
+      );
       expect(serverTime.isBefore(after.add(const Duration(seconds: 5))), true);
     });
   });

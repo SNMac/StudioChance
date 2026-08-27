@@ -25,6 +25,7 @@ class TitleSwitchButton extends StatelessWidget {
         padding: EdgeInsetsDirectional.symmetric(horizontal: horizontalPadding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          spacing: 8,
           children: [
             Expanded(
               child: Text(

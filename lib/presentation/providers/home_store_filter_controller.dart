@@ -49,8 +49,18 @@ class HomeStoreFilterController extends _$HomeStoreFilterController {
     final user = ref.read(currentUserProvider).asData?.value;
     if (user == null) return;
     final allIds = user.storeInfos.map((info) => info.id).toSet();
-    final isAllSelected = state.length == allIds.length && state.containsAll(allIds);
+    final isAllSelected =
+        state.length == allIds.length && state.containsAll(allIds);
     state = isAllSelected ? {} : Set<String>.of(allIds);
+    _persistDeselected();
+  }
+
+  /// 특정 점포를 표시 상태로 만든다 (푸시 알림 딥링크 등에서 사용).
+  ///
+  /// 이미 선택돼 있으면 아무것도 하지 않으며, 다른 점포의 선택 상태는 유지한다.
+  void ensureSelected(String storeId) {
+    if (state.contains(storeId)) return;
+    state = {...state, storeId};
     _persistDeselected();
   }
 

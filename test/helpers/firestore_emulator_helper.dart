@@ -27,6 +27,9 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 /// - `FieldValue.serverTimestamp()`: 패키지 내부 clock으로 대체되어 null이 아닌 실제 Timestamp 반환
 /// - `AggregateQuery.count()`: 3.x 이상에서 지원, 이하 버전은 테스트가 실패할 수 있음
 /// - Firestore Security Rules: 적용되지 않음
+/// - `where(field, isNull: true)`: 필드가 아예 없는 문서도 매치시킨다. 실제 Firestore는
+///   필터 대상 필드가 없는 문서를 결과에서 제외하므로, 이 필터에 의존하는 쿼리는
+///   테스트를 통과해도 실제 환경에서 빈 결과를 낸다 (getStoreByInviteCode에서 실제로 발생).
 class FirestoreEmulatorHelper {
   static final _random = Random();
 

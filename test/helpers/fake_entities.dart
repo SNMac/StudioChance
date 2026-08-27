@@ -77,3 +77,19 @@ final fakeReservation = Reservation(
   priceAdjustment: -5000,
   totalPrice: 45000,
 );
+
+/// 지정한 점포 ID 목록을 가진 사용자 (홈 점포 필터 테스트용)
+User fakeUserWithStores(List<String> storeIds) {
+  return fakeUser.copyWith(
+    storeInfos: [
+      for (final id in storeIds)
+        UserStoreInfo(
+          id: id,
+          name: '점포 $id',
+          role: UserRole.admin,
+          color: StoreColor.red,
+          memo: '',
+        ),
+    ],
+  );
+}

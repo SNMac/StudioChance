@@ -63,10 +63,9 @@ gen-external-apklibs
 .pub/
 coverage/
 lib/generated_plugin_registrant.dart
-# For library packages, don’t commit the pubspec.lock file.
-# Regenerating the pubspec.lock file lets you test your package against the latest compatible versions of its dependencies.
+# pubspec.lock은 커밋한다 — 이 저장소는 라이브러리 패키지가 아니라 배포되는 앱이므로,
+# 잠금 파일이 없으면 빌드마다 의존성 버전이 달라져 재현 가능한 빌드가 깨진다.
 # See https://dart.dev/guides/libraries/private-files#pubspeclock
-pubspec.lock
 
 # Android related
 **/android/**/gradle-wrapper.jar

@@ -1,0 +1,63 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'sign_out_controller.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+/// 로그아웃 액션을 UseCase에 위임한다.
+/// (CLAUDE.md "Presentation → Domain 접근 규칙")
+
+@ProviderFor(SignOutController)
+final signOutControllerProvider = SignOutControllerProvider._();
+
+/// 로그아웃 액션을 UseCase에 위임한다.
+/// (CLAUDE.md "Presentation → Domain 접근 규칙")
+final class SignOutControllerProvider
+    extends $AsyncNotifierProvider<SignOutController, void> {
+  /// 로그아웃 액션을 UseCase에 위임한다.
+  /// (CLAUDE.md "Presentation → Domain 접근 규칙")
+  SignOutControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'signOutControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$signOutControllerHash();
+
+  @$internal
+  @override
+  SignOutController create() => SignOutController();
+}
+
+String _$signOutControllerHash() => r'f68cf533a5c679724e582921dbc54547bdbe1663';
+
+/// 로그아웃 액션을 UseCase에 위임한다.
+/// (CLAUDE.md "Presentation → Domain 접근 규칙")
+
+abstract class _$SignOutController extends $AsyncNotifier<void> {
+  FutureOr<void> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

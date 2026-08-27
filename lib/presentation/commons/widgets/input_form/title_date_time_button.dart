@@ -49,6 +49,7 @@ class TitleDateTimeButton extends StatelessWidget {
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              spacing: 8,
               children: [
                 Text(title, style: textTheme.bodyLarge),
                 Container(

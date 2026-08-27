@@ -85,8 +85,9 @@ class StoreRepositoryImpl implements StoreRepository {
       }
 
       final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
-      final waitingInfosFuture =
-          _fetchMembersWithRoles(storeModel.waitingMemberById);
+      final waitingInfosFuture = _fetchMembersWithRoles(
+        storeModel.waitingMemberById,
+      );
       final memberInfos = await memberInfosFuture;
       final waitingInfos = await waitingInfosFuture;
 
@@ -126,9 +127,14 @@ class StoreRepositoryImpl implements StoreRepository {
       );
 
       // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
-      final colorJson = UserStoreInfoModel(
-        name: '', role: UserRole.none, color: color, memo: '',
-      ).toJson()['color'] as String;
+      final colorJson =
+          UserStoreInfoModel(
+                name: '',
+                role: UserRole.none,
+                color: color,
+                memo: '',
+              ).toJson()['color']
+              as String;
       await _userDataSource.updateStoreInfo(uid, store.id, {
         'color': colorJson,
         'memo': memo,
@@ -170,8 +176,9 @@ class StoreRepositoryImpl implements StoreRepository {
       if (!forceRegenerate) {
         final existing = await _storeDataSource.getInviteInfo(storeId);
         if (existing != null && existing.createdAt != null) {
-          final expiresAt = existing.createdAt!
-              .add(const Duration(minutes: storeInviteCodeAvailableMin));
+          final expiresAt = existing.createdAt!.add(
+            const Duration(minutes: storeInviteCodeAvailableMin),
+          );
           final serverNow = await _storeDataSource.getServerTime();
           if (serverNow.isBefore(expiresAt)) {
             _logger.i('유효한 초대 코드 재사용\nstoreId: $storeId');
@@ -194,7 +201,9 @@ class StoreRepositoryImpl implements StoreRepository {
     String inviteCode,
   ) async {
     try {
-      final storeModel = await _storeDataSource.getStoreByInviteCode(inviteCode);
+      final storeModel = await _storeDataSource.getStoreByInviteCode(
+        inviteCode,
+      );
       if (storeModel == null) return right(null);
 
       // 만료 검증 (DataSource에서 이동)
@@ -202,15 +211,18 @@ class StoreRepositoryImpl implements StoreRepository {
       if (inviteData == null || inviteData.createdAt == null) {
         return left(StoreValidationException(message: '유효하지 않은 초대 코드입니다.'));
       }
-      final expiresAt = inviteData.createdAt!
-          .add(const Duration(minutes: storeInviteCodeAvailableMin));
+      final expiresAt = inviteData.createdAt!.add(
+        const Duration(minutes: storeInviteCodeAvailableMin),
+      );
       final serverNow = await _storeDataSource.getServerTime();
       if (serverNow.isAfter(expiresAt)) {
-        return left(StoreValidationException(message: '만료된 초대 코드입니다.'));
+        return left(StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'));
       }
 
       final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
-      final waitingInfosFuture = _fetchMembersWithRoles(storeModel.waitingMemberById);
+      final waitingInfosFuture = _fetchMembersWithRoles(
+        storeModel.waitingMemberById,
+      );
       final memberInfos = await memberInfosFuture;
       final waitingInfos = await waitingInfosFuture;
 
@@ -254,7 +266,8 @@ class StoreRepositoryImpl implements StoreRepository {
       );
 
       _logger.i('점포 가입 신청 완료 (대기열 추가)\nstoreId: $storeId, uid: $uid');
-      // TODO: FCM 알림
+      // 관리자 FCM 알림은 Cloud Functions `notifyAdminsOnJoinRequest`가
+      // stores/{storeId}.waitingMemberById 변경을 감지해 발송한다 (functions/src/index.ts).
 
       return right(null);
     } catch (e) {
@@ -283,6 +296,22 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String uid,
+  }) async {
+    try {
+      await _storeDataSource.removeMember(storeId, uid);
+
+      _logger.i('멤버 제거 완료\nstoreId: $storeId, uid: $uid');
+      return right(null);
+    } catch (e) {
+      _logger.e('멤버 제거 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
   Future<Either<Exception, void>> updateMemberRole({
     required String storeId,
     required String uid,
@@ -290,7 +319,8 @@ class StoreRepositoryImpl implements StoreRepository {
   }) async {
     try {
       // newRole.name은 Dart 식별자('admin')를 반환하므로 toJson()으로 JSON 값('ADMIN') 직렬화
-      final roleJson = StoreMemberInfoModel(role: newRole).toJson()['role'] as String;
+      final roleJson =
+          StoreMemberInfoModel(role: newRole).toJson()['role'] as String;
       await _storeDataSource.updateMemberRole(storeId, uid, roleJson);
 
       _logger.i(

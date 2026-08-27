@@ -55,6 +55,13 @@ abstract interface class StoreRepository {
     required UserRole role,
   });
 
+  /// 멤버 제거 (승인 대기자 거절 / 기존 멤버 추방)
+  /// - `memberById`, `waitingMemberById`, `users/{uid}.storeById`에서 모두 제거된다.
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String uid,
+  });
+
   /// 멤버 권한 변경
   Future<Either<Exception, void>> updateMemberRole({
     required String storeId,

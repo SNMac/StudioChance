@@ -30,9 +30,16 @@ class TitleTextLabel extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
-          spacing: 4,
+          spacing: 8,
           children: [
-            Text(title, style: textTheme.bodyLarge),
+            Flexible(
+              child: Text(
+                title,
+                style: textTheme.bodyLarge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,

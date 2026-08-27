@@ -41,6 +41,12 @@ abstract interface class StoreUseCase {
     required UserRole role,
   });
 
+  /// 멤버 제거 (관리자용) — 승인 대기자 거절 및 기존 멤버 추방에 사용
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String targetUid,
+  });
+
   /// 멤버 권한 수정 (관리자용)
   Future<Either<Exception, void>> updateMemberRole({
     required String storeId,
@@ -182,6 +188,16 @@ class StoreUseCaseImpl implements StoreUseCase {
         uid: targetUid,
         role: role,
       ),
+    ).run();
+  }
+
+  @override
+  Future<Either<Exception, void>> removeMember({
+    required String storeId,
+    required String targetUid,
+  }) {
+    return TaskEither(
+      () => _storeRepository.removeMember(storeId: storeId, uid: targetUid),
     ).run();
   }
 

@@ -27,16 +27,19 @@ class InviteCodeVerifiedScreen extends ConsumerStatefulWidget {
 class _InviteCodeVerifiedScreenState
     extends ConsumerState<InviteCodeVerifiedScreen> {
   late final TextEditingController _memoController;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _memoController = TextEditingController();
+    _scrollController = ScrollController();
   }
 
   @override
   void dispose() {
     _memoController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -70,60 +73,73 @@ class _InviteCodeVerifiedScreenState
       ),
       body: Stack(
         children: [
-          SafeAreaWithPadding(
-            child: Column(
-              spacing: 20,
-              children: [
-                GroupedFormContainer(
-                  header: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('초대받은 점포가 맞는지 확인해주세요', style: textTheme.titleLarge),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
+          Scrollbar(
+            controller: _scrollController,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: SafeAreaWithPadding(
+                child: Column(
+                  spacing: 20,
                   children: [
-                    TitleTextLabel(title: '점포명', content: store?.name ?? ''),
-                    TitleTextLabel(title: '대표 관리자', content: adminName),
-                    TitleNavigationButton(
-                      title: '주소',
-                      content: address,
-                      isChangeable: false,
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-
-                GroupedFormContainer(
-                  header: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text(
-                        '사용자 설정',
-                        style: textTheme.labelLarge?.copyWith(
-                          color: context.secondaryLabel,
-                        ),
+                    GroupedFormContainer(
+                      header: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '초대받은 점포가 맞는지 확인해주세요',
+                            style: textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
-                    ],
-                  ),
-                  children: [
-                    TitleTextField(
-                      title: '점포 별명',
-                      placeholder: store?.name ?? '',
+                      children: [
+                        TitleTextLabel(
+                          title: '점포명',
+                          content: store?.name ?? '',
+                        ),
+                        TitleTextLabel(title: '대표 관리자', content: adminName),
+                        TitleNavigationButton(
+                          title: '주소',
+                          content: address,
+                          isChangeable: false,
+                          onPressed: () {},
+                        ),
+                      ],
                     ),
-                    TitleNavigationButton(title: '색상', onPressed: () {}),
-                    MemoTextField(
-                      placeholder: '메모',
-                      controller: _memoController,
-                      maxLength: maxMemoCharCount,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(maxMemoCharCount),
+
+                    GroupedFormContainer(
+                      header: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            '사용자 설정',
+                            style: textTheme.labelLarge?.copyWith(
+                              color: context.secondaryLabel,
+                            ),
+                          ),
+                        ],
+                      ),
+                      children: [
+                        TitleTextField(
+                          title: '점포 별명',
+                          placeholder: store?.name ?? '',
+                        ),
+                        TitleNavigationButton(title: '색상', onPressed: () {}),
+                        MemoTextField(
+                          placeholder: '메모',
+                          controller: _memoController,
+                          maxLength: maxMemoCharCount,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(maxMemoCharCount),
+                          ],
+                        ),
                       ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
 

@@ -174,6 +174,57 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   final user = await userF;
   ```
 
+## FCM 푸시 알림
+
+- **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
+  - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
+  - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}.fcmTokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
+  - 배포: `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
+  - 테스트: `cd functions && npm test` (Node 내장 `node:test`)
+  - `firebase.json`/`.firebaserc`는 gitignore 처리되어 저장소에 없음 — 새로 clone한 환경에서 배포하려면 아래 내용을 직접 만들어야 한다
+    ```json
+    // firebase.json (functions 배포에 필요한 부분만)
+    {
+      "functions": [
+        {
+          "source": "functions",
+          "codebase": "default",
+          "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"],
+          "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+        }
+      ]
+    }
+    ```
+    ```json
+    // .firebaserc (-P dev / -P prod 별칭)
+    {
+      "projects": {
+        "default": "studio-chance",
+        "dev": "studio-chance",
+        "prod": "studio-chance-prod"
+      }
+    }
+    ```
+- **수신**: `NotificationController`(`lib/presentation/providers/`)가 `MyApp`에서 watch되어 권한 요청·토큰 등록·스트림 구독·딥링크를 담당
+  - **포그라운드 표시는 플랫폼별로 경로가 다르다**
+    - Android: FCM SDK가 표시하지 않으므로 `flutter_local_notifications`로 직접 표시
+    - iOS: `setForegroundNotificationPresentationOptions(alert·badge·sound)`를 **켜고** 시스템이 표시하게 한다. 로컬 알림은 **띄우지 않는다** (`NotificationController`의 `Platform.isIOS` 분기)
+  - iOS에서 위 옵션을 끄면 알림이 **아예 보이지 않는다.** `UNUserNotificationCenterDelegate`가 `presentationOptions=0`을 반환하는데, 이 delegate는 수신 푸시뿐 아니라 앱이 `flutter_local_notifications`로 만든 알림까지 함께 억제한다 (배너 없이 알림 센터에만 쌓임)
+    - 시뮬레이터 로그로 확인 가능: 꺼진 상태 `Received response 0` / `shouldPresentAlert: 0`, 켜진 상태 `Received response 7` / `shouldPresentAlert: YES`
+    - 검증 방법: `xcrun simctl push <device> <bundleId> payload.apns` (APNs·FCM을 우회하므로 전달 경로가 아닌 **표시·탭 처리만** 검증됨)
+- **값이 반드시 일치해야 하는 상수**
+  - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
+  - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
+- **알려진 제약**: FCM Admin SDK가 registration token을 deprecated 처리하고 FID를 권장한다. 현행은 token 기반이며 FID 마이그레이션은 별도 이슈.
+
+## 마이페이지 / 하단 탭바
+
+- `HomeTabBar`(`lib/presentation/home/widgets/`)는 홈·마이페이지가 **공유**한다. 선택 인덱스는 로컬 state가 아니라 `GoRouterState.of(context).uri.path`에서 파생하므로 두 화면의 표시가 어긋나지 않는다.
+- 예약 통계(`stats`) 탭은 화면이 없어 탭해도 아무 동작도 하지 않는다 (`_onTabTapped`의 TODO).
+- `/my-page` 하위는 온보딩과 동일한 `_roleSubRoutes()`를 재사용한다 — 점포 추가 플로우를 중복 구현하지 않는다.
+- 승인 대기 멤버 관리는 `showPendingMemberModal(context, storeId)` 모달이며, 마이페이지의 ADMIN 점포 행과 FCM 알림 딥링크 두 곳에서 같은 모달을 연다.
+- 승인 시 역할은 **신청자가 초대 코드 단계에서 고른 값을 그대로** 쓴다. 관리자가 역할을 바꾸려면 승인 후 `updateMemberRole`을 쓴다 (해당 UI는 미구현).
+
 ## 모달 시트 패턴
 
 - `DraggableScrollableSheet` 사용 금지 — 내부 gesture tracking이 `BottomSheet.onClosing → Navigator.pop`을 독립 호출, `GestureDetector`/`Listener` 우회 불가
