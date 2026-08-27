@@ -228,7 +228,10 @@ void main() {
   testWidgets('발급 버튼을 누르면 UseCase를 호출하고 받은 코드를 보여준다', (tester) async {
     final mockStoreUseCase = MockStoreUseCase();
     when(
-      () => mockStoreUseCase.createInviteCode(any()),
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
     ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'A7K2P9')));
 
     final store = await pumpWithInviteMock(tester, mockStoreUseCase);
@@ -240,14 +243,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('A7K2P9'), findsOneWidget);
-    verify(() => mockStoreUseCase.createInviteCode(store.id)).called(1);
+    verify(
+      () => mockStoreUseCase.createInviteCode(store.id, forceRegenerate: false),
+    ).called(1);
   });
 
   testWidgets('발급 처리 중에는 버튼이 비활성화되어 중복 발급을 막는다', (tester) async {
     final mockStoreUseCase = MockStoreUseCase();
     final completer = Completer<Either<Exception, InviteInfo>>();
     when(
-      () => mockStoreUseCase.createInviteCode(any()),
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
     ).thenAnswer((_) => completer.future);
 
     await pumpWithInviteMock(tester, mockStoreUseCase);
@@ -262,6 +270,68 @@ void main() {
     completer.complete(right(const InviteInfo(inviteCode: 'A7K2P9')));
     await tester.pumpAndSettle();
 
-    verify(() => mockStoreUseCase.createInviteCode(any())).called(1);
+    verify(
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
+    ).called(1);
+  });
+
+  testWidgets('재발급을 확인하면 forceRegenerate로 다시 발급한다', (tester) async {
+    final store = storeWithWaiting([]);
+    final mockStoreUseCase = MockStoreUseCase();
+    when(
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
+    ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'A7K2P9')));
+
+    // showCustomAlertDialog의 확인 버튼이 go_router의 context.pop()을 쓰므로
+    // 순수 MaterialApp이 아닌 GoRouter 하네스가 필요하다.
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: store.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storeDetailProvider(store.id).overrideWith((ref) async => store),
+          storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 코드가 없을 때는 재발급 행이 없다 — 첫 행의 [발급]이 같은 역할을 한다.
+    expect(find.text('코드 재발급'), findsNothing);
+
+    await tester.tap(find.text('발급'));
+    await tester.pumpAndSettle();
+    expect(find.text('코드 재발급'), findsOneWidget);
+
+    await tester.tap(find.text('코드 재발급'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('재발급'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockStoreUseCase.createInviteCode(store.id, forceRegenerate: true),
+    ).called(1);
   });
 }

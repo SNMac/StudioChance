@@ -313,6 +313,25 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     });
   }
 
+  /// 코드를 새로 만들어 덮어쓴다.
+  ///
+  /// 코드를 폐기하는 별도 경로가 없으므로, 유출된 코드를 즉시 막는 수단도
+  /// 이 재발급이다. 옛 코드는 되돌릴 수 없게 되므로 확인을 한 번 받는다.
+  void _onRegenerate() {
+    showCustomAlertDialog(
+      context: context,
+      title: '초대 코드를 재발급할까요?',
+      content: '기존 코드는 즉시 사용할 수 없게 됩니다.',
+      confirmText: '재발급',
+      isDestructive: true,
+      onConfirmAfterPop: () {
+        ref
+            .read(inviteCodeControllerProvider.notifier)
+            .issue(widget.storeId, forceRegenerate: true);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -396,6 +415,27 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
             ),
           ),
         ),
+        // 코드가 없을 때는 첫 행의 [발급]이 같은 역할을 하므로 숨긴다.
+        if (code != null)
+          SizedBox(
+            height: inputFormComponentHeight,
+            child: CupertinoButton(
+              padding: const EdgeInsetsDirectional.symmetric(
+                horizontal: horizontalPadding,
+              ),
+              onPressed: _onRegenerate,
+              child: Row(
+                children: [
+                  Text(
+                    '코드 재발급',
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }

@@ -46,7 +46,10 @@ void main() {
     group('발급에 성공했을 때', () {
       setUp(() {
         when(
-          () => mockStoreUseCase.createInviteCode(any()),
+          () => mockStoreUseCase.createInviteCode(
+            any(),
+            forceRegenerate: any(named: 'forceRegenerate'),
+          ),
         ).thenAnswer((_) async => right(inviteInfo));
       });
 
@@ -65,10 +68,15 @@ void main() {
             .read(inviteCodeControllerProvider.notifier)
             .issue('store42');
 
-        verify(() => mockStoreUseCase.createInviteCode('store42')).called(1);
+        verify(
+          () => mockStoreUseCase.createInviteCode(
+            'store42',
+            forceRegenerate: false,
+          ),
+        ).called(1);
       });
 
-      test('강제 재발급을 요청하지 않는다 — 유효 코드 재사용은 Repository가 판단한다', () async {
+      test('기본값에서는 강제 재발급을 요청하지 않는다 — 유효 코드 재사용은 Repository가 판단한다', () async {
         await container
             .read(inviteCodeControllerProvider.notifier)
             .issue('store1');
@@ -76,6 +84,19 @@ void main() {
         verifyNever(
           () => mockStoreUseCase.createInviteCode(any(), forceRegenerate: true),
         );
+      });
+
+      test('forceRegenerate를 넘기면 그대로 UseCase에 전달한다', () async {
+        await container
+            .read(inviteCodeControllerProvider.notifier)
+            .issue('store1', forceRegenerate: true);
+
+        verify(
+          () => mockStoreUseCase.createInviteCode(
+            'store1',
+            forceRegenerate: true,
+          ),
+        ).called(1);
       });
 
       test('발급 중에는 상태가 AsyncLoading이다 — UI가 중복 발급을 차단할 수 있어야 한다', () async {
@@ -93,7 +114,10 @@ void main() {
 
       setUp(() {
         when(
-          () => mockStoreUseCase.createInviteCode(any()),
+          () => mockStoreUseCase.createInviteCode(
+            any(),
+            forceRegenerate: any(named: 'forceRegenerate'),
+          ),
         ).thenAnswer((_) async => left(exception));
       });
 
@@ -105,16 +129,19 @@ void main() {
         expect(container.read(inviteCodeControllerProvider), isA<AsyncError>());
       });
 
-      test('원본 예외 타입을 유지한다 — MyPageScreen이 AppException 여부로 다이얼로그를 가른다', () async {
-        await container
-            .read(inviteCodeControllerProvider.notifier)
-            .issue('store1');
+      test(
+        '원본 예외 타입을 유지한다 — MyPageScreen이 AppException 여부로 다이얼로그를 가른다',
+        () async {
+          await container
+              .read(inviteCodeControllerProvider.notifier)
+              .issue('store1');
 
-        expect(
-          container.read(inviteCodeControllerProvider).error,
-          isA<StoreNetworkException>(),
-        );
-      });
+          expect(
+            container.read(inviteCodeControllerProvider).error,
+            isA<StoreNetworkException>(),
+          );
+        },
+      );
     });
   });
 }
