@@ -93,16 +93,25 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
 
   @override
   Exception mapFirebaseCode(String code, String message) => switch (code) {
-    'permission-denied' || 'unauthenticated' =>
-      StorePermissionDeniedException(message: message, code: code),
+    'permission-denied' || 'unauthenticated' => StorePermissionDeniedException(
+      message: message,
+      code: code,
+    ),
     'not-found' => StoreNotFoundException(message: message, code: code),
-    'already-exists' => StoreAlreadyExistsException(message: message, code: code),
-    'resource-exhausted' =>
-      StoreResourceExhaustedException(message: message, code: code),
-    'unavailable' || 'deadline-exceeded' =>
-      StoreNetworkException(message: message, code: code),
-    'aborted' || 'failed-precondition' =>
-      StoreTransactionException(message: message, code: code),
+    'already-exists' => StoreAlreadyExistsException(
+      message: message,
+      code: code,
+    ),
+    'resource-exhausted' => StoreResourceExhaustedException(
+      message: message,
+      code: code,
+    ),
+    'unavailable' ||
+    'deadline-exceeded' => StoreNetworkException(message: message, code: code),
+    'aborted' || 'failed-precondition' => StoreTransactionException(
+      message: message,
+      code: code,
+    ),
     'cancelled' => StoreCancelledException(message: message, code: code),
     _ => StoreUnknownException(message: message, code: code),
   };
@@ -347,10 +356,9 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final json = inviteInfoModel.toJson();
       json['createdAt'] = FieldValue.serverTimestamp();
 
-      await _storeDocRef(storeId).update({
-        'inviteInfo': json,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _storeDocRef(
+        storeId,
+      ).update({'inviteInfo': json, 'updatedAt': FieldValue.serverTimestamp()});
 
       return inviteInfoModel;
     } catch (e) {
@@ -364,7 +372,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final querySnapshot = await _firestore
           .collection('stores')
           .where('inviteInfo.inviteCode', isEqualTo: inviteCode)
-          .where('deletedAt', isNull: true)
           .limit(1)
           .get();
 
@@ -372,6 +379,11 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
 
       final docSnapshot = querySnapshot.docs.first;
       final data = docSnapshot.data();
+      // deletedAt은 softDeleteStore에서만 기록되므로 정상 점포 문서에는 필드 자체가 없다.
+      // Firestore 쿼리는 필터 대상 필드가 없는 문서를 결과에서 제외하기 때문에
+      // where('deletedAt', isNull: true)를 걸면 정상 점포가 전부 걸러진다.
+      // (fake_cloud_firestore는 이 동작이 달라 테스트에서 드러나지 않았다.)
+      if (data['deletedAt'] != null) return null;
       data['id'] = docSnapshot.id;
       return StoreModel.fromJson(data);
     } catch (e) {
@@ -410,7 +422,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       ),
     );
   }
-
 }
 
 @Riverpod(keepAlive: true)
