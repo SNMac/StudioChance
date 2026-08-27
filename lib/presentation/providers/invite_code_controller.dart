@@ -15,9 +15,10 @@ part 'invite_code_controller.g.dart';
 class InviteCodeController extends _$InviteCodeController {
   final _logger = Logger();
 
-  /// 발급 전에는 null이며, 모달을 열 때마다 항상 발급 버튼부터 시작한다.
-  /// [InviteInfo]에 `createdAt`이 없어 이미 발급된 코드의 만료 여부를
-  /// 클라이언트가 판단할 수 없기 때문이다 (만료된 코드를 보여줄 위험).
+  /// 이번 세션에서 방금 발급한 코드. 발급 전에는 null이다.
+  ///
+  /// 이미 저장돼 있는 코드는 `storeDetailProvider`의 `Store.inviteInfo`가 들고
+  /// 있으므로 여기서 다시 조회하지 않는다 — 모달은 두 곳을 합쳐서 보여준다.
   @override
   FutureOr<InviteInfo?> build() => null;
 
@@ -40,6 +41,16 @@ class InviteCodeController extends _$InviteCodeController {
         .read(storeUseCaseProvider)
         .createInviteCode(storeId, forceRegenerate: forceRegenerate);
     final stackTrace = StackTrace.current;
+
+    // 응답을 기다리는 동안 모달이 닫히고 다른 점포 모달이 열렸다면, 그쪽
+    // didChangeDependencies가 이 컨트롤러를 invalidate해 state를 AsyncData(null)로
+    // 되돌린다. 그런데 invalidate는 Notifier 인스턴스를 재사용하므로 이 메서드는
+    // 그대로 살아남아, 막지 않으면 A점포의 코드를 B점포 모달에 써 넣는다
+    // (관리자가 엉뚱한 점포 코드를 복사·공유하게 된다).
+    if (!state.isLoading) {
+      _logger.w('버려진 초대 코드 발급 결과 — 요청 중 상태가 리셋됐다\nstoreId: $storeId');
+      return;
+    }
 
     result.fold(
       (e) {

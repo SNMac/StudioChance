@@ -203,10 +203,14 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                     children: [
                       // 초대 코드 발급은 점포 조회 성공 여부와 무관하게 동작하므로
                       // 대기 명단의 로딩·실패 분기 바깥에 둔다.
+                      // 발급 성공 시 storeDetailProvider를 무효화하므로 재조회
+                      // 동안 asData가 null이 된다. value로 직전 값을
+                      // 유지하지 않으면 그 사이 점포명이 빠진 채로 공유되고,
+                      // 보이던 코드가 잠깐 사라진다.
                       _InviteCodeSection(
                         storeId: widget.storeId,
-                        storeName: storeAsync.asData?.value?.name,
-                        savedInvite: storeAsync.asData?.value?.inviteInfo,
+                        storeName: storeAsync.value?.name,
+                        savedInvite: storeAsync.value?.inviteInfo,
                       ),
                       if (isLoadingStore)
                         const Padding(
@@ -254,11 +258,12 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
 
 /// 초대 코드 발급 섹션.
 ///
-/// 발급 전에는 [발급] 버튼만 두고, 발급 후 코드와 공유·복사 버튼을 보여준다.
-/// 모달을 열 때마다 발급 전 상태로 시작한다 — [InviteInfo]에 `createdAt`이 없어
-/// 이미 발급된 코드의 만료 여부를 클라이언트가 판단할 수 없기 때문이다.
-/// 유효 기간이 남아 있으면 Repository가 같은 코드를 되돌려주므로 발급을 눌러도
-/// 코드가 바뀌지 않는다.
+/// 보여줄 코드가 없으면 [발급] 버튼만 두고, 있으면 코드와 복사·공유·재발급
+/// 버튼을 보여준다. 표시 대상은 저장돼 있던 코드와 방금 발급한 코드를 합쳐
+/// `_visibleInvite`가 고른다.
+///
+/// 발급을 눌러도 유효 기간이 남아 있으면 Repository가 같은 코드를 되돌려주므로
+/// 코드가 바뀌지 않는다. 새 코드가 필요하면 재발급을 쓴다.
 class _InviteCodeSection extends ConsumerStatefulWidget {
   const _InviteCodeSection({
     required this.storeId,
@@ -303,8 +308,9 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // MyPageScreen이 발급 실패를 듣기 위해 컨트롤러를 계속 구독하고 있어
-    // 모달이 닫혀도 autoDispose되지 않는다. 리셋하지 않으면 다시 열었을 때
-    // 만료됐을 수 있는 코드가, 다른 점포의 모달에서는 남의 점포 코드가 남는다.
+    // 모달이 닫혀도 autoDispose되지 않는다. 리셋하지 않으면 다른 점포 모달에
+    // 직전 점포의 코드가 그대로 남는다. (요청이 진행 중인 동안 리셋되는 경우는
+    // InviteCodeController.issue의 isLoading 가드가 막는다.)
     //
     // initState에서는 ProviderScope를 아직 조회할 수 없어 여기서 한 번만 실행한다.
     if (_didReset) return;
@@ -359,8 +365,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   /// 방금 발급한 코드([issued])는 만료 전까지 그대로 쓴다. 반대로 점포 문서에
   /// 저장돼 있던 코드는 **만료 시각을 알 수 있을 때만** 쓴다 — `createdAt`이
   /// 없으면 이미 만료됐는지 판단할 수 없어, 죽은 코드를 보여주느니 숨긴다.
-  InviteInfo? _visibleInvite(InviteInfo? issued) {
-    final now = DateTime.now();
+  InviteInfo? _visibleInvite(InviteInfo? issued, DateTime now) {
     if (issued != null) {
       final expiresAt = issued.expiresAt;
       return expiresAt == null || expiresAt.isAfter(now) ? issued : null;
@@ -376,11 +381,11 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   ///
   /// 기준은 로컬 시계다. 만료 판정 자체는 서버 시각으로 하므로(`StoreRepositoryImpl`)
   /// 여기의 오차는 표시에만 영향을 준다.
-  String _validityLabel(InviteInfo invite) {
+  String _validityLabel(InviteInfo invite, DateTime now) {
     final expiresAt = invite.expiresAt;
     if (expiresAt == null) return '$storeInviteCodeAvailableMin분간 유효합니다';
 
-    final remaining = expiresAt.difference(DateTime.now());
+    final remaining = expiresAt.difference(now);
     if (remaining <= Duration.zero) return '만료됐습니다';
 
     final minutes = remaining.inMinutes.toString().padLeft(2, '0');
@@ -415,7 +420,9 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     final inviteAsync = ref.watch(inviteCodeControllerProvider);
     // 발급 실패(AsyncError)는 MyPageScreen의 ref.listen이 다이얼로그로 알리므로
     // 여기서는 발급 전과 동일하게 다시 시도할 수 있는 상태로 둔다.
-    final invite = _visibleInvite(inviteAsync.value);
+    // 한 프레임 안에서 시계를 두 번 읽으면 만료 순간에 두 판단이 엇갈린다.
+    final now = DateTime.now();
+    final invite = _visibleInvite(inviteAsync.value, now);
     final code = invite?.inviteCode;
 
     return GroupedFormContainer(
@@ -427,7 +434,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                 top: 8,
               ),
               child: Text(
-                _validityLabel(invite),
+                _validityLabel(invite, now),
                 style: textTheme.labelMedium?.copyWith(
                   color: context.secondaryLabel,
                 ),

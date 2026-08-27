@@ -369,7 +369,13 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       // 서버가 확정한 값을 다시 읽어야 한다.
       final saved = await docRef.get();
       final savedInvite = saved.data()?['inviteInfo'] as Map<String, dynamic>?;
-      if (savedInvite == null) return inviteInfoModel;
+      if (savedInvite == null) {
+        // 방금 쓴 필드가 없다 — 도달해선 안 되는 경로다. createdAt 없는 모델을
+        // 그대로 돌려주면 UI가 남은 유효 시간 대신 고정 문구로 조용히 대체하므로,
+        // 로그를 남겨야 드러난다.
+        logger.w('초대 코드 생성 후 inviteInfo를 다시 읽지 못했다\nstoreId: $storeId');
+        return inviteInfoModel;
+      }
 
       return InviteInfoModel.fromJson(savedInvite);
     } catch (e) {
