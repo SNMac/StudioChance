@@ -14,7 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteInfo {
 
- String get inviteCode;
+ String get inviteCode;/// 서버가 확정한 생성 시각. 발급 직후에도 채워진다
+/// (`StoreDataSource.createInviteCode`가 쓰기 후 다시 읽어 온다).
+ DateTime? get createdAt;
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +27,16 @@ $InviteInfoCopyWith<InviteInfo> get copyWith => _$InviteInfoCopyWithImpl<InviteI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode);
+int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode)';
+  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 
@@ -45,7 +47,7 @@ abstract mixin class $InviteInfoCopyWith<$Res>  {
   factory $InviteInfoCopyWith(InviteInfo value, $Res Function(InviteInfo) _then) = _$InviteInfoCopyWithImpl;
 @useResult
 $Res call({
- String inviteCode
+ String inviteCode, DateTime? createdAt
 });
 
 
@@ -62,10 +64,11 @@ class _$InviteInfoCopyWithImpl<$Res>
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String,
+as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -150,10 +153,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InviteInfo() when $default != null:
-return $default(_that.inviteCode);case _:
+return $default(_that.inviteCode,_that.createdAt);case _:
   return orElse();
 
 }
@@ -171,10 +174,10 @@ return $default(_that.inviteCode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _InviteInfo():
-return $default(_that.inviteCode);case _:
+return $default(_that.inviteCode,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -191,10 +194,10 @@ return $default(_that.inviteCode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _InviteInfo() when $default != null:
-return $default(_that.inviteCode);case _:
+return $default(_that.inviteCode,_that.createdAt);case _:
   return null;
 
 }
@@ -205,11 +208,14 @@ return $default(_that.inviteCode);case _:
 /// @nodoc
 
 
-class _InviteInfo implements InviteInfo {
-  const _InviteInfo({required this.inviteCode});
+class _InviteInfo extends InviteInfo {
+  const _InviteInfo({required this.inviteCode, this.createdAt}): super._();
   
 
 @override final  String inviteCode;
+/// 서버가 확정한 생성 시각. 발급 직후에도 채워진다
+/// (`StoreDataSource.createInviteCode`가 쓰기 후 다시 읽어 온다).
+@override final  DateTime? createdAt;
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -221,16 +227,16 @@ _$InviteInfoCopyWith<_InviteInfo> get copyWith => __$InviteInfoCopyWithImpl<_Inv
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode);
+int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode)';
+  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 
@@ -241,7 +247,7 @@ abstract mixin class _$InviteInfoCopyWith<$Res> implements $InviteInfoCopyWith<$
   factory _$InviteInfoCopyWith(_InviteInfo value, $Res Function(_InviteInfo) _then) = __$InviteInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String inviteCode
+ String inviteCode, DateTime? createdAt
 });
 
 
@@ -258,10 +264,11 @@ class __$InviteInfoCopyWithImpl<$Res>
 
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? inviteCode = null,Object? createdAt = freezed,}) {
   return _then(_InviteInfo(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String,
+as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

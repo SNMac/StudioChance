@@ -58,7 +58,7 @@ final class StoreDetailProvider
   }
 }
 
-String _$storeDetailHash() => r'f6eab271e9b39d9ff3bee58c29ffc3fab54c9c6c';
+String _$storeDetailHash() => r'c73d22036602b6ae58d9d07e5eff8a398753afd3';
 
 final class StoreDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Store?>, String> {

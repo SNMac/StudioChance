@@ -66,7 +66,7 @@ final class AppAuthControllerProvider
   AppAuthController create() => AppAuthController();
 }
 
-String _$appAuthControllerHash() => r'd557eb6787d4a186ae66826b004712b7e88508f7';
+String _$appAuthControllerHash() => r'1873a05f609dd35a73cbdeae734bf1e717f8ab6e';
 
 abstract class _$AppAuthController extends $AsyncNotifier<AppStatus> {
   FutureOr<AppStatus> build();

@@ -358,11 +358,26 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final json = inviteInfoModel.toJson();
       json['createdAt'] = FieldValue.serverTimestamp();
 
-      await _storeDocRef(
-        storeId,
-      ).update({'inviteInfo': json, 'updatedAt': FieldValue.serverTimestamp()});
+      final docRef = _storeDocRef(storeId);
+      await docRef.update({
+        'inviteInfo': json,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
-      return inviteInfoModel;
+      // serverTimestamp는 쓰기 시점에 클라이언트가 값을 알 수 없어, 방금 만든
+      // 모델의 createdAt은 null이다. 발급 직후부터 남은 유효 시간을 보여주려면
+      // 서버가 확정한 값을 다시 읽어야 한다.
+      final saved = await docRef.get();
+      final savedInvite = saved.data()?['inviteInfo'] as Map<String, dynamic>?;
+      if (savedInvite == null) {
+        // 쓰기는 성공했는데 방금 쓴 필드를 다시 읽지 못했다 — 도달해선 안 되는
+        // 경로다. 이 반환값의 createdAt이 비어도 화면에는 드러나지 않으므로
+        // (표시는 점포 문서 재조회가 담당한다) 로그로만 알 수 있다.
+        logger.w('초대 코드 생성 후 inviteInfo를 다시 읽지 못했다\nstoreId: $storeId');
+        return inviteInfoModel;
+      }
+
+      return InviteInfoModel.fromJson(savedInvite);
     } catch (e) {
       throw handleFirestoreError(e);
     }

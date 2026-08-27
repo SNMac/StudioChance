@@ -20,10 +20,13 @@ abstract class InviteInfoModel with _$InviteInfoModel {
       _$InviteInfoModelFromJson(json);
 
   factory InviteInfoModel.fromEntity(InviteInfo entity) {
-    return InviteInfoModel(inviteCode: entity.inviteCode);
+    return InviteInfoModel(
+      inviteCode: entity.inviteCode,
+      createdAt: entity.createdAt,
+    );
   }
 
   InviteInfo toEntity() {
-    return InviteInfo(inviteCode: inviteCode);
+    return InviteInfo(inviteCode: inviteCode, createdAt: createdAt);
   }
 }
