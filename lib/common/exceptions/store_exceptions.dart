@@ -29,8 +29,8 @@ sealed class StoreException extends AppException {
     SpaceNameDuplicateException() => '중복된 공간명이 있습니다',
 
     // 6. 유효성 검사 / 알 수 없는 에러
-    StoreValidationException() ||
-    StoreUnknownException() => '에러가 발생했습니다',
+    StoreInviteCodeExpiredException() => '만료된 초대 코드입니다',
+    StoreValidationException() || StoreUnknownException() => '에러가 발생했습니다',
   };
 
   @override
@@ -63,6 +63,8 @@ sealed class StoreException extends AppException {
       '같은 점포 안에서는 공간명을 중복해서 사용할 수 없습니다.\n공간명을 다르게 입력해 주세요.',
 
     // 6. 유효성 검사 / 알 수 없는 에러
+    StoreInviteCodeExpiredException() =>
+      '초대 코드의 유효 시간이 지났습니다.\n점포 관리자에게 새 코드를 요청해 주세요.',
     StoreValidationException() ||
     StoreUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
   };
@@ -78,6 +80,7 @@ sealed class StoreException extends AppException {
     StoreTransactionException() ||
     StoreDataParsingException() ||
     StoreValidationException() ||
+    StoreInviteCodeExpiredException() ||
     StoreNameDuplicateException() ||
     SpaceNameDuplicateException() ||
     StoreUnknownException() => false,
@@ -166,6 +169,16 @@ class StoreCancelledException extends StoreException {
 /// 점포 등록, 수정 시 형식에 맞지 않는 데이터가 있을 때 발생하는 예외
 class StoreValidationException extends StoreException {
   StoreValidationException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 초대 코드의 유효 시간(`storeInviteCodeAvailableMin`)이 지났을 때 발생하는 예외
+///
+/// StoreValidationException과 분리한 이유: 만료는 사용자가 새 코드를 요청하면
+/// 해결되는 상황인데, 같은 arm에 묶이면 '잠시 후 다시 시도해 주세요'라는
+/// 틀린 안내가 나간다 (기다릴수록 만료 상태가 유지된다).
+class StoreInviteCodeExpiredException extends StoreException {
+  StoreInviteCodeExpiredException({required String message, String? code})
     : super(message, code: code);
 }
 

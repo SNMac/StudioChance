@@ -216,7 +216,7 @@ class StoreRepositoryImpl implements StoreRepository {
       );
       final serverNow = await _storeDataSource.getServerTime();
       if (serverNow.isAfter(expiresAt)) {
-        return left(StoreValidationException(message: '만료된 초대 코드입니다.'));
+        return left(StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'));
       }
 
       final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
