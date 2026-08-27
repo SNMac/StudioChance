@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/presentation/colors.dart';
@@ -11,6 +16,7 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
@@ -186,15 +192,25 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                     horizontalPadding,
                     8,
                   ),
-                  child: isLoadingStore
-                      ? const Padding(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 24,
+                    children: [
+                      // 초대 코드 발급은 점포 조회 성공 여부와 무관하게 동작하므로
+                      // 대기 명단의 로딩·실패 분기 바깥에 둔다.
+                      _InviteCodeSection(
+                        storeId: widget.storeId,
+                        storeName: storeAsync.asData?.value?.name,
+                      ),
+                      if (isLoadingStore)
+                        const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32),
                           child: Center(
                             child: CircularProgressIndicator.adaptive(),
                           ),
                         )
-                      : hasLoadFailed || waitingInfos.isEmpty
-                      ? Padding(
+                      else if (hasLoadFailed || waitingInfos.isEmpty)
+                        Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Text(
                             hasLoadFailed
@@ -205,7 +221,8 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                                 ?.copyWith(color: context.secondaryLabel),
                           ),
                         )
-                      : GroupedFormContainer(
+                      else
+                        GroupedFormContainer(
                           children: [
                             for (final info in waitingInfos)
                               _PendingMemberRow(
@@ -217,12 +234,163 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                               ),
                           ],
                         ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 초대 코드 발급 섹션.
+///
+/// 발급 전에는 [발급] 버튼만 두고, 발급 후 코드와 공유·복사 버튼을 보여준다.
+/// 모달을 열 때마다 발급 전 상태로 시작한다 — [InviteInfo]에 `createdAt`이 없어
+/// 이미 발급된 코드의 만료 여부를 클라이언트가 판단할 수 없기 때문이다.
+/// 유효 기간이 남아 있으면 Repository가 같은 코드를 되돌려주므로 발급을 눌러도
+/// 코드가 바뀌지 않는다.
+class _InviteCodeSection extends ConsumerStatefulWidget {
+  const _InviteCodeSection({required this.storeId, required this.storeName});
+
+  final String storeId;
+
+  /// 공유 문구에 넣을 점포명. 점포 조회 실패 시 null이며, 이때는 코드만 공유한다.
+  final String? storeName;
+
+  @override
+  ConsumerState<_InviteCodeSection> createState() => _InviteCodeSectionState();
+}
+
+class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
+  /// 복사 완료 피드백을 스낵바가 아닌 아이콘 전환으로 보여주기 위한 플래그.
+  /// [ScaffoldMessenger]의 스낵바는 뒤에 있는 Scaffold에 붙어 모달 시트에
+  /// 가려지므로, 이 화면에서는 사용자에게 도달하지 않는다.
+  bool _isCopied = false;
+  Timer? _copiedResetTimer;
+
+  bool _didReset = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // MyPageScreen이 발급 실패를 듣기 위해 컨트롤러를 계속 구독하고 있어
+    // 모달이 닫혀도 autoDispose되지 않는다. 리셋하지 않으면 다시 열었을 때
+    // 만료됐을 수 있는 코드가, 다른 점포의 모달에서는 남의 점포 코드가 남는다.
+    //
+    // initState에서는 ProviderScope를 아직 조회할 수 없어 여기서 한 번만 실행한다.
+    if (_didReset) return;
+    _didReset = true;
+    ref.invalidate(inviteCodeControllerProvider);
+  }
+
+  @override
+  void dispose() {
+    _copiedResetTimer?.cancel();
+    super.dispose();
+  }
+
+  String _shareText(String code) {
+    final storeName = widget.storeName;
+    final prefix = storeName == null ? '초대 코드' : '[$storeName] 초대 코드';
+    return '$prefix: $code\n'
+        '$storeInviteCodeAvailableMin분 이내에 입력해 주세요.';
+  }
+
+  void _onCopy(String code) {
+    Clipboard.setData(ClipboardData(text: code));
+    _copiedResetTimer?.cancel();
+    setState(() => _isCopied = true);
+    _copiedResetTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _isCopied = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final inviteAsync = ref.watch(inviteCodeControllerProvider);
+    // 발급 실패(AsyncError)는 MyPageScreen의 ref.listen이 다이얼로그로 알리므로
+    // 여기서는 발급 전과 동일하게 다시 시도할 수 있는 상태로 둔다.
+    final code = inviteAsync.value?.inviteCode;
+
+    return GroupedFormContainer(
+      footer: code == null
+          ? null
+          : Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: horizontalPadding,
+                top: 8,
+              ),
+              child: Text(
+                '$storeInviteCodeAvailableMin분간 유효합니다',
+                style: textTheme.labelMedium?.copyWith(
+                  color: context.secondaryLabel,
+                ),
+              ),
+            ),
+      children: [
+        SizedBox(
+          height: inputFormComponentHeight,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: horizontalPadding,
+            ),
+            child: Row(
+              children: [
+                Expanded(child: Text('초대 코드', style: textTheme.bodyLarge)),
+                if (code == null)
+                  _ActionCapsule(
+                    label: '발급',
+                    background: colorScheme.primaryContainer,
+                    foreground: colorScheme.onPrimaryContainer,
+                    // 발급 중에는 비활성화해 연타로 인한 중복 발급을 막는다.
+                    onPressed: inviteAsync.isLoading
+                        ? null
+                        : () => ref
+                              .read(inviteCodeControllerProvider.notifier)
+                              .issue(widget.storeId),
+                  )
+                else ...[
+                  Text(
+                    code,
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      // 6자리 코드를 눈으로 받아적기 쉽도록 자간을 벌린다.
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      CupertinoIcons.share,
+                      color: colorScheme.primary,
+                    ),
+                    tooltip: '공유',
+                    onPressed: () => SharePlus.instance.share(
+                      ShareParams(text: _shareText(code)),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _isCopied
+                          ? CupertinoIcons.checkmark_alt
+                          : CupertinoIcons.doc_on_doc,
+                      color: colorScheme.primary,
+                    ),
+                    tooltip: '복사',
+                    onPressed: () => _onCopy(code),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

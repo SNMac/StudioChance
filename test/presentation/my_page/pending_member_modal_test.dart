@@ -7,6 +7,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
@@ -188,5 +189,79 @@ void main() {
         role: any(named: 'role'),
       ),
     ).called(1);
+  });
+
+  // =========================================================================
+  // 초대 코드 발급
+  // =========================================================================
+
+  /// 초대 코드 섹션이 든 모달을 띄운다. 발급은 UseCase를 직접 부르므로
+  /// storeUseCaseProvider까지 오버라이드해야 한다.
+  Future<Store> pumpWithInviteMock(
+    WidgetTester tester,
+    MockStoreUseCase mockStoreUseCase,
+  ) async {
+    final store = storeWithWaiting([]);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storeDetailProvider(store.id).overrideWith((ref) async => store),
+          storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: store.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return store;
+  }
+
+  testWidgets('발급 버튼을 누르면 UseCase를 호출하고 받은 코드를 보여준다', (tester) async {
+    final mockStoreUseCase = MockStoreUseCase();
+    when(
+      () => mockStoreUseCase.createInviteCode(any()),
+    ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'A7K2P9')));
+
+    final store = await pumpWithInviteMock(tester, mockStoreUseCase);
+
+    // 발급 전에는 코드가 없다 — 만료 여부를 알 수 없어 기존 코드를 미리 띄우지 않는다.
+    expect(find.text('A7K2P9'), findsNothing);
+
+    await tester.tap(find.text('발급'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A7K2P9'), findsOneWidget);
+    verify(() => mockStoreUseCase.createInviteCode(store.id)).called(1);
+  });
+
+  testWidgets('발급 처리 중에는 버튼이 비활성화되어 중복 발급을 막는다', (tester) async {
+    final mockStoreUseCase = MockStoreUseCase();
+    final completer = Completer<Either<Exception, InviteInfo>>();
+    when(
+      () => mockStoreUseCase.createInviteCode(any()),
+    ).thenAnswer((_) => completer.future);
+
+    await pumpWithInviteMock(tester, mockStoreUseCase);
+
+    await tester.tap(find.text('발급'));
+    await tester.pump();
+
+    // 처리 중 다시 탭해도 호출이 늘지 않는다
+    await tester.tap(find.text('발급'), warnIfMissed: false);
+    await tester.pump();
+
+    completer.complete(right(const InviteInfo(inviteCode: 'A7K2P9')));
+    await tester.pumpAndSettle();
+
+    verify(() => mockStoreUseCase.createInviteCode(any())).called(1);
   });
 }
