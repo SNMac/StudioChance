@@ -83,7 +83,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('대기 중인 가입 신청이 없습니다.'), findsNothing);
+    expect(find.text('대기 중인 가입 신청이 없습니다'), findsNothing);
   });
 
   testWidgets('대기자가 없으면 안내 문구를 보여준다', (tester) async {
@@ -97,7 +97,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('대기 중인 가입 신청이 없습니다.'), findsOneWidget);
+    expect(find.text('대기 중인 가입 신청이 없습니다'), findsOneWidget);
   });
 
   testWidgets('닉네임이 없으면 이름으로 대체 표시한다', (tester) async {

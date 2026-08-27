@@ -198,8 +198,8 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Text(
                             hasLoadFailed
-                                ? '가입 신청 정보를 불러오지 못했습니다.'
-                                : '대기 중인 가입 신청이 없습니다.',
+                                ? '가입 신청 정보를 불러오지 못했습니다'
+                                : '대기 중인 가입 신청이 없습니다',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(color: context.secondaryLabel),
