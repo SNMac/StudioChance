@@ -126,13 +126,19 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
   @override
   Widget build(BuildContext context) {
     final storeAsync = ref.watch(storeDetailProvider(widget.storeId));
-    final waitingInfos = storeAsync.asData?.value?.waitingMemberInfos ?? [];
-    final isLoadingStore = storeAsync.isLoading;
+    // 승인·거절·초대 코드 발급이 모두 이 provider를 무효화한다. asData는
+    // AsyncLoading에서 null이 되므로, 그때마다 대기 명단이 스피너로 바뀐다.
+    // value로 직전 값을 유지해 첫 조회에서만 스피너를 보여준다.
+    final store = storeAsync.value;
+    final waitingInfos = store?.waitingMemberInfos ?? [];
+    final isLoadingStore = store == null && storeAsync.isLoading;
     // storeDetailProvider는 조회 실패도 null로 흡수하므로(store_detail_provider.dart),
     // value == null && !isLoading은 "정말 대기자가 없음"과 구분되는 조회 실패/미존재 상태다.
-    final hasLoadFailed = !isLoadingStore && storeAsync.asData?.value == null;
+    final hasLoadFailed = store == null && !storeAsync.isLoading;
     // 승인/거절 처리 중에는 버튼을 비활성화해 같은 신청의 중복 제출을 막는다.
-    final isMutating = ref.watch(pendingMemberControllerProvider).isLoading;
+    final isMutating = ref.watch(
+      pendingMemberControllerProvider.select((s) => s.isLoading),
+    );
 
     return AnimatedBuilder(
       animation: _sheetController,
@@ -352,9 +358,10 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   ///
   /// 기준은 로컬 시계다. 만료 판정 자체는 서버 시각으로 하므로(`StoreRepositoryImpl`)
   /// 여기의 오차는 표시에만 영향을 준다.
+  /// 만료되지 않은 코드만 [_visibleInvite]를 통과하므로 `expiresAt`은 non-null이고
+  /// 남은 시간은 항상 양수다.
   String _validityLabel(InviteInfo invite, DateTime now) {
     final remaining = invite.expiresAt!.difference(now);
-    if (remaining <= Duration.zero) return '만료됐습니다';
 
     final minutes = remaining.inMinutes.toString().padLeft(2, '0');
     final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
@@ -398,7 +405,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     // 버튼이 다시 활성화되면 중복 발급이 되므로 둘 다 걸어 잠근다.
     // 발급 실패(AsyncError)는 MyPageScreen의 ref.listen이 다이얼로그로 알린다.
     final isBusy =
-        ref.watch(inviteCodeControllerProvider).isLoading ||
+        ref.watch(inviteCodeControllerProvider.select((s) => s.isLoading)) ||
         storeAsync.isLoading;
 
     // 한 프레임 안에서 시계를 두 번 읽으면 만료 순간에 두 판단이 엇갈린다.

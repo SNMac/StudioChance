@@ -365,6 +365,69 @@ void main() {
     ).called(1);
   });
 
+  testWidgets('재조회가 끝나기 전에는 발급 버튼이 다시 열리지 않는다', (tester) async {
+    // 발급이 끝나도 코드는 점포 재조회를 거쳐야 화면에 나타난다. 그 사이
+    // 버튼이 다시 활성화되면, 관리자가 이미 복사·공유한 코드를 덮어쓰는
+    // 두 번째 발급이 일어난다.
+    final store = storeWithWaiting([]);
+    final blockedRefetch = Completer<Store?>();
+    var fetchCount = 0;
+
+    final mockStoreUseCase = MockStoreUseCase();
+    when(
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
+    ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'A7K2P9')));
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storeDetailProvider(store.id).overrideWith((ref) {
+            fetchCount++;
+            // 첫 조회는 즉시 끝내고, 발급 후 재조회는 붙잡아 그 창을 재현한다.
+            return fetchCount == 1
+                ? Future.value(store)
+                : blockedRefetch.future;
+          }),
+          storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: store.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('발급'));
+    await tester.pumpAndSettle();
+
+    // 컨트롤러는 끝났지만 재조회가 진행 중이라 코드는 아직 화면에 없다.
+    expect(find.text('발급'), findsOneWidget);
+    expect(find.text('A7K2P9'), findsNothing);
+
+    await tester.tap(find.text('발급'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
+    ).called(1);
+
+    blockedRefetch.complete(store);
+    await tester.pumpAndSettle();
+  });
+
   /// 저장된 초대 코드를 가진 점포로 모달을 띄운다.
   Future<void> pumpWithSavedInvite(WidgetTester tester, Store store) async {
     await tester.pumpWidget(

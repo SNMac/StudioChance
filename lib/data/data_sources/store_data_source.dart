@@ -370,9 +370,9 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       final saved = await docRef.get();
       final savedInvite = saved.data()?['inviteInfo'] as Map<String, dynamic>?;
       if (savedInvite == null) {
-        // 방금 쓴 필드가 없다 — 도달해선 안 되는 경로다. createdAt 없는 모델을
-        // 그대로 돌려주면 UI가 남은 유효 시간 대신 고정 문구로 조용히 대체하므로,
-        // 로그를 남겨야 드러난다.
+        // 쓰기는 성공했는데 방금 쓴 필드를 다시 읽지 못했다 — 도달해선 안 되는
+        // 경로다. 이 반환값의 createdAt이 비어도 화면에는 드러나지 않으므로
+        // (표시는 점포 문서 재조회가 담당한다) 로그로만 알 수 있다.
         logger.w('초대 코드 생성 후 inviteInfo를 다시 읽지 못했다\nstoreId: $storeId');
         return inviteInfoModel;
       }
