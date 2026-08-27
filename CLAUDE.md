@@ -206,8 +206,12 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
     }
     ```
 - **수신**: `NotificationController`(`lib/presentation/providers/`)가 `MyApp`에서 watch되어 권한 요청·토큰 등록·스트림 구독·딥링크를 담당
-  - 포그라운드는 FCM SDK가 알림을 표시하지 않으므로 `flutter_local_notifications`로 직접 표시
-  - iOS `setForegroundNotificationPresentationOptions`는 켜지 않는다 — 켜면 시스템 배너와 로컬 알림이 중복된다
+  - **포그라운드 표시는 플랫폼별로 경로가 다르다**
+    - Android: FCM SDK가 표시하지 않으므로 `flutter_local_notifications`로 직접 표시
+    - iOS: `setForegroundNotificationPresentationOptions(alert·badge·sound)`를 **켜고** 시스템이 표시하게 한다. 로컬 알림은 **띄우지 않는다** (`NotificationController`의 `Platform.isIOS` 분기)
+  - iOS에서 위 옵션을 끄면 알림이 **아예 보이지 않는다.** `UNUserNotificationCenterDelegate`가 `presentationOptions=0`을 반환하는데, 이 delegate는 수신 푸시뿐 아니라 앱이 `flutter_local_notifications`로 만든 알림까지 함께 억제한다 (배너 없이 알림 센터에만 쌓임)
+    - 시뮬레이터 로그로 확인 가능: 꺼진 상태 `Received response 0` / `shouldPresentAlert: 0`, 켜진 상태 `Received response 7` / `shouldPresentAlert: YES`
+    - 검증 방법: `xcrun simctl push <device> <bundleId> payload.apns` (APNs·FCM을 우회하므로 전달 경로가 아닌 **표시·탭 처리만** 검증됨)
 - **값이 반드시 일치해야 하는 상수**
   - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
   - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
