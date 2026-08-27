@@ -47,6 +47,17 @@ class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
+  Future<Either<Exception, void>> enableForegroundPresentation() async {
+    try {
+      await _notificationDataSource.enableForegroundPresentation();
+      return right(null);
+    } catch (e) {
+      _logger.e('포그라운드 알림 표시 설정 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
   Future<Either<Exception, void>> registerFcmToken({
     required String uid,
     String? token,

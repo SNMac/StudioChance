@@ -46,6 +46,10 @@ class _RacingNotificationUseCase implements NotificationUseCase {
   }
 
   @override
+  Future<Either<Exception, void>> enableForegroundPresentation() async =>
+      right(null);
+
+  @override
   Future<Either<Exception, void>> registerFcmToken({
     required String uid,
     String? token,

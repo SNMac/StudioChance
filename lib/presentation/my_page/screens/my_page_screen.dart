@@ -157,6 +157,39 @@ class _SectionHeader extends StatelessWidget {
 }
 
 /// 점포 한 줄. ADMIN 점포는 대기 인원을 함께 표시하고 탭하면 승인 대기 모달을 연다.
+/// 승인 대기 인원 배지.
+///
+/// 관리자에게 조치가 필요한 상태라 눈에 띄어야 하고, 점포명이 길어도
+/// 잘리면 안 되므로 텍스트가 아닌 고정 크기 요소로 표시한다.
+class _PendingBadge extends StatelessWidget {
+  const _PendingBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 20),
+      padding: const EdgeInsetsDirectional.symmetric(
+        horizontal: 6,
+        vertical: 2,
+      ),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: context.systemRed,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        '$count',
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: context.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 class _StoreRow extends ConsumerWidget {
   const _StoreRow({required this.info});
 
@@ -177,13 +210,12 @@ class _StoreRow extends ConsumerWidget {
               0
         : 0;
 
-    final content = waitingCount > 0
-        ? '${info.role.displayName} · 신청 $waitingCount'
-        : info.role.displayName;
-
     return TitleNavigationButton(
       title: info.name,
-      content: content,
+      // 대기 인원을 content에 문자열로 붙이면 긴 점포명과 한 줄을 다투다
+      // '관리자 · 신...'처럼 잘린다. 길이가 고정된 배지로 분리한다.
+      content: info.role.displayName,
+      trailing: waitingCount > 0 ? _PendingBadge(count: waitingCount) : null,
       isChangeable: isAdmin,
       contentLeading: Container(
         width: 8,

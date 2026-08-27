@@ -23,6 +23,9 @@ abstract interface class NotificationUseCase {
     required void Function(String? payload) onTap,
   });
 
+  /// iOS 포그라운드에서 시스템이 알림 배너를 직접 표시하도록 설정한다.
+  Future<Either<Exception, void>> enableForegroundPresentation();
+
   Future<Either<Exception, void>> showLocalNotification(PushMessage message);
 }
 
@@ -65,6 +68,10 @@ class NotificationUseCaseImpl implements NotificationUseCase {
   Future<Either<Exception, void>> initLocalNotifications({
     required void Function(String? payload) onTap,
   }) => _notificationRepository.initLocalNotifications(onTap: onTap);
+
+  @override
+  Future<Either<Exception, void>> enableForegroundPresentation() =>
+      _notificationRepository.enableForegroundPresentation();
 
   @override
   Future<Either<Exception, void>> showLocalNotification(PushMessage message) =>

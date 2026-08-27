@@ -14,6 +14,9 @@ abstract interface class NotificationDataSource {
   /// 알림 권한 요청
   Future<NotificationSettings> requestPermission();
 
+  /// iOS 포그라운드에서 시스템이 알림 배너를 직접 표시하도록 설정한다.
+  Future<void> enableForegroundPresentation();
+
   /// 현재 기기의 FCM 토큰 가져오기
   Future<String> getFcmToken();
 
@@ -71,6 +74,14 @@ class FirebaseMessagingDataSource implements NotificationDataSource {
       _logger.w('FCM 토큰 삭제 실패', error: e);
     }
   }
+
+  @override
+  Future<void> enableForegroundPresentation() =>
+      _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
   @override
   Stream<RemoteMessage> get onMessage => FirebaseMessaging.onMessage;
