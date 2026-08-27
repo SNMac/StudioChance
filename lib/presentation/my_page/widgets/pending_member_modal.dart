@@ -270,28 +270,58 @@ class _PendingMemberRow extends StatelessWidget {
                 color: context.secondaryLabel,
               ),
             ),
-            const SizedBox(width: 8),
-            CupertinoButton(
-              minimumSize: Size.zero,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+            const SizedBox(width: 12),
+            _ActionCapsule(
+              label: '거절',
+              color: Theme.of(context).colorScheme.error,
               onPressed: disabled ? null : onReject,
-              child: Text(
-                '거절',
-                style: textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
             ),
-            CupertinoButton(
-              minimumSize: Size.zero,
-              padding: const EdgeInsets.only(left: 8),
+            const SizedBox(width: 8),
+            _ActionCapsule(
+              label: '승인',
+              color: context.systemBlue,
               onPressed: disabled ? null : onApprove,
-              child: Text(
-                '승인',
-                style: textTheme.bodyLarge?.copyWith(color: context.systemBlue),
-              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 승인/거절 액션 버튼.
+///
+/// 역할 라벨과 나란히 놓이는 자리라 텍스트만으로는 버튼인지 구분되지 않는다.
+/// 옅은 배경의 캡슐로 감싸 탭 가능한 요소임을 드러낸다.
+class _ActionCapsule extends StatelessWidget {
+  const _ActionCapsule({
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String label;
+  final Color color;
+
+  /// null이면 비활성 (처리 중 중복 제출 차단)
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = onPressed == null;
+
+    return CupertinoButton(
+      minimumSize: Size.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      borderRadius: BorderRadius.circular(100),
+      color: color.withValues(alpha: 0.12),
+      disabledColor: context.quaternarySystemFill,
+      onPressed: onPressed,
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: isDisabled ? context.tertiaryLabel : color,
         ),
       ),
     );
