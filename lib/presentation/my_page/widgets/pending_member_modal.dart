@@ -246,6 +246,7 @@ class _PendingMemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SizedBox(
       height: inputFormComponentHeight,
@@ -273,13 +274,15 @@ class _PendingMemberRow extends StatelessWidget {
             const SizedBox(width: 12),
             _ActionCapsule(
               label: '거절',
-              color: Theme.of(context).colorScheme.error,
+              background: colorScheme.errorContainer,
+              foreground: colorScheme.onErrorContainer,
               onPressed: disabled ? null : onReject,
             ),
             const SizedBox(width: 8),
             _ActionCapsule(
               label: '승인',
-              color: context.systemBlue,
+              background: colorScheme.primaryContainer,
+              foreground: colorScheme.onPrimaryContainer,
               onPressed: disabled ? null : onApprove,
             ),
           ],
@@ -296,12 +299,17 @@ class _PendingMemberRow extends StatelessWidget {
 class _ActionCapsule extends StatelessWidget {
   const _ActionCapsule({
     required this.label,
-    required this.color,
+    required this.background,
+    required this.foreground,
     required this.onPressed,
   });
 
   final String label;
-  final Color color;
+
+  /// 배경·전경 모두 ColorScheme에서 받는다. 알파를 직접 계산하면
+  /// 강조색 변경이나 다크 모드 대응이 이 위젯에만 누락된다.
+  final Color background;
+  final Color foreground;
 
   /// null이면 비활성 (처리 중 중복 제출 차단)
   final VoidCallback? onPressed;
@@ -314,14 +322,14 @@ class _ActionCapsule extends StatelessWidget {
       minimumSize: Size.zero,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       borderRadius: BorderRadius.circular(100),
-      color: color.withValues(alpha: 0.12),
+      color: background,
       disabledColor: context.quaternarySystemFill,
       onPressed: onPressed,
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
           fontWeight: FontWeight.w600,
-          color: isDisabled ? context.tertiaryLabel : color,
+          color: isDisabled ? context.tertiaryLabel : foreground,
         ),
       ),
     );

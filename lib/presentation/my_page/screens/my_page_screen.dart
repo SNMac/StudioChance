@@ -168,22 +168,31 @@ class _PendingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 20),
-      padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: 6,
-        vertical: 2,
-      ),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: context.systemRed,
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Text(
-        '$count',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: context.white,
-          fontWeight: FontWeight.w600,
+    // 앱 강조색은 my_app.dart의 ColorScheme 한 곳에서만 정의된다.
+    // systemBlue를 직접 쓰면 강조색을 바꿀 때 여기만 남는다.
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // 숫자를 담는 고정 크기 chrome이라 시스템 글자 크기를 따라가지 않는다.
+    // 따라가게 두면 높이만 늘어나 세로로 길쭉해지고 행 높이를 넘어선다
+    // (textTheme.labelMedium의 height가 1.5인 데다 배율까지 곱해진다).
+    return MediaQuery.withNoTextScaling(
+      child: Container(
+        height: 20,
+        constraints: const BoxConstraints(minWidth: 20),
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: 6),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: colorScheme.primary,
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Text(
+          '$count',
+          style: TextStyle(
+            color: colorScheme.onPrimary,
+            fontSize: 12,
+            height: 1.0,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
