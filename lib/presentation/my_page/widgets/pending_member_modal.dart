@@ -23,7 +23,7 @@ import 'package:studio_chance/presentation/providers/store_detail_provider.dart'
 const double _kModalInitialSize = 0.5;
 const double _kModalMaxSize = 1.0;
 
-/// 초대 코드 복사·공유 아이콘 크기. IconButton 기본값(24)은 코드 텍스트보다
+/// 초대 코드 복사·공유·재발급 아이콘 크기. IconButton 기본값(24)은 코드 텍스트보다
 /// 커 보여 시선을 뺏으므로 한 단계 줄인다.
 const double _kInviteActionIconSize = 20;
 
@@ -332,6 +332,26 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     );
   }
 
+  /// 초대 코드 행의 액션 아이콘.
+  ///
+  /// IconButton 기본 탭 영역(48)은 아이콘 사이를 28px 벌려 세 개가 나란히
+  /// 서면 흩어져 보인다. compact로 40까지 좁힌다 — 더 줄이면 탭 영역이
+  /// 손가락에 비해 작아진다.
+  Widget _actionIcon({
+    required IconData icon,
+    required Color color,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(icon, color: color),
+      iconSize: _kInviteActionIconSize,
+      visualDensity: VisualDensity.compact,
+      tooltip: tooltip,
+      onPressed: onPressed,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -388,54 +408,34 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  IconButton(
-                    icon: Icon(
-                      _isCopied
-                          ? CupertinoIcons.checkmark_alt
-                          : CupertinoIcons.doc_on_doc,
-                      color: colorScheme.primary,
-                    ),
-                    iconSize: _kInviteActionIconSize,
+                  _actionIcon(
+                    icon: _isCopied
+                        ? CupertinoIcons.checkmark_alt
+                        : CupertinoIcons.doc_on_doc,
+                    color: colorScheme.primary,
                     tooltip: '복사',
                     onPressed: () => _onCopy(code),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      CupertinoIcons.share,
-                      color: colorScheme.primary,
-                    ),
-                    iconSize: _kInviteActionIconSize,
+                  _actionIcon(
+                    icon: CupertinoIcons.share,
+                    color: colorScheme.primary,
                     tooltip: '공유',
                     onPressed: () => SharePlus.instance.share(
                       ShareParams(text: _shareText(code)),
                     ),
+                  ),
+                  _actionIcon(
+                    icon: CupertinoIcons.arrow_counterclockwise,
+                    // 옛 코드를 끊는 파괴적 동작이라 안전한 두 아이콘과 색으로 가른다.
+                    color: colorScheme.error,
+                    tooltip: '재발급',
+                    onPressed: _onRegenerate,
                   ),
                 ],
               ],
             ),
           ),
         ),
-        // 코드가 없을 때는 첫 행의 [발급]이 같은 역할을 하므로 숨긴다.
-        if (code != null)
-          SizedBox(
-            height: inputFormComponentHeight,
-            child: CupertinoButton(
-              padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: horizontalPadding,
-              ),
-              onPressed: _onRegenerate,
-              child: Row(
-                children: [
-                  Text(
-                    '코드 재발급',
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
       ],
     );
   }

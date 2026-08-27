@@ -318,14 +318,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 코드가 없을 때는 재발급 행이 없다 — 첫 행의 [발급]이 같은 역할을 한다.
-    expect(find.text('코드 재발급'), findsNothing);
+    // 코드가 없을 때는 재발급 버튼이 없다 — 첫 행의 [발급]이 같은 역할을 한다.
+    expect(find.byTooltip('재발급'), findsNothing);
 
     await tester.tap(find.text('발급'));
     await tester.pumpAndSettle();
-    expect(find.text('코드 재발급'), findsOneWidget);
+    expect(find.byTooltip('재발급'), findsOneWidget);
 
-    await tester.tap(find.text('코드 재발급'));
+    // 확인 다이얼로그의 버튼도 '재발급'이라 아이콘은 tooltip으로 찾는다.
+    await tester.tap(find.byTooltip('재발급'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('재발급'));
     await tester.pumpAndSettle();
