@@ -40,6 +40,7 @@ class _TitlePopupButtonState<T> extends State<TitlePopupButton<T>> {
         onPressed: () => _menuKey.currentState?.showButtonMenu(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          spacing: 8,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(widget.title, style: textTheme.bodyLarge),
