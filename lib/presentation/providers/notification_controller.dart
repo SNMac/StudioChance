@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/widgets.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -80,7 +81,7 @@ class NotificationController extends _$NotificationController {
     // iOS는 시스템이 포그라운드 배너를 표시하도록 켠다. 이 설정을 끄면
     // UNUserNotificationCenterDelegate가 presentationOptions=0을 반환해,
     // 앱이 만든 로컬 알림까지 함께 억제된다(배너 없이 알림 센터에만 쌓임).
-    if (Platform.isIOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       final presentationResult = await useCase.enableForegroundPresentation();
       if (generation != _buildGeneration) return;
       presentationResult.fold(
@@ -113,7 +114,7 @@ class NotificationController extends _$NotificationController {
       // iOS는 위에서 켠 설정으로 시스템이 직접 배너를 표시하므로,
       // 로컬 알림까지 띄우면 배너가 두 번 보인다.
       // Android는 FCM이 포그라운드 알림을 표시하지 않아 로컬 알림이 필요하다.
-      if (Platform.isIOS) return;
+      if (defaultTargetPlatform == TargetPlatform.iOS) return;
       useCase.showLocalNotification(message);
     });
 

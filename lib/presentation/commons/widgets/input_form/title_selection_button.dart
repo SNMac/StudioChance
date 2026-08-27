@@ -38,7 +38,7 @@ class TitleSelectionButton<T> extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             spacing: 8,
             children: [
-              if (leading != null) ...[leading!, const SizedBox(width: 8)],
+              ?leading,
               Expanded(
                 child: Text(
                   title,

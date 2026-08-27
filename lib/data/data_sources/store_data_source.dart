@@ -312,6 +312,8 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
+        // deletedAt을 쓰는 경로는 반드시 inviteInfo도 함께 null로 만들어야 한다.
+        // getStoreByInviteCode가 이 불변식에 기대어 초대 코드로만 조회한다.
         'inviteInfo': null,
       });
 

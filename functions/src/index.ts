@@ -88,9 +88,11 @@ export const notifyAdminsOnJoinRequest = onDocumentUpdated(
         successCount: response.successCount,
         failureCount: response.failureCount,
         // 실패 코드를 남겨야 정리 대상이 아닌 영구 실패 토큰을 사후에 식별할 수 있다
-        failureCodes: response.responses
-          .filter((result) => !result.success)
-          .map((result) => result.error?.code ?? 'unknown'),
+        ...(response.failureCount > 0 && {
+          failureCodes: response.responses
+            .filter((result) => !result.success)
+            .map((result) => result.error?.code ?? 'unknown'),
+        }),
       });
 
       const expiredTokens = invalidTokensFrom(response, targetTokens);

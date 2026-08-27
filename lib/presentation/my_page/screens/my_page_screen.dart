@@ -156,7 +156,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// 점포 한 줄. ADMIN 점포는 대기 인원을 함께 표시하고 탭하면 승인 대기 모달을 연다.
 /// 승인 대기 인원 배지.
 ///
 /// 관리자에게 조치가 필요한 상태라 눈에 띄어야 하고, 점포명이 길어도
@@ -172,26 +171,28 @@ class _PendingBadge extends StatelessWidget {
     // systemBlue를 직접 쓰면 강조색을 바꿀 때 여기만 남는다.
     final colorScheme = Theme.of(context).colorScheme;
 
-    // 숫자를 담는 고정 크기 chrome이라 시스템 글자 크기를 따라가지 않는다.
-    // 따라가게 두면 높이만 늘어나 세로로 길쭉해지고 행 높이를 넘어선다
-    // (textTheme.labelMedium의 height가 1.5인 데다 배율까지 곱해진다).
-    return MediaQuery.withNoTextScaling(
-      child: Container(
-        height: 20,
-        constraints: const BoxConstraints(minWidth: 20),
-        padding: const EdgeInsetsDirectional.symmetric(horizontal: 6),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: colorScheme.primary,
-          borderRadius: BorderRadius.circular(100),
-        ),
-        child: Text(
-          '$count',
-          style: TextStyle(
-            color: colorScheme.onPrimary,
-            fontSize: 12,
-            height: 1.0,
-            fontWeight: FontWeight.w600,
+    // 숫자를 담는 고정 크기 chrome이라 높이를 고정한다. textTheme을 쓰면
+    // labelMedium의 height 1.5가 곱해져 세로로 길쭉해지고 행 높이를 넘어선다.
+    return Semantics(
+      label: '승인 대기 $count명',
+      child: ExcludeSemantics(
+        child: Container(
+          height: 20,
+          constraints: const BoxConstraints(minWidth: 20),
+          padding: const EdgeInsetsDirectional.symmetric(horizontal: 6),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Text(
+            '$count',
+            style: TextStyle(
+              color: colorScheme.onPrimary,
+              fontSize: 12,
+              height: 1.0,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -199,6 +200,7 @@ class _PendingBadge extends StatelessWidget {
   }
 }
 
+/// 점포 한 줄. ADMIN 점포는 대기 인원을 함께 표시하고 탭하면 승인 대기 모달을 연다.
 class _StoreRow extends ConsumerWidget {
   const _StoreRow({required this.info});
 

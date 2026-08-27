@@ -49,7 +49,10 @@ void main() {
 
       final result = await repository.getStoreByInviteCode('ABC123');
 
-      expect(result.isRight(), true);
+      result.fold(
+        (error) => fail('유효한 초대 코드인데 실패를 반환했다: $error'),
+        (store) => expect(store?.inviteInfo?.inviteCode, 'ABC123'),
+      );
     });
 
     test(

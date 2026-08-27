@@ -43,7 +43,16 @@ class TitleNavigationButton extends StatelessWidget {
           // TitleTextLabel과 동일한 최소 간격을 둔다.
           spacing: 8,
           children: [
-            Text(title, style: textTheme.bodyLarge),
+            // title이 non-flex면 긴 점포명이 Expanded를 0폭으로 만들어
+            // 고정 크기 요소(배지·chevron)가 행 밖으로 넘친다. title이 양보한다.
+            Flexible(
+              child: Text(
+                title,
+                style: textTheme.bodyLarge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,

@@ -1193,6 +1193,12 @@ git commit -m "feat: #19 - PushMessage 엔티티 및 RemoteMessage 변환 추가
 
 **설계 노트:** FCM SDK는 앱이 포그라운드일 때 Android에서 알림을 표시하지 않는다. iOS도 기본적으로 표시하지 않는다. 두 플랫폼 모두 `flutter_local_notifications`로 직접 띄워 동작을 통일한다. 그래서 iOS의 `setForegroundNotificationPresentationOptions`는 켜지 않는다 — 켜면 시스템 배너와 로컬 알림이 중복 표시된다.
 
+> **[2026-08-27 정정]** 아래 서술은 실기기 검증으로 반증됐다. iOS에서 이 옵션을 끄면
+> `UNUserNotificationCenterDelegate`가 `presentationOptions=0`을 반환해 **로컬 알림까지 함께
+> 억제되어 아무것도 보이지 않는다**(시뮬레이터 로그 `Received response 0` / `shouldPresentAlert: 0`).
+> 올바른 구성은 옵션을 켜고 iOS에서 로컬 알림을 건너뛰는 것이다. CLAUDE.md의 FCM 절 참고.
+
+
 - [ ] **Step 1: `NotificationDataSource` 인터페이스에 스트림 추가**
 
 `lib/data/data_sources/notification_data_source.dart`의 `abstract interface class NotificationDataSource` 안, `deleteToken()` 선언 **뒤에** 추가한다.
@@ -3482,6 +3488,12 @@ firebase functions:log --only notifyAdminsOnJoinRequest -P dev
 - **수신**: `NotificationController`(`lib/presentation/providers/`)가 `MyApp`에서 watch되어 권한 요청·토큰 등록·스트림 구독·딥링크를 담당
   - 포그라운드는 FCM SDK가 알림을 표시하지 않으므로 `flutter_local_notifications`로 직접 표시
   - iOS `setForegroundNotificationPresentationOptions`는 켜지 않는다 — 켜면 시스템 배너와 로컬 알림이 중복된다
+
+> **[2026-08-27 정정]** 아래 서술은 실기기 검증으로 반증됐다. iOS에서 이 옵션을 끄면
+> `UNUserNotificationCenterDelegate`가 `presentationOptions=0`을 반환해 **로컬 알림까지 함께
+> 억제되어 아무것도 보이지 않는다**(시뮬레이터 로그 `Received response 0` / `shouldPresentAlert: 0`).
+> 올바른 구성은 옵션을 켜고 iOS에서 로컬 알림을 건너뛰는 것이다. CLAUDE.md의 FCM 절 참고.
+
 - **값이 반드시 일치해야 하는 상수**
   - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
   - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
