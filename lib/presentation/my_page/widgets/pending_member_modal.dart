@@ -23,6 +23,10 @@ import 'package:studio_chance/presentation/providers/store_detail_provider.dart'
 const double _kModalInitialSize = 0.5;
 const double _kModalMaxSize = 1.0;
 
+/// 초대 코드 복사·공유 아이콘 크기. IconButton 기본값(24)은 코드 텍스트보다
+/// 커 보여 시선을 뺏으므로 한 단계 줄인다.
+const double _kInviteActionIconSize = 20;
+
 /// 승인 대기 멤버 모달.
 ///
 /// 각 항목: (닉네임) (신청 역할) (거절) (승인).
@@ -367,23 +371,25 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                   const SizedBox(width: 4),
                   IconButton(
                     icon: Icon(
-                      CupertinoIcons.share,
-                      color: colorScheme.primary,
-                    ),
-                    tooltip: '공유',
-                    onPressed: () => SharePlus.instance.share(
-                      ShareParams(text: _shareText(code)),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
                       _isCopied
                           ? CupertinoIcons.checkmark_alt
                           : CupertinoIcons.doc_on_doc,
                       color: colorScheme.primary,
                     ),
+                    iconSize: _kInviteActionIconSize,
                     tooltip: '복사',
                     onPressed: () => _onCopy(code),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      CupertinoIcons.share,
+                      color: colorScheme.primary,
+                    ),
+                    iconSize: _kInviteActionIconSize,
+                    tooltip: '공유',
+                    onPressed: () => SharePlus.instance.share(
+                      ShareParams(text: _shareText(code)),
+                    ),
                   ),
                 ],
               ],
