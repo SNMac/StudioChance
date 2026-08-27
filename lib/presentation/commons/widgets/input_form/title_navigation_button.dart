@@ -34,6 +34,9 @@ class TitleNavigationButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
+          // content가 길어 Expanded를 가득 채우면 title에 붙어버리므로
+          // TitleTextLabel과 동일한 최소 간격을 둔다.
+          spacing: 4,
           children: [
             Text(title, style: textTheme.bodyLarge),
             Expanded(
@@ -51,7 +54,9 @@ class TitleNavigationButton extends StatelessWidget {
                         content!,
                         style: textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.normal,
-                          color: isChangeable ? context.secondaryLabel : context.label,
+                          color: isChangeable
+                              ? context.secondaryLabel
+                              : context.label,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
