@@ -203,15 +203,7 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                     children: [
                       // 초대 코드 발급은 점포 조회 성공 여부와 무관하게 동작하므로
                       // 대기 명단의 로딩·실패 분기 바깥에 둔다.
-                      // 발급 성공 시 storeDetailProvider를 무효화하므로 재조회
-                      // 동안 asData가 null이 된다. value로 직전 값을
-                      // 유지하지 않으면 그 사이 점포명이 빠진 채로 공유되고,
-                      // 보이던 코드가 잠깐 사라진다.
-                      _InviteCodeSection(
-                        storeId: widget.storeId,
-                        storeName: storeAsync.value?.name,
-                        savedInvite: storeAsync.value?.inviteInfo,
-                      ),
+                      _InviteCodeSection(storeId: widget.storeId),
                       if (isLoadingStore)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32),
@@ -259,26 +251,19 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
 /// 초대 코드 발급 섹션.
 ///
 /// 보여줄 코드가 없으면 [발급] 버튼만 두고, 있으면 코드와 복사·공유·재발급
-/// 버튼을 보여준다. 표시 대상은 저장돼 있던 코드와 방금 발급한 코드를 합쳐
-/// `_visibleInvite`가 고른다.
+/// 버튼을 보여준다.
+///
+/// 표시할 코드의 출처는 `storeDetailProvider`의 `Store.inviteInfo` 하나뿐이다.
+/// 발급 결과를 컨트롤러에도 들고 있으면 점포별로 분리되지 않은 두 번째 출처가
+/// 생겨, 다른 점포 모달에 직전 점포의 코드가 새는 경로가 만들어진다.
+/// 대신 발급한 코드는 재조회가 끝난 뒤에 나타난다.
 ///
 /// 발급을 눌러도 유효 기간이 남아 있으면 Repository가 같은 코드를 되돌려주므로
 /// 코드가 바뀌지 않는다. 새 코드가 필요하면 재발급을 쓴다.
 class _InviteCodeSection extends ConsumerStatefulWidget {
-  const _InviteCodeSection({
-    required this.storeId,
-    required this.storeName,
-    required this.savedInvite,
-  });
+  const _InviteCodeSection({required this.storeId});
 
   final String storeId;
-
-  /// 공유 문구에 넣을 점포명. 점포 조회 실패 시 null이며, 이때는 코드만 공유한다.
-  final String? storeName;
-
-  /// 점포 문서에 이미 저장된 초대 코드. 유효 기간이 남아 있으면 모달을 열자마자
-  /// 보여준다 (발급을 다시 누르지 않아도 되도록).
-  final InviteInfo? savedInvite;
 
   @override
   ConsumerState<_InviteCodeSection> createState() => _InviteCodeSectionState();
@@ -291,32 +276,8 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   bool _isCopied = false;
   Timer? _copiedResetTimer;
 
-  bool _didReset = false;
-
-  /// 남은 유효 시간 표시를 1초마다 갱신한다.
+  /// 남은 유효 시간 표시를 1초마다 갱신한다. 셀 코드가 있을 때만 돈다.
   Timer? _tickTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // MyPageScreen이 발급 실패를 듣기 위해 컨트롤러를 계속 구독하고 있어
-    // 모달이 닫혀도 autoDispose되지 않는다. 리셋하지 않으면 다른 점포 모달에
-    // 직전 점포의 코드가 그대로 남는다. (요청이 진행 중인 동안 리셋되는 경우는
-    // InviteCodeController.issue의 isLoading 가드가 막는다.)
-    //
-    // initState에서는 ProviderScope를 아직 조회할 수 없어 여기서 한 번만 실행한다.
-    if (_didReset) return;
-    _didReset = true;
-    ref.invalidate(inviteCodeControllerProvider);
-  }
 
   @override
   void dispose() {
@@ -325,8 +286,25 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     super.dispose();
   }
 
-  String _shareText(String code) {
-    final storeName = widget.storeName;
+  /// 카운트다운 타이머를 [needed] 상태에 맞춘다. build에서 매 프레임 호출되며,
+  /// 이미 원하는 상태면 아무것도 하지 않는다.
+  ///
+  /// 만료되는 순간의 화면 전환은 마지막 tick이 만든다 — 그 tick의 build에서
+  /// [needed]가 false가 되어 타이머가 여기서 멈춘다.
+  void _syncTicker({required bool needed}) {
+    if (needed == (_tickTimer != null)) return;
+
+    if (needed) {
+      _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    } else {
+      _tickTimer?.cancel();
+      _tickTimer = null;
+    }
+  }
+
+  String _shareText(String code, String? storeName) {
     final prefix = storeName == null ? '초대 코드' : '[$storeName] 초대 코드';
     return '$prefix: $code\n'
         '$storeInviteCodeAvailableMin분 이내에 입력해 주세요.';
@@ -362,30 +340,20 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
 
   /// 화면에 보여줄 초대 코드.
   ///
-  /// 방금 발급한 코드([issued])는 만료 전까지 그대로 쓴다. 반대로 점포 문서에
-  /// 저장돼 있던 코드는 **만료 시각을 알 수 있을 때만** 쓴다 — `createdAt`이
-  /// 없으면 이미 만료됐는지 판단할 수 없어, 죽은 코드를 보여주느니 숨긴다.
-  InviteInfo? _visibleInvite(InviteInfo? issued, DateTime now) {
-    if (issued != null) {
-      final expiresAt = issued.expiresAt;
-      return expiresAt == null || expiresAt.isAfter(now) ? issued : null;
-    }
-
-    final saved = widget.savedInvite;
-    final savedExpiresAt = saved?.expiresAt;
-    if (savedExpiresAt == null || !savedExpiresAt.isAfter(now)) return null;
+  /// 만료 시각을 알 수 있고 아직 지나지 않았을 때만 쓴다. `createdAt`이 없으면
+  /// 이미 만료됐는지 판단할 수 없어, 죽은 코드를 보여주느니 숨긴다.
+  InviteInfo? _visibleInvite(InviteInfo? saved, DateTime now) {
+    final expiresAt = saved?.expiresAt;
+    if (expiresAt == null || !expiresAt.isAfter(now)) return null;
     return saved;
   }
 
-  /// 남은 유효 시간 안내. 만료 시각을 모르면 고정 문구로 대체한다.
+  /// 남은 유효 시간 안내.
   ///
   /// 기준은 로컬 시계다. 만료 판정 자체는 서버 시각으로 하므로(`StoreRepositoryImpl`)
   /// 여기의 오차는 표시에만 영향을 준다.
   String _validityLabel(InviteInfo invite, DateTime now) {
-    final expiresAt = invite.expiresAt;
-    if (expiresAt == null) return '$storeInviteCodeAvailableMin분간 유효합니다';
-
-    final remaining = expiresAt.difference(now);
+    final remaining = invite.expiresAt!.difference(now);
     if (remaining <= Duration.zero) return '만료됐습니다';
 
     final minutes = remaining.inMinutes.toString().padLeft(2, '0');
@@ -402,10 +370,13 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
     required IconData icon,
     required Color color,
     required String tooltip,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
   }) {
     return IconButton(
-      icon: Icon(icon, color: color),
+      icon: Icon(
+        icon,
+        color: onPressed == null ? context.tertiaryLabel : color,
+      ),
       iconSize: _kInviteActionIconSize,
       visualDensity: VisualDensity.compact,
       tooltip: tooltip,
@@ -417,12 +388,23 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final inviteAsync = ref.watch(inviteCodeControllerProvider);
-    // 발급 실패(AsyncError)는 MyPageScreen의 ref.listen이 다이얼로그로 알리므로
-    // 여기서는 발급 전과 동일하게 다시 시도할 수 있는 상태로 둔다.
+
+    final storeAsync = ref.watch(storeDetailProvider(widget.storeId));
+    // 재조회 중에도 직전 값을 유지한다. asData는 AsyncLoading에서 null이 되어,
+    // 그 사이 점포명이 빠진 채로 공유되고 보이던 코드가 잠깐 사라진다.
+    final store = storeAsync.value;
+
+    // 발급이 끝나도 재조회가 끝나기 전까지는 코드가 화면에 없다. 그 창에서
+    // 버튼이 다시 활성화되면 중복 발급이 되므로 둘 다 걸어 잠근다.
+    // 발급 실패(AsyncError)는 MyPageScreen의 ref.listen이 다이얼로그로 알린다.
+    final isBusy =
+        ref.watch(inviteCodeControllerProvider).isLoading ||
+        storeAsync.isLoading;
+
     // 한 프레임 안에서 시계를 두 번 읽으면 만료 순간에 두 판단이 엇갈린다.
     final now = DateTime.now();
-    final invite = _visibleInvite(inviteAsync.value, now);
+    final invite = _visibleInvite(store?.inviteInfo, now);
+    _syncTicker(needed: invite != null);
     final code = invite?.inviteCode;
 
     return GroupedFormContainer(
@@ -455,8 +437,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                     label: '발급',
                     background: colorScheme.primaryContainer,
                     foreground: colorScheme.onPrimaryContainer,
-                    // 발급 중에는 비활성화해 연타로 인한 중복 발급을 막는다.
-                    onPressed: inviteAsync.isLoading
+                    onPressed: isBusy
                         ? null
                         : () => ref
                               .read(inviteCodeControllerProvider.notifier)
@@ -485,7 +466,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                     color: colorScheme.primary,
                     tooltip: '공유',
                     onPressed: () => SharePlus.instance.share(
-                      ShareParams(text: _shareText(code)),
+                      ShareParams(text: _shareText(code, store?.name)),
                     ),
                   ),
                   _actionIcon(
@@ -493,7 +474,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
                     // 옛 코드를 끊는 파괴적 동작이라 안전한 두 아이콘과 색으로 가른다.
                     color: colorScheme.error,
                     tooltip: '재발급',
-                    onPressed: _onRegenerate,
+                    onPressed: isBusy ? null : _onRegenerate,
                   ),
                 ],
               ],

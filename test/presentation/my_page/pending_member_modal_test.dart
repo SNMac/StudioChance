@@ -226,18 +226,47 @@ void main() {
     return store;
   }
 
-  testWidgets('발급 버튼을 누르면 UseCase를 호출하고 받은 코드를 보여준다', (tester) async {
+  testWidgets('발급 버튼을 누르면 UseCase를 호출하고, 재조회된 점포의 코드를 보여준다', (tester) async {
+    // 발급된 코드는 컨트롤러가 아니라 점포 문서를 통해 화면에 도달한다.
+    final storeWithoutCode = storeWithWaiting([]);
+    final storeWithCode = storeWithoutCode.copyWith(
+      inviteInfo: InviteInfo(inviteCode: 'A7K2P9', createdAt: DateTime.now()),
+    );
+    var issued = false;
+
     final mockStoreUseCase = MockStoreUseCase();
     when(
       () => mockStoreUseCase.createInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
-    ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'A7K2P9')));
+    ).thenAnswer((_) async {
+      issued = true;
+      return right(const InviteInfo(inviteCode: 'A7K2P9'));
+    });
 
-    final store = await pumpWithInviteMock(tester, mockStoreUseCase);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storeDetailProvider(storeWithoutCode.id).overrideWith(
+            (ref) async => issued ? storeWithCode : storeWithoutCode,
+          ),
+          storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: storeWithoutCode.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // 발급 전에는 코드가 없다 — 만료 여부를 알 수 없어 기존 코드를 미리 띄우지 않는다.
     expect(find.text('A7K2P9'), findsNothing);
 
     await tester.tap(find.text('발급'));
@@ -245,7 +274,10 @@ void main() {
 
     expect(find.text('A7K2P9'), findsOneWidget);
     verify(
-      () => mockStoreUseCase.createInviteCode(store.id, forceRegenerate: false),
+      () => mockStoreUseCase.createInviteCode(
+        storeWithoutCode.id,
+        forceRegenerate: false,
+      ),
     ).called(1);
   });
 
@@ -280,14 +312,17 @@ void main() {
   });
 
   testWidgets('재발급을 확인하면 forceRegenerate로 다시 발급한다', (tester) async {
-    final store = storeWithWaiting([]);
+    final store = storeWithWaiting([]).copyWith(
+      inviteInfo: InviteInfo(inviteCode: 'A7K2P9', createdAt: DateTime.now()),
+    );
+
     final mockStoreUseCase = MockStoreUseCase();
     when(
       () => mockStoreUseCase.createInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
-    ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'A7K2P9')));
+    ).thenAnswer((_) async => right(const InviteInfo(inviteCode: 'Z5ESBX')));
 
     // showCustomAlertDialog의 확인 버튼이 go_router의 context.pop()을 쓰므로
     // 순수 MaterialApp이 아닌 GoRouter 하네스가 필요하다.
@@ -318,13 +353,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-
-    // 코드가 없을 때는 재발급 버튼이 없다 — 첫 행의 [발급]이 같은 역할을 한다.
-    expect(find.byTooltip('재발급'), findsNothing);
-
-    await tester.tap(find.text('발급'));
-    await tester.pumpAndSettle();
-    expect(find.byTooltip('재발급'), findsOneWidget);
 
     // 확인 다이얼로그의 버튼도 '재발급'이라 아이콘은 tooltip으로 찾는다.
     await tester.tap(find.byTooltip('재발급'));

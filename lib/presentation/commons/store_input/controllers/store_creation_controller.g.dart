@@ -42,7 +42,7 @@ final class StoreCreationControllerProvider
 }
 
 String _$storeCreationControllerHash() =>
-    r'c5df450fe820a2fcec544cd71db3d4e9e9041ef1';
+    r'e16c5ab2ced863127d5fb56648f460b33486915c';
 
 abstract class _$StoreCreationController extends $Notifier<StoreFormState> {
   StoreFormState build();

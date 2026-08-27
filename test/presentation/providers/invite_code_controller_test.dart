@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -28,18 +26,14 @@ void main() {
 
   tearDown(() => container.dispose());
 
-  // =========================================================================
-  // build
-  // =========================================================================
-
-  group('build', () {
-    test('초기 상태는 AsyncData(null)이다', () {
-      final state = container.read(inviteCodeControllerProvider);
-
-      expect(state, isA<AsyncData<InviteInfo?>>());
-      expect(state.value, isNull);
-    });
-  });
+  void stubIssue(Either<Exception, InviteInfo> result) {
+    when(
+      () => mockStoreUseCase.createInviteCode(
+        any(),
+        forceRegenerate: any(named: 'forceRegenerate'),
+      ),
+    ).thenAnswer((_) async => result);
+  }
 
   // =========================================================================
   // issue
@@ -47,23 +41,14 @@ void main() {
 
   group('issue', () {
     group('발급에 성공했을 때', () {
-      setUp(() {
-        when(
-          () => mockStoreUseCase.createInviteCode(
-            any(),
-            forceRegenerate: any(named: 'forceRegenerate'),
-          ),
-        ).thenAnswer((_) async => right(inviteInfo));
-      });
+      setUp(() => stubIssue(right(inviteInfo)));
 
-      test('상태가 AsyncData(발급된 코드)가 된다', () async {
+      test('상태가 AsyncData가 된다', () async {
         await container
             .read(inviteCodeControllerProvider.notifier)
             .issue('store1');
 
-        final state = container.read(inviteCodeControllerProvider);
-        expect(state, isA<AsyncData<InviteInfo?>>());
-        expect(state.value, inviteInfo);
+        expect(container.read(inviteCodeControllerProvider), isA<AsyncData>());
       });
 
       test('전달된 storeId로 UseCase를 호출한다', () async {
@@ -115,14 +100,7 @@ void main() {
     group('발급에 실패했을 때', () {
       final exception = StoreNetworkException(message: '네트워크 오류');
 
-      setUp(() {
-        when(
-          () => mockStoreUseCase.createInviteCode(
-            any(),
-            forceRegenerate: any(named: 'forceRegenerate'),
-          ),
-        ).thenAnswer((_) async => left(exception));
-      });
+      setUp(() => stubIssue(left(exception)));
 
       test('상태가 AsyncError가 된다', () async {
         await container
@@ -149,69 +127,73 @@ void main() {
   });
 
   // =========================================================================
-  // 진행 중 요청 / 캐시 무효화
+  // 점포 캐시 무효화
+  //
+  // 발급된 코드는 컨트롤러가 아니라 점포 문서를 통해 화면에 도달한다.
+  // 이 무효화가 빠지면 새 코드가 영영 표시되지 않는다.
   // =========================================================================
 
-  group('발급 결과 반영', () {
-    test('성공하면 해당 점포의 storeDetailProvider를 무효화한다', () async {
-      // 무효화하지 않으면 모달을 다시 열 때 캐시에 남은 옛 코드가 보인다.
-      var fetchCount = 0;
-      final container = ProviderContainer(
+  group('점포 캐시 무효화', () {
+    /// storeId별 조회 횟수를 세는 컨테이너.
+    ({ProviderContainer container, Map<String, int> fetchCounts}) countingSetup(
+      List<String> storeIds,
+    ) {
+      final fetchCounts = {for (final id in storeIds) id: 0};
+      final c = ProviderContainer(
         overrides: [
           storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
-          storeDetailProvider('store1').overrideWith((ref) async {
-            fetchCount++;
-            return null;
-          }),
+          for (final id in storeIds)
+            storeDetailProvider(id).overrideWith((ref) async {
+              fetchCounts[id] = fetchCounts[id]! + 1;
+              return null;
+            }),
         ],
       );
-      addTearDown(container.dispose);
+      addTearDown(c.dispose);
 
-      when(
-        () => mockStoreUseCase.createInviteCode(
-          any(),
-          forceRegenerate: any(named: 'forceRegenerate'),
-        ),
-      ).thenAnswer((_) async => right(inviteInfo));
+      // 구독이 없으면 무효화해도 재조회가 일어나지 않는다.
+      for (final id in storeIds) {
+        c.listen(storeDetailProvider(id), (_, _) {});
+      }
+      return (container: c, fetchCounts: fetchCounts);
+    }
 
-      // 구독을 만들어 두어야 무효화 후 재조회가 실제로 일어난다.
-      container.listen(storeDetailProvider('store1'), (_, _) {});
-      await container.read(storeDetailProvider('store1').future);
-      expect(fetchCount, 1);
+    test('발급에 성공하면 해당 점포를 다시 조회한다', () async {
+      stubIssue(right(inviteInfo));
+      final (container: c, fetchCounts: counts) = countingSetup(['store1']);
+      await c.read(storeDetailProvider('store1').future);
+      expect(counts['store1'], 1);
 
-      await container
-          .read(inviteCodeControllerProvider.notifier)
-          .issue('store1');
-      await container.read(storeDetailProvider('store1').future);
+      await c.read(inviteCodeControllerProvider.notifier).issue('store1');
+      await c.read(storeDetailProvider('store1').future);
 
-      expect(fetchCount, 2);
+      expect(counts['store1'], 2);
     });
 
-    test('요청 중 상태가 리셋되면 뒤늦게 도착한 결과를 버린다', () async {
-      // 모달을 닫고 다른 점포 모달을 열면 그쪽에서 컨트롤러를 invalidate한다.
-      // invalidate는 Notifier 인스턴스를 재사용하므로, 막지 않으면 앞선 점포의
-      // 코드가 다른 점포 모달에 그대로 표시·공유된다.
-      final completer = Completer<Either<Exception, InviteInfo>>();
-      when(
-        () => mockStoreUseCase.createInviteCode(
-          any(),
-          forceRegenerate: any(named: 'forceRegenerate'),
-        ),
-      ).thenAnswer((_) => completer.future);
+    test('발급에 실패하면 다시 조회하지 않는다', () async {
+      stubIssue(left(StoreNetworkException(message: '네트워크 오류')));
+      final (container: c, fetchCounts: counts) = countingSetup(['store1']);
+      await c.read(storeDetailProvider('store1').future);
 
-      final future = container
-          .read(inviteCodeControllerProvider.notifier)
-          .issue('store1');
-      expect(container.read(inviteCodeControllerProvider).isLoading, isTrue);
+      await c.read(inviteCodeControllerProvider.notifier).issue('store1');
+      await Future<void>.delayed(Duration.zero);
 
-      container.invalidate(inviteCodeControllerProvider);
-      // 리셋된 상태를 구독해 두어야 이후 상태 변화를 관찰할 수 있다.
-      expect(container.read(inviteCodeControllerProvider).value, isNull);
+      expect(counts['store1'], 1);
+    });
 
-      completer.complete(right(inviteInfo));
-      await future;
+    test('다른 점포의 캐시는 건드리지 않는다', () async {
+      stubIssue(right(inviteInfo));
+      final (container: c, fetchCounts: counts) = countingSetup([
+        'store1',
+        'store2',
+      ]);
+      await c.read(storeDetailProvider('store2').future);
+      expect(counts['store2'], 1);
 
-      expect(container.read(inviteCodeControllerProvider).value, isNull);
+      await c.read(inviteCodeControllerProvider.notifier).issue('store1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(counts['store2'], 1);
     });
   });
 }
