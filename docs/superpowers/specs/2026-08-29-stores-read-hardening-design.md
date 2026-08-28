@@ -79,27 +79,40 @@ default-deny가 클라이언트 접근을 막고, Admin SDK는 Rules를 우회�
 enforceAppCheck: true, 인증 필수
 
 요청: { code: string }        // 6자 [A-Z0-9], 서버에서 형식 검증
-응답: { storeId, storeName, address, addressDetail, adminName }
+응답: { ok: true, store: { storeId, storeName, address, addressDetail, adminName } }
+    | { ok: false, reason: 'invalidCode' | 'notFound' | 'expired' | 'rateLimited' }
 ```
 
 `adminName`은 `memberById`에서 ADMIN 1명을 골라 그 사용자의 `users` 문서에서 조합한다.
 찾지 못하면 빈 문자열을 반환한다(현행 클라이언트 동작과 동일). 계좌 정보·`memberById`·
 `waitingMemberById`·`inviteInfo`는 응답에 포함하지 않는다.
 
-에러 매핑:
+### 에러 처리 — 도메인 결과는 예외가 아니라 판별 값으로
 
-| HttpsError | 조건 | 클라이언트 처리 |
+`HttpsError`로 도메인 실패를 표현하면 안 된다. `FirebaseFunctionsException`은
+`FirebaseException`을 상속하므로 기존 `handleFirestoreError` → `mapFirebaseCode`를 타는데,
+그 매핑은 **이 DataSource의 모든 Firestore 호출이 공유**한다. 초대 코드 전용 의미를 거기
+얹으면 다른 경로가 깨진다.
+
+| 코드 | `mapFirebaseCode`의 현행 의미 | 초대 코드에서 필요한 의미 |
 |---|---|---|
-| `unauthenticated` | 미로그인 | 인증 예외 |
-| `invalid-argument` | 코드 형식 불량 | `StoreValidationException` |
-| `not-found` | 코드 없음 / `deletedAt` 있음 | `right(null)` — 현행 "없으면 null" 계약 유지 |
-| `deadline-exceeded` | 만료 (서버 시각으로 판정) | `StoreInviteCodeExpiredException` |
-| `failed-precondition` | `inviteInfo.createdAt` 없음 | `StoreValidationException` |
-| `resource-exhausted` | 시도 한도 초과 | `StoreInviteCodeRateLimitedException` (신규) |
+| `not-found` | `StoreNotFoundException` | `right(null)` |
+| `deadline-exceeded` | `StoreNetworkException` | 만료 |
+| `failed-precondition` | `StoreTransactionException` | 형식/데이터 불량 |
 
-`FirebaseFunctionsException`은 `FirebaseException`을 상속하므로 기존
-`FirestoreDataSourceBase.handleFirestoreError` → `mapFirebaseCode(code, message)` 경로를
-그대로 탄다. 새 에러 핸들링 기반 클래스는 필요 없다.
+따라서 **성공·도메인 실패를 모두 정상 응답의 판별 값(`reason`)으로 반환**하고,
+DataSource가 명시적으로 매핑한다. `mapFirebaseCode`는 **변경하지 않는다.**
+
+| `reason` | 조건 | 클라이언트 처리 |
+|---|---|---|
+| `invalidCode` | 코드 형식 불량 | `StoreValidationException` |
+| `notFound` | 코드 없음 / `deletedAt` 있음 / `inviteInfo.createdAt` 없음 | `right(null)` — 현행 "없으면 null" 계약 유지 |
+| `expired` | 만료 (서버 시각으로 판정) | `StoreInviteCodeExpiredException` |
+| `rateLimited` | 시도 한도 초과 | `StoreResourceExhaustedException` (기존 클래스 재사용, title이 "요청 한도가 초과되었습니다") |
+
+전송·인프라 실패(미로그인, App Check 실패, `unavailable`, `internal`)는 그대로
+`FirebaseFunctionsException`으로 올라와 기존 `handleFirestoreError` 경로를 타며, 현행
+매핑이 이미 올바른 예외를 돌려준다. **새 예외 클래스는 필요 없다.**
 
 ### 브루트포스 제한
 
@@ -129,7 +142,6 @@ enforceAppCheck: true, 인증 필수
 - `domain/entities/invite_store_preview.dart` — `@freezed`,
   `{storeId, storeName, address, addressDetail, adminName}`
 - `data/models/invite_store_preview_model.dart` — `@freezed` + `fromJson`
-- `common/exceptions/store_exceptions.dart`에 `StoreInviteCodeRateLimitedException`
 - `presentation/commons/extensions/address_formatter.dart`에 `InviteStorePreview`용
   `formattedAddress` extension (기존 두 개와 동일 패턴)
 
@@ -138,7 +150,6 @@ enforceAppCheck: true, 인증 필수
 | 위치 | 변경 |
 |---|---|
 | `StoreDataSource` | `getStoreByInviteCode → StoreModel?` 삭제, `lookupInviteCode(code) → InviteStorePreviewModel?` 추가 (`FirebaseFunctions.instanceFor(region: 'asia-northeast3')` 주입) |
-| `StoreDataSource.mapFirebaseCode` | `deadline-exceeded`·`resource-exhausted`·`unauthenticated` 매핑 추가 |
 | `StoreRepositoryImpl.getStoreByInviteCode` | 반환 타입 교체. **만료 검증·`getServerTime` 호출·`_fetchMembersWithRoles` 2회를 삭제** (서버가 대신한다) |
 | `StoreRepository` / `StoreUseCase` | 시그니처 `Either<Exception, InviteStorePreview?>` |
 | `InviteCodeVerificationState.status` | `AsyncValue<Store?>` → `AsyncValue<InviteStorePreview?>` |
@@ -235,8 +246,8 @@ test       : test:unit && test:rules
 | Callable 순수 로직 | 코드 형식 검증·만료 판정·rate limit 창 계산을 `functions/src/invite/`의 순수 함수로 분리해 `node:test` |
 | onCall 본체 / Firestore I/O | 테스트 제외 — 기존 `index.ts` 트리거와 동일 방침 |
 | `InviteStorePreviewModel.fromJson` | 단위 테스트 |
-| `StoreDataSource.mapFirebaseCode` | 새 에러 코드 매핑 단위 테스트 |
-| DataSource의 callable 래퍼 | **테스트 제외** — `HttpsCallable` 목킹 비용이 검증 가치를 넘는다. 파싱과 에러 매핑을 위 두 줄로 따로 덮는다 |
+| `reason` → 예외 매핑 | 순수 함수 `inviteLookupFailureOf(reason)`로 분리해 단위 테스트 |
+| DataSource의 callable 래퍼 | **테스트 제외** — `HttpsCallable` 목킹 비용이 검증 가치를 넘는다. 파싱과 `reason` 매핑을 위 두 줄로 따로 덮는다 |
 | Repository / UseCase / Controller | 기존 mocktail 테스트를 새 타입으로 갱신 |
 
 영향받는 기존 테스트 파일:
