@@ -1,12 +1,14 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/firestore_data_source_base.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
+import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
@@ -66,8 +68,11 @@ abstract interface class StoreDataSource {
   /// 새 초대 코드를 생성하여 Firestore에 저장
   Future<InviteInfoModel> createInviteCode(String storeId);
 
-  /// 초대 코드로 점포 조회 (만료 검증 없이 단순 조회)
-  Future<StoreModel?> getStoreByInviteCode(String inviteCode);
+  /// 초대 코드로 가입 전 표시 정보를 조회한다.
+  ///
+  /// 코드가 없거나 삭제된 점포면 `null`을 반환한다. 만료·형식 불량·시도 한도
+  /// 초과는 예외로 던진다.
+  Future<InviteStorePreviewModel?> lookupInviteCode(String inviteCode);
 
   /// 클라이언트 기기 시각을 신뢰할 수 없는 시각 비교 로직(초대 코드 만료 등)에서
   /// 사용할 Firestore 서버 시각을 조회한다.
@@ -77,9 +82,10 @@ abstract interface class StoreDataSource {
 class StoreFirestoreDataSource extends FirestoreDataSourceBase
     implements StoreDataSource {
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
   final _rnd = Random();
 
-  StoreFirestoreDataSource(this._firestore);
+  StoreFirestoreDataSource(this._firestore, this._functions);
 
   @override
   String get errorLogTag => 'Store Firestore Error';
@@ -384,25 +390,30 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<StoreModel?> getStoreByInviteCode(String inviteCode) async {
+  Future<InviteStorePreviewModel?> lookupInviteCode(String inviteCode) async {
     try {
-      final querySnapshot = await _firestore
-          .collection('stores')
-          .where('inviteInfo.inviteCode', isEqualTo: inviteCode)
-          .limit(1)
-          .get();
+      // stores read가 멤버 전용이라 클라이언트 쿼리로는 조회할 수 없다.
+      // 서버가 만료 판정과 시도 한도까지 처리한다 (functions/src/invite/).
+      final callable = _functions.httpsCallable('lookupInviteCode');
+      // Android 플랫폼 채널은 Map<Object?, Object?>를 돌려주므로 제네릭 캐스트가
+      // 런타임에 깨질 수 있다. 제네릭 없이 호출하고 방어적으로 변환한다.
+      final response = await callable.call(<String, dynamic>{
+        'code': inviteCode,
+      });
+      final data = Map<String, dynamic>.from(response.data as Map);
 
-      if (querySnapshot.docs.isEmpty) return null;
+      if (data['ok'] != true) {
+        // 도메인 실패는 HttpsError가 아니라 판별 값으로 온다. mapFirebaseCode는
+        // 이 DataSource의 모든 Firestore 호출과 공유되므로 not-found·
+        // deadline-exceeded에 초대 코드 전용 의미를 얹을 수 없기 때문이다.
+        final failure = inviteLookupFailureOf(data['reason'] as String?);
+        if (failure == null) return null;
+        throw failure;
+      }
 
-      final docSnapshot = querySnapshot.docs.first;
-      final data = docSnapshot.data();
-      // deletedAt은 softDeleteStore에서만 기록되므로 정상 점포 문서에는 필드 자체가 없다.
-      // Firestore 쿼리는 필터 대상 필드가 없는 문서를 결과에서 제외하기 때문에
-      // where('deletedAt', isNull: true)를 걸면 정상 점포가 전부 걸러진다.
-      // (fake_cloud_firestore는 이 동작이 달라 테스트에서 드러나지 않았다.)
-      if (data['deletedAt'] != null) return null;
-      data['id'] = docSnapshot.id;
-      return StoreModel.fromJson(data);
+      return InviteStorePreviewModel.fromJson(
+        Map<String, dynamic>.from(data['store'] as Map),
+      );
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -441,7 +452,24 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 }
 
+/// Callable이 돌려준 실패 사유를 예외로 옮긴다.
+///
+/// `notFound`와 알 수 없는 사유는 `null`을 반환하며, 호출부는 이를 "코드 없음"으로
+/// 처리한다 (현행 `getStoreByInviteCode`의 null 계약을 유지).
+Exception? inviteLookupFailureOf(String? reason) => switch (reason) {
+  'expired' => StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'),
+  'invalidCode' => StoreValidationException(message: '유효하지 않은 초대 코드입니다.'),
+  'rateLimited' => StoreResourceExhaustedException(
+    message: '초대 코드 확인을 너무 많이 시도했습니다.\n잠시 후 다시 시도해 주세요.',
+  ),
+  _ => null,
+};
+
 @Riverpod(keepAlive: true)
 StoreDataSource storeDataSource(Ref ref) {
-  return StoreFirestoreDataSource(FirebaseFirestore.instance);
+  return StoreFirestoreDataSource(
+    FirebaseFirestore.instance,
+    // Firestore·Functions 리전을 반드시 일치시킨다 (functions/src/invite/)
+    FirebaseFunctions.instanceFor(region: 'asia-northeast3'),
+  );
 }
