@@ -35,13 +35,6 @@ test('알림 본문은 "[닉네임]님이 [점포명] 가입을 신청했습니�
   );
 });
 
-test('닉네임·점포명의 앞뒤 공백은 다듬어 공백이 겹치지 않는다', () => {
-  assert.equal(
-    buildJoinRequestBody(' 홍길동 ', '스튜디오 챈스 '),
-    '홍길동님이 스튜디오 챈스 가입을 신청했습니다.',
-  );
-});
-
 test('토큰마다 메시지를 하나씩 만든다', () => {
   const messages = buildJoinRequestMessages({
     tokens: ['t1', 't2'],

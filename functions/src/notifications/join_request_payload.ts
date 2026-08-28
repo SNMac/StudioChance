@@ -24,20 +24,12 @@ export function adminUidsOf(
     .map(([uid]) => uid);
 }
 
-/**
- * 알림 본문 문구를 만든다.
- *
- * 닉네임·점포명은 사용자가 입력한 값이 Firestore에 그대로 저장되므로 앞뒤 공백이
- * 섞여 들어온다. 그대로 끼워 넣으면 "1호점  가입을"처럼 공백이 겹치므로 다듬는다.
- */
+/** 알림 본문 문구를 만든다. */
 export function buildJoinRequestBody(
   applicantName: string,
   storeName: string,
 ): string {
-  const applicant = applicantName.trim();
-  const store = storeName.trim();
-
-  return `${applicant}님이 ${store} 가입을 신청했습니다.`;
+  return `${applicantName}님이 ${storeName} 가입을 신청했습니다.`;
 }
 
 /**
