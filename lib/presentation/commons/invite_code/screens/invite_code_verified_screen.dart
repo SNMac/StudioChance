@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/presentation/commons/extensions/address_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
@@ -132,9 +133,8 @@ class _InviteCodeVerifiedScreenState
             .name ??
         '';
 
-    final address = store != null
-        ? '${store.address} ${store.addressDetail}'.trim()
-        : '';
+    // 점포 생성 화면과 같은 규칙으로 줄여 표시한다
+    final address = store?.formattedAddress ?? '';
 
     return PopScope(
       canPop: !isLoading,
