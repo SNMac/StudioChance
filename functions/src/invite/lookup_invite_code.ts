@@ -46,12 +46,13 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
     const attemptRef = db.doc(`inviteLookupAttempts/${uid}`);
     const attemptSnap = await attemptRef.get();
     const stored = attemptSnap.data();
-    const record: AttemptRecord | null = stored
-      ? {
-          count: stored.count as number,
-          windowStartAt: (stored.windowStartAt as Timestamp).toDate(),
-        }
-      : null;
+    // 기대한 타입이 아니면(수동 조작·손상 등) 기록이 없는 것으로 취급한다.
+    // 그렇지 않으면 캐스팅이 이후 write에서 throw해 해당 사용자가
+    // 초대 코드 조회를 영구히 못 하게 되는 조용한 고장으로 이어진다.
+    const record: AttemptRecord | null =
+      typeof stored?.count === 'number' && stored.windowStartAt instanceof Timestamp
+        ? { count: stored.count, windowStartAt: stored.windowStartAt.toDate() }
+        : null;
     const { blocked, next } = nextAttemptState(record, now);
     if (blocked) {
       logger.warn('초대 코드 조회 시도 한도 초과', { uid });
@@ -99,9 +100,6 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
       return recordFailure('expired');
     }
 
-    // 성공하면 시도 기록을 지운다
-    await attemptRef.delete();
-
     return {
       ok: true,
       store: {
@@ -115,7 +113,16 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
   },
 );
 
-/** 대표 관리자 이름. 찾지 못하면 빈 문자열 (현행 클라이언트 동작과 동일) */
+/**
+ * 대표 관리자 표시 이름. 찾지 못하면 빈 문자열을 반환한다.
+ *
+ * nickname을 우선하는 것은 앱의 다른 멤버 표시 경로와 같은 규칙이다
+ * (pending_member_modal, 가입 신청 푸시 알림). 기존 점포 확인 화면만
+ * name 단독을 써 왔는데, 그쪽이 예외였다.
+ *
+ * users 문서 조회 실패는 표시용 필드 하나 때문에 조회 전체를 죽이지 않도록
+ * 흡수하고 빈 문자열로 대체한다.
+ */
 async function resolveAdminName(memberById: unknown): Promise<string> {
   if (typeof memberById !== 'object' || memberById === null) return '';
 
@@ -124,10 +131,14 @@ async function resolveAdminName(memberById: unknown): Promise<string> {
   ).find(([, member]) => member?.role === 'ADMIN')?.[0];
   if (!adminUid) return '';
 
-  const adminDoc = await getFirestore().doc(`users/${adminUid}`).get();
-  return (
-    (adminDoc.get('nickname') as string | undefined) ??
-    (adminDoc.get('name') as string | undefined) ??
-    ''
-  );
+  try {
+    const adminDoc = await getFirestore().doc(`users/${adminUid}`).get();
+    // 빈 문자열도 없는 것으로 취급 — ??는 빈 문자열을 통과시키므로 ||를 쓴다.
+    const nickname = (adminDoc.get('nickname') as string | undefined) || '';
+    const name = (adminDoc.get('name') as string | undefined) || '';
+    return nickname || name;
+  } catch (error) {
+    logger.warn('관리자 표시 이름 조회 실패', { adminUid, error });
+    return '';
+  }
 }
