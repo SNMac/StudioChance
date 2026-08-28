@@ -44,15 +44,18 @@ export const notifyAdminsOnJoinRequest = onDocumentUpdated(
 
     // 토큰 → 소유 관리자 uid. 폐기 토큰 정리 시 어느 문서를 갱신할지 알기 위해 필요하다.
     const ownerUidByToken = new Map<string, string>();
-    const adminDocs = await db.getAll(
-      ...adminUids.map((uid) => db.doc(`users/${uid}`)),
+    // 토큰은 users/{uid}/private/fcm에 있다 (firestore.rules 참고).
+    // 서브문서의 id는 모두 'fcm'이라 doc.id로 소유자를 되찾을 수 없으므로
+    // getAll에 넘긴 순서와 같은 인덱스로 adminUids와 짝짓는다.
+    const fcmDocs = await db.getAll(
+      ...adminUids.map((uid) => db.doc(`users/${uid}/private/fcm`)),
     );
-    for (const doc of adminDocs) {
-      const tokens = (doc.get('fcmTokens') as string[] | undefined) ?? [];
+    fcmDocs.forEach((doc, index) => {
+      const tokens = (doc.get('tokens') as string[] | undefined) ?? [];
       for (const token of tokens) {
-        ownerUidByToken.set(token, doc.id);
+        ownerUidByToken.set(token, adminUids[index]);
       }
-    }
+    });
 
     if (ownerUidByToken.size === 0) {
       logger.warn('관리자 FCM 토큰이 없어 알림을 건너뜁니다', { storeId, adminUids });
@@ -100,9 +103,8 @@ export const notifyAdminsOnJoinRequest = onDocumentUpdated(
 
       await Promise.all(
         expiredTokens.map((token) =>
-          db.doc(`users/${ownerUidByToken.get(token)}`).update({
-            fcmTokens: FieldValue.arrayRemove(token),
-            updatedAt: FieldValue.serverTimestamp(),
+          db.doc(`users/${ownerUidByToken.get(token)}/private/fcm`).update({
+            tokens: FieldValue.arrayRemove(token),
           }),
         ),
       );

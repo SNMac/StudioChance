@@ -17,7 +17,7 @@ const UNUSABLE_TOKEN_CODES = new Set([
 ]);
 
 /**
- * 전송 결과에서 `users/{uid}.fcmTokens`에서 제거해야 할 토큰만 골라낸다.
+ * 전송 결과에서 `users/{uid}/private/fcm` 문서의 `tokens` 필드에서 제거해야 할 토큰만 골라낸다.
  *
  * `response.responses`의 순서는 입력 `tokens`의 순서와 1:1 대응한다.
  */
