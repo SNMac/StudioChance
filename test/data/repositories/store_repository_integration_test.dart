@@ -1,5 +1,7 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
@@ -11,6 +13,11 @@ import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
+
+// lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
+// 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
+// 파라미터를 채우는 용도로만 쓰인다.
+class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
 
 Store _testStoreEntity(String uid, User adminUser) => Store(
       id: '',
@@ -44,7 +51,7 @@ void main() {
 
   setUp(() {
     fakeFirestore = FirestoreEmulatorHelper.create();
-    storeDataSource = StoreFirestoreDataSource(fakeFirestore);
+    storeDataSource = StoreFirestoreDataSource(fakeFirestore, MockFirebaseFunctions());
     userDataSource = UserFirestoreDataSource(fakeFirestore);
     repository = StoreRepositoryImpl(
       storeDataSource: storeDataSource,
@@ -395,44 +402,9 @@ void main() {
     });
   });
 
-  // =========================================================================
-  // getStoreByInviteCode
-  // =========================================================================
-
-  group('getStoreByInviteCode', () {
-    test('유효한 초대 코드로 점포를 조회한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final storeId = created.getRight().toNullable()!.id;
-      final invite = await repository.createInviteCode(storeId);
-      final code = invite.getRight().toNullable()!.inviteCode;
-
-      final result = await repository.getStoreByInviteCode(code);
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable()!.name, '통합 테스트 점포');
-    });
-
-    test('존재하지 않는 초대 코드는 right(null)을 반환한다', () async {
-      final result = await repository.getStoreByInviteCode('XXXXXX');
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), isNull);
-    });
-  });
+  // getStoreByInviteCode: lookupInviteCode Callable(functions/src/invite/)로
+  // 옮겨간 서버 책임이라 fake_cloud_firestore로는 더 이상 검증할 수 없다.
+  // (store_data_source_test.dart와 동일한 원칙 — Task 8)
 
   // =========================================================================
   // requestJoinStore + approveMember

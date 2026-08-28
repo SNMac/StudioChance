@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
+import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/entities/store.dart';
@@ -23,7 +24,9 @@ abstract interface class StoreUseCase {
   Future<Either<Exception, Store?>> getStore(String storeId);
 
   /// 초대 코드로 점포 조회 (참여 요청 전 확인용)
-  Future<Either<Exception, Store?>> getStoreByInviteCode(String inviteCode);
+  Future<Either<Exception, InviteStorePreview?>> getStoreByInviteCode(
+    String inviteCode,
+  );
 
   /// 점포 참여 요청 (대기열 등록)
   Future<Either<Exception, void>> joinStore({
@@ -149,7 +152,9 @@ class StoreUseCaseImpl implements StoreUseCase {
   }
 
   @override
-  Future<Either<Exception, Store?>> getStoreByInviteCode(String inviteCode) {
+  Future<Either<Exception, InviteStorePreview?>> getStoreByInviteCode(
+    String inviteCode,
+  ) {
     return _storeRepository.getStoreByInviteCode(inviteCode);
   }
 

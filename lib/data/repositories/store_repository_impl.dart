@@ -14,6 +14,7 @@ import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
+import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
@@ -197,42 +198,16 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
-  Future<Either<Exception, Store?>> getStoreByInviteCode(
+  Future<Either<Exception, InviteStorePreview?>> getStoreByInviteCode(
     String inviteCode,
   ) async {
     try {
-      final storeModel = await _storeDataSource.getStoreByInviteCode(
-        inviteCode,
-      );
-      if (storeModel == null) return right(null);
+      // 만료 판정과 대표 관리자 조합은 Callable이 수행한다
+      // (functions/src/invite/lookup_invite_code.ts).
+      final model = await _storeDataSource.lookupInviteCode(inviteCode);
+      if (model == null) return right(null);
 
-      // 만료 검증 (DataSource에서 이동)
-      final inviteData = storeModel.inviteInfoModel;
-      if (inviteData == null || inviteData.createdAt == null) {
-        return left(StoreValidationException(message: '유효하지 않은 초대 코드입니다.'));
-      }
-      final expiresAt = inviteData.createdAt!.add(
-        const Duration(minutes: storeInviteCodeAvailableMin),
-      );
-      final serverNow = await _storeDataSource.getServerTime();
-      if (serverNow.isAfter(expiresAt)) {
-        return left(StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'));
-      }
-
-      final memberInfosFuture = _fetchMembersWithRoles(storeModel.memberById);
-      final waitingInfosFuture = _fetchMembersWithRoles(
-        storeModel.waitingMemberById,
-      );
-      final memberInfos = await memberInfosFuture;
-      final waitingInfos = await waitingInfosFuture;
-
-      return right(
-        _toStoreEntity(
-          storeModel,
-          memberInfos: memberInfos,
-          waitingMemberInfos: waitingInfos,
-        ),
-      );
+      return right(model.toEntity());
     } catch (e) {
       _logger.e('초대 코드로 점포 조회 실패');
       return left(toException(e));

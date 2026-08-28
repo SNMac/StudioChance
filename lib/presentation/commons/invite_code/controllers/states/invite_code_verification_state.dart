@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/common/enums/store_color.dart';
-import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 
 part 'invite_code_verification_state.freezed.dart';
 
@@ -12,7 +12,7 @@ abstract class InviteCodeVerificationState with _$InviteCodeVerificationState {
 
   const factory InviteCodeVerificationState({
     @Default('') String inviteCode,
-    @Default(AsyncData(null)) AsyncValue<Store?> status,
+    @Default(AsyncData(null)) AsyncValue<InviteStorePreview?> status,
     @Default('') String storeAlias,
     @Default(StoreColor.red) StoreColor color,
     @Default('') String memo,

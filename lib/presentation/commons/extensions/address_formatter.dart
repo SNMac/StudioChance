@@ -1,3 +1,4 @@
+import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 
@@ -27,6 +28,11 @@ extension StoreFormAddressFormatter on StoreFormState {
 }
 
 extension StoreAddressFormatter on Store {
+  /// 점포 폼과 같은 규칙으로 줄여 표시한다.
+  String get formattedAddress => formatShortAddress(address, addressDetail);
+}
+
+extension InviteStorePreviewAddressFormatter on InviteStorePreview {
   /// 점포 폼과 같은 규칙으로 줄여 표시한다.
   String get formattedAddress => formatShortAddress(address, addressDetail);
 }

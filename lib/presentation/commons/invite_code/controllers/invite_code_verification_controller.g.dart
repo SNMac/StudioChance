@@ -48,7 +48,7 @@ final class InviteCodeVerificationControllerProvider
 }
 
 String _$inviteCodeVerificationControllerHash() =>
-    r'384c10340f5bbfa90c805b88d135960fdeb55181';
+    r'792e7caa5f911ebf15b23686b7e50275aca09e7c';
 
 abstract class _$InviteCodeVerificationController
     extends $Notifier<InviteCodeVerificationState> {

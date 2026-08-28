@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import 'package:studio_chance/domain/entities/invite_info.dart';
+import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
@@ -34,9 +35,10 @@ abstract interface class StoreRepository {
     bool forceRegenerate = false,
   });
 
-  /// 초대 코드로 점포 조회
-  /// - 유효성 검증된 점포 반환
-  Future<Either<Exception, Store?>> getStoreByInviteCode(String inviteCode);
+  /// 초대 코드로 가입 전 표시 정보를 조회한다. 코드가 없으면 `right(null)`.
+  Future<Either<Exception, InviteStorePreview?>> getStoreByInviteCode(
+    String inviteCode,
+  );
 
   /// 가입 신청 (대기 명단 추가 + 사용자 점포 정보 저장)
   Future<Either<Exception, void>> requestJoinStore({

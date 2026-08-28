@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/models/space_option_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
@@ -10,6 +12,11 @@ import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
+
+// lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
+// 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
+// 파라미터를 채우는 용도로만 쓰인다.
+class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
 
 // @Default({})와 @Default([])의 Freezed 기본값은 const {}와 const []로 생성되어
 // 런타임 타입이 _Map<dynamic, dynamic>/_List<dynamic>입니다.
@@ -125,7 +132,10 @@ void main() {
 
   setUp(() {
     fakeFirestore = FirestoreEmulatorHelper.create();
-    dataSource = StoreFirestoreDataSource(fakeFirestore);
+    dataSource = StoreFirestoreDataSource(
+      fakeFirestore,
+      MockFirebaseFunctions(),
+    );
   });
 
   // =========================================================================
@@ -450,73 +460,6 @@ void main() {
       );
 
       final result = await dataSource.getInviteInfo(created.id);
-      expect(result, isNull);
-    });
-  });
-
-  // =========================================================================
-  // getStoreByInviteCode
-  // =========================================================================
-
-  group('getStoreByInviteCode', () {
-    test('초대 코드로 점포를 조회한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-      final invite = await dataSource.createInviteCode(created.id);
-
-      final result = await dataSource.getStoreByInviteCode(invite.inviteCode);
-
-      expect(result, isNotNull);
-      expect(result!.name, '테스트 점포');
-    });
-
-    test('존재하지 않는 초대 코드로 조회하면 null을 반환한다', () async {
-      final result = await dataSource.getStoreByInviteCode('NOTFND');
-
-      expect(result, isNull);
-    });
-
-    test('soft delete된 점포는 초대 코드 조회에서 제외된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-      final invite = await dataSource.createInviteCode(created.id);
-      await dataSource.softDeleteStore(created.id, []);
-
-      final result = await dataSource.getStoreByInviteCode(invite.inviteCode);
-
-      // softDeleteStore는 inviteInfo를 null로 초기화하므로,
-      // 코드가 삭제되어 조회 불가
-      expect(result, isNull);
-    });
-
-    test('deletedAt이 남아있으면 초대 코드가 유효해도 조회에서 제외된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-      final invite = await dataSource.createInviteCode(created.id);
-      // inviteInfo는 남기고 deletedAt만 세팅 — 쿼리가 아닌 코드 가드가 걸러야 한다.
-      await fakeFirestore.collection('stores').doc(created.id).update(
-        <String, dynamic>{
-          'deletedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
-        },
-      );
-
-      final result = await dataSource.getStoreByInviteCode(invite.inviteCode);
-
       expect(result, isNull);
     });
   });
