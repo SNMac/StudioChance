@@ -37,7 +37,9 @@ class StoreCreationController extends _$StoreCreationController
 
     final store = Store(
       id: '',
-      name: state.name,
+      // 사용자가 끝에 친 공백이 그대로 저장되면 알림 문구 등에서 공백이
+      // 겹친다. 중복 검사도 trim한 값으로 하므로 저장도 맞춘다.
+      name: state.name.trim(),
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
@@ -46,13 +48,14 @@ class StoreCreationController extends _$StoreCreationController
       waitingMemberInfos: [],
       inviteInfo: null,
       bankName: state.bankName.isEmpty ? null : state.bankName,
-      bankAccountNumber:
-          state.bankAccountNumber.isEmpty ? null : state.bankAccountNumber,
-      bankAccountHolder:
-          state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
+      bankAccountNumber: state.bankAccountNumber.isEmpty
+          ? null
+          : state.bankAccountNumber,
+      bankAccountHolder: state.bankAccountHolder.isEmpty
+          ? null
+          : state.bankAccountHolder,
       paymentDeadlineMinutes: state.paymentDeadlineMinutes,
-      infoNotes:
-          state.infoNotes.isEmpty ? null : state.infoNotes,
+      infoNotes: state.infoNotes.isEmpty ? null : state.infoNotes,
       cautionNotes: state.cautionNotes.isEmpty ? null : state.cautionNotes,
     );
 

@@ -30,7 +30,8 @@ abstract class StoreFormState with _$StoreFormState {
 
   /// 필수 입력값만 체크
   bool get isValid =>
-      name.isNotEmpty &&
+      // 저장 시 이름을 trim하므로(getFormData) 공백만 입력된 값도 걸러야 한다
+      name.trim().isNotEmpty &&
       (address.isNotEmpty || addressDetail.isNotEmpty) &&
       spaceOptions.isNotEmpty &&
       spaceOptions.every((s) => s.name.isNotEmpty);
