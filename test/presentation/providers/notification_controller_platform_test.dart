@@ -10,6 +10,7 @@ import 'package:studio_chance/domain/use_cases/notification_use_case.dart';
 import 'package:studio_chance/domain/use_cases/notification_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/notification_controller.dart';
+import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 import '../../helpers/fake_entities.dart';
 
@@ -111,7 +112,8 @@ void main() {
     expect(
       useCase.enableForegroundPresentationCallCount,
       1,
-      reason: '이 설정을 끄면 delegate가 presentationOptions=0을 반환해 '
+      reason:
+          '이 설정을 끄면 delegate가 presentationOptions=0을 반환해 '
           '수신 푸시와 로컬 알림이 모두 억제된다',
     );
     expect(
@@ -134,5 +136,41 @@ void main() {
       0,
       reason: 'iOS 전용 설정이다',
     );
+  });
+
+  test('가입 신청 알림을 받으면 해당 점포 조회를 다시 한다', () async {
+    // storeDetailProvider는 일회성 조회라, 무효화하지 않으면 마이페이지가
+    // 살아 있는 동안 다른 기기에서 들어온 신청이 배지·모달에 보이지 않는다.
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    var fetchCount = 0;
+    final useCase = _RecordingNotificationUseCase();
+    addTearDown(useCase.dispose);
+
+    final container = ProviderContainer(
+      overrides: [
+        currentUserProvider.overrideWith((ref) => fakeUser),
+        notificationUseCaseProvider.overrideWith((ref) => useCase),
+        storeDetailProvider('store-1').overrideWith((ref) async {
+          fetchCount++;
+          return fakeStore;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(notificationControllerProvider.future);
+
+    // 마이페이지의 대기 인원 배지처럼 계속 구독 중인 상태를 만든다.
+    container.listen(storeDetailProvider('store-1'), (_, _) {});
+    await container.read(storeDetailProvider('store-1').future);
+    expect(fetchCount, 1);
+
+    useCase.emitForegroundMessage(_message);
+    await Future<void>.delayed(Duration.zero);
+
+    await container.read(storeDetailProvider('store-1').future);
+    expect(fetchCount, 2, reason: '알림 수신 시 점포 조회가 무효화되어야 한다');
   });
 }

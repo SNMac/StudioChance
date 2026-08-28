@@ -15,21 +15,39 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_sele
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 
 class StoreColorSelectionScreen extends ConsumerWidget {
-  const StoreColorSelectionScreen({super.key});
+  /// 점포 폼 컨트롤러가 아닌 다른 상태에 색상을 연결할 때 사용 (예: 가입 신청 화면).
+  /// 둘 다 생략하면 점포 생성/수정 컨트롤러를 사용한다.
+  final StoreColor? selected;
+  final ValueChanged<StoreColor>? onSelected;
+
+  const StoreColorSelectionScreen({super.key, this.selected, this.onSelected});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final storeToEdit = GoRouterState.of(context).extra as Store?;
+    StoreColor selectedColor;
+    ValueChanged<StoreColor> onColorSelected;
 
-    StoreFormState state;
-    StoreFormControllerable notifier;
-
-    if (storeToEdit != null) {
-      state = ref.watch(storeUpdateControllerProvider(storeToEdit));
-      notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
+    if (onSelected != null) {
+      selectedColor = selected ?? StoreColor.red;
+      onColorSelected = onSelected!;
     } else {
-      state = ref.watch(storeCreationControllerProvider);
-      notifier = ref.read(storeCreationControllerProvider.notifier);
+      final storeToEdit = GoRouterState.of(context).extra as Store?;
+
+      StoreFormState state;
+      StoreFormControllerable notifier;
+
+      if (storeToEdit != null) {
+        state = ref.watch(storeUpdateControllerProvider(storeToEdit));
+        notifier = ref.read(
+          storeUpdateControllerProvider(storeToEdit).notifier,
+        );
+      } else {
+        state = ref.watch(storeCreationControllerProvider);
+        notifier = ref.read(storeCreationControllerProvider.notifier);
+      }
+
+      selectedColor = state.color;
+      onColorSelected = notifier.setColor;
     }
 
     return Scaffold(
@@ -40,7 +58,7 @@ class StoreColorSelectionScreen extends ConsumerWidget {
             return TitleSelectionButton<StoreColor>(
               value: color,
               title: color.displayName,
-              isSelected: state.color == color,
+              isSelected: selectedColor == color,
               leading: Container(
                 width: 8,
                 height: 8,
@@ -50,7 +68,7 @@ class StoreColorSelectionScreen extends ConsumerWidget {
                 ),
               ),
               onPressed: () {
-                notifier.setColor(color);
+                onColorSelected(color);
               },
             );
           }).toList(),

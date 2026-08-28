@@ -24,8 +24,9 @@ class StoreUpdateController extends _$StoreUpdateController
     String memo = '';
 
     if (currentUser != null) {
-      final storeInfo =
-          currentUser.storeInfos.where((e) => e.id == store.id).firstOrNull;
+      final storeInfo = currentUser.storeInfos
+          .where((e) => e.id == store.id)
+          .firstOrNull;
       color = storeInfo?.color ?? StoreColor.red;
       memo = storeInfo?.memo ?? '';
     }
@@ -52,19 +53,22 @@ class StoreUpdateController extends _$StoreUpdateController
     if (!state.isValid) return null;
 
     final updatedStore = _targetStore.copyWith(
-      name: state.name,
+      // 사용자가 끝에 친 공백이 그대로 저장되면 알림 문구 등에서 공백이
+      // 겹친다. 중복 검사도 trim한 값으로 하므로 저장도 맞춘다.
+      name: state.name.trim(),
       address: state.address,
       addressDetail: state.addressDetail,
       addressGuide: state.addressGuide,
       spaceOptions: state.spaceOptions,
       bankName: state.bankName.isEmpty ? null : state.bankName,
-      bankAccountNumber:
-          state.bankAccountNumber.isEmpty ? null : state.bankAccountNumber,
-      bankAccountHolder:
-          state.bankAccountHolder.isEmpty ? null : state.bankAccountHolder,
+      bankAccountNumber: state.bankAccountNumber.isEmpty
+          ? null
+          : state.bankAccountNumber,
+      bankAccountHolder: state.bankAccountHolder.isEmpty
+          ? null
+          : state.bankAccountHolder,
       paymentDeadlineMinutes: state.paymentDeadlineMinutes,
-      infoNotes:
-          state.infoNotes.isEmpty ? null : state.infoNotes,
+      infoNotes: state.infoNotes.isEmpty ? null : state.infoNotes,
       cautionNotes: state.cautionNotes.isEmpty ? null : state.cautionNotes,
     );
 

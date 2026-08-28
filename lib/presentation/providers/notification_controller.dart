@@ -13,6 +13,7 @@ import 'package:studio_chance/domain/entities/push_message.dart';
 import 'package:studio_chance/domain/use_cases/notification_use_case_provider.dart';
 import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 import 'package:studio_chance/router/app_router.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -111,6 +112,14 @@ class NotificationController extends _$NotificationController {
 
     if (generation != _buildGeneration) return;
     _foregroundSubscription = useCase.foregroundMessages.listen((message) {
+      // storeDetailProvider는 일회성 조회라, 마이페이지가 살아 있는 동안 캐시가
+      // 그대로 유지된다. 다른 기기에서 들어온 신청이 대기 인원 배지와 모달에
+      // 즉시 보이도록, 알림을 받은 시점에 해당 점포 조회를 무효화한다.
+      final joinRequestStoreId = joinRequestStoreIdOf(message);
+      if (joinRequestStoreId != null) {
+        ref.invalidate(storeDetailProvider(joinRequestStoreId));
+      }
+
       // iOS는 위에서 켠 설정으로 시스템이 직접 배너를 표시하므로,
       // 로컬 알림까지 띄우면 배너가 두 번 보인다.
       // Android는 FCM이 포그라운드 알림을 표시하지 않아 로컬 알림이 필요하다.

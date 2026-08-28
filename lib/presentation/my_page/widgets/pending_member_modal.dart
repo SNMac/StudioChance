@@ -63,6 +63,17 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
       lowerBound: _kModalInitialSize,
       upperBound: _kModalMaxSize,
     );
+
+    // storeDetailProvider는 일회성 조회이고 마이페이지의 대기 인원 배지가
+    // 계속 watch하고 있어, 무효화하지 않으면 이 모달은 마이페이지에 처음
+    // 들어왔을 때의 명단을 계속 보여준다. 알림을 놓친 경우까지 덮기 위해
+    // 모달을 열 때마다 다시 조회한다.
+    // 무효화 중에도 직전 값이 유지되므로(build의 storeAsync.value) 스피너로
+    // 깜빡이지 않는다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.invalidate(storeDetailProvider(widget.storeId));
+    });
   }
 
   @override
