@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/presentation/commons/admin_store_registration/screens/admin_store_registration_screen.dart';
+import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/invite_code/screens/invite_code_input_screen.dart';
 import 'package:studio_chance/presentation/commons/invite_code/screens/invite_code_verified_screen.dart';
 import 'package:studio_chance/presentation/commons/role_selection/screens/role_selection_screen.dart';
@@ -89,6 +91,7 @@ List<GoRoute> _roleSubRoutes() => [
           GoRoute(
             path: SCRoute.inviteCodeVerified.path,
             builder: (context, state) => const InviteCodeVerifiedScreen(),
+            routes: [_inviteCodeColorRoute()],
           ),
         ],
       ),
@@ -102,10 +105,25 @@ List<GoRoute> _roleSubRoutes() => [
       GoRoute(
         path: SCRoute.inviteCodeVerified.path,
         builder: (context, state) => const InviteCodeVerifiedScreen(),
+        routes: [_inviteCodeColorRoute()],
       ),
     ],
   ),
 ];
+
+/// 가입 신청 화면의 색상 선택 — 점포 폼 색상 화면을 초대 코드 컨트롤러에 연결해 재사용
+GoRoute _inviteCodeColorRoute() => GoRoute(
+  path: SCRoute.storeColor.path,
+  builder: (context, state) => Consumer(
+    builder: (context, ref, _) {
+      final provider = inviteCodeVerificationControllerProvider;
+      return StoreColorSelectionScreen(
+        selected: ref.watch(provider.select((s) => s.color)),
+        onSelected: ref.read(provider.notifier).setColor,
+      );
+    },
+  ),
+);
 
 class _UnfocusNavigatorObserver extends NavigatorObserver {
   void _unfocus() => FocusManager.instance.primaryFocus?.unfocus();

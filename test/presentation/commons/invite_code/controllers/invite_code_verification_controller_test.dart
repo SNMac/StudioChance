@@ -2,11 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:studio_chance/common/enums/store_color.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
+import 'package:studio_chance/presentation/commons/role_selection/controllers/role_selection_controller.dart';
 
 import '../../../../helpers/fake_entities.dart';
 
@@ -16,12 +19,15 @@ void main() {
   late MockStoreUseCase mockStoreUseCase;
   late ProviderContainer container;
 
+  setUpAll(() {
+    registerFallbackValue(UserRole.none);
+    registerFallbackValue(StoreColor.red);
+  });
+
   setUp(() {
     mockStoreUseCase = MockStoreUseCase();
     container = ProviderContainer(
-      overrides: [
-        storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
-      ],
+      overrides: [storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase)],
     );
   });
 
@@ -50,8 +56,9 @@ void main() {
   group('verifyInviteCode', () {
     group('점포가 존재할 때', () {
       setUp(() {
-        when(() => mockStoreUseCase.getStoreByInviteCode(any()))
-            .thenAnswer((_) async => right(fakeStore));
+        when(
+          () => mockStoreUseCase.getStoreByInviteCode(any()),
+        ).thenAnswer((_) async => right(fakeStore));
       });
 
       test('status가 AsyncData(store)가 된다', () async {
@@ -79,8 +86,9 @@ void main() {
 
     group('점포가 없을 때', () {
       setUp(() {
-        when(() => mockStoreUseCase.getStoreByInviteCode(any()))
-            .thenAnswer((_) async => right(null));
+        when(
+          () => mockStoreUseCase.getStoreByInviteCode(any()),
+        ).thenAnswer((_) async => right(null));
       });
 
       test('status가 AsyncData(null)이 된다', () async {
@@ -100,8 +108,9 @@ void main() {
       final exception = StoreNetworkException(message: '네트워크 오류');
 
       setUp(() {
-        when(() => mockStoreUseCase.getStoreByInviteCode(any()))
-            .thenAnswer((_) async => left(exception));
+        when(
+          () => mockStoreUseCase.getStoreByInviteCode(any()),
+        ).thenAnswer((_) async => left(exception));
       });
 
       test('status가 AsyncError가 된다', () async {
@@ -156,6 +165,128 @@ void main() {
     test('빈 값이면 false를 반환한다', () {
       final state = container.read(inviteCodeVerificationControllerProvider);
       expect(state.isValid, isFalse);
+    });
+  });
+
+  // =========================================================================
+  // submitJoinRequest
+  // =========================================================================
+
+  group('submitJoinRequest', () {
+    /// 초대 코드 조회에 성공해 점포 확인 화면에 도달한 상태를 만든다
+    Future<InviteCodeVerificationController> arrangeVerified() async {
+      when(
+        () => mockStoreUseCase.getStoreByInviteCode(any()),
+      ).thenAnswer((_) async => right(fakeStore));
+
+      final notifier = container.read(
+        inviteCodeVerificationControllerProvider.notifier,
+      );
+      notifier.onCodeChanged('ABC123');
+      await notifier.verifyInviteCode();
+      return notifier;
+    }
+
+    void arrangeJoinResult(Either<Exception, void> result) {
+      when(
+        () => mockStoreUseCase.joinStore(
+          storeId: any(named: 'storeId'),
+          storeAlias: any(named: 'storeAlias'),
+          role: any(named: 'role'),
+          color: any(named: 'color'),
+          memo: any(named: 'memo'),
+        ),
+      ).thenAnswer((_) async => result);
+    }
+
+    test('초대 코드 조회 성공 시 점포 별명 기본값이 점포명으로 채워진다', () async {
+      await arrangeVerified();
+
+      final state = container.read(inviteCodeVerificationControllerProvider);
+      expect(state.storeAlias, fakeStore.name);
+      expect(state.canSubmit, isTrue);
+    });
+
+    test('선택한 역할·색상·별명·메모로 UseCase를 호출한다', () async {
+      final notifier = await arrangeVerified();
+      arrangeJoinResult(right(null));
+
+      container
+          .read(roleSelectionControllerProvider.notifier)
+          .setRole(UserRole.staff);
+      notifier.setStoreAlias('  내 점포  ');
+      notifier.setColor(StoreColor.blue);
+      notifier.setMemo('메모입니다');
+
+      await notifier.submitJoinRequest();
+
+      verify(
+        () => mockStoreUseCase.joinStore(
+          storeId: fakeStore.id,
+          storeAlias: '내 점포',
+          role: UserRole.staff,
+          color: StoreColor.blue,
+          memo: '메모입니다',
+        ),
+      ).called(1);
+    });
+
+    test('성공 시 submitStatus가 AsyncData가 된다', () async {
+      final notifier = await arrangeVerified();
+      arrangeJoinResult(right(null));
+
+      await notifier.submitJoinRequest();
+
+      final state = container.read(inviteCodeVerificationControllerProvider);
+      expect(state.submitStatus, isA<AsyncData<void>>());
+    });
+
+    test('실패 시 submitStatus가 원본 예외를 담은 AsyncError가 된다', () async {
+      final notifier = await arrangeVerified();
+      arrangeJoinResult(left(StoreNetworkException(message: '네트워크 오류')));
+
+      await notifier.submitJoinRequest();
+
+      final state = container.read(inviteCodeVerificationControllerProvider);
+      expect(state.submitStatus, isA<AsyncError<void>>());
+      expect(state.submitStatus.error, isA<StoreNetworkException>());
+    });
+
+    test('점포 별명이 비어 있으면 제출하지 않는다', () async {
+      final notifier = await arrangeVerified();
+      arrangeJoinResult(right(null));
+
+      notifier.setStoreAlias('   ');
+      await notifier.submitJoinRequest();
+
+      verifyNever(
+        () => mockStoreUseCase.joinStore(
+          storeId: any(named: 'storeId'),
+          storeAlias: any(named: 'storeAlias'),
+          role: any(named: 'role'),
+          color: any(named: 'color'),
+          memo: any(named: 'memo'),
+        ),
+      );
+    });
+
+    test('제출 중에는 중복 호출해도 UseCase가 한 번만 호출된다', () async {
+      final notifier = await arrangeVerified();
+      arrangeJoinResult(right(null));
+
+      final first = notifier.submitJoinRequest();
+      final second = notifier.submitJoinRequest();
+      await Future.wait([first, second]);
+
+      verify(
+        () => mockStoreUseCase.joinStore(
+          storeId: any(named: 'storeId'),
+          storeAlias: any(named: 'storeAlias'),
+          role: any(named: 'role'),
+          color: any(named: 'color'),
+          memo: any(named: 'memo'),
+        ),
+      ).called(1);
     });
   });
 }
