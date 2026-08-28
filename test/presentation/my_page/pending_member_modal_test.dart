@@ -371,7 +371,9 @@ void main() {
     // 두 번째 발급이 일어난다.
     final store = storeWithWaiting([]);
     final blockedRefetch = Completer<Store?>();
-    var fetchCount = 0;
+    // 모달은 열릴 때 최신 명단을 위해 한 번 더 조회하므로, 조회 횟수가 아니라
+    // '발급을 눌렀는지'로 붙잡을 시점을 정한다.
+    var blockRefetch = false;
 
     final mockStoreUseCase = MockStoreUseCase();
     when(
@@ -385,11 +387,8 @@ void main() {
       ProviderScope(
         overrides: [
           storeDetailProvider(store.id).overrideWith((ref) {
-            fetchCount++;
-            // 첫 조회는 즉시 끝내고, 발급 후 재조회는 붙잡아 그 창을 재현한다.
-            return fetchCount == 1
-                ? Future.value(store)
-                : blockedRefetch.future;
+            // 발급 후 재조회만 붙잡아 그 창을 재현한다.
+            return blockRefetch ? blockedRefetch.future : Future.value(store);
           }),
           storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
         ],
@@ -407,6 +406,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    blockRefetch = true;
     await tester.tap(find.text('발급'));
     await tester.pumpAndSettle();
 
@@ -489,5 +489,36 @@ void main() {
 
     expect(find.text('A7K2P9'), findsNothing);
     expect(find.text('발급'), findsOneWidget);
+  });
+
+  testWidgets('모달을 열면 캐시된 값에 의존하지 않고 점포를 다시 조회한다', (tester) async {
+    // 마이페이지의 대기 인원 배지가 storeDetailProvider를 계속 watch하고 있어,
+    // 무효화하지 않으면 다른 기기에서 들어온 신청이 명단에 보이지 않는다.
+    var fetchCount = 0;
+    final store = storeWithWaiting([]);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storeDetailProvider(store.id).overrideWith((ref) async {
+            fetchCount++;
+            return store;
+          }),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: LayoutBuilder(
+              builder: (_, constraints) => PendingMemberModal(
+                storeId: store.id,
+                maxAvailableHeight: 600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(fetchCount, 2, reason: '모달을 열 때마다 최신 명단을 다시 조회해야 한다');
   });
 }
