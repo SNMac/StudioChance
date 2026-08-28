@@ -12,7 +12,7 @@ import { createTestEnv } from './helpers.js';
 let env: RulesTestEnvironment;
 
 before(async () => {
-  env = await createTestEnv();
+  env = await createTestEnv('reservations');
 });
 
 after(async () => {
@@ -45,9 +45,9 @@ test('비멤버는 예약을 읽지 못한다', async () => {
   await assertFails(getDoc(doc(db, 'stores/s1/reservations/r1')));
 });
 
-test('현행: STAFF는 예약을 쓰지 못한다 (memberRole() 평가 오류)', async () => {
+test('STAFF는 예약을 쓸 수 있다', async () => {
   const db = env.authenticatedContext('staff1').firestore();
-  await assertFails(
+  await assertSucceeds(
     setDoc(doc(db, 'stores/s1/reservations/r2'), { name: '김철수' }),
   );
 });

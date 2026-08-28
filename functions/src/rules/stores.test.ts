@@ -12,7 +12,7 @@ import { createTestEnv } from './helpers.js';
 let env: RulesTestEnvironment;
 
 before(async () => {
-  env = await createTestEnv();
+  env = await createTestEnv('stores');
 });
 
 after(async () => {
