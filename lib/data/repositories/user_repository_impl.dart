@@ -56,11 +56,10 @@ class UserRepositoryImpl implements UserRepository {
           email: authInfo.email ?? '',
           nickname: null,
           authProviders: authInfo.authProviders,
-          fcmTokens: fcmToken != null ? [fcmToken] : [],
           storeById: {},
         );
 
-        await _userDataSource.createUser(newUserModel);
+        await _userDataSource.createUser(newUserModel, fcmToken: fcmToken);
         userModel = newUserModel;
         _logger.i('신규 유저 DB 생성 완료: ${newUserModel.id}');
       }
@@ -138,9 +137,14 @@ class UserRepositoryImpl implements UserRepository {
       if (color != null) {
         // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
         // (store_repository_impl.dart의 updateStore와 동일한 패턴)
-        final colorJson = UserStoreInfoModel(
-          name: '', role: UserRole.none, color: color, memo: '',
-        ).toJson()['color'] as String;
+        final colorJson =
+            UserStoreInfoModel(
+                  name: '',
+                  role: UserRole.none,
+                  color: color,
+                  memo: '',
+                ).toJson()['color']
+                as String;
         data['color'] = colorJson;
       }
 

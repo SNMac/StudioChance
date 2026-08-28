@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
-@JsonKey(includeToJson: false) String get id; String get email; String get name; String? get nickname; List<String> get authProviders;@JsonKey(includeToJson: false) List<String> get fcmTokens; Map<String, UserStoreInfoModel> get storeById;
+@JsonKey(includeToJson: false) String get id; String get email; String get name; String? get nickname; List<String> get authProviders; Map<String, UserStoreInfoModel> get storeById;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.fcmTokens, fcmTokens)&&const DeepCollectionEquality().equals(other.storeById, storeById));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.storeById, storeById));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(fcmTokens),const DeepCollectionEquality().hash(storeById));
+int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(storeById));
 
 @override
 String toString() {
-  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, fcmTokens: $fcmTokens, storeById: $storeById)';
+  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders,@JsonKey(includeToJson: false) List<String> fcmTokens, Map<String, UserStoreInfoModel> storeById
+@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, Map<String, UserStoreInfoModel> storeById
 });
 
 
@@ -65,14 +65,13 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? fcmTokens = null,Object? storeById = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
-as List<String>,fcmTokens: null == fcmTokens ? _self.fcmTokens : fcmTokens // ignore: cast_nullable_to_non_nullable
 as List<String>,storeById: null == storeById ? _self.storeById : storeById // ignore: cast_nullable_to_non_nullable
 as Map<String, UserStoreInfoModel>,
   ));
@@ -159,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders, @JsonKey(includeToJson: false)  List<String> fcmTokens,  Map<String, UserStoreInfoModel> storeById)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.storeById);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById);case _:
   return orElse();
 
 }
@@ -180,10 +179,10 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders, @JsonKey(includeToJson: false)  List<String> fcmTokens,  Map<String, UserStoreInfoModel> storeById)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.storeById);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +199,10 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders, @JsonKey(includeToJson: false)  List<String> fcmTokens,  Map<String, UserStoreInfoModel> storeById)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.fcmTokens,_that.storeById);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById);case _:
   return null;
 
 }
@@ -215,7 +214,7 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 @JsonSerializable()
 
 class _UserModel extends UserModel {
-  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname, final  List<String> authProviders = const [], @JsonKey(includeToJson: false) final  List<String> fcmTokens = const [], final  Map<String, UserStoreInfoModel> storeById = const {}}): _authProviders = authProviders,_fcmTokens = fcmTokens,_storeById = storeById,super._();
+  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname, final  List<String> authProviders = const [], final  Map<String, UserStoreInfoModel> storeById = const {}}): _authProviders = authProviders,_storeById = storeById,super._();
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -227,13 +226,6 @@ class _UserModel extends UserModel {
   if (_authProviders is EqualUnmodifiableListView) return _authProviders;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_authProviders);
-}
-
- final  List<String> _fcmTokens;
-@override@JsonKey(includeToJson: false) List<String> get fcmTokens {
-  if (_fcmTokens is EqualUnmodifiableListView) return _fcmTokens;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_fcmTokens);
 }
 
  final  Map<String, UserStoreInfoModel> _storeById;
@@ -257,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._fcmTokens, _fcmTokens)&&const DeepCollectionEquality().equals(other._storeById, _storeById));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._storeById, _storeById));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_fcmTokens),const DeepCollectionEquality().hash(_storeById));
+int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeById));
 
 @override
 String toString() {
-  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, fcmTokens: $fcmTokens, storeById: $storeById)';
+  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById)';
 }
 
 
@@ -277,7 +269,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders,@JsonKey(includeToJson: false) List<String> fcmTokens, Map<String, UserStoreInfoModel> storeById
+@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, Map<String, UserStoreInfoModel> storeById
 });
 
 
@@ -294,14 +286,13 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? fcmTokens = null,Object? storeById = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,}) {
   return _then(_UserModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable
-as List<String>,fcmTokens: null == fcmTokens ? _self._fcmTokens : fcmTokens // ignore: cast_nullable_to_non_nullable
 as List<String>,storeById: null == storeById ? _self._storeById : storeById // ignore: cast_nullable_to_non_nullable
 as Map<String, UserStoreInfoModel>,
   ));
