@@ -10,6 +10,8 @@ import { collectNewWaitingUids } from './notifications/waiting_member_diff.js';
 
 initializeApp();
 
+export { lookupInviteCode } from './invite/lookup_invite_code.js';
+
 /**
  * 점포 대기 명단(`waitingMemberById`)에 새 신청자가 추가되면
  * 해당 점포 관리자(ADMIN)의 모든 기기에 푸시 알림을 보낸다.
