@@ -119,7 +119,8 @@ DataSource가 명시적으로 매핑한다. `mapFirebaseCode`는 **변경하지 
 ```
 컬렉션: inviteLookupAttempts/{uid}   → { count, windowStartAt }
 창: 10분 / 한도: 실패 10회 → resource-exhausted
-증가: 실패(not-found · deadline-exceeded)에만. 성공 시 문서 삭제
+증가: 실패(invalidCode · notFound · expired)에만. 성공해도 문서를 삭제하지 않는다
+(유효한 코드를 하나 가진 공격자가 성공 호출을 섞어 카운터를 무한 리셋하는 것을 막기 위함)
 ```
 
 정상 사용자는 오타 몇 번이면 끝나므로 10회/10분에 걸리지 않는다. 공격자 기준으로는
@@ -230,12 +231,12 @@ test       : test:unit && test:rules
 
 ### 커버리지
 
-- `users` 본인 / 타인 / 비로그인
-- `users/{uid}/private/*` 본인만
-- `stores` read — 멤버 / 비멤버 / 대기멤버
+- `users` 타인 read(성공) / 타인 write(차단) — 비로그인 read, 본인의 본문 write는 다루지 않는다(9절 참고)
+- `users/{uid}/private/*` 본인만 read·write, 타인은 read·write 모두 차단
+- `stores` read — 멤버 / 비멤버 / 대기멤버, `stores` 쿼리(`where inviteInfo.inviteCode ==`) 차단(#13 회귀 가드)
 - `stores` 가입 신청 update — 자기 항목만 허용, 타 필드 차단
-- `stores` update·delete — ADMIN만
-- `stores/{storeId}/reservations` — ADMIN / STAFF / VIEWER / 비멤버
+- `stores` update·delete — ADMIN은 수정 가능 / STAFF는 수정·삭제 불가
+- `stores/{storeId}/reservations` — VIEWER read(성공) / 비멤버 read(차단) / STAFF write(성공) / VIEWER write(차단) — ADMIN write는 다루지 않는다(9절 참고)
 - `system/serverTime` — `probe == request.time` 검증
 - `inviteLookupAttempts` — 클라이언트 완전 차단
 
@@ -295,3 +296,7 @@ test/presentation/my_page/pending_member_modal_test.dart
 - `createInviteCode`의 "유효 코드 재사용" 판정을 서버로 이전 — 그래서
   `system/serverTime` 왕복이 유지된다
 - FCM registration token → FID 마이그레이션 (별도 이슈)
+- Rules 테스트 미구현 항목 — 실제로 작성되지 않았다:
+  - `users` 비로그인 read 차단
+  - `users` 본문(본인) write 허용
+  - `stores/{storeId}/reservations` ADMIN write 허용

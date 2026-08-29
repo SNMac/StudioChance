@@ -83,7 +83,7 @@
 
 **Interfaces:**
 - Consumes: 없음 (첫 작업)
-- Produces: `createTestEnv(): Promise<RulesTestEnvironment>`, `PROJECT_ID = 'demo-studio-chance'` — 이후 모든 Rules 테스트 파일이 `./helpers.js`에서 import한다
+- Produces: `createTestEnv(suffix: string): Promise<RulesTestEnvironment>`, `projectIdFor(suffix): string` — 이후 모든 Rules 테스트 파일이 `./helpers.js`에서 import한다
 
 - [ ] **Step 1: 에뮬레이터 설정 파일 생성**
 
@@ -150,8 +150,16 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 
-/** demo- 프리픽스라 자격증명 없이 에뮬레이터만 사용한다 */
-export const PROJECT_ID = 'demo-studio-chance';
+/**
+ * 테스트 파일마다 고유한 프로젝트 ID를 쓴다.
+ *
+ * node --test는 파일을 별도 프로세스에서 병렬 실행하는데, 같은 프로젝트를 공유하면
+ * 한 파일의 clearFirestore()가 다른 파일의 시드를 지워 결과가 매번 달라진다.
+ * demo- 프리픽스는 유지되므로 자격증명은 여전히 필요 없다.
+ */
+export function projectIdFor(suffix: string): string {
+  return `demo-studio-chance-${suffix}`;
+}
 
 /**
  * 컴파일 결과는 `functions/lib/rules/helpers.js`에 놓이므로
@@ -159,9 +167,9 @@ export const PROJECT_ID = 'demo-studio-chance';
  */
 const RULES_PATH = join(__dirname, '../../../firestore.rules');
 
-export async function createTestEnv(): Promise<RulesTestEnvironment> {
+export async function createTestEnv(suffix: string): Promise<RulesTestEnvironment> {
   return initializeTestEnvironment({
-    projectId: PROJECT_ID,
+    projectId: projectIdFor(suffix),
     firestore: { rules: readFileSync(RULES_PATH, 'utf8') },
   });
 }
@@ -186,7 +194,7 @@ import { createTestEnv } from './helpers.js';
 let env: RulesTestEnvironment;
 
 before(async () => {
-  env = await createTestEnv();
+  env = await createTestEnv('stores');
 });
 
 after(async () => {
@@ -253,7 +261,7 @@ Task 9에서 `stores` 블록을 건드릴 때 다른 규칙을 망가뜨리지 �
 - Modify: `functions/src/rules/stores.test.ts`
 
 **Interfaces:**
-- Consumes: `createTestEnv()` from `./helpers.js` (Task 1)
+- Consumes: `createTestEnv(suffix)` from `./helpers.js` (Task 1)
 - Produces: 없음 (테스트 전용)
 
 - [ ] **Step 1: stores 쓰기 규칙 테스트 추가**
@@ -327,7 +335,7 @@ import { createTestEnv } from './helpers.js';
 let env: RulesTestEnvironment;
 
 before(async () => {
-  env = await createTestEnv();
+  env = await createTestEnv('reservations');
 });
 
 after(async () => {
@@ -394,7 +402,7 @@ import { createTestEnv } from './helpers.js';
 let env: RulesTestEnvironment;
 
 before(async () => {
-  env = await createTestEnv();
+  env = await createTestEnv('system');
 });
 
 after(async () => {
@@ -462,7 +470,7 @@ git commit -m "test: #39 - stores 쓰기·reservations·system 규칙 회귀 테
 - Modify: `test/data/data_sources/user_data_source_test.dart`
 
 **Interfaces:**
-- Consumes: `createTestEnv()` (Task 1)
+- Consumes: `createTestEnv(suffix)` (Task 1)
 - Produces: 저장 위치 `users/{uid}/private/fcm` 문서의 `tokens: string[]` 필드 — Task 4의 Cloud Functions가 같은 경로를 읽는다. `UserDataSource.createUser(UserModel userModel, {String? fcmToken})`
 
 - [ ] **Step 1: 실패하는 Rules 테스트 작성**
@@ -484,7 +492,7 @@ import { createTestEnv } from './helpers.js';
 let env: RulesTestEnvironment;
 
 before(async () => {
-  env = await createTestEnv();
+  env = await createTestEnv('users');
 });
 
 after(async () => {
