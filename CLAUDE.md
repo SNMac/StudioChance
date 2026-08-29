@@ -111,6 +111,14 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 현재 비즈니스 로직이 없다는 이유로 UseCase 계층 자체를 생략하지 않음 — 향후 검증/가공 로직이 필요해지면 이 계층에 추가
 - 관련 이슈: [#15](https://github.com/SNMac/StudioChance/issues/15) [M-3]
 
+### stores read 최소 권한 (D11)
+`stores` read는 `isMember()` 전용. 비멤버의 초대 코드 조회는 Callable `lookupInviteCode`가 대신한다.
+- 새 컬렉션(`inviteCodes`) 분리 대신 Callable을 고른 이유: 표시용 필드 비정규화가 없어 점포 정보가 낡지 않고,
+  만료 판정이 서버 시각으로 이뤄지며, 발급 경로(`createInviteCode`, ADMIN이므로 이미 멤버)를 건드리지 않는다.
+- 대가는 `cloud_functions` 의존성과 cold start. 초대 코드 입력은 온보딩 1회성이라 감내한다.
+- `stores`를 읽는 클라이언트 경로는 `getStore` 하나뿐이며 호출부는 전부 멤버 전제다
+  (마이페이지 ADMIN 행, 예약 상세, 승인 대기 모달, 예약 가격 계산).
+
 ## Either / TaskEither 패턴
 
 - 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)
@@ -176,9 +184,13 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 ## FCM 푸시 알림
 
+- **토큰 저장 위치**: `users/{uid}/private/fcm` 문서의 `tokens: string[]`.
+  `users/{uid}` 본문은 멤버 이름 표시 때문에 인증 사용자 전체에 읽기가 열려 있어 토큰을 둘 수 없다.
+  클라이언트는 `UserFirestoreDataSource._fcmDocRef`를 통해서만 접근하고, 항상 `set(..., merge: true)`를 쓴다
+  (`update`는 문서가 없으면 실패한다).
 - **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
   - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
-  - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}.fcmTokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
+  - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
   - 배포: `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
   - 테스트: `cd functions && npm test` (Node 내장 `node:test`)
   - `firebase.json`/`.firebaserc`는 gitignore 처리되어 저장소에 없음 — 새로 clone한 환경에서 배포하려면 아래 내용을 직접 만들어야 한다
@@ -215,7 +227,36 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - **값이 반드시 일치해야 하는 상수**
   - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
   - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
+  - 초대 코드 유효 시간 15분: `lib/constants/data_constants.dart`의 `storeInviteCodeAvailableMin`,
+    `functions/src/invite/invite_code.ts`의 `INVITE_CODE_AVAILABLE_MIN`
 - **알려진 제약**: FCM Admin SDK가 registration token을 deprecated 처리하고 FID를 권장한다. 현행은 token 기반이며 FID 마이그레이션은 별도 이슈.
+
+## Callable Cloud Function
+
+- `lookupInviteCode` (`functions/src/invite/`): 초대 코드로 **가입 전 표시 정보만** 조회.
+  리전 `asia-northeast3`, `enforceAppCheck: true`, 인증 필수.
+  - `stores` read가 멤버 전용이라 아직 멤버가 아닌 사용자가 넘어야 하는 유일한 경계다.
+    계좌 정보·`memberById`·`waitingMemberById`·`inviteInfo`는 **절대 응답에 넣지 않는다.**
+  - 도메인 실패는 `HttpsError`가 아니라 `{ok: false, reason}` 판별 값으로 반환한다.
+    `mapFirebaseCode`가 DataSource의 모든 Firestore 호출과 공유되므로 `not-found`·
+    `deadline-exceeded`에 초대 코드 전용 의미를 얹을 수 없다. 매핑은 `inviteLookupFailureOf`.
+  - 브루트포스 카운터 `inviteLookupAttempts/{uid}`: 10분/10회. 성공해도 삭제하지 않는다
+    (자기 코드로 리셋하는 우회 차단). Rules를 정의하지 않아 클라이언트는 접근 불가.
+  - 클라이언트: `cloud_functions` 패키지, `FirebaseFunctions.instanceFor(region: 'asia-northeast3')`.
+
+## Firestore Rules 테스트
+
+- `functions/src/rules/*.test.ts` + `@firebase/rules-unit-testing`.
+  실행: `cd functions && npm run test:rules` (에뮬레이터 필요) / `npm run test:unit` (불필요) / `npm test` (둘 다).
+- `firebase.json`은 gitignore되어 있으므로 테스트 전용 최소 설정 `firebase.emulator.json`을 별도로 추적한다.
+- `createTestEnv(suffix)`는 **파일마다 고유한 projectId**를 쓴다 —
+  `node --test`가 파일을 병렬 실행해 `clearFirestore()`가 서로의 시드를 지우기 때문.
+- Rules를 고쳤으면 이 테스트를 반드시 돌린다. `fake_cloud_firestore`는 Rules를 적용하지 않는다.
+
+## Firestore Rules / Functions 배포 순서
+
+`firebase deploy --only functions` → `--only firestore:rules` → 앱 배포.
+반대로 하면 Rules만 조여진 구간에서 초대 코드 조회가 실패한다.
 
 ## 마이페이지 / 하단 탭바
 
