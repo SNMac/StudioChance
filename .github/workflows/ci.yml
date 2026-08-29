@@ -10,6 +10,7 @@ jobs:
   test:
     name: Analyze & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -45,6 +46,7 @@ jobs:
   functions:
     name: Functions & Rules
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
