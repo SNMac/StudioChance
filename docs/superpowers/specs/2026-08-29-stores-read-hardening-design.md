@@ -65,8 +65,8 @@ match /stores/{storeId} {
   }
 
   allow read:   if isMember();            // 변경 (기존: request.auth != null)
-  allow create: if isCreatorAdmin();      // 변경 (기존: request.auth != null) — 생성자가
-                                           // memberById에 ADMIN으로 포함된 문서만 허용
+  allow create: if isCreatorAdmin();      // 변경 (기존: request.auth != null) — memberById가
+                                           // 생성자 본인 하나뿐이고 role이 ADMIN인 문서만 허용
   allow update, delete: if isAdmin();     // 유지
   allow update: if /* 가입 신청 규칙 */;    // 유지 — read와 독립 평가되므로 계속 동작
 }
