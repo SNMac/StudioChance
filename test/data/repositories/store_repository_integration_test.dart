@@ -20,21 +20,18 @@ import '../../helpers/firestore_emulator_helper.dart';
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
 
 Store _testStoreEntity(String uid, User adminUser) => Store(
-      id: '',
-      name: '통합 테스트 점포',
-      address: '서울시 강남구',
-      addressDetail: '101호',
-      addressGuide: '안내',
-      memberInfos: [StoreMemberInfo(user: adminUser, role: UserRole.admin)],
-      waitingMemberInfos: [],
-      spaceOptions: [SpaceOption.empty()],
-      inviteInfo: null,
-    );
+  id: '',
+  name: '통합 테스트 점포',
+  address: '서울시 강남구',
+  addressDetail: '101호',
+  addressGuide: '안내',
+  memberInfos: [StoreMemberInfo(user: adminUser, role: UserRole.admin)],
+  waitingMemberInfos: [],
+  spaceOptions: [SpaceOption.empty()],
+  inviteInfo: null,
+);
 
-Future<void> _seedUserDoc(
-  FakeFirebaseFirestore firestore,
-  String uid,
-) async {
+Future<void> _seedUserDoc(FakeFirebaseFirestore firestore, String uid) async {
   await firestore.collection('users').doc(uid).set(<String, dynamic>{
     'email': 'test@example.com',
     'name': '테스트 유저',
@@ -51,7 +48,10 @@ void main() {
 
   setUp(() {
     fakeFirestore = FirestoreEmulatorHelper.create();
-    storeDataSource = StoreFirestoreDataSource(fakeFirestore, MockFirebaseFunctions());
+    storeDataSource = StoreFirestoreDataSource(
+      fakeFirestore,
+      MockFirebaseFunctions(),
+    );
     userDataSource = UserFirestoreDataSource(fakeFirestore);
     repository = StoreRepositoryImpl(
       storeDataSource: storeDataSource,
@@ -131,17 +131,19 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       // spaceOptions 필드 자체가 없던 구버전 문서를 직접 시뮬레이션
       final storeId = FirestoreEmulatorHelper.generateId();
-      await fakeFirestore.collection('stores').doc(storeId).set(<String, dynamic>{
-        'name': '레거시 점포',
-        'address': '서울',
-        'addressDetail': '',
-        'addressGuide': '',
-        'memberById': <String, dynamic>{
-          uid: <String, dynamic>{'role': 'ADMIN'},
+      await fakeFirestore.collection('stores').doc(storeId).set(
+        <String, dynamic>{
+          'name': '레거시 점포',
+          'address': '서울',
+          'addressDetail': '',
+          'addressGuide': '',
+          'memberById': <String, dynamic>{
+            uid: <String, dynamic>{'role': 'ADMIN'},
+          },
+          'waitingMemberById': <String, dynamic>{},
+          'spaceOptions': <dynamic>[],
         },
-        'waitingMemberById': <String, dynamic>{},
-        'spaceOptions': <dynamic>[],
-      });
+      );
 
       final fetched = await repository.getStore(storeId);
 
@@ -232,8 +234,12 @@ void main() {
         memo: '',
       );
 
-      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
-      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffDoc = await fakeFirestore
+          .collection('users')
+          .doc(staffUid)
+          .get();
+      final staffStoreById =
+          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
     });
 
@@ -264,8 +270,7 @@ void main() {
       );
 
       final userDoc = await fakeFirestore.collection('users').doc(uid).get();
-      final storeById =
-          userDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(storeById?[createdStore.id]['color'], 'RED');
       expect(storeById?[createdStore.id]['memo'], '변경된 메모');
     });
@@ -338,10 +343,18 @@ void main() {
 
       await repository.softDeleteStore(storeId);
 
-      final ownerDoc = await fakeFirestore.collection('users').doc(ownerUid).get();
-      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
-      final ownerStoreById = ownerDoc.data()?['storeById'] as Map<String, dynamic>?;
-      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final ownerDoc = await fakeFirestore
+          .collection('users')
+          .doc(ownerUid)
+          .get();
+      final staffDoc = await fakeFirestore
+          .collection('users')
+          .doc(staffUid)
+          .get();
+      final ownerStoreById =
+          ownerDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffStoreById =
+          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(ownerStoreById?.containsKey(storeId), isFalse);
       expect(staffStoreById?.containsKey(storeId), isFalse);
     });
@@ -397,8 +410,10 @@ void main() {
       final first = await repository.createInviteCode(storeId);
       final second = await repository.createInviteCode(storeId);
 
-      expect(first.getRight().toNullable()!.inviteCode,
-          second.getRight().toNullable()!.inviteCode);
+      expect(
+        first.getRight().toNullable()!.inviteCode,
+        second.getRight().toNullable()!.inviteCode,
+      );
     });
   });
 
@@ -441,8 +456,7 @@ void main() {
       );
 
       final doc = await fakeFirestore.collection('stores').doc(storeId).get();
-      final waiting =
-          doc.data()?['waitingMemberById'] as Map<String, dynamic>?;
+      final waiting = doc.data()?['waitingMemberById'] as Map<String, dynamic>?;
       expect(waiting?.containsKey(memberUid), isTrue);
     });
 
@@ -485,8 +499,10 @@ void main() {
       final memberIds = store.memberInfos.map((m) => m.user.id).toList();
       expect(memberIds.contains(memberUid), isTrue);
 
-      final memberUserDoc =
-          await fakeFirestore.collection('users').doc(memberUid).get();
+      final memberUserDoc = await fakeFirestore
+          .collection('users')
+          .doc(memberUid)
+          .get();
       final memberStoreById =
           memberUserDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(memberStoreById?[storeId]['role'], 'STAFF');
@@ -541,14 +557,16 @@ void main() {
 
       // Firestore에 저장된 값이 JSON 직렬화 형식('ADMIN')인지 확인
       final doc = await fakeFirestore.collection('stores').doc(storeId).get();
-      final members =
-          doc.data()?['memberById'] as Map<String, dynamic>?;
+      final members = doc.data()?['memberById'] as Map<String, dynamic>?;
       expect(members?[memberUid]['role'], 'ADMIN');
 
       // getStore 호출 시 역직렬화가 성공해야 함
       final fetched = await repository.getStore(storeId);
-      expect(fetched.isRight(), true,
-          reason: 'updateMemberRole 후 getStore가 실패하면 role 직렬화 버그임');
+      expect(
+        fetched.isRight(),
+        true,
+        reason: 'updateMemberRole 후 getStore가 실패하면 role 직렬화 버그임',
+      );
       final updatedMember = fetched
           .getRight()
           .toNullable()!
