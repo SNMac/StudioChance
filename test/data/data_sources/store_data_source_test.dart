@@ -356,6 +356,26 @@ void main() {
       expect(doc.data()?.containsKey('deletedAt'), true);
     });
 
+    test('softDelete 후 inviteInfo가 null이 된다', () async {
+      final uid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, uid);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
+      await dataSource.createInviteCode(created.id);
+
+      await dataSource.softDeleteStore(created.id, []);
+
+      // lookupInviteCode Callable이 이 불변식에 기대어 조회한다.
+      final doc = await fakeFirestore
+          .collection('stores')
+          .doc(created.id)
+          .get();
+      expect(doc.data()?['inviteInfo'], isNull);
+    });
+
     test('전달된 memberUids의 storeById.{storeId} 캐시가 모두 삭제된다', () async {
       final storeId = FirestoreEmulatorHelper.generateId();
       final memberUid = FirestoreEmulatorHelper.generateId();
