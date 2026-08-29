@@ -77,7 +77,11 @@ service cloud.firestore {
         return request.auth != null
             && 'memberById' in request.resource.data
             && request.auth.uid in request.resource.data.memberById
-            && request.resource.data.memberById[request.auth.uid].role == 'ADMIN';
+            && request.resource.data.memberById[request.auth.uid].role == 'ADMIN'
+            // 생성자 외의 멤버를 끼워넣지 못하게 한다. 타인을 멤버로 넣은 뒤
+            // users의 storeById 완화 규칙으로 캐시를 밀어넣으면 피해자 앱에
+            // 유령 점포가 뜬다. 앱은 생성 시 항상 생성자 1명만 쓴다.
+            && request.resource.data.memberById.keys().hasOnly([request.auth.uid]);
       }
 
       allow read:   if isMember();

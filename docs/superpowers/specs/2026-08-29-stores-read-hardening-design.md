@@ -58,7 +58,10 @@ match /stores/{storeId} {
     return request.auth != null
         && 'memberById' in request.resource.data
         && request.auth.uid in request.resource.data.memberById
-        && request.resource.data.memberById[request.auth.uid].role == 'ADMIN';
+        && request.resource.data.memberById[request.auth.uid].role == 'ADMIN'
+        // 생성자 외의 멤버를 끼워넣지 못하게 한다 — 타인을 멤버로 넣은 뒤 users의
+        // storeById 완화 규칙으로 캐시를 밀어넣으면 피해자 앱에 유령 점포가 뜬다
+        && request.resource.data.memberById.keys().hasOnly([request.auth.uid]);
   }
 
   allow read:   if isMember();            // 변경 (기존: request.auth != null)
@@ -242,9 +245,9 @@ test       : test:unit && test:rules
 - `users` read — 타인 read(성공), 비로그인 read(차단)
 - `users` write — 본인 본문 write(성공), 타인 본문 write(차단)
 - `users/{uid}/private/*` 본인만 read·write, 타인은 read·write 모두 차단
-- `stores` read — 멤버 / 비멤버 / 대기멤버, `stores` 쿼리(`where inviteInfo.inviteCode ==`) 차단(#13 회귀 가드)
+- `stores` read — 멤버 / 비멤버 / 대기멤버 / 비로그인, `stores` 쿼리(`where inviteInfo.inviteCode ==`) 차단(#13 회귀 가드)
 - `stores` create — 생성자를 ADMIN으로 포함(성공) / memberById에 자신 없음·자신이 ADMIN
-  아님·memberById 없음(모두 차단)
+  아님·memberById 없음·타인을 함께 멤버로 포함(STAFF·ADMIN 모두)·비로그인(모두 차단)
 - `stores` 가입 신청 update — 자기 항목만 허용, 타 필드 차단
 - `stores` update·delete — ADMIN은 수정 가능 / STAFF는 수정·삭제 불가
 - `stores/{storeId}/reservations` — VIEWER read(성공) / 비멤버 read(차단) / STAFF write(성공) /

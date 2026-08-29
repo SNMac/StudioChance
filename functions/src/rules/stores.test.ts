@@ -164,3 +164,39 @@ test('memberById 필드가 없으면 점포 생성이 거부된다', async () =>
     setDoc(doc(collection(db, 'stores')), { name: '새 점포' }),
   );
 });
+
+test('타인을 함께 멤버로 넣으면 거부된다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: {
+        creator1: { role: 'ADMIN' },
+        other: { role: 'STAFF' },
+      },
+    }),
+  );
+});
+
+test('타인을 함께 ADMIN으로 넣어도 거부된다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: {
+        creator1: { role: 'ADMIN' },
+        other: { role: 'ADMIN' },
+      },
+    }),
+  );
+});
+
+test('비로그인 사용자는 점포를 만들지 못한다', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: { creator1: { role: 'ADMIN' } },
+    }),
+  );
+});
