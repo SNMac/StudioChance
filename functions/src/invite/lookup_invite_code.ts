@@ -2,7 +2,12 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v2';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 
-import { isInviteExpired, isValidInviteCode } from './invite_code.js';
+import {
+  adminUidOf,
+  displayNameOf,
+  evaluateInviteStore,
+  isValidInviteCode,
+} from './invite_code.js';
 import { type AttemptRecord, nextAttemptState } from './rate_limit.js';
 
 type FailureReason = 'invalidCode' | 'notFound' | 'expired' | 'rateLimited';
@@ -84,20 +89,18 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
     const storeDoc = snapshot.docs[0];
     const store = storeDoc.data();
 
-    // deletedAt은 softDeleteStore에서만 기록되며, 그 경로는 inviteInfo도 함께
-    // null로 만든다. 그래도 방어적으로 확인한다.
-    if (store.deletedAt) {
-      return recordFailure('notFound');
-    }
-
     const createdAt = store.inviteInfo?.createdAt as Timestamp | undefined;
-    if (!createdAt) {
-      // 코드가 있는데 발급 시각이 없는 문서 — 만료 판정이 불가능하므로 없는 것으로 본다
-      logger.warn('inviteInfo.createdAt이 없는 점포', { storeId: storeDoc.id });
-      return recordFailure('notFound');
-    }
-    if (isInviteExpired(createdAt.toDate(), now)) {
-      return recordFailure('expired');
+    const evaluation = evaluateInviteStore({
+      deletedAt: store.deletedAt,
+      inviteCreatedAt: createdAt ? createdAt.toDate() : null,
+      now,
+    });
+    if (!evaluation.ok) {
+      if (!store.deletedAt && !createdAt) {
+        // 코드가 있는데 발급 시각이 없는 문서 — 만료 판정이 불가능하므로 없는 것으로 본다
+        logger.warn('inviteInfo.createdAt이 없는 점포', { storeId: storeDoc.id });
+      }
+      return recordFailure(evaluation.reason);
     }
 
     return {
@@ -124,19 +127,12 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
  * 흡수하고 빈 문자열로 대체한다.
  */
 async function resolveAdminName(memberById: unknown): Promise<string> {
-  if (typeof memberById !== 'object' || memberById === null) return '';
-
-  const adminUid = Object.entries(
-    memberById as Record<string, { role?: string }>,
-  ).find(([, member]) => member?.role === 'ADMIN')?.[0];
+  const adminUid = adminUidOf(memberById);
   if (!adminUid) return '';
 
   try {
     const adminDoc = await getFirestore().doc(`users/${adminUid}`).get();
-    // 빈 문자열도 없는 것으로 취급 — ??는 빈 문자열을 통과시키므로 ||를 쓴다.
-    const nickname = (adminDoc.get('nickname') as string | undefined) || '';
-    const name = (adminDoc.get('name') as string | undefined) || '';
-    return nickname || name;
+    return displayNameOf(adminDoc.get('nickname'), adminDoc.get('name'));
   } catch (error) {
     logger.warn('관리자 표시 이름 조회 실패', { adminUid, error });
     return '';
