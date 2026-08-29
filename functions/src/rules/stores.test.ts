@@ -5,7 +5,17 @@ import {
   assertSucceeds,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 
 import { createTestEnv } from './helpers.js';
 
@@ -48,6 +58,15 @@ test('비로그인은 점포 문서를 읽지 못한다', async () => {
 test('비멤버는 점포 문서를 읽지 못한다', async () => {
   const db = env.authenticatedContext('outsider').firestore();
   await assertFails(getDoc(doc(db, 'stores/s1')));
+});
+
+test('비멤버는 초대 코드로 stores를 쿼리하지 못한다 (#13 회귀 가드)', async () => {
+  const db = env.authenticatedContext('outsider').firestore();
+  await assertFails(
+    getDocs(
+      query(collection(db, 'stores'), where('inviteInfo.inviteCode', '==', 'AB3D9F')),
+    ),
+  );
 });
 
 test('대기 멤버(승인 전)는 점포 문서를 읽지 못한다', async () => {
