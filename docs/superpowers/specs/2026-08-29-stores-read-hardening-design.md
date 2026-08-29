@@ -231,7 +231,7 @@ test       : test:unit && test:rules
 
 ### 커버리지
 
-- `users` 타인 read(성공) / 타인 write(차단) — 비로그인 read, 본인의 본문 write는 다루지 않는다(9절 참고)
+- `users` 타인 read(성공) — 비로그인 read와 본문 write(본인·타인 모두)는 다루지 않는다(9절 참고)
 - `users/{uid}/private/*` 본인만 read·write, 타인은 read·write 모두 차단
 - `stores` read — 멤버 / 비멤버 / 대기멤버, `stores` 쿼리(`where inviteInfo.inviteCode ==`) 차단(#13 회귀 가드)
 - `stores` 가입 신청 update — 자기 항목만 허용, 타 필드 차단
@@ -298,5 +298,6 @@ test/presentation/my_page/pending_member_modal_test.dart
 - FCM registration token → FID 마이그레이션 (별도 이슈)
 - Rules 테스트 미구현 항목 — 실제로 작성되지 않았다:
   - `users` 비로그인 read 차단
-  - `users` 본문(본인) write 허용
+  - `users` 본문 write — 본인 허용·타인 차단 양쪽 모두. 작성된 write 테스트 4건은 전부
+    `users/{uid}/private/*` 서브컬렉션 대상이다
   - `stores/{storeId}/reservations` ADMIN write 허용

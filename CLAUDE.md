@@ -186,8 +186,10 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 - **토큰 저장 위치**: `users/{uid}/private/fcm` 문서의 `tokens: string[]`.
   `users/{uid}` 본문은 멤버 이름 표시 때문에 인증 사용자 전체에 읽기가 열려 있어 토큰을 둘 수 없다.
-  클라이언트는 `UserFirestoreDataSource._fcmDocRef`를 통해서만 접근하고, 항상 `set(..., merge: true)`를 쓴다
-  (`update`는 문서가 없으면 실패한다).
+  클라이언트는 `UserFirestoreDataSource._fcmDocRef`를 통해서만 접근한다. 토큰을 추가·교체·제거하는
+  경로(`recordLogin`, `addFcmToken`, `replaceFcmToken`, `removeFcmToken`)는 반드시
+  `set(..., merge: true)`를 쓴다 — `update`는 문서가 없으면 실패하는데 첫 로그인 기기에는 서브문서가 없다.
+  문서를 처음 만드는 `createUser`와 전체를 비우는 `softDeleteUser`는 `SetOptions` 없이 쓰는 것이 맞다.
 - **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
   - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
   - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
