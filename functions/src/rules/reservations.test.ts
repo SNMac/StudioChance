@@ -52,6 +52,13 @@ test('STAFF는 예약을 쓸 수 있다', async () => {
   );
 });
 
+test('ADMIN은 예약을 쓸 수 있다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    setDoc(doc(db, 'stores/s1/reservations/r4'), { name: '박영희' }),
+  );
+});
+
 test('VIEWER는 예약을 쓰지 못한다', async () => {
   const db = env.authenticatedContext('viewer1').firestore();
   await assertFails(
