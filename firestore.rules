@@ -54,12 +54,11 @@ service cloud.firestore {
     //   → 아직 멤버가 아닌 사용자의 초대 코드 조회는 Callable 함수
     //      lookupInviteCode가 대신한다 (functions/src/invite/). 표시에 필요한
     //      최소 정보만 반환하므로 문서를 통째로 열 필요가 없다
-    // 생성: 인증된 모든 사용자 허용
-    //   → 첫 점포 등록 시 본인이 memberById[uid] = ADMIN으로 포함되어야 함
-    //      (UseCase 레벨에서 강제, Rules에서는 현재 미검증)
+    // 생성: 생성자 본인이 memberById에 ADMIN으로 포함된 문서만 허용
+    //   → 타인을 ADMIN으로 넣거나 memberById 없이 문서를 만드는 것을 막는다
+    //      (UseCase(createStore)도 이미 생성자를 ADMIN으로 강제하므로 앱 동작에는
+    //      영향이 없다)
     // 수정/삭제: ADMIN 역할 보유자만 허용
-    //
-    // TODO: 생성 시 request.resource.data.memberById[request.auth.uid].role == 'ADMIN' 검증 추가
     match /stores/{storeId} {
       function isAdmin() {
         return request.auth != null
@@ -72,8 +71,17 @@ service cloud.firestore {
             && request.auth.uid in resource.data.memberById;
       }
 
+      // create 시점엔 기존 문서가 없으므로 resource.data가 아니라 들어오는 문서인
+      // request.resource.data를 검사해야 한다(isAdmin()은 재사용 불가).
+      function isCreatorAdmin() {
+        return request.auth != null
+            && 'memberById' in request.resource.data
+            && request.auth.uid in request.resource.data.memberById
+            && request.resource.data.memberById[request.auth.uid].role == 'ADMIN';
+      }
+
       allow read:   if isMember();
-      allow create: if request.auth != null;
+      allow create: if isCreatorAdmin();
       allow update, delete: if isAdmin();
 
       // 가입 신청(requestJoinWithBatch): 아직 멤버가 아닌 인증된 사용자가 스스로를

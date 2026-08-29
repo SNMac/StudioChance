@@ -127,3 +127,40 @@ test('가입 신청과 함께 다른 필드를 바꾸면 거부된다', async ()
     }),
   );
 });
+
+test('생성자를 ADMIN으로 포함한 문서 생성은 성공한다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertSucceeds(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: { creator1: { role: 'ADMIN' } },
+    }),
+  );
+});
+
+test('memberById에 자신이 없으면 점포 생성이 거부된다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: { someoneElse: { role: 'ADMIN' } },
+    }),
+  );
+});
+
+test('자신이 있지만 role이 ADMIN이 아니면 점포 생성이 거부된다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: { creator1: { role: 'STAFF' } },
+    }),
+  );
+});
+
+test('memberById 필드가 없으면 점포 생성이 거부된다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), { name: '새 점포' }),
+  );
+});

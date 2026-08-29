@@ -54,8 +54,16 @@ match /stores/{storeId} {
         && request.auth.uid in resource.data.memberById;
   }
 
+  function isCreatorAdmin() {             // 신규
+    return request.auth != null
+        && 'memberById' in request.resource.data
+        && request.auth.uid in request.resource.data.memberById
+        && request.resource.data.memberById[request.auth.uid].role == 'ADMIN';
+  }
+
   allow read:   if isMember();            // 변경 (기존: request.auth != null)
-  allow create: if request.auth != null;  // 유지
+  allow create: if isCreatorAdmin();      // 변경 (기존: request.auth != null) — 생성자가
+                                           // memberById에 ADMIN으로 포함된 문서만 허용
   allow update, delete: if isAdmin();     // 유지
   allow update: if /* 가입 신청 규칙 */;    // 유지 — read와 독립 평가되므로 계속 동작
 }
@@ -231,12 +239,16 @@ test       : test:unit && test:rules
 
 ### 커버리지
 
-- `users` 타인 read(성공) — 비로그인 read와 본문 write(본인·타인 모두)는 다루지 않는다(9절 참고)
+- `users` read — 타인 read(성공), 비로그인 read(차단)
+- `users` write — 본인 본문 write(성공), 타인 본문 write(차단)
 - `users/{uid}/private/*` 본인만 read·write, 타인은 read·write 모두 차단
 - `stores` read — 멤버 / 비멤버 / 대기멤버, `stores` 쿼리(`where inviteInfo.inviteCode ==`) 차단(#13 회귀 가드)
+- `stores` create — 생성자를 ADMIN으로 포함(성공) / memberById에 자신 없음·자신이 ADMIN
+  아님·memberById 없음(모두 차단)
 - `stores` 가입 신청 update — 자기 항목만 허용, 타 필드 차단
 - `stores` update·delete — ADMIN은 수정 가능 / STAFF는 수정·삭제 불가
-- `stores/{storeId}/reservations` — VIEWER read(성공) / 비멤버 read(차단) / STAFF write(성공) / VIEWER write(차단) — ADMIN write는 다루지 않는다(9절 참고)
+- `stores/{storeId}/reservations` — VIEWER read(성공) / 비멤버 read(차단) / STAFF write(성공) /
+  ADMIN write(성공) / VIEWER write(차단)
 - `system/serverTime` — `probe == request.time` 검증
 - `inviteLookupAttempts` — 클라이언트 완전 차단
 
@@ -296,8 +308,3 @@ test/presentation/my_page/pending_member_modal_test.dart
 - `createInviteCode`의 "유효 코드 재사용" 판정을 서버로 이전 — 그래서
   `system/serverTime` 왕복이 유지된다
 - FCM registration token → FID 마이그레이션 (별도 이슈)
-- Rules 테스트 미구현 항목 — 실제로 작성되지 않았다:
-  - `users` 비로그인 read 차단
-  - `users` 본문 write — 본인 허용·타인 차단 양쪽 모두. 작성된 write 테스트 4건은 전부
-    `users/{uid}/private/*` 서브컬렉션 대상이다
-  - `stores/{storeId}/reservations` ADMIN write 허용
