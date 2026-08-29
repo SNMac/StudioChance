@@ -85,7 +85,7 @@
 - Consumes: 없음 (첫 작업)
 - Produces: `createTestEnv(suffix: string): Promise<RulesTestEnvironment>`, `projectIdFor(suffix): string` — 이후 모든 Rules 테스트 파일이 `./helpers.js`에서 import한다
 
-- [ ] **Step 1: 에뮬레이터 설정 파일 생성**
+- [x] **Step 1: 에뮬레이터 설정 파일 생성**
 
 배포용 `firebase.json`은 gitignore 상태를 유지하고, 테스트에 필요한 최소 설정만 새 파일로 추적한다.
 
@@ -101,7 +101,7 @@
 }
 ```
 
-- [ ] **Step 2: devDependency 설치**
+- [x] **Step 2: devDependency 설치**
 
 ```bash
 cd functions && npm i -D @firebase/rules-unit-testing@^5.0.2 firebase@^12.18.0 firebase-tools@^15.19.1
@@ -109,7 +109,7 @@ cd functions && npm i -D @firebase/rules-unit-testing@^5.0.2 firebase@^12.18.0 f
 
 `firebase-tools`를 devDependency로 두는 이유는 CI에서 `npm ci` 한 번으로 CLI까지 확보하기 위해서다. npm 스크립트는 `node_modules/.bin`을 PATH에 올리므로 스크립트 안에서 `firebase`를 그대로 쓸 수 있다.
 
-- [ ] **Step 3: 테스트 스크립트 분리**
+- [x] **Step 3: 테스트 스크립트 분리**
 
 `functions/package.json`의 `scripts`를 아래로 교체한다. 에뮬레이터가 필요한 테스트와 필요 없는 순수 단위 테스트를 반드시 나눠야 CI가 깨지지 않는다.
 
@@ -126,7 +126,7 @@ cd functions && npm i -D @firebase/rules-unit-testing@^5.0.2 firebase@^12.18.0 f
 
 `lib/invite/**/*.test.js`는 Task 5에서 생기며, 매칭되는 파일이 없어도 `node --test`는 실패하지 않는다.
 
-- [ ] **Step 4: 에뮬레이터 로그 gitignore**
+- [x] **Step 4: 에뮬레이터 로그 gitignore**
 
 `functions/.gitignore`에 한 줄 추가한다. 에뮬레이터가 cwd에 로그를 남긴다.
 
@@ -137,7 +137,7 @@ lib/
 firestore-debug.log
 ```
 
-- [ ] **Step 5: 테스트 공통 헬퍼 작성**
+- [x] **Step 5: 테스트 공통 헬퍼 작성**
 
 `functions/src/rules/helpers.ts`:
 
@@ -175,7 +175,7 @@ export async function createTestEnv(suffix: string): Promise<RulesTestEnvironmen
 }
 ```
 
-- [ ] **Step 6: 현행 stores read 동작을 고정하는 테스트 작성**
+- [x] **Step 6: 현행 stores read 동작을 고정하는 테스트 작성**
 
 `functions/src/rules/stores.test.ts`:
 
@@ -234,7 +234,7 @@ test('현행: 비멤버도 점포 문서를 읽을 수 있다 (이슈 #13의 취
 });
 ```
 
-- [ ] **Step 7: 테스트 실행하여 3건 통과 확인**
+- [x] **Step 7: 테스트 실행하여 3건 통과 확인**
 
 ```bash
 cd functions && npm run test:rules
@@ -242,7 +242,7 @@ cd functions && npm run test:rules
 
 기대: `pass 3 / fail 0`. 실패한다면 Java 설치 여부(`java -version`)와 8080 포트 점유를 확인한다.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add firebase.emulator.json functions/package.json functions/package-lock.json functions/.gitignore functions/src/rules/
@@ -264,7 +264,7 @@ Task 9에서 `stores` 블록을 건드릴 때 다른 규칙을 망가뜨리지 �
 - Consumes: `createTestEnv(suffix)` from `./helpers.js` (Task 1)
 - Produces: 없음 (테스트 전용)
 
-- [ ] **Step 1: stores 쓰기 규칙 테스트 추가**
+- [x] **Step 1: stores 쓰기 규칙 테스트 추가**
 
 `functions/src/rules/stores.test.ts` 끝에 아래를 덧붙인다. `updateDoc`, `deleteDoc`를 import에 추가해야 한다.
 
@@ -316,7 +316,7 @@ test('가입 신청과 함께 다른 필드를 바꾸면 거부된다', async ()
 });
 ```
 
-- [ ] **Step 2: reservations 규칙 테스트 작성**
+- [x] **Step 2: reservations 규칙 테스트 작성**
 
 `functions/src/rules/reservations.test.ts`:
 
@@ -383,7 +383,7 @@ test('VIEWER는 예약을 쓰지 못한다', async () => {
 });
 ```
 
-- [ ] **Step 3: system/serverTime 및 미정의 컬렉션 테스트 작성**
+- [x] **Step 3: system/serverTime 및 미정의 컬렉션 테스트 작성**
 
 `functions/src/rules/system.test.ts`:
 
@@ -440,7 +440,7 @@ test('클라이언트는 inviteLookupAttempts를 쓰지 못한다', async () => 
 });
 ```
 
-- [ ] **Step 4: 전체 Rules 테스트 실행**
+- [x] **Step 4: 전체 Rules 테스트 실행**
 
 ```bash
 cd functions && npm run test:rules
@@ -448,7 +448,7 @@ cd functions && npm run test:rules
 
 기대: 전부 통과. 하나라도 실패하면 현행 `firestore.rules`와 테스트 기대가 어긋난 것이므로, **Rules가 아니라 테스트를 현행에 맞춘다.** 이 단계의 목적은 현 상태를 기록하는 것이다.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add functions/src/rules/
@@ -473,7 +473,7 @@ git commit -m "test: #39 - stores 쓰기·reservations·system 규칙 회귀 테
 - Consumes: `createTestEnv(suffix)` (Task 1)
 - Produces: 저장 위치 `users/{uid}/private/fcm` 문서의 `tokens: string[]` 필드 — Task 4의 Cloud Functions가 같은 경로를 읽는다. `UserDataSource.createUser(UserModel userModel, {String? fcmToken})`
 
-- [ ] **Step 1: 실패하는 Rules 테스트 작성**
+- [x] **Step 1: 실패하는 Rules 테스트 작성**
 
 `functions/src/rules/users.test.ts`:
 
@@ -538,7 +538,7 @@ test('본인은 자신의 FCM 토큰 문서를 쓸 수 있다', async () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd functions && npm run test:rules
@@ -546,7 +546,7 @@ cd functions && npm run test:rules
 
 기대: `private/fcm` 관련 4건이 FAIL. 현재 Rules에는 `users/{uid}` 하위 서브컬렉션 규칙이 없어 최상단 default-deny에 걸리므로 **본인 접근 2건도 함께 실패**한다.
 
-- [ ] **Step 3: Rules에 서브컬렉션 규칙 추가**
+- [x] **Step 3: Rules에 서브컬렉션 규칙 추가**
 
 `firestore.rules`의 `match /users/{uid} { ... }` 블록이 **닫힌 직후**에 아래를 넣는다.
 
@@ -563,7 +563,7 @@ cd functions && npm run test:rules
     }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 cd functions && npm run test:rules
@@ -571,7 +571,7 @@ cd functions && npm run test:rules
 
 기대: 전부 PASS.
 
-- [ ] **Step 5: UserModel에서 fcmTokens 필드 삭제**
+- [x] **Step 5: UserModel에서 fcmTokens 필드 삭제**
 
 `fcmTokens`는 앱 로직 어디에서도 읽지 않는 순수 저장용 필드이고 `User` 엔티티에도 없다. 필드 자체를 제거한다.
 
@@ -581,7 +581,7 @@ cd functions && npm run test:rules
     @JsonKey(includeToJson: false) @Default([]) List<String> fcmTokens,
 ```
 
-- [ ] **Step 6: DataSource 인터페이스와 구현을 서브문서 대상으로 변경**
+- [x] **Step 6: DataSource 인터페이스와 구현을 서브문서 대상으로 변경**
 
 `lib/data/data_sources/user_data_source.dart`. 인터페이스 20행:
 
@@ -729,7 +729,7 @@ cd functions && npm run test:rules
   }
 ```
 
-- [ ] **Step 7: 호출부 수정**
+- [x] **Step 7: 호출부 수정**
 
 `lib/data/repositories/user_repository_impl.dart`에서 `UserModel` 생성의 `fcmTokens:` 줄을 지우고, `createUser` 호출에 토큰을 넘긴다.
 
@@ -746,7 +746,7 @@ cd functions && npm run test:rules
         await _userDataSource.createUser(newUserModel, fcmToken: fcmToken);
 ```
 
-- [ ] **Step 8: 코드 생성 및 정적 분석**
+- [x] **Step 8: 코드 생성 및 정적 분석**
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -755,7 +755,7 @@ dart analyze
 
 기대: 에러 0건. `fcmTokens`를 참조하던 곳이 남아 있으면 여기서 드러난다.
 
-- [ ] **Step 9: 기존 Dart 테스트 갱신 및 실행**
+- [x] **Step 9: 기존 Dart 테스트 갱신 및 실행**
 
 `test/data/data_sources/user_data_source_test.dart`에서 `fcmTokens` 필드를 직접 읽던 단언을 서브문서 경로로 바꾼다. `fake_cloud_firestore`에서는 아래처럼 읽는다.
 
@@ -775,7 +775,7 @@ flutter test
 
 기대: 전부 통과.
 
-- [ ] **Step 10: 포맷 및 커밋**
+- [x] **Step 10: 포맷 및 커밋**
 
 ```bash
 dart format lib/data/models/user_model.dart lib/data/data_sources/user_data_source.dart lib/data/repositories/user_repository_impl.dart test/data/data_sources/user_data_source_test.dart
@@ -796,7 +796,7 @@ Task 3에서 저장 위치를 옮겼으므로 발송 함수도 같은 경로를 
 - Consumes: `users/{uid}/private/fcm` 문서의 `tokens: string[]` (Task 3)
 - Produces: 없음
 
-- [ ] **Step 1: 토큰 조회 경로 변경**
+- [x] **Step 1: 토큰 조회 경로 변경**
 
 `functions/src/index.ts`에서 관리자 토큰을 모으는 블록을 아래로 교체한다. 서브문서의 `doc.id`는 전부 `'fcm'`이라 소유자를 되찾을 수 없으므로, **요청 순서와 같은 인덱스로 `adminUids`와 짝짓는다.**
 
@@ -817,7 +817,7 @@ Task 3에서 저장 위치를 옮겼으므로 발송 함수도 같은 경로를 
     });
 ```
 
-- [ ] **Step 2: 폐기 토큰 정리 경로 변경**
+- [x] **Step 2: 폐기 토큰 정리 경로 변경**
 
 같은 파일 하단의 정리 블록을 아래로 교체한다. `users/{uid}.updatedAt`은 더 이상 건드리지 않는다.
 
@@ -831,7 +831,7 @@ Task 3에서 저장 위치를 옮겼으므로 발송 함수도 같은 경로를 
       );
 ```
 
-- [ ] **Step 3: 빌드 및 단위 테스트**
+- [x] **Step 3: 빌드 및 단위 테스트**
 
 ```bash
 cd functions && npm run test:unit
@@ -839,7 +839,7 @@ cd functions && npm run test:unit
 
 기대: 기존 순수 함수 테스트 전부 통과, TypeScript 컴파일 에러 없음. `FieldValue` import가 그대로 쓰이는지 확인한다(`noUnusedLocals`가 켜져 있어 미사용 import는 빌드를 깨뜨린다).
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add functions/src/index.ts
@@ -868,7 +868,7 @@ Callable 본체에서 Firestore I/O와 분리 가능한 판단 로직을 먼저 
   - `type AttemptRecord = { count: number; windowStartAt: Date }`
   - `nextAttemptState(record: AttemptRecord | null, now: Date): { blocked: boolean; next: AttemptRecord }`
 
-- [ ] **Step 1: 실패하는 초대 코드 테스트 작성**
+- [x] **Step 1: 실패하는 초대 코드 테스트 작성**
 
 `functions/src/invite/invite_code.test.ts`:
 
@@ -918,7 +918,7 @@ test('유효 시간이 지나면 만료다', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd functions && npm run test:unit
@@ -926,7 +926,7 @@ cd functions && npm run test:unit
 
 기대: 컴파일 실패 — `Cannot find module './invite_code.js'`.
 
-- [ ] **Step 3: 초대 코드 순수 로직 구현**
+- [x] **Step 3: 초대 코드 순수 로직 구현**
 
 `functions/src/invite/invite_code.ts`:
 
@@ -951,7 +951,7 @@ export function isInviteExpired(createdAt: Date, now: Date): boolean {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 cd functions && npm run test:unit
@@ -959,7 +959,7 @@ cd functions && npm run test:unit
 
 기대: 초대 코드 테스트 6건 PASS.
 
-- [ ] **Step 5: 실패하는 rate limit 테스트 작성**
+- [x] **Step 5: 실패하는 rate limit 테스트 작성**
 
 `functions/src/invite/rate_limit.test.ts`:
 
@@ -1008,7 +1008,7 @@ test('창이 지나면 카운트가 초기화된다', () => {
 });
 ```
 
-- [ ] **Step 6: 테스트 실패 확인**
+- [x] **Step 6: 테스트 실패 확인**
 
 ```bash
 cd functions && npm run test:unit
@@ -1016,7 +1016,7 @@ cd functions && npm run test:unit
 
 기대: `Cannot find module './rate_limit.js'`.
 
-- [ ] **Step 7: rate limit 순수 로직 구현**
+- [x] **Step 7: rate limit 순수 로직 구현**
 
 `functions/src/invite/rate_limit.ts`:
 
@@ -1060,7 +1060,7 @@ export function nextAttemptState(
 }
 ```
 
-- [ ] **Step 8: 테스트 통과 확인**
+- [x] **Step 8: 테스트 통과 확인**
 
 ```bash
 cd functions && npm run test:unit
@@ -1068,7 +1068,7 @@ cd functions && npm run test:unit
 
 기대: 초대 코드 6건 + rate limit 4건 전부 PASS.
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add functions/src/invite/
@@ -1093,7 +1093,7 @@ git commit -m "feat: #13 - 초대 코드 형식·만료·시도 한도 판정 �
 
   Task 7의 Flutter DataSource가 이 계약을 그대로 파싱한다.
 
-- [ ] **Step 1: Callable 구현**
+- [x] **Step 1: Callable 구현**
 
 도메인 실패를 `HttpsError`로 던지지 않는 이유는 스펙 §2에 있다 — 클라이언트의 `mapFirebaseCode`가 모든 Firestore 호출과 공유되는 매핑이라 `not-found`/`deadline-exceeded`에 초대 코드 전용 의미를 얹을 수 없다.
 
@@ -1235,7 +1235,7 @@ async function resolveAdminName(memberById: unknown): Promise<string> {
 }
 ```
 
-- [ ] **Step 2: index.ts에서 export**
+- [x] **Step 2: index.ts에서 export**
 
 `functions/src/index.ts` 하단(또는 import 블록 아래)에 재export를 추가한다.
 
@@ -1243,7 +1243,7 @@ async function resolveAdminName(memberById: unknown): Promise<string> {
 export { lookupInviteCode } from './invite/lookup_invite_code.js';
 ```
 
-- [ ] **Step 3: 빌드 확인**
+- [x] **Step 3: 빌드 확인**
 
 ```bash
 cd functions && npm run build
@@ -1251,7 +1251,7 @@ cd functions && npm run build
 
 기대: 컴파일 에러 0건.
 
-- [ ] **Step 4: 전체 테스트 실행**
+- [x] **Step 4: 전체 테스트 실행**
 
 ```bash
 cd functions && npm test
@@ -1259,7 +1259,7 @@ cd functions && npm test
 
 기대: 단위 테스트와 Rules 테스트 전부 통과. `inviteLookupAttempts` 차단 테스트(Task 2)가 여전히 통과하는지 확인한다.
 
-- [ ] **Step 5: dev 환경 배포**
+- [x] **Step 5: dev 환경 배포**
 
 ```bash
 firebase deploy --only functions -P dev
@@ -1267,7 +1267,7 @@ firebase deploy --only functions -P dev
 
 기대: `lookupInviteCode(asia-northeast3)` 생성 성공. 실패 시 Blaze 요금제와 `.firebaserc` 별칭을 확인한다.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add functions/src/invite/lookup_invite_code.ts functions/src/index.ts
@@ -1296,7 +1296,7 @@ Callable 응답을 받을 타입을 만들고 DataSource의 조회 경로를 교
 
   Task 8의 Repository가 이것을 사용한다.
 
-- [ ] **Step 1: cloud_functions 의존성 추가**
+- [x] **Step 1: cloud_functions 의존성 추가**
 
 ```bash
 flutter pub add cloud_functions
@@ -1304,7 +1304,7 @@ flutter pub add cloud_functions
 
 설치 후 `pubspec.yaml`에 들어간 버전이 기존 `firebase_core: ^4.6.0`과 충돌하지 않는지 `flutter pub get` 출력으로 확인한다.
 
-- [ ] **Step 2: 실패하는 모델 테스트 작성**
+- [x] **Step 2: 실패하는 모델 테스트 작성**
 
 `test/data/models/invite_store_preview_model_test.dart`:
 
@@ -1349,7 +1349,7 @@ void main() {
 }
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 ```bash
 flutter test test/data/models/invite_store_preview_model_test.dart
@@ -1357,7 +1357,7 @@ flutter test test/data/models/invite_store_preview_model_test.dart
 
 기대: `Target of URI doesn't exist` 컴파일 에러.
 
-- [ ] **Step 4: 엔티티 작성**
+- [x] **Step 4: 엔티티 작성**
 
 `lib/domain/entities/invite_store_preview.dart`:
 
@@ -1382,7 +1382,7 @@ abstract class InviteStorePreview with _$InviteStorePreview {
 }
 ```
 
-- [ ] **Step 5: 모델 작성**
+- [x] **Step 5: 모델 작성**
 
 `lib/data/models/invite_store_preview_model.dart`:
 
@@ -1421,7 +1421,7 @@ abstract class InviteStorePreviewModel with _$InviteStorePreviewModel {
 }
 ```
 
-- [ ] **Step 6: 코드 생성 후 테스트 통과 확인**
+- [x] **Step 6: 코드 생성 후 테스트 통과 확인**
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -1430,7 +1430,7 @@ flutter test test/data/models/invite_store_preview_model_test.dart
 
 기대: 2건 PASS.
 
-- [ ] **Step 7: DataSource 인터페이스와 구현 교체**
+- [x] **Step 7: DataSource 인터페이스와 구현 교체**
 
 `lib/data/data_sources/store_data_source.dart`.
 
@@ -1521,7 +1521,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 ```
 
-- [ ] **Step 8: 매핑 함수 테스트 추가**
+- [x] **Step 8: 매핑 함수 테스트 추가**
 
 `test/data/models/invite_store_preview_model_test.dart` 하단에 group을 추가한다. import에 `package:studio_chance/common/exceptions/store_exceptions.dart`와 `package:studio_chance/data/data_sources/store_data_source.dart`를 넣는다.
 
@@ -1556,7 +1556,7 @@ import 'package:studio_chance/data/models/invite_store_preview_model.dart';
   });
 ```
 
-- [ ] **Step 9: 테스트 실행**
+- [x] **Step 9: 테스트 실행**
 
 ```bash
 flutter test test/data/models/invite_store_preview_model_test.dart
@@ -1564,7 +1564,7 @@ flutter test test/data/models/invite_store_preview_model_test.dart
 
 기대: 6건 PASS. 이 시점에 `dart analyze`는 `getStoreByInviteCode`를 참조하는 Repository 때문에 에러를 낸다 — Task 8에서 해소된다.
 
-- [ ] **Step 10: 커밋**
+- [x] **Step 10: 커밋**
 
 ```bash
 dart format lib/domain/entities/invite_store_preview.dart lib/data/models/invite_store_preview_model.dart lib/data/data_sources/store_data_source.dart test/data/models/invite_store_preview_model_test.dart
@@ -1592,7 +1592,7 @@ DataSource 시그니처 변경을 상위 계층까지 전파하고, 서버로 �
 - Consumes: `StoreDataSource.lookupInviteCode`, `InviteStorePreview` (Task 7)
 - Produces: `StoreUseCase.getStoreByInviteCode(String) → Future<Either<Exception, InviteStorePreview?>>`
 
-- [ ] **Step 1: Repository 인터페이스 변경**
+- [x] **Step 1: Repository 인터페이스 변경**
 
 `lib/domain/repository_interfaces/store_repository.dart` 39행:
 
@@ -1605,7 +1605,7 @@ DataSource 시그니처 변경을 상위 계층까지 전파하고, 서버로 �
 
 `import 'package:studio_chance/domain/entities/invite_store_preview.dart';`를 추가한다.
 
-- [ ] **Step 2: Repository 구현 교체**
+- [x] **Step 2: Repository 구현 교체**
 
 `lib/data/repositories/store_repository_impl.dart`의 `getStoreByInviteCode` 전체를 교체한다. 만료 검증·`getServerTime` 호출·`_fetchMembersWithRoles` 2회가 모두 사라진다 — 서버가 대신한다.
 
@@ -1628,7 +1628,7 @@ DataSource 시그니처 변경을 상위 계층까지 전파하고, 서버로 �
   }
 ```
 
-- [ ] **Step 3: UseCase 시그니처 변경**
+- [x] **Step 3: UseCase 시그니처 변경**
 
 `lib/domain/use_cases/store_use_case.dart`의 26행과 152행:
 
@@ -1649,7 +1649,7 @@ DataSource 시그니처 변경을 상위 계층까지 전파하고, 서버로 �
 
 `import 'package:studio_chance/domain/entities/invite_store_preview.dart';`를 추가한다.
 
-- [ ] **Step 4: 주소 포맷 extension 추가**
+- [x] **Step 4: 주소 포맷 extension 추가**
 
 `lib/presentation/commons/extensions/address_formatter.dart` 하단에 기존 두 extension과 같은 패턴으로 추가한다.
 
@@ -1662,7 +1662,7 @@ extension InviteStorePreviewAddressFormatter on InviteStorePreview {
 
 `import 'package:studio_chance/domain/entities/invite_store_preview.dart';`를 추가한다.
 
-- [ ] **Step 5: 상태 타입 변경**
+- [x] **Step 5: 상태 타입 변경**
 
 `lib/presentation/commons/invite_code/controllers/states/invite_code_verification_state.dart`에서 `Store` import를 `InviteStorePreview`로 바꾸고 필드 타입을 교체한다.
 
@@ -1670,7 +1670,7 @@ extension InviteStorePreviewAddressFormatter on InviteStorePreview {
     @Default(AsyncData(null)) AsyncValue<InviteStorePreview?> status,
 ```
 
-- [ ] **Step 6: 컨트롤러 필드명 변경**
+- [x] **Step 6: 컨트롤러 필드명 변경**
 
 `lib/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart`의 `verifyInviteCode` 결과 처리와 `submitJoinRequest`를 교체한다.
 
@@ -1704,7 +1704,7 @@ extension InviteStorePreviewAddressFormatter on InviteStorePreview {
     );
 ```
 
-- [ ] **Step 7: 점포 확인 화면 변경**
+- [x] **Step 7: 점포 확인 화면 변경**
 
 `lib/presentation/commons/invite_code/screens/invite_code_verified_screen.dart`에서 `memberInfos`를 훑어 ADMIN을 찾던 블록을 삭제하고 서버가 준 값을 그대로 쓴다. 128~137행을 아래로 교체한다.
 
@@ -1719,7 +1719,7 @@ extension InviteStorePreviewAddressFormatter on InviteStorePreview {
 
 `store?.name ?? ''`을 `store?.storeName ?? ''`로 바꾼다. 더 이상 쓰이지 않는 `UserRole` import를 제거한다(`noUnusedLocals`는 없지만 `dart analyze`가 미사용 import를 경고한다).
 
-- [ ] **Step 8: 정적 분석**
+- [x] **Step 8: 정적 분석**
 
 ```bash
 dart analyze
@@ -1727,7 +1727,7 @@ dart analyze
 
 기대: 에러 0건. 남은 참조가 있으면 여기서 전부 드러난다.
 
-- [ ] **Step 9: 기존 테스트 갱신**
+- [x] **Step 9: 기존 테스트 갱신**
 
 `test/data/data_sources/store_data_source_test.dart`: `getStoreByInviteCode` 관련 group 전체를 삭제한다. Callable은 `fake_cloud_firestore`로 검증할 수 없고, 파싱과 사유 매핑은 Task 7에서 따로 덮었다.
 
@@ -1804,7 +1804,7 @@ const testPreview = InviteStorePreview(
       expect(container.read(provider).storeAlias, '테스트 점포');
 ```
 
-- [ ] **Step 10: 전체 테스트 실행**
+- [x] **Step 10: 전체 테스트 실행**
 
 ```bash
 flutter test
@@ -1812,7 +1812,7 @@ flutter test
 
 기대: 전부 통과.
 
-- [ ] **Step 11: 포맷 및 커밋**
+- [x] **Step 11: 포맷 및 커밋**
 
 수정한 파일만 지정해 포맷한다.
 
@@ -1836,7 +1836,7 @@ git commit -m "feat: #13 - 초대 코드 조회 결과를 InviteStorePreview로 
 - Consumes: Task 8까지의 모든 변경 (앱이 더 이상 비멤버로서 `stores`를 읽지 않는다)
 - Produces: 없음
 
-- [ ] **Step 1: 취약점 테스트를 기대하는 동작으로 뒤집기**
+- [x] **Step 1: 취약점 테스트를 기대하는 동작으로 뒤집기**
 
 `functions/src/rules/stores.test.ts`의 해당 테스트를 교체한다.
 
@@ -1862,7 +1862,7 @@ test('대기 멤버(승인 전)는 점포 문서를 읽지 못한다', async () 
 
 `setDoc` import에 `{ merge: true }`용 옵션 인자를 쓰므로 추가 import는 필요 없다.
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd functions && npm run test:rules
@@ -1870,7 +1870,7 @@ cd functions && npm run test:rules
 
 기대: 방금 뒤집은 2건이 FAIL (현재 Rules가 아직 비멤버 읽기를 허용한다).
 
-- [ ] **Step 3: Rules 수정**
+- [x] **Step 3: Rules 수정**
 
 `firestore.rules`의 `stores` 블록에 `isMember()`를 추가하고 `read`를 교체한다. 주석의 완화 사유도 함께 갱신한다.
 
@@ -1906,7 +1906,7 @@ cd functions && npm run test:rules
       allow update, delete: if isAdmin();
 ```
 
-- [ ] **Step 4: 전체 Rules 테스트 통과 확인**
+- [x] **Step 4: 전체 Rules 테스트 통과 확인**
 
 ```bash
 cd functions && npm test
@@ -1930,7 +1930,7 @@ flutter run --flavor dev --target lib/main_dev.dart
 4. 틀린 코드 입력 → "유효하지 않은 초대 코드" 안내
 5. 승인 후 홈 화면에서 예약 목록이 정상 조회된다
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add firestore.rules functions/src/rules/stores.test.ts
@@ -1950,7 +1950,7 @@ git commit -m "feat: #13 - stores read 권한을 점포 멤버 전용으로 제�
 - Consumes: `npm test` (Task 1의 스크립트)
 - Produces: 없음
 
-- [ ] **Step 1: functions job 추가**
+- [x] **Step 1: functions job 추가**
 
 `.github/workflows/ci.yml`의 기존 `test` job 아래에 job을 추가한다. Firestore 에뮬레이터는 Java를 요구하므로 명시적으로 설치한다.
 
@@ -1991,7 +1991,7 @@ git commit -m "feat: #13 - stores read 권한을 점포 멤버 전용으로 제�
 
 `test:rules`는 `--config ../firebase.emulator.json`을 쓰므로 gitignore된 `firebase.json` 없이 동작한다. 프로젝트 ID가 `demo-` 프리픽스라 자격증명도 필요 없다.
 
-- [ ] **Step 2: 워크플로 문법 확인**
+- [x] **Step 2: 워크플로 문법 확인**
 
 ```bash
 cd functions && npm ci && npm test
