@@ -45,10 +45,22 @@ test('비로그인은 점포 문서를 읽지 못한다', async () => {
   await assertFails(getDoc(doc(db, 'stores/s1')));
 });
 
-// TODO(#13): Task 9에서 assertFails로 뒤집는다. 지금은 취약한 현 상태를 고정한다.
-test('현행: 비멤버도 점포 문서를 읽을 수 있다 (이슈 #13의 취약점)', async () => {
+test('비멤버는 점포 문서를 읽지 못한다', async () => {
   const db = env.authenticatedContext('outsider').firestore();
-  await assertSucceeds(getDoc(doc(db, 'stores/s1')));
+  await assertFails(getDoc(doc(db, 'stores/s1')));
+});
+
+test('대기 멤버(승인 전)는 점포 문서를 읽지 못한다', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(
+      doc(ctx.firestore(), 'stores/s1'),
+      { waitingMemberById: { pending1: { role: 'STAFF' } } },
+      { merge: true },
+    );
+  });
+
+  const db = env.authenticatedContext('pending1').firestore();
+  await assertFails(getDoc(doc(db, 'stores/s1')));
 });
 
 test('ADMIN은 점포를 수정할 수 있다', async () => {

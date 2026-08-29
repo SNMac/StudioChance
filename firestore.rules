@@ -49,10 +49,11 @@ service cloud.firestore {
     // ─── stores 컬렉션 ───────────────────────────────────────────────────
     // 경로: stores/{storeId}
     //
-    // 읽기: 인증된 모든 사용자 허용
-    //   → 초대 코드(inviteInfo.inviteCode)로 점포를 조회할 때
-    //      아직 멤버가 아닌 인증된 사용자의 쿼리가 필요하므로 완화
-    //   → inviteCode 자체가 비밀 값이므로 인증 요구만으로 충분
+    // 읽기: 해당 점포의 멤버만 허용
+    //   → 계좌 정보·멤버 목록·초대 코드가 담긴 문서이므로 최소 권한을 적용한다
+    //   → 아직 멤버가 아닌 사용자의 초대 코드 조회는 Callable 함수
+    //      lookupInviteCode가 대신한다 (functions/src/invite/). 표시에 필요한
+    //      최소 정보만 반환하므로 문서를 통째로 열 필요가 없다
     // 생성: 인증된 모든 사용자 허용
     //   → 첫 점포 등록 시 본인이 memberById[uid] = ADMIN으로 포함되어야 함
     //      (UseCase 레벨에서 강제, Rules에서는 현재 미검증)
@@ -66,7 +67,12 @@ service cloud.firestore {
             && resource.data.memberById[request.auth.uid].role == 'ADMIN';
       }
 
-      allow read:   if request.auth != null;
+      function isMember() {
+        return request.auth != null
+            && request.auth.uid in resource.data.memberById;
+      }
+
+      allow read:   if isMember();
       allow create: if request.auth != null;
       allow update, delete: if isAdmin();
 
