@@ -245,6 +245,15 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   - 브루트포스 카운터 `inviteLookupAttempts/{uid}`: 10분/10회. 성공해도 삭제하지 않는다
     (자기 코드로 리셋하는 우회 차단). Rules를 정의하지 않아 클라이언트는 접근 불가.
   - 클라이언트: `cloud_functions` 패키지, `FirebaseFunctions.instanceFor(region: 'asia-northeast3')`.
+  - **dev 실기기 테스트 전 App Check 디버그 토큰 등록이 필요하다.** 이 앱에서 App Check를
+    실제로 강제하는 첫 경로라, 등록하지 않으면 초대 코드 조회가 전부 "권한이 없습니다"로
+    떨어진다(`mapFirebaseCode`가 `unauthenticated` → `StorePermissionDeniedException`).
+    화면에는 원인이 드러나지 않으므로 반드시 서버 로그로 판별한다 —
+    `firebase functions:log --only lookupInviteCode -P dev`에
+    `{"verifications":{"auth":"VALID","app":"INVALID"}}`가 찍히면 이 경우다.
+    기기별 토큰은 앱 시작 시 logcat의 `DebugAppCheckProvider`에 출력되며, 등록은
+    `firebase appcheck:debugtokens:create <토큰> --project <프로젝트> --app <앱ID>`.
+    prod는 Play Integrity / App Attest를 쓰므로 이 절차가 필요 없다.
 
 ## Firestore Rules 테스트
 
