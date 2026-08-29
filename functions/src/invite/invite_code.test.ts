@@ -37,6 +37,14 @@ test('유효 시간 직전은 만료가 아니다', () => {
   assert.equal(isInviteExpired(createdAt, now), false);
 });
 
+test('정확히 유효 시간만큼 지난 시점은 만료가 아니다 (경계값)', () => {
+  const createdAt = new Date('2026-08-29T00:00:00Z');
+  const now = new Date(
+    createdAt.getTime() + INVITE_CODE_AVAILABLE_MIN * 60 * 1000,
+  );
+  assert.equal(isInviteExpired(createdAt, now), false);
+});
+
 test('유효 시간이 지나면 만료다', () => {
   const createdAt = new Date('2026-08-29T00:00:00Z');
   const now = new Date(
