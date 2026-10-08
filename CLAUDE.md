@@ -141,6 +141,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   — `## 📄 이슈 내용`(인용구 한 문단 요약) / `## 📝 상세 내용`(불릿) / `## ✅ 체크리스트`(`- [ ]`), 섹션 사이 `<br>`
 - PR 본문: `.github/PULL_REQUEST_TEMPLATE.md`의 **섹션 구성을 그대로 따를 것**
   — `## #️⃣ 연관된 이슈`(`- #N`) / `## 📝 작업 내용`(불릿) / `## 📸 스크린샷`(표, 없으면 사유 명시), 섹션 사이 `<br>`
+- **PR·이슈 본문에 Claude Code 생성 표기를 넣지 않는다** — `🤖 Generated with [Claude Code]...` 꼬리말과 세션 링크 모두. 템플릿에 없는 섹션이고, 세션 링크는 저장소 바깥을 가리켜 리뷰어에게 쓸모가 없다
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
 ## 빌드 및 실행
