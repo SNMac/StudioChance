@@ -30,6 +30,9 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    # functions/는 TypeScript 워크스페이스다. node_modules 안에 firebase-tools가
+    # 심어 둔 Dart 템플릿 스텁이 있어 분석 대상에 들어오면 에러로 잡힌다.
+    - "functions/**"
   errors:
     invalid_annotation_target: ignore
 

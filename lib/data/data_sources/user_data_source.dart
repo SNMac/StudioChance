@@ -17,9 +17,9 @@ abstract interface class UserDataSource {
   Future<UserModel?> fetchUserWithRestoration(String uid);
 
   /// 사용자 생성
-  Future<void> createUser(UserModel userModel);
+  Future<void> createUser(UserModel userModel, {String? fcmToken});
 
-  /// 일반 필드 업데이트 (`storeById`, `fcmTokens` 수정 불가)
+  /// 일반 필드 업데이트 (`storeById` 수정 불가, FCM 토큰은 `users/{uid}/private/fcm` 서브문서 별도 관리)
   Future<void> updateUser(String uid, Map<String, dynamic> data);
 
   /// 로그인 시점 정보 갱신 (`lastLoginAt`, `authProviders`, FCM 토큰)
@@ -75,22 +75,37 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
 
   @override
   Exception mapFirebaseCode(String code, String message) => switch (code) {
-    'permission-denied' || 'unauthenticated' =>
-      UserPermissionDeniedException(message: message, code: code),
+    'permission-denied' || 'unauthenticated' => UserPermissionDeniedException(
+      message: message,
+      code: code,
+    ),
     'not-found' => UserNotFoundException(message: message, code: code),
-    'already-exists' => UserAlreadyExistsException(message: message, code: code),
-    'resource-exhausted' =>
-      UserResourceExhaustedException(message: message, code: code),
-    'unavailable' || 'deadline-exceeded' =>
-      UserNetworkException(message: message, code: code),
-    'aborted' || 'failed-precondition' =>
-      UserTransactionException(message: message, code: code),
+    'already-exists' => UserAlreadyExistsException(
+      message: message,
+      code: code,
+    ),
+    'resource-exhausted' => UserResourceExhaustedException(
+      message: message,
+      code: code,
+    ),
+    'unavailable' ||
+    'deadline-exceeded' => UserNetworkException(message: message, code: code),
+    'aborted' || 'failed-precondition' => UserTransactionException(
+      message: message,
+      code: code,
+    ),
     'cancelled' => UserCancelledException(message: message, code: code),
     _ => UserUnknownException(message: message, code: code),
   };
 
   DocumentReference<Map<String, dynamic>> _userDocRef(String uid) {
     return _firestore.collection('users').doc(uid);
+  }
+
+  /// FCM 토큰 전용 문서. users/{uid} 본문은 다른 사용자도 읽을 수 있으므로
+  /// 토큰은 본인만 접근 가능한 이 경로에 둔다 (firestore.rules 참고).
+  DocumentReference<Map<String, dynamic>> _fcmDocRef(String uid) {
+    return _userDocRef(uid).collection('private').doc('fcm');
   }
 
   @override
@@ -141,17 +156,21 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> createUser(UserModel userModel) async {
+  Future<void> createUser(UserModel userModel, {String? fcmToken}) async {
     try {
       final json = userModel.toJson();
-      // fcmTokens는 @JsonKey(includeToJson: false)로 일반 toJson()에서 제외되므로
-      // (updateUser 등에서 storeById와 함께 실수로 덮어쓰이지 않도록) 생성 시에만 명시적으로 주입한다.
-      json['fcmTokens'] = userModel.fcmTokens;
       json['createdAt'] = FieldValue.serverTimestamp();
       json['updatedAt'] = FieldValue.serverTimestamp();
       json['lastLoginAt'] = FieldValue.serverTimestamp();
 
-      await _userDocRef(userModel.id).set(json);
+      final batch = _firestore.batch();
+      batch.set(_userDocRef(userModel.id), json);
+      if (fcmToken != null) {
+        batch.set(_fcmDocRef(userModel.id), {
+          'tokens': [fcmToken],
+        });
+      }
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -176,15 +195,20 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
     String? fcmToken,
   }) async {
     try {
-      final updates = <String, dynamic>{
+      final batch = _firestore.batch();
+      batch.update(_userDocRef(uid), {
         'authProviders': authProviders,
         'lastLoginAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      };
+      });
       if (fcmToken != null) {
-        updates['fcmTokens'] = FieldValue.arrayUnion([fcmToken]);
+        // update는 문서가 없으면 실패한다. 첫 로그인 기기에서도 동작해야 하므로
+        // 반드시 merge set을 쓴다.
+        batch.set(_fcmDocRef(uid), {
+          'tokens': FieldValue.arrayUnion([fcmToken]),
+        }, SetOptions(merge: true));
       }
-      await _userDocRef(uid).update(updates);
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -225,10 +249,9 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   @override
   Future<void> addFcmToken(String uid, String token) async {
     try {
-      await _userDocRef(uid).update({
-        'fcmTokens': FieldValue.arrayUnion([token]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _fcmDocRef(uid).set({
+        'tokens': FieldValue.arrayUnion([token]),
+      }, SetOptions(merge: true));
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -241,19 +264,16 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
     String newToken,
   ) async {
     try {
-      final docRef = _userDocRef(uid);
+      final docRef = _fcmDocRef(uid);
 
       // arrayRemove + arrayUnion을 동일 필드에 적용하므로 Transaction으로 원자성 보장
       await _firestore.runTransaction((tx) async {
         final doc = await tx.get(docRef);
-        final tokens = List<String>.from(doc.data()?['fcmTokens'] ?? []);
+        final tokens = List<String>.from(doc.data()?['tokens'] ?? []);
         tokens.remove(oldToken);
         if (!tokens.contains(newToken)) tokens.add(newToken);
 
-        tx.update(docRef, {
-          'fcmTokens': tokens,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        tx.set(docRef, {'tokens': tokens}, SetOptions(merge: true));
       });
     } catch (e) {
       throw handleFirestoreError(e);
@@ -263,10 +283,9 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   @override
   Future<void> removeFcmToken(String uid, String token) async {
     try {
-      await _userDocRef(uid).update({
-        'fcmTokens': FieldValue.arrayRemove([token]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _fcmDocRef(uid).set({
+        'tokens': FieldValue.arrayRemove([token]),
+      }, SetOptions(merge: true));
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -278,13 +297,17 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
       // expiresAt은 클라이언트 시각 기준으로 계산됩니다.
       // deletedAt(서버 타임스탬프)과 미세한 차이가 있을 수 있으나,
       // 7일 만료 기준에서 실질적인 문제가 없으므로 허용합니다.
-      final hardDeleteDate = DateTime.now().add(const Duration(days: userSoftDeleteDays));
-      await _userDocRef(uid).update({
+      final hardDeleteDate = DateTime.now().add(
+        const Duration(days: userSoftDeleteDays),
+      );
+      final batch = _firestore.batch();
+      batch.update(_userDocRef(uid), {
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
-        'fcmTokens': [], // FCM 토큰 초기화
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      batch.set(_fcmDocRef(uid), {'tokens': <String>[]});
+      await batch.commit();
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -303,7 +326,6 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
       throw handleFirestoreError(e);
     }
   }
-
 }
 
 @Riverpod(keepAlive: true)

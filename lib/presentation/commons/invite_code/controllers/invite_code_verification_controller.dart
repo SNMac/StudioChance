@@ -37,9 +37,9 @@ class InviteCodeVerificationController
         status: AsyncError(exception, StackTrace.current),
       ),
       // 점포 별명 기본값은 점포명
-      (store) => state = state.copyWith(
-        status: AsyncData(store),
-        storeAlias: store?.name ?? '',
+      (preview) => state = state.copyWith(
+        status: AsyncData(preview),
+        storeAlias: preview?.storeName ?? '',
       ),
     );
   }
@@ -48,7 +48,7 @@ class InviteCodeVerificationController
   Future<void> submitJoinRequest() async {
     if (!state.canSubmit) return;
 
-    final store = state.status.value!;
+    final preview = state.status.value!;
     // 역할은 초대 코드 단계 진입 전 역할 선택 화면에서 고른 값을 그대로 사용한다.
     final role = ref.read(roleSelectionControllerProvider);
 
@@ -56,7 +56,7 @@ class InviteCodeVerificationController
 
     final storeUseCase = ref.read(storeUseCaseProvider);
     final result = await storeUseCase.joinStore(
-      storeId: store.id,
+      storeId: preview.storeId,
       storeAlias: state.storeAlias.trim(),
       role: role,
       color: state.color,

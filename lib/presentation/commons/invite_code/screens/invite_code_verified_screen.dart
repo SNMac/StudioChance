@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/constants/data_constants.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/extensions/address_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
@@ -125,13 +124,9 @@ class _InviteCodeVerifiedScreenState
       );
     });
 
-    final adminName =
-        store?.memberInfos
-            .where((m) => m.role == UserRole.admin)
-            .firstOrNull
-            ?.user
-            .name ??
-        '';
+    // 대표 관리자 이름은 Callable이 조합해 내려준다 — 비멤버는 memberById를
+    // 읽을 수 없으므로 클라이언트에서 다시 찾을 수 없다.
+    final adminName = store?.adminName ?? '';
 
     // 점포 생성 화면과 같은 규칙으로 줄여 표시한다
     final address = store?.formattedAddress ?? '';
@@ -177,7 +172,7 @@ class _InviteCodeVerifiedScreenState
                         children: [
                           TitleTextLabel(
                             title: '점포명',
-                            content: store?.name ?? '',
+                            content: store?.storeName ?? '',
                           ),
                           TitleTextLabel(title: '대표 관리자', content: adminName),
                           TitleNavigationButton(
@@ -205,7 +200,7 @@ class _InviteCodeVerifiedScreenState
                         children: [
                           TitleTextField(
                             title: '점포 별명',
-                            placeholder: store?.name ?? '',
+                            placeholder: store?.storeName ?? '',
                             controller: _storeAliasController,
                             onChanged: notifier.setStoreAlias,
                             inputFormatters: [

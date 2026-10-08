@@ -7,7 +7,9 @@
   },
   "scripts": {
     "build": "rm -rf lib && tsc",
-    "test": "npm run build && node --test \"lib/**/*.test.js\"",
+    "test:unit": "npm run build && node --test \"lib/notifications/**/*.test.js\" \"lib/invite/**/*.test.js\"",
+    "test:rules": "npm run build && firebase emulators:exec --config ../firebase.emulator.json --only firestore --project demo-studio-chance \"node --test lib/rules/**/*.test.js\"",
+    "test": "npm run test:unit && npm run test:rules",
     "serve": "npm run build && firebase emulators:start --only functions",
     "logs": "firebase functions:log"
   },
@@ -16,7 +18,10 @@
     "firebase-functions": "^7.3.2"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/node": "^22.15.0",
+    "firebase": "^12.18.0",
+    "firebase-tools": "^15.28.2",
     "typescript": "^5.9.3"
   }
 }

@@ -16,9 +16,6 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
           ?.map((e) => e as String)
           .toList() ??
       const [],
-  fcmTokens:
-      (json['fcmTokens'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
   storeById:
       (json['storeById'] as Map<String, dynamic>?)?.map(
         (k, e) =>

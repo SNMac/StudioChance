@@ -3,10 +3,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
-import 'package:studio_chance/data/models/invite_info_model.dart';
+import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
-
-import '../../helpers/fake_data.dart';
 
 class MockStoreDataSource extends Mock implements StoreDataSource {}
 
@@ -26,61 +24,52 @@ void main() {
     );
   });
 
-  group('getStoreByInviteCode 만료 검증', () {
-    test('서버 시각이 만료 시간 이전이면 점포를 반환한다', () async {
-      final createdAt = DateTime(2026, 1, 1, 0, 0);
-      final storeModel = fakeStoreModel.copyWith(
-        // memberById를 비워 _fetchMembersWithRoles가 mockUserDs.getUser를
-        // 호출하지 않도록 한다 (이 테스트는 만료 검증 로직만 검증한다).
-        memberById: const {},
-        inviteInfoModel: InviteInfoModel(
-          inviteCode: 'ABC123',
-          createdAt: createdAt,
-        ),
-      );
-      when(
-        () => mockStoreDs.getStoreByInviteCode(any()),
-      ).thenAnswer((_) async => storeModel);
-      // 기기 시각(DateTime.now())은 미래로 조작되었더라도, 서버 시각이
-      // 만료 시각(createdAt + 15분) 이전이면 유효해야 한다.
-      when(
-        () => mockStoreDs.getServerTime(),
-      ).thenAnswer((_) async => createdAt.add(const Duration(minutes: 10)));
+  group('getStoreByInviteCode', () {
+    const preview = InviteStorePreviewModel(
+      storeId: 'store-1',
+      storeName: '테스트 점포',
+      address: '경기 오산시 경기대로285번길 26',
+      addressDetail: '3층',
+      adminName: '홍길동',
+    );
 
-      final result = await repository.getStoreByInviteCode('ABC123');
+    test('조회 결과를 엔티티로 감싸 반환한다', () async {
+      when(
+        () => mockStoreDs.lookupInviteCode('AB3D9F'),
+      ).thenAnswer((_) async => preview);
+
+      final result = await repository.getStoreByInviteCode('AB3D9F');
 
       result.fold(
-        (error) => fail('유효한 초대 코드인데 실패를 반환했다: $error'),
-        (store) => expect(store?.inviteInfo?.inviteCode, 'ABC123'),
+        (error) => fail('성공을 기대했으나 실패: $error'),
+        (value) => expect(value?.storeId, 'store-1'),
       );
     });
 
-    test(
-      '서버 시각이 만료 시간을 지났으면 left(StoreInviteCodeExpiredException)을 반환한다',
-      () async {
-        final createdAt = DateTime(2026, 1, 1, 0, 0);
-        final storeModel = fakeStoreModel.copyWith(
-          inviteInfoModel: InviteInfoModel(
-            inviteCode: 'ABC123',
-            createdAt: createdAt,
-          ),
-        );
-        when(
-          () => mockStoreDs.getStoreByInviteCode(any()),
-        ).thenAnswer((_) async => storeModel);
-        when(
-          () => mockStoreDs.getServerTime(),
-        ).thenAnswer((_) async => createdAt.add(const Duration(minutes: 20)));
+    test('코드가 없으면 right(null)을 반환한다', () async {
+      when(
+        () => mockStoreDs.lookupInviteCode('NOTFND'),
+      ).thenAnswer((_) async => null);
 
-        final result = await repository.getStoreByInviteCode('ABC123');
+      final result = await repository.getStoreByInviteCode('NOTFND');
 
-        // StoreValidationException과 구분되어야 한다. 같은 타입이면 사용자에게
-        // '잠시 후 다시 시도해 주세요'라는 틀린 안내가 나간다.
-        result.fold(
-          (error) => expect(error, isA<StoreInviteCodeExpiredException>()),
-          (_) => fail('만료된 초대 코드인데 성공을 반환했다'),
-        );
-      },
-    );
+      result.fold(
+        (error) => fail('성공을 기대했으나 실패: $error'),
+        (value) => expect(value, isNull),
+      );
+    });
+
+    test('DataSource가 던진 예외는 left로 감싼다', () async {
+      when(
+        () => mockStoreDs.lookupInviteCode('EXPIRD'),
+      ).thenThrow(StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'));
+
+      final result = await repository.getStoreByInviteCode('EXPIRD');
+
+      result.fold(
+        (error) => expect(error, isA<StoreInviteCodeExpiredException>()),
+        (_) => fail('실패를 기대했으나 성공'),
+      );
+    });
   });
 }

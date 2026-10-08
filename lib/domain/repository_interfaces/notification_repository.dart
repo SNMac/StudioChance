@@ -7,7 +7,7 @@ abstract interface class NotificationRepository {
   /// - 허용됨(authorized/provisional)이면 `true`
   Future<Either<Exception, bool>> requestPermission();
 
-  /// 현재 기기의 FCM 토큰을 `users/{uid}.fcmTokens`에 추가한다.
+  /// 현재 기기의 FCM 토큰을 `users/{uid}/private/fcm` 문서의 `tokens`에 추가한다.
   /// - [token]이 null이면 SDK에서 현재 토큰을 조회한다.
   Future<Either<Exception, void>> registerFcmToken({
     required String uid,

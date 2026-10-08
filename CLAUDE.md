@@ -111,6 +111,14 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 현재 비즈니스 로직이 없다는 이유로 UseCase 계층 자체를 생략하지 않음 — 향후 검증/가공 로직이 필요해지면 이 계층에 추가
 - 관련 이슈: [#15](https://github.com/SNMac/StudioChance/issues/15) [M-3]
 
+### stores read 최소 권한 (D11)
+`stores` read는 `isMember()` 전용. 비멤버의 초대 코드 조회는 Callable `lookupInviteCode`가 대신한다.
+- 새 컬렉션(`inviteCodes`) 분리 대신 Callable을 고른 이유: 표시용 필드 비정규화가 없어 점포 정보가 낡지 않고,
+  만료 판정이 서버 시각으로 이뤄지며, 발급 경로(`createInviteCode`, ADMIN이므로 이미 멤버)를 건드리지 않는다.
+- 대가는 `cloud_functions` 의존성과 cold start. 초대 코드 입력은 온보딩 1회성이라 감내한다.
+- `stores`를 읽는 클라이언트 경로는 `getStore` 하나뿐이며 호출부는 전부 멤버 전제다
+  (마이페이지 ADMIN 행, 예약 상세, 승인 대기 모달, 예약 가격 계산).
+
 ## Either / TaskEither 패턴
 
 - 기본 패턴: `result.fold((error) => left(error), (value) => ...)` (함수형)
@@ -124,11 +132,17 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 포맷 전용 변경(`dart format`이 손대지 않은 기존 파일까지 재배치한 결과)은 기능 커밋에 섞지 말고 별도 `style:` 커밋으로 분리 — 리뷰 시 실제 변경을 가려내기 어려워짐
   - `dart format`은 디렉터리 전체가 아니라 **수정한 파일만** 지정해서 실행할 것
 - 기본 브랜치: `develop` (PR 대상)
-- PR 제목: `<Type>/#<이슈번호> <한국어 설명>` — 커밋 메시지 형식(`<type>: #N - ...`)과 다름에 주의
-  - Type: `Feature`, `Bug`, `Refactor` (첫 글자 대문자)
-  - 예: `Feature/#17 OCR 점포·공간 자동 선택`, `Bug/#35 시스템 글자 크기 설정에 따른 레이아웃 깨짐 방지`
-- PR 본문: `.github/PULL_REQUEST_TEMPLATE.md` 형식을 따를 것 (연관된 이슈 / 작업 내용 / 스크린샷)
-- 이슈 본문: `.github/ISSUE_TEMPLATE/issue_template.md` 형식을 따를 것 (이슈 내용 / 상세 내용 / 체크리스트)
+- Type(이슈·PR 공통): `Feature`, `Bug`, `Refactor` (첫 글자 대문자)
+- 이슈 제목: `<Type>/<한국어 설명>` — **이슈번호를 넣지 않는다**(생성 시점엔 번호가 없다)
+  - 예: `Feature/마이페이지 실제 디자인으로 재구현`, `Bug/iOS APNs 키 미설정으로 푸시 알림 전부 실패`
+- PR 제목: `<Type>/#<이슈번호> <한국어 설명>` — 이슈 제목과 달리 **번호가 들어가고**, 커밋 메시지 형식(`<type>: #N - ...`)과도 다르다
+  - 예: `Feature/#41 가입 신청 제출 UI 배선 (점포 확인 화면)`, `Bug/#35 시스템 글자 크기 설정에 따른 레이아웃 깨짐 방지`
+- 이슈 본문: `.github/ISSUE_TEMPLATE/issue_template.md`의 **섹션 구성을 그대로 따를 것**
+  — `## 📄 이슈 내용`(인용구 한 문단 요약) / `## 📝 상세 내용`(불릿) / `## ✅ 체크리스트`(`- [ ]`), 섹션 사이 `<br>`
+- PR 본문: `.github/PULL_REQUEST_TEMPLATE.md`의 **섹션 구성을 그대로 따를 것**
+  — `## #️⃣ 연관된 이슈`(`- #N`) / `## 📝 작업 내용`(불릿) / `## 📸 스크린샷`(표), 섹션 사이 `<br>`
+  - **UI 변경이 없는 작업이면 스크린샷 섹션을 통째로 생략한다** — 빈 표나 "해당 없음" 같은 문구를 남기지 않는다. 서버·Rules·리팩터링처럼 보여줄 화면이 없는 PR이 적지 않다
+- **PR·이슈 본문에 Claude Code 생성 표기를 넣지 않는다** — `🤖 Generated with [Claude Code]...` 꼬리말과 세션 링크 모두. 템플릿에 없는 섹션이고, 세션 링크는 저장소 바깥을 가리켜 리뷰어에게 쓸모가 없다
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
 
 ## 빌드 및 실행
@@ -176,9 +190,15 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 ## FCM 푸시 알림
 
+- **토큰 저장 위치**: `users/{uid}/private/fcm` 문서의 `tokens: string[]`.
+  `users/{uid}` 본문은 멤버 이름 표시 때문에 인증 사용자 전체에 읽기가 열려 있어 토큰을 둘 수 없다.
+  클라이언트는 `UserFirestoreDataSource._fcmDocRef`를 통해서만 접근한다. 토큰을 추가·교체·제거하는
+  경로(`recordLogin`, `addFcmToken`, `replaceFcmToken`, `removeFcmToken`)는 반드시
+  `set(..., merge: true)`를 쓴다 — `update`는 문서가 없으면 실패하는데 첫 로그인 기기에는 서브문서가 없다.
+  문서를 처음 만드는 `createUser`와 전체를 비우는 `softDeleteUser`는 `SetOptions` 없이 쓰는 것이 맞다.
 - **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
   - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
-  - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}.fcmTokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
+  - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
   - 배포: `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
   - 테스트: `cd functions && npm test` (Node 내장 `node:test`)
   - `firebase.json`/`.firebaserc`는 gitignore 처리되어 저장소에 없음 — 새로 clone한 환경에서 배포하려면 아래 내용을 직접 만들어야 한다
@@ -215,7 +235,52 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - **값이 반드시 일치해야 하는 상수**
   - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
   - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
+  - 초대 코드 유효 시간 15분: `lib/constants/data_constants.dart`의 `storeInviteCodeAvailableMin`,
+    `functions/src/invite/invite_code.ts`의 `INVITE_CODE_AVAILABLE_MIN`
 - **알려진 제약**: FCM Admin SDK가 registration token을 deprecated 처리하고 FID를 권장한다. 현행은 token 기반이며 FID 마이그레이션은 별도 이슈.
+
+## Callable Cloud Function
+
+- `lookupInviteCode` (`functions/src/invite/`): 초대 코드로 **가입 전 표시 정보만** 조회.
+  리전 `asia-northeast3`, `enforceAppCheck: true`, 인증 필수.
+  - `stores` read가 멤버 전용이라 아직 멤버가 아닌 사용자가 넘어야 하는 유일한 경계다.
+    계좌 정보·`memberById`·`waitingMemberById`·`inviteInfo`는 **절대 응답에 넣지 않는다.**
+  - 도메인 실패는 `HttpsError`가 아니라 `{ok: false, reason}` 판별 값으로 반환한다.
+    `mapFirebaseCode`가 DataSource의 모든 Firestore 호출과 공유되므로 `not-found`·
+    `deadline-exceeded`에 초대 코드 전용 의미를 얹을 수 없다. 매핑은 `inviteLookupFailureOf`.
+  - 브루트포스 카운터 `inviteLookupAttempts/{uid}`: 10분/10회. 성공해도 삭제하지 않는다
+    (자기 코드로 리셋하는 우회 차단). Rules를 정의하지 않아 클라이언트는 접근 불가.
+  - 클라이언트: `cloud_functions` 패키지, `FirebaseFunctions.instanceFor(region: 'asia-northeast3')`.
+  - **dev 실기기 테스트 전 App Check 디버그 토큰 등록이 필요하다.** 이 앱에서 App Check를
+    실제로 강제하는 첫 경로라, 등록하지 않으면 초대 코드 조회가 전부 "권한이 없습니다"로
+    떨어진다(`mapFirebaseCode`가 `unauthenticated` → `StorePermissionDeniedException`).
+    화면에는 원인이 드러나지 않으므로 반드시 서버 로그로 판별한다 —
+    `firebase functions:log --only lookupInviteCode -P dev`에
+    `{"verifications":{"auth":"VALID","app":"INVALID"}}`가 찍히면 이 경우다.
+    토큰은 **기기·앱 설치 단위**라 기기를 바꾸거나 앱을 재설치하면 새로 발급된다.
+    - Android: 앱 시작 시 logcat의 `DebugAppCheckProvider`에 출력
+    - iOS: Xcode 콘솔에 `App Check debug token:`으로 출력. 안 보이면 스킴의
+      Arguments Passed on Launch에 `-FIRDebugEnabled`를 추가한다
+      (`main_dev.dart`는 Android·Apple **양쪽** 디버그 Provider를 켠다)
+    - 등록: Firebase 콘솔 **Security > App Check > Apps** 탭에서 해당 앱의 ⋮ 메뉴 →
+      **Manage debug tokens**. Android 앱과 iOS 앱은 **각각 따로** 등록해야 한다.
+      (Firebase CLI에는 `appcheck` 명령이 없다 — 자동화가 필요하면 App Check REST API의
+      `projects.apps.debugTokens`를 쓴다)
+    prod는 Play Integrity / App Attest를 쓰므로 이 절차가 필요 없다.
+
+## Firestore Rules 테스트
+
+- `functions/src/rules/*.test.ts` + `@firebase/rules-unit-testing`.
+  실행: `cd functions && npm run test:rules` (에뮬레이터 필요) / `npm run test:unit` (불필요) / `npm test` (둘 다).
+- `firebase.json`은 gitignore되어 있으므로 테스트 전용 최소 설정 `firebase.emulator.json`을 별도로 추적한다.
+- `createTestEnv(suffix)`는 **파일마다 고유한 projectId**를 쓴다 —
+  `node --test`가 파일을 병렬 실행해 `clearFirestore()`가 서로의 시드를 지우기 때문.
+- Rules를 고쳤으면 이 테스트를 반드시 돌린다. `fake_cloud_firestore`는 Rules를 적용하지 않는다.
+
+## Firestore Rules / Functions 배포 순서
+
+`firebase deploy --only functions` → `--only firestore:rules` → 앱 배포.
+반대로 하면 Rules만 조여진 구간에서 초대 코드 조회가 실패한다.
 
 ## 마이페이지 / 하단 탭바
 

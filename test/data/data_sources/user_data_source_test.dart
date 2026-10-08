@@ -12,13 +12,13 @@ import '../../helpers/firestore_emulator_helper.dart';
 // Map<String, dynamic>으로 캐스팅할 때 TypeError가 발생할 수 있습니다.
 // 명시적으로 빈 컬렉션을 전달하여 올바른 제네릭 타입을 사용합니다.
 UserModel _testUser({String? id}) => UserModel(
-      id: id ?? FirestoreEmulatorHelper.generateId(),
-      email: 'test@example.com',
-      name: '테스트 유저',
-      nickname: '닉네임',
-      authProviders: <String>[],
-      storeById: <String, UserStoreInfoModel>{},
-    );
+  id: id ?? FirestoreEmulatorHelper.generateId(),
+  email: 'test@example.com',
+  name: '테스트 유저',
+  nickname: '닉네임',
+  authProviders: <String>[],
+  storeById: <String, UserStoreInfoModel>{},
+);
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -46,13 +46,18 @@ void main() {
       expect(doc.data()?['nickname'], user.nickname);
     });
 
-    test('fcmTokens가 Firestore 문서에 저장된다', () async {
-      final user = _testUser().copyWith(fcmTokens: ['token-abc']);
+    test('fcmToken을 전달하면 private/fcm 서브문서에 저장된다', () async {
+      final user = _testUser();
 
-      await dataSource.createUser(user);
+      await dataSource.createUser(user, fcmToken: 'token-abc');
 
-      final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      expect(doc.data()?['fcmTokens'], ['token-abc']);
+      final fcmDoc = await fakeFirestore
+          .collection('users')
+          .doc(user.id)
+          .collection('private')
+          .doc('fcm')
+          .get();
+      expect(fcmDoc.data()?['tokens'], ['token-abc']);
     });
   });
 
@@ -146,20 +151,20 @@ void main() {
       expect(doc.data()?['deletedAt'], isNotNull);
     });
 
-    test('softDelete 후 fcmTokens가 빈 배열로 초기화된다', () async {
+    test('softDelete 후 private/fcm 서브문서의 tokens가 빈 배열로 초기화된다', () async {
       final user = _testUser();
-      await dataSource.createUser(user);
-      // fcmTokens는 @JsonKey(includeToJson: false)이므로 createUser에서 저장되지 않음
-      // 직접 추가 후 softDelete 테스트
-      await fakeFirestore.collection('users').doc(user.id).update({
-        'fcmTokens': ['token-1', 'token-2'],
-      });
+      await dataSource.createUser(user, fcmToken: 'token-1');
 
       await dataSource.softDeleteUser(user.id);
 
-      final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      final fcmTokens = doc.data()?['fcmTokens'] as List<dynamic>?;
-      expect(fcmTokens, isEmpty);
+      final fcmDoc = await fakeFirestore
+          .collection('users')
+          .doc(user.id)
+          .collection('private')
+          .doc('fcm')
+          .get();
+      final tokens = fcmDoc.data()?['tokens'] as List<dynamic>?;
+      expect(tokens, isEmpty);
     });
   });
 
@@ -214,7 +219,9 @@ void main() {
     });
 
     test('존재하지 않는 사용자는 null을 반환한다', () async {
-      final result = await dataSource.fetchUserWithRestoration('nonexistent-uid');
+      final result = await dataSource.fetchUserWithRestoration(
+        'nonexistent-uid',
+      );
 
       expect(result, isNull);
     });

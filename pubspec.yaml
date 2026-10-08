@@ -64,6 +64,7 @@ dependencies:
   image_picker: ^1.2.2
   intl: ^0.20.2
   uuid: ^4.5.3
+  cloud_functions: ^6.4.0
 
 dev_dependencies:
   flutter_test:
@@ -81,7 +82,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   mocktail: ^1.0.5
-  fake_cloud_firestore: ^4.1.1
+  fake_cloud_firestore: ^4.2.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

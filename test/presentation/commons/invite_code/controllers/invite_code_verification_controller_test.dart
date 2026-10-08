@@ -5,15 +5,21 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/role_selection/controllers/role_selection_controller.dart';
 
-import '../../../../helpers/fake_entities.dart';
-
 class MockStoreUseCase extends Mock implements StoreUseCase {}
+
+const testPreview = InviteStorePreview(
+  storeId: 'store-1',
+  storeName: '테스트 점포',
+  address: '경기 오산시 경기대로285번길 26',
+  addressDetail: '3층',
+  adminName: '홍길동',
+);
 
 void main() {
   late MockStoreUseCase mockStoreUseCase;
@@ -58,7 +64,7 @@ void main() {
       setUp(() {
         when(
           () => mockStoreUseCase.getStoreByInviteCode(any()),
-        ).thenAnswer((_) async => right(fakeStore));
+        ).thenAnswer((_) async => right(testPreview));
       });
 
       test('status가 AsyncData(store)가 된다', () async {
@@ -69,8 +75,8 @@ void main() {
         await notifier.verifyInviteCode();
 
         final state = container.read(inviteCodeVerificationControllerProvider);
-        expect(state.status, isA<AsyncData<Store?>>());
-        expect(state.status.value, fakeStore);
+        expect(state.status, isA<AsyncData<InviteStorePreview?>>());
+        expect(state.status.value, testPreview);
       });
 
       test('입력된 코드로 UseCase를 호출한다', () async {
@@ -99,7 +105,7 @@ void main() {
         await notifier.verifyInviteCode();
 
         final state = container.read(inviteCodeVerificationControllerProvider);
-        expect(state.status, isA<AsyncData<Store?>>());
+        expect(state.status, isA<AsyncData<InviteStorePreview?>>());
         expect(state.status.value, isNull);
       });
     });
@@ -121,7 +127,7 @@ void main() {
         await notifier.verifyInviteCode();
 
         final state = container.read(inviteCodeVerificationControllerProvider);
-        expect(state.status, isA<AsyncError<Store?>>());
+        expect(state.status, isA<AsyncError<InviteStorePreview?>>());
       });
 
       test('status.error가 원본 예외 타입을 유지한다', () async {
@@ -177,7 +183,7 @@ void main() {
     Future<InviteCodeVerificationController> arrangeVerified() async {
       when(
         () => mockStoreUseCase.getStoreByInviteCode(any()),
-      ).thenAnswer((_) async => right(fakeStore));
+      ).thenAnswer((_) async => right(testPreview));
 
       final notifier = container.read(
         inviteCodeVerificationControllerProvider.notifier,
@@ -203,7 +209,7 @@ void main() {
       await arrangeVerified();
 
       final state = container.read(inviteCodeVerificationControllerProvider);
-      expect(state.storeAlias, fakeStore.name);
+      expect(state.storeAlias, testPreview.storeName);
       expect(state.canSubmit, isTrue);
     });
 
@@ -222,7 +228,7 @@ void main() {
 
       verify(
         () => mockStoreUseCase.joinStore(
-          storeId: fakeStore.id,
+          storeId: testPreview.storeId,
           storeAlias: '내 점포',
           role: UserRole.staff,
           color: StoreColor.blue,

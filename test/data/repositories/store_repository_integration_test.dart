@@ -1,5 +1,7 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
@@ -12,22 +14,24 @@ import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
 
-Store _testStoreEntity(String uid, User adminUser) => Store(
-      id: '',
-      name: '통합 테스트 점포',
-      address: '서울시 강남구',
-      addressDetail: '101호',
-      addressGuide: '안내',
-      memberInfos: [StoreMemberInfo(user: adminUser, role: UserRole.admin)],
-      waitingMemberInfos: [],
-      spaceOptions: [SpaceOption.empty()],
-      inviteInfo: null,
-    );
+// lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
+// 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
+// 파라미터를 채우는 용도로만 쓰인다.
+class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
 
-Future<void> _seedUserDoc(
-  FakeFirebaseFirestore firestore,
-  String uid,
-) async {
+Store _testStoreEntity(String uid, User adminUser) => Store(
+  id: '',
+  name: '통합 테스트 점포',
+  address: '서울시 강남구',
+  addressDetail: '101호',
+  addressGuide: '안내',
+  memberInfos: [StoreMemberInfo(user: adminUser, role: UserRole.admin)],
+  waitingMemberInfos: [],
+  spaceOptions: [SpaceOption.empty()],
+  inviteInfo: null,
+);
+
+Future<void> _seedUserDoc(FakeFirebaseFirestore firestore, String uid) async {
   await firestore.collection('users').doc(uid).set(<String, dynamic>{
     'email': 'test@example.com',
     'name': '테스트 유저',
@@ -44,7 +48,10 @@ void main() {
 
   setUp(() {
     fakeFirestore = FirestoreEmulatorHelper.create();
-    storeDataSource = StoreFirestoreDataSource(fakeFirestore);
+    storeDataSource = StoreFirestoreDataSource(
+      fakeFirestore,
+      MockFirebaseFunctions(),
+    );
     userDataSource = UserFirestoreDataSource(fakeFirestore);
     repository = StoreRepositoryImpl(
       storeDataSource: storeDataSource,
@@ -124,17 +131,19 @@ void main() {
       await _seedUserDoc(fakeFirestore, uid);
       // spaceOptions 필드 자체가 없던 구버전 문서를 직접 시뮬레이션
       final storeId = FirestoreEmulatorHelper.generateId();
-      await fakeFirestore.collection('stores').doc(storeId).set(<String, dynamic>{
-        'name': '레거시 점포',
-        'address': '서울',
-        'addressDetail': '',
-        'addressGuide': '',
-        'memberById': <String, dynamic>{
-          uid: <String, dynamic>{'role': 'ADMIN'},
+      await fakeFirestore.collection('stores').doc(storeId).set(
+        <String, dynamic>{
+          'name': '레거시 점포',
+          'address': '서울',
+          'addressDetail': '',
+          'addressGuide': '',
+          'memberById': <String, dynamic>{
+            uid: <String, dynamic>{'role': 'ADMIN'},
+          },
+          'waitingMemberById': <String, dynamic>{},
+          'spaceOptions': <dynamic>[],
         },
-        'waitingMemberById': <String, dynamic>{},
-        'spaceOptions': <dynamic>[],
-      });
+      );
 
       final fetched = await repository.getStore(storeId);
 
@@ -225,8 +234,12 @@ void main() {
         memo: '',
       );
 
-      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
-      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffDoc = await fakeFirestore
+          .collection('users')
+          .doc(staffUid)
+          .get();
+      final staffStoreById =
+          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
     });
 
@@ -257,8 +270,7 @@ void main() {
       );
 
       final userDoc = await fakeFirestore.collection('users').doc(uid).get();
-      final storeById =
-          userDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(storeById?[createdStore.id]['color'], 'RED');
       expect(storeById?[createdStore.id]['memo'], '변경된 메모');
     });
@@ -331,10 +343,18 @@ void main() {
 
       await repository.softDeleteStore(storeId);
 
-      final ownerDoc = await fakeFirestore.collection('users').doc(ownerUid).get();
-      final staffDoc = await fakeFirestore.collection('users').doc(staffUid).get();
-      final ownerStoreById = ownerDoc.data()?['storeById'] as Map<String, dynamic>?;
-      final staffStoreById = staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final ownerDoc = await fakeFirestore
+          .collection('users')
+          .doc(ownerUid)
+          .get();
+      final staffDoc = await fakeFirestore
+          .collection('users')
+          .doc(staffUid)
+          .get();
+      final ownerStoreById =
+          ownerDoc.data()?['storeById'] as Map<String, dynamic>?;
+      final staffStoreById =
+          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(ownerStoreById?.containsKey(storeId), isFalse);
       expect(staffStoreById?.containsKey(storeId), isFalse);
     });
@@ -390,49 +410,16 @@ void main() {
       final first = await repository.createInviteCode(storeId);
       final second = await repository.createInviteCode(storeId);
 
-      expect(first.getRight().toNullable()!.inviteCode,
-          second.getRight().toNullable()!.inviteCode);
+      expect(
+        first.getRight().toNullable()!.inviteCode,
+        second.getRight().toNullable()!.inviteCode,
+      );
     });
   });
 
-  // =========================================================================
-  // getStoreByInviteCode
-  // =========================================================================
-
-  group('getStoreByInviteCode', () {
-    test('유효한 초대 코드로 점포를 조회한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final storeId = created.getRight().toNullable()!.id;
-      final invite = await repository.createInviteCode(storeId);
-      final code = invite.getRight().toNullable()!.inviteCode;
-
-      final result = await repository.getStoreByInviteCode(code);
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable()!.name, '통합 테스트 점포');
-    });
-
-    test('존재하지 않는 초대 코드는 right(null)을 반환한다', () async {
-      final result = await repository.getStoreByInviteCode('XXXXXX');
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), isNull);
-    });
-  });
+  // getStoreByInviteCode: lookupInviteCode Callable(functions/src/invite/)로
+  // 옮겨간 서버 책임이라 fake_cloud_firestore로는 더 이상 검증할 수 없다.
+  // (store_data_source_test.dart와 동일한 원칙 — Task 8)
 
   // =========================================================================
   // requestJoinStore + approveMember
@@ -469,8 +456,7 @@ void main() {
       );
 
       final doc = await fakeFirestore.collection('stores').doc(storeId).get();
-      final waiting =
-          doc.data()?['waitingMemberById'] as Map<String, dynamic>?;
+      final waiting = doc.data()?['waitingMemberById'] as Map<String, dynamic>?;
       expect(waiting?.containsKey(memberUid), isTrue);
     });
 
@@ -513,8 +499,10 @@ void main() {
       final memberIds = store.memberInfos.map((m) => m.user.id).toList();
       expect(memberIds.contains(memberUid), isTrue);
 
-      final memberUserDoc =
-          await fakeFirestore.collection('users').doc(memberUid).get();
+      final memberUserDoc = await fakeFirestore
+          .collection('users')
+          .doc(memberUid)
+          .get();
       final memberStoreById =
           memberUserDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(memberStoreById?[storeId]['role'], 'STAFF');
@@ -569,14 +557,16 @@ void main() {
 
       // Firestore에 저장된 값이 JSON 직렬화 형식('ADMIN')인지 확인
       final doc = await fakeFirestore.collection('stores').doc(storeId).get();
-      final members =
-          doc.data()?['memberById'] as Map<String, dynamic>?;
+      final members = doc.data()?['memberById'] as Map<String, dynamic>?;
       expect(members?[memberUid]['role'], 'ADMIN');
 
       // getStore 호출 시 역직렬화가 성공해야 함
       final fetched = await repository.getStore(storeId);
-      expect(fetched.isRight(), true,
-          reason: 'updateMemberRole 후 getStore가 실패하면 role 직렬화 버그임');
+      expect(
+        fetched.isRight(),
+        true,
+        reason: 'updateMemberRole 후 getStore가 실패하면 role 직렬화 버그임',
+      );
       final updatedMember = fetched
           .getRight()
           .toNullable()!

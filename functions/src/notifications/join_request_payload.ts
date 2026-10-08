@@ -36,7 +36,7 @@ export function buildJoinRequestBody(
  * 관리자 기기 토큰마다 가입 신청 알림 메시지를 만든다.
  *
  * NOTE: FCM Admin SDK는 registration token 대신 FID를 권장하며 `token` 필드를
- * deprecated로 표시했다. 현재 앱은 `users/{uid}.fcmTokens`에 registration token을
+ * deprecated로 표시했다. 현재 앱은 `users/{uid}/private/fcm` 문서의 `tokens` 필드에 registration token을
  * 저장하므로 `token`을 사용한다. FID 마이그레이션은 별도 이슈로 다룬다.
  */
 export function buildJoinRequestMessages(params: {

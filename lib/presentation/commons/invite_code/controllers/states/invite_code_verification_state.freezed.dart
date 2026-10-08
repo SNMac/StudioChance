@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteCodeVerificationState {
 
- String get inviteCode; AsyncValue<Store?> get status; String get storeAlias; StoreColor get color; String get memo;// 초대 코드 조회(status)와 분리한다. status를 재사용하면 스택에 남아 있는
+ String get inviteCode; AsyncValue<InviteStorePreview?> get status; String get storeAlias; StoreColor get color; String get memo;// 초대 코드 조회(status)와 분리한다. status를 재사용하면 스택에 남아 있는
 // 초대 코드 입력 화면의 ref.listen이 제출 완료를 조회 성공으로 오인해
 // 점포 확인 화면을 한 번 더 push한다.
  AsyncValue<void> get submitStatus;
@@ -48,7 +48,7 @@ abstract mixin class $InviteCodeVerificationStateCopyWith<$Res>  {
   factory $InviteCodeVerificationStateCopyWith(InviteCodeVerificationState value, $Res Function(InviteCodeVerificationState) _then) = _$InviteCodeVerificationStateCopyWithImpl;
 @useResult
 $Res call({
- String inviteCode, AsyncValue<Store?> status, String storeAlias, StoreColor color, String memo, AsyncValue<void> submitStatus
+ String inviteCode, AsyncValue<InviteStorePreview?> status, String storeAlias, StoreColor color, String memo, AsyncValue<void> submitStatus
 });
 
 
@@ -69,7 +69,7 @@ class _$InviteCodeVerificationStateCopyWithImpl<$Res>
   return _then(_self.copyWith(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as AsyncValue<Store?>,storeAlias: null == storeAlias ? _self.storeAlias : storeAlias // ignore: cast_nullable_to_non_nullable
+as AsyncValue<InviteStorePreview?>,storeAlias: null == storeAlias ? _self.storeAlias : storeAlias // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,submitStatus: null == submitStatus ? _self.submitStatus : submitStatus // ignore: cast_nullable_to_non_nullable
@@ -158,7 +158,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<Store?> status,  String storeAlias,  StoreColor color,  String memo,  AsyncValue<void> submitStatus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<InviteStorePreview?> status,  String storeAlias,  StoreColor color,  String memo,  AsyncValue<void> submitStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InviteCodeVerificationState() when $default != null:
 return $default(_that.inviteCode,_that.status,_that.storeAlias,_that.color,_that.memo,_that.submitStatus);case _:
@@ -179,7 +179,7 @@ return $default(_that.inviteCode,_that.status,_that.storeAlias,_that.color,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<Store?> status,  String storeAlias,  StoreColor color,  String memo,  AsyncValue<void> submitStatus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String inviteCode,  AsyncValue<InviteStorePreview?> status,  String storeAlias,  StoreColor color,  String memo,  AsyncValue<void> submitStatus)  $default,) {final _that = this;
 switch (_that) {
 case _InviteCodeVerificationState():
 return $default(_that.inviteCode,_that.status,_that.storeAlias,_that.color,_that.memo,_that.submitStatus);case _:
@@ -199,7 +199,7 @@ return $default(_that.inviteCode,_that.status,_that.storeAlias,_that.color,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  AsyncValue<Store?> status,  String storeAlias,  StoreColor color,  String memo,  AsyncValue<void> submitStatus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String inviteCode,  AsyncValue<InviteStorePreview?> status,  String storeAlias,  StoreColor color,  String memo,  AsyncValue<void> submitStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _InviteCodeVerificationState() when $default != null:
 return $default(_that.inviteCode,_that.status,_that.storeAlias,_that.color,_that.memo,_that.submitStatus);case _:
@@ -218,7 +218,7 @@ class _InviteCodeVerificationState extends InviteCodeVerificationState {
   
 
 @override@JsonKey() final  String inviteCode;
-@override@JsonKey() final  AsyncValue<Store?> status;
+@override@JsonKey() final  AsyncValue<InviteStorePreview?> status;
 @override@JsonKey() final  String storeAlias;
 @override@JsonKey() final  StoreColor color;
 @override@JsonKey() final  String memo;
@@ -257,7 +257,7 @@ abstract mixin class _$InviteCodeVerificationStateCopyWith<$Res> implements $Inv
   factory _$InviteCodeVerificationStateCopyWith(_InviteCodeVerificationState value, $Res Function(_InviteCodeVerificationState) _then) = __$InviteCodeVerificationStateCopyWithImpl;
 @override @useResult
 $Res call({
- String inviteCode, AsyncValue<Store?> status, String storeAlias, StoreColor color, String memo, AsyncValue<void> submitStatus
+ String inviteCode, AsyncValue<InviteStorePreview?> status, String storeAlias, StoreColor color, String memo, AsyncValue<void> submitStatus
 });
 
 
@@ -278,7 +278,7 @@ class __$InviteCodeVerificationStateCopyWithImpl<$Res>
   return _then(_InviteCodeVerificationState(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as AsyncValue<Store?>,storeAlias: null == storeAlias ? _self.storeAlias : storeAlias // ignore: cast_nullable_to_non_nullable
+as AsyncValue<InviteStorePreview?>,storeAlias: null == storeAlias ? _self.storeAlias : storeAlias // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,submitStatus: null == submitStatus ? _self.submitStatus : submitStatus // ignore: cast_nullable_to_non_nullable

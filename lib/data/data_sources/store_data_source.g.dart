@@ -49,4 +49,4 @@ final class StoreDataSourceProvider
   }
 }
 
-String _$storeDataSourceHash() => r'ff32b421603584dfdffefc638d106779cd4b8ec5';
+String _$storeDataSourceHash() => r'8c0f5a73f456b1ce68cc14856612afe49414fec4';
