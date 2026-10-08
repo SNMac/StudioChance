@@ -1914,7 +1914,7 @@ cd functions && npm test
 
 기대: 전부 PASS. 특히 Task 2의 가입 신청 update 테스트가 계속 통과해야 한다 — `update`는 `read`와 독립적으로 평가되므로 read를 조여도 신청 쓰기는 동작한다.
 
-- [ ] **Step 5: dev 환경 배포 및 수동 확인**
+- [x] **Step 5: dev 환경 배포 및 수동 확인**
 
 **배포 순서를 지킨다.** Functions가 먼저다(Task 6에서 이미 배포됨).
 
@@ -1927,7 +1927,7 @@ flutter run --flavor dev --target lib/main_dev.dart
 1. 관리자 계정에서 초대 코드 발급 → 코드가 표시된다
 2. 다른 계정에서 초대 코드 입력 → 점포 확인 화면에 점포명·대표 관리자·주소가 뜬다
 3. 가입 신청 제출 → 성공하고 관리자에게 푸시 알림이 온다
-4. 틀린 코드 입력 → "유효하지 않은 초대 코드" 안내
+4. 틀린 코드 입력 → "점포를 찾을 수 없습니다" 안내(`notFound` → `right(null)` 경로)
 5. 승인 후 홈 화면에서 예약 목록이 정상 조회된다
 
 - [x] **Step 6: 커밋**
@@ -1999,7 +1999,7 @@ cd functions && npm ci && npm test
 
 CI가 실행할 것과 같은 명령을 로컬에서 그대로 돌려 통과를 확인한다.
 
-- [ ] **Step 3: 커밋 및 푸시**
+- [x] **Step 3: 커밋 및 푸시**
 
 ```bash
 git add .github/workflows/ci.yml
