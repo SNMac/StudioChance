@@ -251,8 +251,15 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
     화면에는 원인이 드러나지 않으므로 반드시 서버 로그로 판별한다 —
     `firebase functions:log --only lookupInviteCode -P dev`에
     `{"verifications":{"auth":"VALID","app":"INVALID"}}`가 찍히면 이 경우다.
-    기기별 토큰은 앱 시작 시 logcat의 `DebugAppCheckProvider`에 출력되며, 등록은
-    `firebase appcheck:debugtokens:create <토큰> --project <프로젝트> --app <앱ID>`.
+    토큰은 **기기·앱 설치 단위**라 기기를 바꾸거나 앱을 재설치하면 새로 발급된다.
+    - Android: 앱 시작 시 logcat의 `DebugAppCheckProvider`에 출력
+    - iOS: Xcode 콘솔에 `App Check debug token:`으로 출력. 안 보이면 스킴의
+      Arguments Passed on Launch에 `-FIRDebugEnabled`를 추가한다
+      (`main_dev.dart`는 Android·Apple **양쪽** 디버그 Provider를 켠다)
+    - 등록: Firebase 콘솔 **Security > App Check > Apps** 탭에서 해당 앱의 ⋮ 메뉴 →
+      **Manage debug tokens**. Android 앱과 iOS 앱은 **각각 따로** 등록해야 한다.
+      (Firebase CLI에는 `appcheck` 명령이 없다 — 자동화가 필요하면 App Check REST API의
+      `projects.apps.debugTokens`를 쓴다)
     prod는 Play Integrity / App Attest를 쓰므로 이 절차가 필요 없다.
 
 ## Firestore Rules 테스트

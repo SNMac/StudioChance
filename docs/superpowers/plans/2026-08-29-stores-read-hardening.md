@@ -1902,7 +1902,7 @@ cd functions && npm run test:rules
       }
 
       allow read:   if isMember();
-      allow create: if request.auth != null;
+      allow create: if request.auth != null;  // Task 11에서 isCreatorAdmin()으로 강화됨
       allow update, delete: if isAdmin();
 ```
 

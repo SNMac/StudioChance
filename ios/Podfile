@@ -30,6 +30,10 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+  # 사전 컴파일 Firestore 프레임워크(빌드 시간 단축용). 태그를 firebase_core가 요구하는
+  # iOS Firebase SDK 버전과 **반드시 같이** 올려야 한다. 어긋나면 pod install이
+  # "requires a higher minimum iOS deployment version"이라는 엉뚱한 메시지로 실패한다
+  # (배포 타깃과 무관하다). CI는 iOS를 빌드하지 않으므로 로컬에서만 드러난다.
   pod 'FirebaseFirestore',
     :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git',
     :tag => '12.18.0'
