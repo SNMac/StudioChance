@@ -149,7 +149,8 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
 
       // restoreUser가 실패 없이 완료된 뒤에만 도달 — 로컬에서 필드를 지우는 대신
       // Firestore에 실제로 반영된 최신 상태를 재조회하여 상태 불일치를 방지한다.
-      return getUser(uid);
+      // await 없이 반환하면 이 Future의 에러가 아래 catch를 그냥 지나친다.
+      return await getUser(uid);
     } catch (e) {
       throw handleFirestoreError(e);
     }
