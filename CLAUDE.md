@@ -5,7 +5,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - Firebase 서비스: Firestore, Authentication, Crashlytics, Cloud Message, Analytics, App Check
 - 소셜 로그인: Google, Apple
   - 정식 출시 후 Naver, Kakao 추가 예정
-- **배포 예정 시점**: 2026-08 말 ~ 2026-09 초 (아직 정식 출시 전, 프로덕션 데이터 없음)
+- **출시 상태**: 아직 정식 출시 전 (시점 미정). prod 프로젝트에 실사용자·실데이터가 없다
 
 ## 코드 스타일
 - Flutter/Dart 사용
@@ -131,7 +131,9 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 커밋: `<type>: #<이슈번호> - <한국어 설명>`
 - 포맷 전용 변경(`dart format`이 손대지 않은 기존 파일까지 재배치한 결과)은 기능 커밋에 섞지 말고 별도 `style:` 커밋으로 분리 — 리뷰 시 실제 변경을 가려내기 어려워짐
   - `dart format`은 디렉터리 전체가 아니라 **수정한 파일만** 지정해서 실행할 것
-- 기본 브랜치: `develop` (PR 대상)
+- 기본 브랜치: `develop` (PR 대상). 모든 작업은 `develop`에서 분기해 `develop`으로 머지한다
+- `main`은 **출시 브랜치**다. 정식 출시 시점에 `develop`을 `main`에 머지하며, 그 전까지는 건드리지 않는다
+  (현재 `main`은 `develop`보다 한참 뒤처져 있는 것이 정상이다)
 - Type(이슈·PR 공통): `Feature`, `Bug`, `Refactor` (첫 글자 대문자)
 - 이슈 제목: `<Type>/<한국어 설명>` — **이슈번호를 넣지 않는다**(생성 시점엔 번호가 없다)
   - 예: `Feature/마이페이지 실제 디자인으로 재구현`, `Bug/iOS APNs 키 미설정으로 푸시 알림 전부 실패`
@@ -176,7 +178,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
 
 ## 중요 사항
-- 정식 출시 전(배포 예정 2026-08 말 ~ 2026-09 초)이므로 Firestore 스키마 변경 시 기존 데이터 마이그레이션은 고려하지 않아도 됨
+- 정식 출시 전이라 prod에 실데이터가 없다 — Firestore 스키마 변경 시 기존 데이터 마이그레이션은 고려하지 않아도 됨
 - API Key 관련 문자열은 gitignore 처리되어있는 별도 파일로 분리하고 import하여 사용
 - `Future.wait([f1, f2])` — f1, f2의 **반환 타입이 다르면** `List<Object?>`로 추론됨 → 타입별 별도 Future 변수로 분리할 것
   ```dart
