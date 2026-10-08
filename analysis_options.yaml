@@ -25,14 +25,20 @@ linter:
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
 analyzer:
-  plugins:
-    - custom_lint
+  # custom_lint는 legacy analyzer plugin 방식이라 Dart 3.13부터 deprecation warning이
+  # 뜨고, `dart analyze`가 warning에서 실패해 CI가 깨진다. 룰을 제공하는 패키지
+  # (riverpod_lint 등)를 쓰고 있지 않아 실제로 검사하는 것도 없었다
+  # (`dart run custom_lint` → No issues found). 필요해지면 riverpod_lint와 함께
+  # 새 플러그인 방식으로 다시 붙인다.
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     # functions/는 TypeScript 워크스페이스다. node_modules 안에 firebase-tools가
     # 심어 둔 Dart 템플릿 스텁이 있어 분석 대상에 들어오면 에러로 잡힌다.
     - "functions/**"
+    - build/**
+    - android/**
+    - ios/**
   errors:
     invalid_annotation_target: ignore
 
