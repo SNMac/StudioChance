@@ -409,6 +409,10 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         current != _saved.priceSetting;
   }
 
+  /// '현재 요금 적용' 버튼에 표시할 현재 요금. 버튼을 보여주지 않을 때는 null.
+  int? get _applicableCurrentPrice =>
+      _canApplyCurrentPrice ? _priceWith(_currentPriceSetting) : null;
+
   int? _priceWith(PriceSetting? priceSetting) {
     return priceSetting?.calculatePrice(
       start: _startTime,
@@ -935,6 +939,15 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           _buildSection2Edit(),
           _buildSection3Edit(),
           _buildSection4Edit(textTheme),
+          if (_applicableCurrentPrice case final currentPrice?)
+            GroupedFormContainer(
+              children: [
+                TextActionButton(
+                  title: '현재 요금 적용 (${currentPrice.formattedPrice})',
+                  onPressed: _onApplyCurrentPricePressed,
+                ),
+              ],
+            ),
           GroupedFormContainer(
             children: [
               TextActionButton(
@@ -1216,9 +1229,6 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     final footerStyle = textTheme.labelMedium?.copyWith(
       color: context.secondaryLabel,
     );
-    final currentPrice = _canApplyCurrentPrice
-        ? _priceWith(_currentPriceSetting)
-        : null;
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
@@ -1260,11 +1270,6 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           ),
         ),
         TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
-        if (currentPrice != null)
-          TextActionButton(
-            title: '현재 요금 적용 (${currentPrice.formattedPrice})',
-            onPressed: _onApplyCurrentPricePressed,
-          ),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
