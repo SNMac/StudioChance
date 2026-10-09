@@ -324,3 +324,16 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 여러 파일 수정 시 계획 먼저 설명
 - superpowers 플랜 문서(`writing-plans`/`executing-plans`)대로 작업할 때: 각 스텝 구현 완료 시 해당 스텝 커밋 → 플랜 문서의 체크리스트 항목 체크 표시 후 별도 `docs:` 커밋 (예: `docs: #17 - Task 1 플랜 체크리스트 완료 표시`), 스텝 단위로 반복
 
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues(`SNMac/StudioChance`), `gh` CLI 사용. Linear는 자동 연동되므로 직접 쓰지 않는다. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+기본 5개 라벨 그대로 사용 (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context (루트 `CONTEXT.md` + `docs/adr/`). See `docs/agents/domain.md`.
