@@ -16,10 +16,16 @@ class HomeReservationActionsController
   @override
   FutureOr<void> build() {}
 
-  Future<void> updateReservation(Reservation reservation) async {
+  Future<void> updateReservation(
+    Reservation reservation, {
+    bool applyCurrentPrice = false,
+  }) async {
     final result = await ref
         .read(reservationUseCaseProvider)
-        .updateReservation(reservation: reservation);
+        .updateReservation(
+          reservation: reservation,
+          applyCurrentPrice: applyCurrentPrice,
+        );
     final stackTrace = StackTrace.current;
     result.fold(
       (e) {

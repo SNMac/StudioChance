@@ -73,8 +73,14 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 ### ReservationUseCase → StoreRepository 의존성 (D3)
 현행 유지: `ReservationUseCaseImpl`이 `StoreRepository`를 주입받아 가격 계산에 사용.
-- `_applyCalculatedPrice`: 예약 생성/수정 전 점포 요금 설정 기반 계산 (필수 비즈니스 로직)
+- `_applyCurrentPrice`: 점포의 현재 요금표로 계산하고 그 요금표를 예약에 스냅샷(`Reservation.priceSetting`)으로 저장 (필수 비즈니스 로직)
 - PricingService 분리는 과도한 추상화 — 현재 규모에서 허용
+
+### 예약 요금표 스냅샷 (D12)
+예약 수정 시 점포의 현재 요금이 아니라 **예약에 저장된 요금표**로 재계산한다. 점포 요금이 바뀌어도 기존 예약 가격이 저절로 바뀌지 않게 하기 위함.
+- 현재 요금표를 쓰는 경우: 사용자가 상세 모달의 '현재 요금 적용'을 누름(`applyCurrentPrice`), 점포·공간이 바뀜, 저장된 스냅샷이 없음
+- 비교 기준은 UseCase가 조회한 저장된 예약이다 — 화면이 보낸 스냅샷은 신뢰하지 않는다 (D3)
+- 상세 모달(`_usesSavedPriceSetting`)과 `ReservationUseCaseImpl.updateReservation`의 판단 규칙이 같아야 화면 가격과 저장 가격이 일치한다. 한쪽을 바꾸면 다른 쪽도 바꿀 것
 
 ### Common Exceptions 레이어 배치 (D4)
 `common/exceptions/` 를 모든 레이어 공유 위치로 유지.
@@ -96,7 +102,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ### 공휴일 요금 — isHoliday 콜백 패턴 (D8)
 `PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
-- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
+- 현재 모든 호출부(`_applyPriceSetting`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
 - 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 날짜별 판단 결과를 콜백으로 전달
 
 ### 앱 최초 실행 인증 데이터 삭제 (D9)

@@ -30,6 +30,11 @@ _ReservationModel _$ReservationModelFromJson(Map<String, dynamic> json) =>
       totalPrice: (json['totalPrice'] as num).toInt(),
       writerRole: $enumDecode(_$UserRoleEnumMap, json['writerRole']),
       spaceOptionId: json['spaceOptionId'] as String?,
+      priceSettings: json['priceSettings'] == null
+          ? null
+          : PriceSettingsModel.fromJson(
+              json['priceSettings'] as Map<String, dynamic>,
+            ),
       createdAt: _$JsonConverterFromJson<Timestamp, DateTime>(
         json['createdAt'],
         const TimestampConverter().fromJson,
@@ -55,6 +60,7 @@ Map<String, dynamic> _$ReservationModelToJson(_ReservationModel instance) =>
       'totalPrice': instance.totalPrice,
       'writerRole': _$UserRoleEnumMap[instance.writerRole]!,
       'spaceOptionId': instance.spaceOptionId,
+      'priceSettings': ?instance.priceSettings?.toJson(),
       'createdAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
         instance.createdAt,
         const TimestampConverter().toJson,

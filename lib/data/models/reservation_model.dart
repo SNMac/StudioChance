@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:studio_chance/common/converters/timestamp_converter.dart';
+import 'package:studio_chance/data/models/price_settings_model.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
@@ -36,6 +37,7 @@ abstract class ReservationModel with _$ReservationModel {
     required int totalPrice,
     required UserRole writerRole,
     String? spaceOptionId,
+    @JsonKey(includeIfNull: false) PriceSettingsModel? priceSettings,
     @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? createdAt,
   }) = _ReservationModel;
 
@@ -62,6 +64,9 @@ abstract class ReservationModel with _$ReservationModel {
       totalPrice: entity.totalPrice,
       writerRole: entity.writer.role,
       spaceOptionId: entity.spaceOptionId,
+      priceSettings: entity.priceSetting == null
+          ? null
+          : PriceSettingsModel.fromEntity(entity.priceSetting!),
       createdAt: entity.createdAt,
     );
   }
@@ -74,6 +79,7 @@ abstract class ReservationModel with _$ReservationModel {
       'status', 'customerName', 'headCount', 'customerPhone', 'memo',
       'isAllDay', 'startTime', 'endTime', 'platform', 'paymentMethod',
       'calculatedPrice', 'priceAdjustment', 'totalPrice', 'spaceOptionId',
+      'priceSettings',
     };
     return {
       for (final entry in json.entries)
@@ -100,6 +106,7 @@ abstract class ReservationModel with _$ReservationModel {
       priceAdjustment: priceAdjustment,
       totalPrice: totalPrice,
       spaceOptionId: spaceOptionId,
+      priceSetting: priceSettings?.toEntity(),
       createdAt: createdAt,
     );
   }
