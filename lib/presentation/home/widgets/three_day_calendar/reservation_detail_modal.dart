@@ -279,8 +279,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       title: '예약 점포 변경',
       content:
           '${store.name}(으)로 변경하면 공간 선택이 초기화되고 '
-          '${store.name}의 현재 요금이 적용됩니다.\n'
-          '저장하면 예약이 ${store.name}(으)로 옮겨집니다.',
+          '${store.name}의 현재 요금이 적용됩니다.',
       confirmText: '변경',
       onConfirmAfterPop: () {
         if (!mounted) return;
