@@ -252,20 +252,7 @@ void main() {
 
       final updated = await dataSource.getStore(created.id);
       expect(updated?.name, '변경된 점포명');
-    });
-
-    test('업데이트 후 기존 필드는 변경되지 않는다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-
-      await dataSource.updateStore(created.id, {'name': '변경된 점포명'}, []);
-
-      final updated = await dataSource.getStore(created.id);
+      // update가 set(덮어쓰기)으로 바뀌면 지정하지 않은 필드가 사라진다
       expect(updated?.address, '서울시 강남구 테헤란로 1');
       expect(updated?.addressDetail, '101호');
     });

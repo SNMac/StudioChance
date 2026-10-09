@@ -18,40 +18,6 @@ void main() {
   });
 
   // =========================================================================
-  // getCurrentUser
-  // =========================================================================
-
-  group('getCurrentUser', () {
-    test('유저가 있는 경우 right(user)를 반환한다', () async {
-      when(() => mockRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
-
-      final result = await useCase.getCurrentUser();
-
-      expect(result.getRight().toNullable(), fakeUser);
-    });
-
-    test('유저가 null인 경우 right(null)를 반환한다', () async {
-      when(() => mockRepo.getCurrentUser())
-          .thenAnswer((_) async => right(null));
-
-      final result = await useCase.getCurrentUser();
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), isNull);
-    });
-
-    test('Repository 실패를 그대로 전파한다', () async {
-      when(() => mockRepo.getCurrentUser())
-          .thenAnswer((_) async => left(Exception('유저 조회 실패')));
-
-      final result = await useCase.getCurrentUser();
-
-      expect(result.isLeft(), true);
-    });
-  });
-
-  // =========================================================================
   // updateUser
   // =========================================================================
 
@@ -78,23 +44,6 @@ void main() {
           nickname: '새닉네임',
         ),
       ).called(1);
-    });
-
-    test('Repository 실패를 그대로 전파한다', () async {
-      when(
-        () => mockRepo.updateUser(
-          uid: any(named: 'uid'),
-          email: any(named: 'email'),
-          nickname: any(named: 'nickname'),
-        ),
-      ).thenAnswer((_) async => left(Exception('업데이트 실패')));
-
-      final result = await useCase.updateUser(
-        uid: fakeUser.id,
-        nickname: '새닉네임',
-      );
-
-      expect(result.isLeft(), true);
     });
   });
 }

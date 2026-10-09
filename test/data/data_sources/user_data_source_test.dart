@@ -20,6 +20,20 @@ UserModel _testUser({String? id}) => UserModel(
   storeById: <String, UserStoreInfoModel>{},
 );
 
+/// `users/{uid}/private/fcm` 서브문서의 tokens를 읽는다. 문서가 없으면 null.
+Future<List<dynamic>?> _readFcmTokens(
+  FakeFirebaseFirestore firestore,
+  String uid,
+) async {
+  final doc = await firestore
+      .collection('users')
+      .doc(uid)
+      .collection('private')
+      .doc('fcm')
+      .get();
+  return doc.data()?['tokens'] as List<dynamic>?;
+}
+
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
   late UserFirestoreDataSource dataSource;
@@ -110,15 +124,7 @@ void main() {
 
       final updated = await dataSource.getUser(user.id);
       expect(updated?.nickname, '새닉네임');
-    });
-
-    test('업데이트 후 기존 필드는 변경되지 않는다', () async {
-      final user = _testUser();
-      await dataSource.createUser(user);
-
-      await dataSource.updateUser(user.id, {'nickname': '새닉네임'});
-
-      final updated = await dataSource.getUser(user.id);
+      // update가 set(덮어쓰기)으로 바뀌면 지정하지 않은 필드가 사라진다
       expect(updated?.email, user.email);
       expect(updated?.name, user.name);
     });
@@ -184,40 +190,6 @@ void main() {
       expect(result.email, user.email);
     });
 
-    test('deletedAt이 있는 사용자를 복구 후 반환한다', () async {
-      final user = _testUser();
-      await fakeFirestore.collection('users').doc(user.id).set({
-        'email': user.email,
-        'name': user.name,
-        'nickname': user.nickname,
-        'authProviders': <String>[],
-        'storeById': <String, dynamic>{},
-        'deletedAt': Timestamp.now(),
-      });
-
-      final result = await dataSource.fetchUserWithRestoration(user.id);
-
-      expect(result, isNotNull);
-      expect(result!.id, user.id);
-    });
-
-    test('복구 후 deletedAt 필드가 삭제된다', () async {
-      final user = _testUser();
-      await fakeFirestore.collection('users').doc(user.id).set({
-        'email': user.email,
-        'name': user.name,
-        'nickname': user.nickname,
-        'authProviders': <String>[],
-        'storeById': <String, dynamic>{},
-        'deletedAt': Timestamp.now(),
-      });
-
-      await dataSource.fetchUserWithRestoration(user.id);
-
-      final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      expect(doc.data()?.containsKey('deletedAt'), false);
-    });
-
     test('존재하지 않는 사용자는 null을 반환한다', () async {
       final result = await dataSource.fetchUserWithRestoration(
         'nonexistent-uid',
@@ -272,24 +244,249 @@ void main() {
       expect(doc.data()?.containsKey('deletedAt'), false);
       expect(doc.data()?.containsKey('expiresAt'), false);
     });
+  });
 
-    test('복구 후 getUser가 사용자를 반환한다', () async {
+  // =========================================================================
+  // recordLogin
+  // =========================================================================
+
+  group('recordLogin', () {
+    test('authProviders를 갱신하고 lastLoginAt을 기록한다', () async {
       final user = _testUser();
       await fakeFirestore.collection('users').doc(user.id).set({
         'email': user.email,
         'name': user.name,
-        'nickname': user.nickname,
-        'authProviders': <String>[],
+        'authProviders': <String>['google.com'],
         'storeById': <String, dynamic>{},
-        'deletedAt': Timestamp.now(),
-        'expiresAt': Timestamp.now(),
       });
 
-      await dataSource.restoreUser(user.id);
-      final result = await dataSource.getUser(user.id);
+      await dataSource.recordLogin(
+        user.id,
+        authProviders: ['google.com', 'apple.com'],
+      );
 
-      expect(result, isNotNull);
-      expect(result!.id, user.id);
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      expect(doc.data()?['authProviders'], ['google.com', 'apple.com']);
+      expect(doc.data()?['lastLoginAt'], isNotNull);
+    });
+
+    test('fcm 서브문서가 없는 첫 로그인 기기에서도 토큰이 저장된다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      await dataSource.recordLogin(
+        user.id,
+        authProviders: <String>[],
+        fcmToken: 'token-new',
+      );
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), ['token-new']);
+    });
+
+    test('다른 기기의 기존 토큰을 유지한 채 새 토큰을 추가한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-other-device');
+
+      await dataSource.recordLogin(
+        user.id,
+        authProviders: <String>[],
+        fcmToken: 'token-new',
+      );
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), [
+        'token-other-device',
+        'token-new',
+      ]);
+    });
+
+    test('fcmToken이 없으면 fcm 서브문서를 만들지 않는다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      await dataSource.recordLogin(user.id, authProviders: <String>[]);
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), isNull);
+    });
+  });
+
+  // =========================================================================
+  // updateStoreInfo / removeStoreInfo
+  // =========================================================================
+
+  group('updateStoreInfo', () {
+    test('지정한 키만 갱신하고 같은 점포의 나머지 정보는 유지한다', () async {
+      final user = _testUser();
+      await fakeFirestore.collection('users').doc(user.id).set({
+        'email': user.email,
+        'name': user.name,
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          'store-1': <String, dynamic>{
+            'name': '테스트 점포',
+            'role': 'ADMIN',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
+
+      await dataSource.updateStoreInfo(user.id, 'store-1', {
+        'color': 'BLUE',
+        'memo': '새 메모',
+      });
+
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      final storeInfo =
+          (doc.data()?['storeById'] as Map<String, dynamic>)['store-1']
+              as Map<String, dynamic>;
+      expect(storeInfo['color'], 'BLUE');
+      expect(storeInfo['memo'], '새 메모');
+      expect(storeInfo['name'], '테스트 점포');
+      expect(storeInfo['role'], 'ADMIN');
+    });
+  });
+
+  group('removeStoreInfo', () {
+    test('해당 점포 정보만 삭제하고 다른 점포 정보는 유지한다', () async {
+      final user = _testUser();
+      await fakeFirestore.collection('users').doc(user.id).set({
+        'email': user.email,
+        'name': user.name,
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          'store-1': <String, dynamic>{
+            'name': '점포 1',
+            'role': 'STAFF',
+            'color': 'RED',
+            'memo': '',
+          },
+          'store-2': <String, dynamic>{
+            'name': '점포 2',
+            'role': 'STAFF',
+            'color': 'BLUE',
+            'memo': '',
+          },
+        },
+      });
+
+      await dataSource.removeStoreInfo(user.id, 'store-1');
+
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      final storeById = doc.data()?['storeById'] as Map<String, dynamic>;
+      expect(storeById.containsKey('store-1'), isFalse);
+      expect(storeById.containsKey('store-2'), isTrue);
+    });
+  });
+
+  // =========================================================================
+  // addFcmToken
+  // =========================================================================
+
+  group('addFcmToken', () {
+    test('fcm 서브문서가 없으면 새로 만들어 토큰을 저장한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      await dataSource.addFcmToken(user.id, 'token-1');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), ['token-1']);
+    });
+
+    test('기존 토큰을 유지한 채 새 토큰을 추가한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-1');
+
+      await dataSource.addFcmToken(user.id, 'token-2');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), [
+        'token-1',
+        'token-2',
+      ]);
+    });
+
+    test('이미 저장된 토큰은 중복으로 추가하지 않는다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-1');
+
+      await dataSource.addFcmToken(user.id, 'token-1');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), ['token-1']);
+    });
+  });
+
+  // =========================================================================
+  // replaceFcmToken
+  // =========================================================================
+
+  group('replaceFcmToken', () {
+    test('기존 토큰을 새 토큰으로 교체하고 다른 기기 토큰은 유지한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-other');
+      await dataSource.addFcmToken(user.id, 'token-old');
+
+      await dataSource.replaceFcmToken(user.id, 'token-old', 'token-new');
+
+      final tokens = await _readFcmTokens(fakeFirestore, user.id);
+      expect(tokens, containsAll(['token-other', 'token-new']));
+      expect(tokens, isNot(contains('token-old')));
+      expect(tokens, hasLength(2));
+    });
+
+    test('기존 토큰이 저장되어 있지 않아도 새 토큰을 추가한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-other');
+
+      await dataSource.replaceFcmToken(user.id, 'token-old', 'token-new');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), [
+        'token-other',
+        'token-new',
+      ]);
+    });
+
+    test('새 토큰이 이미 있으면 중복 없이 기존 토큰만 제거한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-old');
+      await dataSource.addFcmToken(user.id, 'token-new');
+
+      await dataSource.replaceFcmToken(user.id, 'token-old', 'token-new');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), ['token-new']);
+    });
+
+    test('fcm 서브문서가 없으면 새 토큰으로 문서를 만든다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      await dataSource.replaceFcmToken(user.id, 'token-old', 'token-new');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), ['token-new']);
+    });
+  });
+
+  // =========================================================================
+  // removeFcmToken
+  // =========================================================================
+
+  group('removeFcmToken', () {
+    test('지정한 토큰만 삭제하고 다른 기기 토큰은 유지한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user, fcmToken: 'token-1');
+      await dataSource.addFcmToken(user.id, 'token-2');
+
+      await dataSource.removeFcmToken(user.id, 'token-1');
+
+      expect(await _readFcmTokens(fakeFirestore, user.id), ['token-2']);
+    });
+
+    test('fcm 서브문서가 없어도 예외 없이 완료된다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      await expectLater(
+        dataSource.removeFcmToken(user.id, 'token-1'),
+        completes,
+      );
     });
   });
 }

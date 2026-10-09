@@ -2,10 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
-import 'package:studio_chance/data/models/invite_info_model.dart';
-import 'package:studio_chance/data/models/store_member_info_model.dart';
-import 'package:studio_chance/data/models/store_model.dart';
-import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
@@ -17,26 +13,10 @@ class MockStoreDataSource extends Mock implements StoreDataSource {}
 
 class MockUserDataSource extends Mock implements UserDataSource {}
 
-// mocktail fallback 등록용
-class FakeStoreModel extends Fake implements StoreModel {}
-
-class FakeStoreMemberInfoModel extends Fake implements StoreMemberInfoModel {}
-
-class FakeUserStoreInfoModel extends Fake implements UserStoreInfoModel {}
-
-class FakeInviteInfoModel extends Fake implements InviteInfoModel {}
-
 void main() {
   late StoreRepositoryImpl repository;
   late MockStoreDataSource mockStoreDataSource;
   late MockUserDataSource mockUserDataSource;
-
-  setUpAll(() {
-    registerFallbackValue(FakeStoreModel());
-    registerFallbackValue(FakeStoreMemberInfoModel());
-    registerFallbackValue(FakeUserStoreInfoModel());
-    registerFallbackValue(UserRole.admin);
-  });
 
   setUp(() {
     mockStoreDataSource = MockStoreDataSource();

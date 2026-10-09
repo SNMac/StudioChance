@@ -165,7 +165,7 @@ test('memberById 필드가 없으면 점포 생성이 거부된다', async () =>
   );
 });
 
-test('타인을 함께 멤버로 넣으면 거부된다', async () => {
+test('타인을 함께 멤버로 넣으면 역할과 무관하게 거부된다', async () => {
   const db = env.authenticatedContext('creator1').firestore();
   await assertFails(
     setDoc(doc(collection(db, 'stores')), {
@@ -176,10 +176,6 @@ test('타인을 함께 멤버로 넣으면 거부된다', async () => {
       },
     }),
   );
-});
-
-test('타인을 함께 ADMIN으로 넣어도 거부된다', async () => {
-  const db = env.authenticatedContext('creator1').firestore();
   await assertFails(
     setDoc(doc(collection(db, 'stores')), {
       name: '새 점포',

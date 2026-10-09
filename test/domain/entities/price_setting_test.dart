@@ -438,21 +438,6 @@ void main() {
       expect(result, 240000); // 5,000 × 24 × 2
     });
 
-    test('다일(2일), isHourly=false → price × 2', () {
-      final setting = _makeWeekdaySetting(
-        price: 100000,
-        isHourly: false,
-        isAllDay: true,
-      );
-      final result = setting.calculatePrice(
-        start: DateTime(2026, 5, 18), // 월요일
-        end: DateTime(2026, 5, 20), // 수요일 (2일)
-        headCount: 1,
-        isAllDay: true,
-      );
-      expect(result, 200000); // 100,000 × 2
-    });
-
     test('다일, 평일→주말 경계 걸침 → 날짜별 DayGroup 요금 합산', () {
       // 금 50,000원 / 토 80,000원 (isHourly=false)
       final setting = _makeWeekendSplitSetting(

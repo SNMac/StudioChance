@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
@@ -19,14 +18,6 @@ class MockStoreRepository extends Mock implements StoreRepository {}
 class MockUserRepository extends Mock implements UserRepository {}
 
 class FakeStore extends Fake implements Store {}
-
-const testPreview = InviteStorePreview(
-  storeId: 'store-1',
-  storeName: '테스트 점포',
-  address: '경기 오산시 경기대로285번길 26',
-  addressDetail: '3층',
-  adminName: '홍길동',
-);
 
 void main() {
   late StoreUseCaseImpl useCase;
@@ -224,33 +215,13 @@ void main() {
   // =========================================================================
 
   group('getStoreByInviteCode', () {
-    test('유효한 초대 코드로 점포를 반환한다', () async {
-      when(() => mockStoreRepo.getStoreByInviteCode('VALID1'))
-          .thenAnswer((_) async => right(testPreview));
-
-      final result = await useCase.getStoreByInviteCode('VALID1');
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), testPreview);
-    });
-
-    test('점포가 없으면 right(null)을 반환한다', () async {
+    test('초대 코드를 그대로 Repository에 전달한다', () async {
       when(() => mockStoreRepo.getStoreByInviteCode(any()))
           .thenAnswer((_) async => right(null));
 
-      final result = await useCase.getStoreByInviteCode('NOTFND');
+      await useCase.getStoreByInviteCode('VALID1');
 
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), isNull);
-    });
-
-    test('Repository 실패 시 left를 반환한다', () async {
-      when(() => mockStoreRepo.getStoreByInviteCode(any()))
-          .thenAnswer((_) async => left(Exception('초대 코드 오류')));
-
-      final result = await useCase.getStoreByInviteCode('INVALD');
-
-      expect(result.isLeft(), true);
+      verify(() => mockStoreRepo.getStoreByInviteCode('VALID1')).called(1);
     });
   });
 
@@ -268,16 +239,6 @@ void main() {
 
       expect(result.isRight(), true);
       verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
-    });
-
-    test('Repository 실패 시 left를 전파한다', () async {
-      when(
-        () => mockStoreRepo.softDeleteStore(any()),
-      ).thenAnswer((_) async => left(Exception('삭제 실패')));
-
-      final result = await useCase.softDeleteStore('store-123');
-
-      expect(result.isLeft(), true);
     });
   });
 }

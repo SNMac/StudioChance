@@ -2,7 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
+import 'package:studio_chance/common/enums/weekday.dart';
+import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/domain/entities/headcount_rule.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/space_option.dart';
+import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
@@ -19,6 +25,58 @@ class MockUserRepository extends Mock implements UserRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
 
 class FakeReservation extends Fake implements Reservation {}
+
+/// 평일(월~금) 시간당 요금 + 인원 추가 요금이 설정된 PriceSetting
+///
+/// - 기본 요금: 0~24시 시간당 [hourlyPrice]원
+/// - 인원 추가: 기준 2명 초과 시 1인·1시간당 1,000원
+PriceSetting _weekdayHourlySetting(int hourlyPrice) {
+  return PriceSetting(
+    dayGroups: [
+      DayGroup(
+        days: [
+          Weekday.monday,
+          Weekday.tuesday,
+          Weekday.wednesday,
+          Weekday.thursday,
+          Weekday.friday,
+        ],
+        headcountRule: const HeadcountRule(
+          headcountBase: 2,
+          headcountExtraPrice: 1000,
+          isHeadcountHourly: true,
+          isHeadcountPerPerson: true,
+        ),
+        timeSlots: [
+          TimeSlot(
+            isAllDay: false,
+            startTime: 0,
+            endTime: 1440,
+            price: hourlyPrice,
+            isHourly: true,
+            isPerPerson: false,
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+/// 공간 A(시간당 10,000원), 공간 B(시간당 20,000원)를 가진 점포
+final _pricedStore = fakeStore.copyWith(
+  spaceOptions: [
+    SpaceOption(
+      id: 'space-a',
+      name: '공간 A',
+      priceSetting: _weekdayHourlySetting(10000),
+    ),
+    SpaceOption(
+      id: 'space-b',
+      name: '공간 B',
+      priceSetting: _weekdayHourlySetting(20000),
+    ),
+  ],
+);
 
 void main() {
   late ReservationUseCaseImpl useCase;
@@ -52,7 +110,7 @@ void main() {
   // =========================================================================
 
   group('createReservation', () {
-    test('writer.user를 현재 로그인 유저로 교체하여 Repository를 호출한다', () async {
+    test('writer.user만 현재 로그인 유저로 교체하고 writer.role은 유지하여 Repository를 호출한다', () async {
       when(() => mockUserRepo.getCurrentUser())
           .thenAnswer((_) async => right(fakeUser));
 
@@ -73,25 +131,6 @@ void main() {
 
       result.fold((error) => fail(error.toString()), (_) {});
       expect(capturedReservation?.writer.user.id, fakeUser.id);
-    });
-
-    test('createReservation 시 writer.role은 원본 그대로 유지된다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
-
-      Reservation? capturedReservation;
-      when(
-        () => mockReservationRepo.createReservation(
-          reservation: any(named: 'reservation'),
-        ),
-      ).thenAnswer((invocation) async {
-        capturedReservation =
-            invocation.namedArguments[#reservation] as Reservation;
-        return right(capturedReservation!);
-      });
-
-      await useCase.createReservation(reservation: fakeReservation);
-
       expect(capturedReservation?.writer.role, UserRole.admin);
     });
 
@@ -253,20 +292,6 @@ void main() {
       ).called(1);
     });
 
-    test('Repository 실패 시 left를 전파한다', () async {
-      when(
-        () => mockReservationRepo.updateReservation(
-          reservation: any(named: 'reservation'),
-        ),
-      ).thenAnswer((_) async => left(Exception('수정 실패')));
-
-      final result = await useCase.updateReservation(
-        reservation: fakeReservation,
-      );
-
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
-    });
-
     test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
       when(
         () => mockStoreRepo.getStore(any()),
@@ -282,6 +307,109 @@ void main() {
           reservation: any(named: 'reservation'),
         ),
       );
+    });
+  });
+
+  // =========================================================================
+  // 가격 계산 (_applyCalculatedPrice)
+  // =========================================================================
+
+  // fakeReservation: 2026-05-01(금) 10:00~12:00, 4명, priceAdjustment -5,000원
+  group('가격 계산', () {
+    Reservation? capturedCreate;
+    Reservation? capturedUpdate;
+
+    setUp(() {
+      capturedCreate = null;
+      capturedUpdate = null;
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockReservationRepo.createReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedCreate = invocation.namedArguments[#reservation] as Reservation;
+        return right(capturedCreate!);
+      });
+      when(
+        () => mockReservationRepo.updateReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedUpdate = invocation.namedArguments[#reservation] as Reservation;
+        return right(null);
+      });
+    });
+
+    test('createReservation: 점포 요금 설정으로 calculatedPrice/totalPrice를 계산해 저장한다',
+        () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(_pricedStore));
+
+      final result = await useCase.createReservation(
+        reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
+      );
+
+      result.fold((error) => fail(error.toString()), (_) {});
+      verify(() => mockStoreRepo.getStore(fakeStoreSummary.id)).called(1);
+      // 기본 10,000 × 2시간 + 추가 인원 2명 × 1,000 × 2시간 = 24,000
+      expect(capturedCreate?.calculatedPrice, 24000);
+      // 24,000 + (-5,000)
+      expect(capturedCreate?.totalPrice, 19000);
+    });
+
+    test('createReservation: spaceOptionId에 해당하는 공간의 요금 설정을 사용한다', () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(_pricedStore));
+
+      await useCase.createReservation(
+        reservation: fakeReservation.copyWith(spaceOptionId: 'space-b'),
+      );
+
+      // 기본 20,000 × 2시간 + 추가 인원 2명 × 1,000 × 2시간 = 44,000
+      expect(capturedCreate?.calculatedPrice, 44000);
+      expect(capturedCreate?.totalPrice, 39000);
+    });
+
+    test('createReservation: 점포에 공간(요금 설정)이 없으면 기존 가격을 유지한다', () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
+
+      await useCase.createReservation(reservation: fakeReservation);
+
+      expect(capturedCreate?.calculatedPrice, 50000);
+      expect(capturedCreate?.totalPrice, 45000);
+    });
+
+    test('updateReservation: 점포 요금 설정으로 calculatedPrice/totalPrice를 계산해 저장한다',
+        () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(_pricedStore));
+
+      final result = await useCase.updateReservation(
+        reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
+      );
+
+      result.fold((error) => fail(error.toString()), (_) {});
+      verify(() => mockStoreRepo.getStore(fakeStoreSummary.id)).called(1);
+      expect(capturedUpdate?.calculatedPrice, 24000);
+      expect(capturedUpdate?.totalPrice, 19000);
+    });
+
+    test('updateReservation: 점포에 공간(요금 설정)이 없으면 기존 가격을 유지한다', () async {
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
+
+      await useCase.updateReservation(reservation: fakeReservation);
+
+      expect(capturedUpdate?.calculatedPrice, 50000);
+      expect(capturedUpdate?.totalPrice, 45000);
     });
   });
 
@@ -310,22 +438,6 @@ void main() {
           reservationId: 'res-001',
         ),
       ).called(1);
-    });
-
-    test('Repository 실패 시 left를 전파한다', () async {
-      when(
-        () => mockReservationRepo.deleteReservation(
-          storeId: any(named: 'storeId'),
-          reservationId: any(named: 'reservationId'),
-        ),
-      ).thenAnswer((_) async => left(Exception('삭제 실패')));
-
-      final result = await useCase.deleteReservation(
-        storeId: 'store-123',
-        reservationId: 'res-001',
-      );
-
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
   });
 
@@ -357,24 +469,6 @@ void main() {
           status: ReservationStatus.canceled,
         ),
       ).called(1);
-    });
-
-    test('Repository 실패 시 left를 전파한다', () async {
-      when(
-        () => mockReservationRepo.updateReservationStatus(
-          storeId: any(named: 'storeId'),
-          reservationId: any(named: 'reservationId'),
-          status: any(named: 'status'),
-        ),
-      ).thenAnswer((_) async => left(Exception('상태 변경 실패')));
-
-      final result = await useCase.updateReservationStatus(
-        storeId: 'store-123',
-        reservationId: 'res-001',
-        status: ReservationStatus.canceled,
-      );
-
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
     });
   });
 

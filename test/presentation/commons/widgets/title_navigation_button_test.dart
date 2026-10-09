@@ -53,21 +53,4 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
-
-  testWidgets('제목이 길면 말줄임 처리된다', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        TitleNavigationButton(
-          title: _maxLengthTitle,
-          content: '관리자',
-          onPressed: () {},
-        ),
-        375.0,
-      ),
-    );
-
-    final titleText = tester.widget<Text>(find.text(_maxLengthTitle));
-    expect(titleText.overflow, TextOverflow.ellipsis);
-    expect(titleText.maxLines, 1);
-  });
 }

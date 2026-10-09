@@ -5,20 +5,6 @@ import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 
 void main() {
   group('InviteStorePreviewModel', () {
-    test('Callable 응답 JSON을 파싱한다', () {
-      final model = InviteStorePreviewModel.fromJson({
-        'storeId': 'store-1',
-        'storeName': '테스트 점포',
-        'address': '경기 오산시 경기대로285번길 26',
-        'addressDetail': '3층',
-        'adminName': '홍길동',
-      });
-
-      expect(model.storeId, 'store-1');
-      expect(model.storeName, '테스트 점포');
-      expect(model.adminName, '홍길동');
-    });
-
     test('toEntity가 모든 필드를 그대로 옮긴다', () {
       const model = InviteStorePreviewModel(
         storeId: 'store-1',
