@@ -277,9 +277,18 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     showCustomAlertDialog(
       context: context,
       title: '예약 점포 변경',
-      content:
-          '${store.name}(으)로 변경하면 공간 선택이 초기화되고 '
-          '${store.name}의 현재 요금이 적용됩니다.',
+      // 어느 점포로 바꾸는지 분명하도록 점포명만 강조한다
+      contentSpans: [
+        TextSpan(
+          text: store.name,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const TextSpan(
+          text:
+              '(으)로 변경하면 공간 선택이 초기화되고 '
+              '해당 점포의 현재 요금이 적용됩니다.',
+        ),
+      ],
       confirmText: '변경',
       onConfirmAfterPop: () {
         if (!mounted) return;
