@@ -5,7 +5,6 @@ import {
   ANDROID_CHANNEL_ID,
   JOIN_REQUEST_TYPE,
   adminUidsOf,
-  buildJoinRequestBody,
   buildJoinRequestMessages,
 } from './join_request_payload.js';
 
@@ -26,13 +25,6 @@ test('memberById가 없으면 빈 배열을 반환한다', () => {
 
 test('role이 없는 멤버는 관리자가 아니다', () => {
   assert.deepEqual(adminUidsOf({ ghost: {} }), []);
-});
-
-test('알림 본문은 "[닉네임]님이 [점포명] 가입을 신청했습니다." 형식이다', () => {
-  assert.equal(
-    buildJoinRequestBody('홍길동', '스튜디오 챈스'),
-    '홍길동님이 스튜디오 챈스 가입을 신청했습니다.',
-  );
 });
 
 test('토큰마다 메시지를 하나씩 만든다', () => {

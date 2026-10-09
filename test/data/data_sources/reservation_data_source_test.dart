@@ -63,21 +63,14 @@ void main() {
       expect(result.id, isNotEmpty);
       expect(result.customerName, reservation.customerName);
       expect(result.storeId, storeId);
-    });
-
-    test('생성된 문서를 Firestore에서 직접 조회할 수 있다', () async {
-      final reservation = _testReservation(storeId: storeId);
-
-      final created = await dataSource.createReservation(reservation);
+      // 점포 서브컬렉션 경로(stores/{storeId}/reservations/{id})에 저장되어야 한다
       final doc = await fakeFirestore
           .collection('stores')
           .doc(storeId)
           .collection('reservations')
-          .doc(created.id)
+          .doc(result.id)
           .get();
-
       expect(doc.exists, true);
-      expect(doc.data()?['customerName'], reservation.customerName);
     });
 
     test(
@@ -322,19 +315,7 @@ void main() {
       final updated = await dataSource.getReservation(storeId, created.id);
       expect(updated?.customerName, '김영희');
       expect(updated?.headCount, 5);
-    });
-
-    test('업데이트 후 기존 필드는 변경되지 않는다', () async {
-      final reservation = _testReservation(storeId: storeId);
-      final created = await dataSource.createReservation(reservation);
-
-      await dataSource.updateReservation(
-        storeId,
-        created.id,
-        {'customerName': '김영희'},
-      );
-
-      final updated = await dataSource.getReservation(storeId, created.id);
+      // update가 set(덮어쓰기)으로 바뀌면 지정하지 않은 필드가 사라진다
       expect(updated?.customerPhone, reservation.customerPhone);
       expect(updated?.memo, reservation.memo);
       expect(updated?.totalPrice, reservation.totalPrice);

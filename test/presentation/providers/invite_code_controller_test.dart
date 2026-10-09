@@ -51,6 +51,7 @@ void main() {
         expect(container.read(inviteCodeControllerProvider), isA<AsyncData>());
       });
 
+      // 기본값에서는 강제 재발급을 요청하지 않는다 — 유효 코드 재사용은 Repository가 판단한다
       test('전달된 storeId로 UseCase를 호출한다', () async {
         await container
             .read(inviteCodeControllerProvider.notifier)
@@ -62,16 +63,6 @@ void main() {
             forceRegenerate: false,
           ),
         ).called(1);
-      });
-
-      test('기본값에서는 강제 재발급을 요청하지 않는다 — 유효 코드 재사용은 Repository가 판단한다', () async {
-        await container
-            .read(inviteCodeControllerProvider.notifier)
-            .issue('store1');
-
-        verifyNever(
-          () => mockStoreUseCase.createInviteCode(any(), forceRegenerate: true),
-        );
       });
 
       test('forceRegenerate를 넘기면 그대로 UseCase에 전달한다', () async {

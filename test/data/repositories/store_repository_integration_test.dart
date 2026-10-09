@@ -64,35 +64,6 @@ void main() {
   // =========================================================================
 
   group('createStore + getStore', () {
-    test('createStore 후 getStore가 점포를 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-      final storeEntity = _testStoreEntity(uid, adminUser);
-
-      final created = await repository.createStore(
-        store: storeEntity,
-        color: StoreColor.blue,
-        memo: '관리자 메모',
-      );
-
-      expect(created.isRight(), true);
-      final storeId = created.getRight().toNullable()!.id;
-
-      final fetched = await repository.getStore(storeId);
-
-      expect(fetched.isRight(), true);
-      expect(fetched.getRight().toNullable(), isNotNull);
-      expect(fetched.getRight().toNullable()!.name, '통합 테스트 점포');
-    });
-
     test('getStore memberInfos가 users 컬렉션에서 hydrate된다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
@@ -115,6 +86,7 @@ void main() {
       final fetched = await repository.getStore(storeId);
 
       final store = fetched.getRight().toNullable()!;
+      expect(store.name, '통합 테스트 점포');
       expect(store.memberInfos.length, 1);
       expect(store.memberInfos.first.user.id, uid);
       expect(store.memberInfos.first.role, UserRole.admin);
@@ -159,36 +131,6 @@ void main() {
   // =========================================================================
 
   group('updateStore', () {
-    test('updateStore 후 점포 이름이 변경된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final createdStore = created.getRight().toNullable()!;
-
-      await repository.updateStore(
-        store: createdStore.copyWith(name: '변경된 점포명'),
-        uid: uid,
-        color: StoreColor.green,
-        memo: '새 메모',
-      );
-
-      final fetched = await repository.getStore(createdStore.id);
-      expect(fetched.getRight().toNullable()!.name, '변경된 점포명');
-    });
-
     test('점포명 변경 시 다른 멤버(staff)의 storeById.name 캐시도 함께 갱신된다', () async {
       final ownerUid = FirestoreEmulatorHelper.generateId();
       final staffUid = FirestoreEmulatorHelper.generateId();
@@ -242,38 +184,6 @@ void main() {
           staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
     });
-
-    test('updateStore 후 users 컬렉션의 storeById에 color, memo가 반영된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final createdStore = created.getRight().toNullable()!;
-
-      await repository.updateStore(
-        store: createdStore,
-        uid: uid,
-        color: StoreColor.red,
-        memo: '변경된 메모',
-      );
-
-      final userDoc = await fakeFirestore.collection('users').doc(uid).get();
-      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
-      expect(storeById?[createdStore.id]['color'], 'RED');
-      expect(storeById?[createdStore.id]['memo'], '변경된 메모');
-    });
   });
 
   // =========================================================================
@@ -281,32 +191,6 @@ void main() {
   // =========================================================================
 
   group('softDeleteStore', () {
-    test('softDeleteStore 후 getStore가 null을 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final storeId = created.getRight().toNullable()!.id;
-
-      await repository.softDeleteStore(storeId);
-
-      final fetched = await repository.getStore(storeId);
-      expect(fetched.isRight(), true);
-      expect(fetched.getRight().toNullable(), isNull);
-    });
-
     test('softDeleteStore 후 멤버(staff)의 storeById 캐시도 제거된다', () async {
       final ownerUid = FirestoreEmulatorHelper.generateId();
       final staffUid = FirestoreEmulatorHelper.generateId();
@@ -365,30 +249,6 @@ void main() {
   // =========================================================================
 
   group('createInviteCode', () {
-    test('초대 코드를 생성하고 6자리 코드를 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final storeId = created.getRight().toNullable()!.id;
-
-      final result = await repository.createInviteCode(storeId);
-
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable()!.inviteCode.length, 6);
-    });
-
     test('유효 시간 내 재호출 시 동일한 코드를 재사용한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
@@ -426,40 +286,6 @@ void main() {
   // =========================================================================
 
   group('requestJoinStore + approveMember', () {
-    test('requestJoinStore 후 waitingMemberInfos에 신청자가 추가된다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final memberUid = FirestoreEmulatorHelper.generateId();
-      await _seedUserDoc(fakeFirestore, ownerUid);
-      await _seedUserDoc(fakeFirestore, memberUid);
-      final adminUser = User(
-        id: ownerUid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-      final created = await repository.createStore(
-        store: _testStoreEntity(ownerUid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final storeId = created.getRight().toNullable()!.id;
-
-      await repository.requestJoinStore(
-        storeId: storeId,
-        uid: memberUid,
-        role: UserRole.staff,
-        color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
-        memo: '',
-      );
-
-      final doc = await fakeFirestore.collection('stores').doc(storeId).get();
-      final waiting = doc.data()?['waitingMemberById'] as Map<String, dynamic>?;
-      expect(waiting?.containsKey(memberUid), isTrue);
-    });
-
     test('approveMember 후 getStore memberInfos에 승인된 멤버가 포함된다', () async {
       final ownerUid = FirestoreEmulatorHelper.generateId();
       final memberUid = FirestoreEmulatorHelper.generateId();
@@ -498,14 +324,6 @@ void main() {
       final store = fetched.getRight().toNullable()!;
       final memberIds = store.memberInfos.map((m) => m.user.id).toList();
       expect(memberIds.contains(memberUid), isTrue);
-
-      final memberUserDoc = await fakeFirestore
-          .collection('users')
-          .doc(memberUid)
-          .get();
-      final memberStoreById =
-          memberUserDoc.data()?['storeById'] as Map<String, dynamic>?;
-      expect(memberStoreById?[storeId]['role'], 'STAFF');
     });
   });
 

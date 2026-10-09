@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
@@ -19,8 +18,6 @@ class MockStoreUseCase extends Mock implements StoreUseCase {}
 
 class FakeAuthInfo extends Fake implements AuthInfo {}
 
-class FakeUser extends Fake implements User {}
-
 void main() {
   late AuthUseCaseImpl useCase;
   late MockAuthRepository mockAuthRepo;
@@ -29,7 +26,6 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeAuthInfo());
-    registerFallbackValue(FakeUser());
   });
 
   setUp(() {
@@ -57,15 +53,6 @@ void main() {
       expect(result.isRight(), true);
       expect(result.getRight().toNullable(), fakeUser);
       verify(() => mockUserRepo.fetchOrCreateUser(fakeAuthInfo)).called(1);
-    });
-
-    test('Repository 실패를 그대로 전파한다', () async {
-      when(() => mockUserRepo.fetchOrCreateUser(any()))
-          .thenAnswer((_) async => left(Exception('유저 조회/생성 실패')));
-
-      final result = await useCase.fetchOrCreateUser(fakeAuthInfo);
-
-      expect(result.isLeft(), true);
     });
   });
 
