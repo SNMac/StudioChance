@@ -180,6 +180,11 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `paymentMethod: PaymentMethod` enum (`lib/common/enums/payment_method.dart`)
 - Repository 조회 시 `currentUid` 필요 — StoreSummary의 color를 user의 `storeById[storeId].color`에서 조회
 - color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
+- **점포 이동**: 예약은 점포 서브컬렉션에 있으므로 점포를 바꾸면 `update`가 아니라 **이동**이다.
+  `updateReservation(fromStoreId:)`가 다르면 `moveReservation`이 트랜잭션으로 원래 문서를 지우고 새 점포에 같은 id로 만든다
+  - 작성자(`writerId`/`writerRole`)는 옮긴 사람과 새 점포에서의 역할로 바뀐다. 새 점포 멤버가 아니면 `ReservationPermissionDeniedException`
+  - `createdAt`은 원래 값 유지, 요금은 새 점포의 현재 요금표 적용 (D12)
+  - 상세 모달은 모달을 연 채 이동할 수 있으므로 삭제·안내문·권한 판단에 `widget.reservation`이 아니라 마지막 저장값(`_saved`)을 쓴다
 
 ## 중요 사항
 - 정식 출시 전이라 prod에 실데이터가 없다 — Firestore 스키마 변경 시 기존 데이터 마이그레이션은 고려하지 않아도 됨

@@ -208,6 +208,28 @@ class ReservationRepositoryImpl implements ReservationRepository {
   }
 
   @override
+  Future<Either<Exception, void>> moveReservation({
+    required Reservation reservation,
+    required String fromStoreId,
+  }) async {
+    try {
+      await _reservationDataSource.moveReservation(
+        fromStoreId,
+        ReservationModel.fromEntity(reservation),
+      );
+
+      _logger.i(
+        '예약 이동 완료\nid: ${reservation.id}, '
+        '$fromStoreId → ${reservation.storeSummary.id}',
+      );
+      return right(null);
+    } catch (e) {
+      _logger.e('예약 이동 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
   Future<Either<Exception, void>> deleteReservation({
     required String storeId,
     required String reservationId,

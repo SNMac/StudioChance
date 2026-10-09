@@ -170,6 +170,50 @@ void main() {
   });
 
   // =========================================================================
+  // moveReservation
+  // =========================================================================
+
+  group('moveReservation', () {
+    test('원래 점포 id와 이동할 점포·작성자가 담긴 모델로 DataSource를 호출한다', () async {
+      when(
+        () => mockReservationDs.moveReservation(any(), any()),
+      ).thenAnswer((_) async {});
+
+      final result = await repository.moveReservation(
+        reservation: fakeReservation,
+        fromStoreId: 'store-old',
+      );
+
+      expect(result.isRight(), true);
+      final model =
+          verify(
+                () => mockReservationDs.moveReservation(
+                  'store-old',
+                  captureAny(),
+                ),
+              ).captured.single
+              as ReservationModel;
+      expect(model.id, fakeReservation.id);
+      expect(model.storeId, fakeReservation.storeSummary.id);
+      expect(model.writerId, fakeReservation.writer.user.id);
+      expect(model.writerRole, fakeReservation.writer.role);
+    });
+
+    test('DataSource 실패 시 left(exception)를 반환한다', () async {
+      when(
+        () => mockReservationDs.moveReservation(any(), any()),
+      ).thenThrow(Exception('이동 실패'));
+
+      final result = await repository.moveReservation(
+        reservation: fakeReservation,
+        fromStoreId: 'store-old',
+      );
+
+      expect(result.isLeft(), true);
+    });
+  });
+
+  // =========================================================================
   // deleteReservation
   // =========================================================================
 

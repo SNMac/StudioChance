@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
+import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/common/enums/weekday.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
@@ -540,6 +541,136 @@ void main() {
         expect(capturedUpdate?.totalPrice, 39000);
         expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(20000));
       });
+    });
+  });
+
+  // =========================================================================
+  // 점포 이동 (updateReservation + fromStoreId)
+  // =========================================================================
+
+  group('점포 이동', () {
+    final storeB = fakeStoreSummary.copyWith(id: 'store-b', name: '점포 B');
+    // 예약 당시 요금표(시간당 30,000원)를 가진 원래 점포의 예약
+    final stored = fakeReservation.copyWith(
+      spaceOptionId: 'space-a',
+      priceSetting: _weekdayHourlySetting(30000),
+    );
+    // 원래 점포는 ADMIN, 옮길 점포는 STAFF인 사용자
+    final mover = fakeUserWithStores([fakeStoreSummary.id, storeB.id]).copyWith(
+      id: 'user-mover',
+    );
+    final moverInStoreB = mover.copyWith(
+      storeInfos: [
+        mover.storeInfos.first,
+        mover.storeInfos.last.copyWith(role: UserRole.staff),
+      ],
+    );
+
+    Reservation? capturedMove;
+
+    setUp(() {
+      capturedMove = null;
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(moverInStoreB));
+      when(
+        () => mockReservationRepo.getReservation(
+          storeId: fakeStoreSummary.id,
+          reservationId: stored.id,
+          currentUid: moverInStoreB.id,
+        ),
+      ).thenAnswer((_) async => right(stored));
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(_pricedStore));
+      when(
+        () => mockReservationRepo.moveReservation(
+          reservation: any(named: 'reservation'),
+          fromStoreId: any(named: 'fromStoreId'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedMove = invocation.namedArguments[#reservation] as Reservation;
+        return right(null);
+      });
+    });
+
+    test('원래 점포에서 이동하고, 작성자를 옮긴 사람과 새 점포 역할로 바꾼다', () async {
+      final result = await useCase.updateReservation(
+        reservation: stored.copyWith(storeSummary: storeB),
+        fromStoreId: fakeStoreSummary.id,
+      );
+
+      result.fold((error) => fail(error.toString()), (_) {});
+      verify(
+        () => mockReservationRepo.moveReservation(
+          reservation: any(named: 'reservation'),
+          fromStoreId: fakeStoreSummary.id,
+        ),
+      ).called(1);
+      verifyNever(
+        () => mockReservationRepo.updateReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      );
+      expect(capturedMove?.storeSummary.id, storeB.id);
+      expect(capturedMove?.writer.user.id, 'user-mover');
+      expect(capturedMove?.writer.role, UserRole.staff);
+    });
+
+    test('새 점포의 현재 요금표로 계산한다', () async {
+      await useCase.updateReservation(
+        reservation: stored.copyWith(storeSummary: storeB),
+        fromStoreId: fakeStoreSummary.id,
+      );
+
+      verify(() => mockStoreRepo.getStore(storeB.id)).called(1);
+      expect(capturedMove?.calculatedPrice, 24000);
+      expect(capturedMove?.priceSetting, _weekdayHourlySetting(10000));
+    });
+
+    test('새 점포의 멤버가 아니면 left를 반환하고 이동하지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUserWithStores([fakeStoreSummary.id])));
+
+      final result = await useCase.updateReservation(
+        reservation: stored.copyWith(storeSummary: storeB),
+        fromStoreId: fakeStoreSummary.id,
+      );
+
+      result.fold(
+        (error) => expect(error, isA<ReservationPermissionDeniedException>()),
+        (_) => fail('실패를 예상했으나 성공했습니다'),
+      );
+      verifyNever(
+        () => mockReservationRepo.moveReservation(
+          reservation: any(named: 'reservation'),
+          fromStoreId: any(named: 'fromStoreId'),
+        ),
+      );
+    });
+
+    test('fromStoreId가 같은 점포면 이동하지 않고 수정한다', () async {
+      when(
+        () => mockReservationRepo.updateReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      ).thenAnswer((_) async => right(null));
+
+      await useCase.updateReservation(
+        reservation: stored,
+        fromStoreId: fakeStoreSummary.id,
+      );
+
+      verify(
+        () => mockReservationRepo.updateReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      ).called(1);
+      verifyNever(
+        () => mockReservationRepo.moveReservation(
+          reservation: any(named: 'reservation'),
+          fromStoreId: any(named: 'fromStoreId'),
+        ),
+      );
     });
   });
 

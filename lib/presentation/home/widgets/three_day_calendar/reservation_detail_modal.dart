@@ -42,9 +42,11 @@ import 'package:studio_chance/presentation/providers/reservation_ocr_controller.
 
 /// 예약 수정 완료 콜백.
 ///
+/// [fromStoreId]는 저장 전 예약이 있던 점포다. [updated]의 점포와 다르면 예약을 옮긴다.
 /// [applyCurrentPrice]가 true면 사용자가 '현재 요금 적용'을 눌렀다는 뜻이다.
-typedef ReservationSavedCallback = void Function(
+typedef ReservationSavedCallback = Future<void> Function(
   Reservation updated, {
+  required String fromStoreId,
   required bool applyCurrentPrice,
 });
 
@@ -68,8 +70,9 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
   /// 완료 탭 시 수정된 Reservation을 전달하는 콜백.
   final ReservationSavedCallback onSaved;
 
-  /// 삭제 확인 시 호출되는 콜백.
-  final VoidCallback onDeleted;
+  /// 삭제 확인 시 호출되는 콜백. 마지막으로 저장된 예약을 전달한다
+  /// (모달을 연 채 점포를 옮겼다면 [reservation]과 점포가 다르다).
+  final ValueChanged<Reservation> onDeleted;
 
   final double maxAvailableHeight;
 
@@ -160,7 +163,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       currentUserProvider.select((u) => u.asData?.value?.storeInfos),
     );
     if (storeInfos == null) return false;
-    final storeId = widget.reservation.storeSummary.id;
+    final storeId = _saved.storeSummary.id;
     final info = storeInfos.where((i) => i.id == storeId).firstOrNull;
     return info?.role == UserRole.admin || info?.role == UserRole.staff;
   }
@@ -268,6 +271,29 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     _calculatedPrice = _priceWith(_effectivePriceSetting) ?? r.calculatedPrice;
   }
 
+  void _onStoreSelected(StoreSummary store) {
+    if (store.id == _storeSummary.id) return;
+    // 점포를 바꾸면 공간·요금이 초기화되고 저장 시 예약 문서가 새 점포로 옮겨지므로 확인을 받는다
+    showCustomAlertDialog(
+      context: context,
+      title: '예약 점포 변경',
+      content:
+          '${store.name}(으)로 변경하면 공간 선택이 초기화되고 '
+          '${store.name}의 현재 요금이 적용됩니다.\n'
+          '저장하면 예약이 ${store.name}(으)로 옮겨집니다.',
+      confirmText: '변경',
+      onConfirmAfterPop: () {
+        if (!mounted) return;
+        setState(() {
+          _storeSummary = store;
+          _spaceOptions = null;
+          _spaceOptionId = null;
+        });
+        _loadSpaceOptions(store.id);
+      },
+    );
+  }
+
   void _onAdjustmentFocusChanged() {
     final raw = _adjustmentController.text
         .replaceAll(',', '')
@@ -339,7 +365,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
   }
 
   void _loadReservationCount({String? customerName, String? customerPhone}) {
-    final r = widget.reservation;
+    final r = _saved;
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getReservationCountByCustomer(
@@ -538,13 +564,22 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       spaceOptionId: _spaceOptionId,
       priceSetting: _effectivePriceSetting ?? _saved.priceSetting,
     );
-    widget.onSaved(updated, applyCurrentPrice: _applyCurrentPrice);
+    // 방문 횟수는 저장이 끝난 뒤 다시 센다 — 점포를 옮긴 경우 저장 전에는 새 점포에 문서가 없어 0이 된다
+    widget
+        .onSaved(
+          updated,
+          fromStoreId: _saved.storeSummary.id,
+          applyCurrentPrice: _applyCurrentPrice,
+        )
+        .then((_) {
+          if (!mounted) return;
+          _loadReservationCount(
+            customerName: updated.customerName,
+            customerPhone: updated.customerPhone,
+          );
+        });
     _saved = updated;
     _applyCurrentPrice = false;
-    _loadReservationCount(
-      customerName: _nameController.text.trim(),
-      customerPhone: _phoneController.text.replaceAll('-', '').trim(),
-    );
     _syncScrollPosition(toEdit: false);
     setState(() {
       _isEditing = false;
@@ -569,7 +604,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
             child: const Text('삭제'),
             onPressed: () {
               Navigator.pop(ctx);
-              widget.onDeleted();
+              widget.onDeleted(_saved);
               _dismissModal();
             },
           ),
@@ -967,14 +1002,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
                 shape: BoxShape.circle,
               ),
             ),
-            onSelected: (s) {
-              setState(() {
-                _storeSummary = s;
-                _spaceOptions = null;
-                _spaceOptionId = null;
-              });
-              _loadSpaceOptions(s.id);
-            },
+            onSelected: _onStoreSelected,
           ),
         ),
         if (spaceOptions != null && spaceOptions.isNotEmpty)
@@ -1274,14 +1302,14 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           title: '입금 안내문',
           onPressed: () => context.push(
             '${SCRoute.home.fullPath}/${SCRoute.paymentInstruction.path}',
-            extra: widget.reservation,
+            extra: _saved,
           ),
         ),
         TextActionButton(
           title: '확정 안내문',
           onPressed: () => context.push(
             '${SCRoute.home.fullPath}/${SCRoute.confirmationNotice.path}',
-            extra: widget.reservation,
+            extra: _saved,
           ),
         ),
       ],
@@ -1345,7 +1373,7 @@ Future<void> showReservationDetailModal(
   List<StoreSummary>? availableStores,
   List<SpaceOption>? initialSpaceOptions,
   required ReservationSavedCallback onSaved,
-  required VoidCallback onDeleted,
+  required ValueChanged<Reservation> onDeleted,
 }) {
   return showModalBottomSheet<void>(
     context: context,

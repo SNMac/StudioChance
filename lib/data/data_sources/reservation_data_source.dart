@@ -44,6 +44,15 @@ abstract interface class ReservationDataSource {
     Map<String, dynamic> data,
   );
 
+  /// 예약을 다른 점포로 이동
+  ///
+  /// [fromStoreId] 점포의 문서를 지우고 [reservation].storeId 점포에 같은 id로 새로 만든다.
+  /// 원래 문서가 없으면 [ReservationNotFoundException]을 던진다. 생성 시각은 원래 값을 유지한다.
+  Future<void> moveReservation(
+    String fromStoreId,
+    ReservationModel reservation,
+  );
+
   /// 예약 삭제
   Future<void> deleteReservation(String storeId, String reservationId);
 
@@ -187,6 +196,36 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
       await _reservationsRef(storeId).doc(reservationId).update(updates);
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<void> moveReservation(
+    String fromStoreId,
+    ReservationModel reservation,
+  ) async {
+    try {
+      final fromRef = _reservationsRef(fromStoreId).doc(reservation.id);
+      final toRef = _reservationsRef(reservation.storeId).doc(reservation.id);
+
+      // 삭제와 생성 중 하나만 반영되면 예약이 사라지거나 두 점포에 중복되므로 트랜잭션으로 묶는다
+      await _firestore.runTransaction((tx) async {
+        final fromDoc = await tx.get(fromRef);
+        if (!fromDoc.exists) {
+          throw ReservationNotFoundException(
+            message: '이동할 예약을 찾을 수 없습니다. id: ${reservation.id}',
+          );
+        }
+
+        final json = reservation.toJson();
+        json['createdAt'] = fromDoc.data()?['createdAt'];
+        json['updatedAt'] = FieldValue.serverTimestamp();
+
+        tx.set(toRef, json);
+        tx.delete(fromRef);
+      });
     } catch (e) {
       throw handleFirestoreError(e);
     }

@@ -1,7 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
@@ -58,8 +60,13 @@ abstract interface class ReservationUseCase {
   /// - [applyCurrentPrice]가 true (사용자가 현재 요금 적용을 선택)
   /// - 점포나 공간이 바뀜 (원래 스냅샷은 다른 공간의 요금표)
   /// - 저장된 스냅샷이 없음
+  ///
+  /// [fromStoreId]가 [reservation]의 점포와 다르면 예약을 그 점포에서 새 점포로 이동한다.
+  /// 이때 작성자는 현재 사용자와 새 점포에서의 역할로 바뀌며, 새 점포의 멤버가 아니면
+  /// [ReservationPermissionDeniedException]을 반환한다. null이면 이동 없이 수정한다.
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
+    String? fromStoreId,
     bool applyCurrentPrice = false,
   });
 
@@ -181,36 +188,70 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   @override
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
+    String? fromStoreId,
     bool applyCurrentPrice = false,
-  }) async {
-    final pricedResult = await getCurrentUserOrThrow(_userRepository)
-        .flatMap(
-          (currentUser) => TaskEither(
+  }) {
+    final storedStoreId = fromStoreId ?? reservation.storeSummary.id;
+    final isMoving = storedStoreId != reservation.storeSummary.id;
+
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      // 이동하면 작성자는 옮긴 사람과 새 점포에서의 역할로 바뀐다
+      final roleInTarget = currentUser.storeInfos
+          .where((info) => info.id == reservation.storeSummary.id)
+          .firstOrNull
+          ?.role;
+      if (isMoving && roleInTarget == null) {
+        return TaskEither<Exception, void>.left(
+          ReservationPermissionDeniedException(
+            message:
+                '이동할 점포의 멤버가 아닙니다. storeId: ${reservation.storeSummary.id}',
+          ),
+        );
+      }
+
+      return TaskEither(
             () => _reservationRepository.getReservation(
-              storeId: reservation.storeSummary.id,
+              storeId: storedStoreId,
               reservationId: reservation.id,
               currentUid: currentUser.id,
             ),
-          ),
-        )
-        .flatMap((stored) {
-          // 화면이 보낸 요금표는 신뢰하지 않고 저장된 예약의 요금표로 바꿔 둔다 —
-          // 현재 요금표를 구하지 못해 그대로 저장되는 경로에서도 지켜지도록
-          final base = reservation.copyWith(priceSetting: stored?.priceSetting);
-          final keepsSnapshot =
-              !applyCurrentPrice &&
-              stored != null &&
-              stored.keepsPriceSettingFor(base);
-          return keepsSnapshot
-              ? TaskEither.right(_applyPriceSetting(base, base.priceSetting!))
-              : TaskEither(() => _applyCurrentPrice(base));
-        })
-        .run();
-
-    return pricedResult.fold(
-      (error) => Future.value(left(error)),
-      (priced) => _reservationRepository.updateReservation(reservation: priced),
-    );
+          )
+          .flatMap((stored) {
+            // 화면이 보낸 요금표는 신뢰하지 않고 저장된 예약의 요금표로 바꿔 둔다 —
+            // 현재 요금표를 구하지 못해 그대로 저장되는 경로에서도 지켜지도록
+            final base = reservation.copyWith(
+              priceSetting: stored?.priceSetting,
+            );
+            final keepsSnapshot =
+                !applyCurrentPrice &&
+                stored != null &&
+                stored.keepsPriceSettingFor(base);
+            return keepsSnapshot
+                ? TaskEither<Exception, Reservation>.right(
+                    _applyPriceSetting(base, base.priceSetting!),
+                  )
+                : TaskEither(() => _applyCurrentPrice(base));
+          })
+          .flatMap(
+            (priced) => isMoving
+                ? TaskEither(
+                    () => _reservationRepository.moveReservation(
+                      reservation: priced.copyWith(
+                        writer: StoreMemberInfo(
+                          user: currentUser,
+                          role: roleInTarget!,
+                        ),
+                      ),
+                      fromStoreId: storedStoreId,
+                    ),
+                  )
+                : TaskEither(
+                    () => _reservationRepository.updateReservation(
+                      reservation: priced,
+                    ),
+                  ),
+          );
+    }).run();
   }
 
   @override
