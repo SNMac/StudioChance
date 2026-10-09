@@ -13,6 +13,7 @@
     ]
   },
   "enabledPlugins": {
-    "firebase@anthropic-plugin-directory": true
+    "firebase@anthropic-plugin-directory": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true
   }
 }
