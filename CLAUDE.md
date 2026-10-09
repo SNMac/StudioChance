@@ -15,7 +15,6 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - 앱 내에서 ID를 자체 생성할 때는 `uuid` 패키지의 `const Uuid().v4()` 사용 (`DateTime.now().millisecondsSinceEpoch` 금지)
 
 ## 라이브러리 문서 조회
-- 라이브러리/API 문서 확인, 코드 생성, 설정·구성 단계가 필요할 때는 명시적으로 요청하지 않아도 항상 Context7 MCP로 최신 문서를 조회할 것
 - Deprecated API 사용은 지양 — 항상 최신 권장 API/패턴으로 구현할 것
 - Context7 MCP가 응답하지 않거나 사용량 초과 등으로 사용 불가한 상태여도 작업을 멈추지 말고, 기존 지식으로 진행할 것. 단, 기존 지식만으로 해결이 어려우면 공식 문서를 별도로 확인할 것
 
@@ -46,7 +45,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
     - `extensions/`: UI 관련 extension 메서드 (포맷터, colors 등)
     - `widgets/`: 재사용 공통 위젯
   - `/home`: 홈 화면
-  - `/my_page`: 마이페이지 화면 (미구현)
+  - `/my_page`: 마이페이지 화면 (점포 목록, 승인 대기 모달 `widgets/pending_member_modal.dart`)
   - `/onboarding`: 닉네임 입력 화면 (온보딩 진입점만 포함, 나머지 플로우는 `/commons`에 위치)
   - `/providers`: UI 상태 관리 (위젯 액션이 UseCase 호출을 필요로 하면 여기에 전용 Controller 생성)
   - `/sign_in`: 로그인 화면
@@ -95,7 +94,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 신규 점포 폼 컨트롤러 추가 시 두 파일 모두 참고: `store_form_controllerable.dart`
 
 ### 공휴일 요금 — isHoliday 콜백 패턴 (D8)
-`PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함, #15 [C-1]).
+`PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
 - 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
 - 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 날짜별 판단 결과를 콜백으로 전달
@@ -109,7 +108,6 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 `UserUseCaseImpl`처럼 모든 메서드가 Repository에 단일 라인으로 위임하는 UseCase도 의도적으로 허용.
 - 목적: Presentation → UseCase → Repository 계층 규칙을 지키기 위함 (Presentation이 Repository를 직접 호출하지 않도록 강제)
 - 현재 비즈니스 로직이 없다는 이유로 UseCase 계층 자체를 생략하지 않음 — 향후 검증/가공 로직이 필요해지면 이 계층에 추가
-- 관련 이슈: [#15](https://github.com/SNMac/StudioChance/issues/15) [M-3]
 
 ### stores read 최소 권한 (D11)
 `stores` read는 `isMember()` 전용. 비멤버의 초대 코드 조회는 Callable `lookupInviteCode`가 대신한다.
@@ -322,10 +320,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 ## Agent Working Rules
 
-- 관련 파일 먼저 읽고 수정
 - 최소 수정 우선
 - 여러 파일 수정 시 계획 먼저 설명
-- 빌드 깨지면 즉시 복구
-- 기존 패턴 우선
 - superpowers 플랜 문서(`writing-plans`/`executing-plans`)대로 작업할 때: 각 스텝 구현 완료 시 해당 스텝 커밋 → 플랜 문서의 체크리스트 항목 체크 표시 후 별도 `docs:` 커밋 (예: `docs: #17 - Task 1 플랜 체크리스트 완료 표시`), 스텝 단위로 반복
 
