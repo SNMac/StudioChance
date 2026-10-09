@@ -46,6 +46,14 @@ abstract interface class ReservationRepository {
     required Reservation reservation,
   });
 
+  /// 예약을 [fromStoreId] 점포에서 [reservation]의 점포로 이동
+  ///
+  /// 원래 문서 삭제와 새 문서 생성이 함께 반영된다. 작성자는 [reservation].writer로 기록된다.
+  Future<Either<Exception, void>> moveReservation({
+    required Reservation reservation,
+    required String fromStoreId,
+  });
+
   /// 예약 삭제
   Future<Either<Exception, void>> deleteReservation({
     required String storeId,

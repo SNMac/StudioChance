@@ -7,6 +7,7 @@ import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/router/router_path.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/common/enums/payment_method.dart';
@@ -39,6 +40,16 @@ import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.d
 import 'package:studio_chance/presentation/commons/widgets/image_preview_page.dart';
 import 'package:studio_chance/presentation/providers/reservation_ocr_controller.dart';
 
+/// 예약 수정 완료 콜백.
+///
+/// [fromStoreId]는 저장 전 예약이 있던 점포다. [updated]의 점포와 다르면 예약을 옮긴다.
+/// [applyCurrentPrice]가 true면 사용자가 '현재 요금 적용'을 눌렀다는 뜻이다.
+typedef ReservationSavedCallback = Future<void> Function(
+  Reservation updated, {
+  required String fromStoreId,
+  required bool applyCurrentPrice,
+});
+
 /// 예약 확인 모달 (읽기 전용 ↔ 편집 모드 인라인 전환).
 ///
 /// - 읽기 전용: 모든 필드 표시 전용, AppBar에 '편집' 버튼
@@ -57,10 +68,11 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
   final Reservation reservation;
 
   /// 완료 탭 시 수정된 Reservation을 전달하는 콜백.
-  final void Function(Reservation) onSaved;
+  final ReservationSavedCallback onSaved;
 
-  /// 삭제 확인 시 호출되는 콜백.
-  final VoidCallback onDeleted;
+  /// 삭제 확인 시 호출되는 콜백. 마지막으로 저장된 예약을 전달한다
+  /// (모달을 연 채 점포를 옮겼다면 [reservation]과 점포가 다르다).
+  final ValueChanged<Reservation> onDeleted;
 
   final double maxAvailableHeight;
 
@@ -121,6 +133,13 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
   List<SpaceOption>? _spaceOptions;
   String? _spaceOptionId;
   int _calculatedPrice = 0;
+
+  /// 마지막으로 저장된 예약. 저장된 요금표 판단과 편집 취소 시 복원 기준이다.
+  /// 모달을 연 채 저장하면 [widget.reservation]과 달라진다.
+  late Reservation _saved;
+
+  /// 사용자가 '현재 요금 적용'을 눌렀는지 여부
+  bool _applyCurrentPrice = false;
   String? _pendingSpaceNameFromOcr;
 
   // ── 방문 횟수 ─────────────────────────────────────────────────────────────
@@ -144,7 +163,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       currentUserProvider.select((u) => u.asData?.value?.storeInfos),
     );
     if (storeInfos == null) return false;
-    final storeId = widget.reservation.storeSummary.id;
+    final storeId = _saved.storeSummary.id;
     final info = storeInfos.where((i) => i.id == storeId).firstOrNull;
     return info?.role == UserRole.admin || info?.role == UserRole.staff;
   }
@@ -162,6 +181,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     _editController = ScrollController();
     _adjustmentFocusNode = FocusNode();
     _adjustmentFocusNode.addListener(_onAdjustmentFocusChanged);
+    _saved = widget.reservation;
     _initFields(widget.reservation);
     _spaceOptionId = widget.reservation.spaceOptionId;
     final preloaded = widget.initialSpaceOptions;
@@ -171,7 +191,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         _spaceOptionId = preloaded.first.id;
       }
       // initState에서 직접 계산 (setState 호출 불가)
-      _applyInitialPrice(preloaded);
+      _calculatedPrice = _priceWith(_effectivePriceSetting) ?? _calculatedPrice;
     } else {
       _loadSpaceOptions(widget.reservation.storeSummary.id);
     }
@@ -218,7 +238,9 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
   }
 
   void _resetFields() {
-    final r = widget.reservation;
+    final r = _saved;
+    final storeChanged = _storeSummary.id != r.storeSummary.id;
+    _applyCurrentPrice = false;
     _storeSummary = r.storeSummary;
     _status = r.status;
     _isAllDay = r.isAllDay;
@@ -236,6 +258,48 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         ? r.priceAdjustment.formattedPrice
         : '';
     _spaceOptionId = r.spaceOptionId;
+
+    // 모달을 열 때와 같은 규칙으로 가격을 맞춘다 — 그대로 두면 화면 가격과 저장 가격이 어긋난다
+    if (storeChanged) {
+      // 다른 점포의 공간 목록이 남아 있으므로 원래 점포 것으로 다시 불러온 뒤 재계산
+      _spaceOptions = null;
+      _loadSpaceOptions(r.storeSummary.id);
+      return;
+    }
+    final spaces = _spaceOptions;
+    if (spaces != null && spaces.isNotEmpty) _spaceOptionId ??= spaces.first.id;
+    _calculatedPrice = _priceWith(_effectivePriceSetting) ?? r.calculatedPrice;
+  }
+
+  void _onStoreSelected(StoreSummary store) {
+    if (store.id == _storeSummary.id) return;
+    // 점포를 바꾸면 공간·요금이 초기화되고 저장 시 예약 문서가 새 점포로 옮겨지므로 확인을 받는다
+    showCustomAlertDialog(
+      context: context,
+      title: '예약 점포 변경',
+      // 어느 점포로 바꾸는지 분명하도록 점포명만 강조한다
+      contentSpans: [
+        TextSpan(
+          text: store.name,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const TextSpan(
+          text:
+              '(으)로 변경하면 공간 선택이 초기화되고 '
+              '해당 점포의 현재 요금이 적용됩니다.',
+        ),
+      ],
+      confirmText: '변경',
+      onConfirmAfterPop: () {
+        if (!mounted) return;
+        setState(() {
+          _storeSummary = store;
+          _spaceOptions = null;
+          _spaceOptionId = null;
+        });
+        _loadSpaceOptions(store.id);
+      },
+    );
   }
 
   void _onAdjustmentFocusChanged() {
@@ -309,7 +373,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
   }
 
   void _loadReservationCount({String? customerName, String? customerPhone}) {
-    final r = widget.reservation;
+    final r = _saved;
     ref
         .read(homeReservationActionsControllerProvider.notifier)
         .getReservationCountByCustomer(
@@ -323,45 +387,60 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         });
   }
 
-  void _recalculatePrice() {
+  /// 선택된 공간의 점포 현재 요금표. 공간 목록을 아직 못 불러왔으면 null.
+  PriceSetting? get _currentPriceSetting {
     final spaces = _spaceOptions;
-    if (spaces == null || spaces.isEmpty) return;
-    final priceSetting = _spaceOptionId != null
-        ? (spaces
-                  .where((s) => s.id == _spaceOptionId)
-                  .firstOrNull
-                  ?.priceSetting ??
-              spaces.first.priceSetting)
-        : spaces.first.priceSetting;
-    final headCount = int.tryParse(_headCountController.text) ?? 0;
-    final price = priceSetting.calculatePrice(
+    if (spaces == null || spaces.isEmpty) return null;
+    final space =
+        spaces.where((s) => s.id == _spaceOptionId).firstOrNull ?? spaces.first;
+    return space.priceSetting;
+  }
+
+  /// 저장된 요금표로 계산하는지 여부 — ReservationUseCase.updateReservation과 같은 규칙
+  bool get _usesSavedPriceSetting =>
+      !_applyCurrentPrice &&
+      _saved.keepsPriceSettingFor(
+        _saved.copyWith(
+          storeSummary: _storeSummary,
+          spaceOptionId: _spaceOptionId,
+        ),
+      );
+
+  PriceSetting? get _effectivePriceSetting =>
+      _usesSavedPriceSetting ? _saved.priceSetting : _currentPriceSetting;
+
+  /// 저장된 요금표와 점포의 현재 요금표가 다를 때만 현재 요금 적용을 제안한다.
+  bool get _canApplyCurrentPrice {
+    final current = _currentPriceSetting;
+    return _usesSavedPriceSetting &&
+        current != null &&
+        current != _saved.priceSetting;
+  }
+
+  /// '현재 요금 적용' 버튼에 표시할 현재 요금. 버튼을 보여주지 않을 때는 null.
+  int? get _applicableCurrentPrice =>
+      _canApplyCurrentPrice ? _priceWith(_currentPriceSetting) : null;
+
+  int? _priceWith(PriceSetting? priceSetting) {
+    return priceSetting?.calculatePrice(
       start: _startTime,
       end: _endTime,
-      headCount: headCount,
+      headCount: int.tryParse(_headCountController.text) ?? 0,
       isAllDay: _isAllDay,
       isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
     );
+  }
+
+  void _recalculatePrice() {
+    final price = _priceWith(_effectivePriceSetting);
+    if (price == null) return;
     setState(() => _calculatedPrice = price);
   }
 
-  // initState에서 setState 없이 초기 가격을 계산할 때만 사용
-  void _applyInitialPrice(List<SpaceOption> spaces) {
-    if (spaces.isEmpty) return;
-    final priceSetting = _spaceOptionId != null
-        ? (spaces
-                  .where((s) => s.id == _spaceOptionId)
-                  .firstOrNull
-                  ?.priceSetting ??
-              spaces.first.priceSetting)
-        : spaces.first.priceSetting;
-    final headCount = int.tryParse(_headCountController.text) ?? 0;
-    _calculatedPrice = priceSetting.calculatePrice(
-      start: _startTime,
-      end: _endTime,
-      headCount: headCount,
-      isAllDay: _isAllDay,
-      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
-    );
+  void _onApplyCurrentPricePressed() {
+    // _recalculatePrice의 setState가 함께 반영한다
+    _applyCurrentPrice = true;
+    _recalculatePrice();
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -479,7 +558,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         ) ??
         0;
 
-    final updated = widget.reservation.copyWith(
+    final updated = _saved.copyWith(
       storeSummary: _storeSummary,
       status: _status,
       customerName: _nameController.text.trim(),
@@ -495,12 +574,24 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       priceAdjustment: priceAdjustment,
       totalPrice: calculatedPrice + priceAdjustment,
       spaceOptionId: _spaceOptionId,
+      priceSetting: _effectivePriceSetting ?? _saved.priceSetting,
     );
-    widget.onSaved(updated);
-    _loadReservationCount(
-      customerName: _nameController.text.trim(),
-      customerPhone: _phoneController.text.replaceAll('-', '').trim(),
-    );
+    // 방문 횟수는 저장이 끝난 뒤 다시 센다 — 점포를 옮긴 경우 저장 전에는 새 점포에 문서가 없어 0이 된다
+    widget
+        .onSaved(
+          updated,
+          fromStoreId: _saved.storeSummary.id,
+          applyCurrentPrice: _applyCurrentPrice,
+        )
+        .then((_) {
+          if (!mounted) return;
+          _loadReservationCount(
+            customerName: updated.customerName,
+            customerPhone: updated.customerPhone,
+          );
+        });
+    _saved = updated;
+    _applyCurrentPrice = false;
     _syncScrollPosition(toEdit: false);
     setState(() {
       _isEditing = false;
@@ -525,7 +616,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
             child: const Text('삭제'),
             onPressed: () {
               Navigator.pop(ctx);
-              widget.onDeleted();
+              widget.onDeleted(_saved);
               _dismissModal();
             },
           ),
@@ -856,6 +947,15 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           _buildSection2Edit(),
           _buildSection3Edit(),
           _buildSection4Edit(textTheme),
+          if (_applicableCurrentPrice case final currentPrice?)
+            GroupedFormContainer(
+              children: [
+                TextActionButton(
+                  title: '현재 요금 적용 (${currentPrice.formattedPrice})',
+                  onPressed: _onApplyCurrentPricePressed,
+                ),
+              ],
+            ),
           GroupedFormContainer(
             children: [
               TextActionButton(
@@ -923,14 +1023,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
                 shape: BoxShape.circle,
               ),
             ),
-            onSelected: (s) {
-              setState(() {
-                _storeSummary = s;
-                _spaceOptions = null;
-                _spaceOptionId = null;
-              });
-              _loadSpaceOptions(s.id);
-            },
+            onSelected: _onStoreSelected,
           ),
         ),
         if (spaceOptions != null && spaceOptions.isNotEmpty)
@@ -1141,15 +1234,22 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           _adjustmentController.text.replaceAll(',', '').replaceAll('원', ''),
         ) ??
         0;
+    final footerStyle = textTheme.labelMedium?.copyWith(
+      color: context.secondaryLabel,
+    );
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
           start: horizontalPadding,
           top: 8,
         ),
-        child: Text(
-          '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
-          style: textTheme.labelMedium?.copyWith(color: context.secondaryLabel),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!_usesSavedPriceSetting && _currentPriceSetting != null)
+              Text('요금은 점포의 현재 요금 기준으로 계산됩니다', style: footerStyle),
+            Text('할인인 경우 -[값]을 입력해주세요 (예: -2,000)', style: footerStyle),
+          ],
         ),
       ),
       children: [
@@ -1215,14 +1315,14 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           title: '입금 안내문',
           onPressed: () => context.push(
             '${SCRoute.home.fullPath}/${SCRoute.paymentInstruction.path}',
-            extra: widget.reservation,
+            extra: _saved,
           ),
         ),
         TextActionButton(
           title: '확정 안내문',
           onPressed: () => context.push(
             '${SCRoute.home.fullPath}/${SCRoute.confirmationNotice.path}',
-            extra: widget.reservation,
+            extra: _saved,
           ),
         ),
       ],
@@ -1285,8 +1385,8 @@ Future<void> showReservationDetailModal(
   Reservation reservation, {
   List<StoreSummary>? availableStores,
   List<SpaceOption>? initialSpaceOptions,
-  required void Function(Reservation) onSaved,
-  required VoidCallback onDeleted,
+  required ReservationSavedCallback onSaved,
+  required ValueChanged<Reservation> onDeleted,
 }) {
   return showModalBottomSheet<void>(
     context: context,

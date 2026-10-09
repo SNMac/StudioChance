@@ -323,6 +323,59 @@ void main() {
   });
 
   // =========================================================================
+  // moveReservation
+  // =========================================================================
+
+  group('moveReservation', () {
+    const toStoreId = 'other-store';
+
+    DocumentReference<Map<String, dynamic>> docRef(String storeId, String id) =>
+        fakeFirestore
+            .collection('stores')
+            .doc(storeId)
+            .collection('reservations')
+            .doc(id);
+
+    test('새 점포에 같은 id로 문서를 만들고 원래 점포의 문서를 삭제한다', () async {
+      final created = await dataSource.createReservation(
+        _testReservation(storeId: storeId),
+      );
+      final originalCreatedAt =
+          (await docRef(storeId, created.id).get()).data()!['createdAt'];
+
+      await dataSource.moveReservation(
+        storeId,
+        created.copyWith(
+          storeId: toStoreId,
+          writerId: 'user-mover',
+          writerRole: UserRole.staff,
+          memo: '이동 후 메모',
+        ),
+      );
+
+      expect((await docRef(storeId, created.id).get()).exists, false);
+      final moved = (await docRef(toStoreId, created.id).get()).data()!;
+      expect(moved['storeId'], toStoreId);
+      expect(moved['writerId'], 'user-mover');
+      expect(moved['writerRole'], 'STAFF');
+      expect(moved['memo'], '이동 후 메모');
+      // 생성 시각은 원래 예약의 것을 유지한다
+      expect(moved['createdAt'], originalCreatedAt);
+    });
+
+    test('원래 점포에 문서가 없으면 ReservationNotFoundException을 던지고 아무것도 만들지 않는다',
+        () async {
+      final missing = _testReservation(storeId: toStoreId);
+
+      await expectLater(
+        dataSource.moveReservation(storeId, missing),
+        throwsA(isA<ReservationNotFoundException>()),
+      );
+      expect((await docRef(toStoreId, missing.id).get()).exists, false);
+    });
+  });
+
+  // =========================================================================
   // deleteReservation
   // =========================================================================
 

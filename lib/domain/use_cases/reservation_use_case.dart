@@ -1,6 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
+import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
@@ -50,8 +53,21 @@ abstract interface class ReservationUseCase {
   });
 
   /// 예약 정보 수정
+  ///
+  /// 가격은 저장된 예약의 요금표 스냅샷([Reservation.priceSetting])으로 재계산하므로,
+  /// 점포 요금이 바뀌어도 예약 가격이 저절로 바뀌지 않는다. 다음 경우에만 점포의
+  /// 현재 요금표로 재계산하고 스냅샷을 교체한다.
+  /// - [applyCurrentPrice]가 true (사용자가 현재 요금 적용을 선택)
+  /// - 점포나 공간이 바뀜 (원래 스냅샷은 다른 공간의 요금표)
+  /// - 저장된 스냅샷이 없음
+  ///
+  /// [fromStoreId]가 [reservation]의 점포와 다르면 예약을 그 점포에서 새 점포로 이동한다.
+  /// 이때 작성자는 현재 사용자와 새 점포에서의 역할로 바뀌며, 새 점포의 멤버가 아니면
+  /// [ReservationPermissionDeniedException]을 반환한다. null이면 이동 없이 수정한다.
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
+    String? fromStoreId,
+    bool applyCurrentPrice = false,
   });
 
   /// 예약 삭제
@@ -93,7 +109,10 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   Future<Either<Exception, Reservation>> createReservation({
     required Reservation reservation,
   }) async {
-    final pricedResult = await _applyCalculatedPrice(reservation);
+    // 새 예약에는 저장된 요금표가 없다 — 화면이 보낸 요금표는 쓰지 않는다
+    final pricedResult = await _applyCurrentPrice(
+      reservation.copyWith(priceSetting: null),
+    );
 
     return pricedResult.fold(
       (error) => Future.value(left(error)),
@@ -169,13 +188,70 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   @override
   Future<Either<Exception, void>> updateReservation({
     required Reservation reservation,
-  }) async {
-    final pricedResult = await _applyCalculatedPrice(reservation);
+    String? fromStoreId,
+    bool applyCurrentPrice = false,
+  }) {
+    final storedStoreId = fromStoreId ?? reservation.storeSummary.id;
+    final isMoving = storedStoreId != reservation.storeSummary.id;
 
-    return pricedResult.fold(
-      (error) => Future.value(left(error)),
-      (priced) => _reservationRepository.updateReservation(reservation: priced),
-    );
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      // 이동하면 작성자는 옮긴 사람과 새 점포에서의 역할로 바뀐다
+      final roleInTarget = currentUser.storeInfos
+          .where((info) => info.id == reservation.storeSummary.id)
+          .firstOrNull
+          ?.role;
+      if (isMoving && roleInTarget == null) {
+        return TaskEither<Exception, void>.left(
+          ReservationPermissionDeniedException(
+            message:
+                '이동할 점포의 멤버가 아닙니다. storeId: ${reservation.storeSummary.id}',
+          ),
+        );
+      }
+
+      return TaskEither(
+            () => _reservationRepository.getReservation(
+              storeId: storedStoreId,
+              reservationId: reservation.id,
+              currentUid: currentUser.id,
+            ),
+          )
+          .flatMap((stored) {
+            // 화면이 보낸 요금표는 신뢰하지 않고 저장된 예약의 요금표로 바꿔 둔다 —
+            // 현재 요금표를 구하지 못해 그대로 저장되는 경로에서도 지켜지도록
+            final base = reservation.copyWith(
+              priceSetting: stored?.priceSetting,
+            );
+            final keepsSnapshot =
+                !applyCurrentPrice &&
+                stored != null &&
+                stored.keepsPriceSettingFor(base);
+            return keepsSnapshot
+                ? TaskEither<Exception, Reservation>.right(
+                    _applyPriceSetting(base, base.priceSetting!),
+                  )
+                : TaskEither(() => _applyCurrentPrice(base));
+          })
+          .flatMap(
+            (priced) => isMoving
+                ? TaskEither(
+                    () => _reservationRepository.moveReservation(
+                      reservation: priced.copyWith(
+                        writer: StoreMemberInfo(
+                          user: currentUser,
+                          role: roleInTarget!,
+                        ),
+                      ),
+                      fromStoreId: storedStoreId,
+                    ),
+                  )
+                : TaskEither(
+                    () => _reservationRepository.updateReservation(
+                      reservation: priced,
+                    ),
+                  ),
+          );
+    }).run();
   }
 
   @override
@@ -219,11 +295,11 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   // Private Helpers
   // ===========================================================================
 
-  /// Store의 PriceSetting으로 calculatedPrice, totalPrice를 계산하여 반영한 예약 반환.
+  /// Store의 현재 PriceSetting으로 가격을 계산하고, 그 요금표를 스냅샷으로 저장한 예약 반환.
   ///
   /// Store 조회 자체가 실패(네트워크 등)하면 에러를 그대로 전파한다.
-  /// Store가 존재하지 않거나 PriceSetting 매칭에 실패하면 기존 값을 유지한다.
-  Future<Either<Exception, Reservation>> _applyCalculatedPrice(
+  /// Store가 존재하지 않거나 공간(요금표)이 없으면 기존 값을 유지한다.
+  Future<Either<Exception, Reservation>> _applyCurrentPrice(
     Reservation reservation,
   ) async {
     final storeResult = await _storeRepository.getStore(
@@ -246,21 +322,28 @@ class ReservationUseCaseImpl implements ReservationUseCase {
         );
         if (priceSetting == null) return right(reservation);
 
-        final calculatedPrice = priceSetting.calculatePrice(
-          start: reservation.startTime,
-          end: reservation.endTime,
-          headCount: reservation.headCount,
-          isAllDay: reservation.isAllDay,
-          isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
-        );
-
-        return right(
-          reservation.copyWith(
-            calculatedPrice: calculatedPrice,
-            totalPrice: calculatedPrice + reservation.priceAdjustment,
-          ),
-        );
+        return right(_applyPriceSetting(reservation, priceSetting));
       },
+    );
+  }
+
+  /// [priceSetting]으로 calculatedPrice, totalPrice를 계산하고 스냅샷으로 함께 담은 예약 반환.
+  Reservation _applyPriceSetting(
+    Reservation reservation,
+    PriceSetting priceSetting,
+  ) {
+    final calculatedPrice = priceSetting.calculatePrice(
+      start: reservation.startTime,
+      end: reservation.endTime,
+      headCount: reservation.headCount,
+      isAllDay: reservation.isAllDay,
+      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
+    );
+
+    return reservation.copyWith(
+      priceSetting: priceSetting,
+      calculatedPrice: calculatedPrice,
+      totalPrice: calculatedPrice + reservation.priceAdjustment,
     );
   }
 }

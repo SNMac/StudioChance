@@ -167,15 +167,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       reservation,
       availableStores: availableStores,
       initialSpaceOptions: spaceOptions,
-      onSaved: (updated) {
-        ref
+      onSaved: (updated, {required fromStoreId, required applyCurrentPrice}) {
+        return ref
             .read(homeReservationActionsControllerProvider.notifier)
-            .updateReservation(updated);
+            .updateReservation(
+              updated,
+              fromStoreId: fromStoreId,
+              applyCurrentPrice: applyCurrentPrice,
+            );
       },
-      onDeleted: () {
+      onDeleted: (current) {
         ref
             .read(homeReservationActionsControllerProvider.notifier)
-            .deleteReservation(reservation);
+            .deleteReservation(current);
       },
     );
   }

@@ -73,8 +73,14 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 ### ReservationUseCase → StoreRepository 의존성 (D3)
 현행 유지: `ReservationUseCaseImpl`이 `StoreRepository`를 주입받아 가격 계산에 사용.
-- `_applyCalculatedPrice`: 예약 생성/수정 전 점포 요금 설정 기반 계산 (필수 비즈니스 로직)
+- `_applyCurrentPrice`: 점포의 현재 요금표로 계산하고 그 요금표를 예약에 스냅샷(`Reservation.priceSetting`)으로 저장 (필수 비즈니스 로직)
 - PricingService 분리는 과도한 추상화 — 현재 규모에서 허용
+
+### 예약 요금표 스냅샷 (D12)
+예약 수정 시 점포의 현재 요금이 아니라 **예약에 저장된 요금표**로 재계산한다. 점포 요금이 바뀌어도 기존 예약 가격이 저절로 바뀌지 않게 하기 위함.
+- 현재 요금표를 쓰는 경우: 사용자가 상세 모달의 '현재 요금 적용'을 누름(`applyCurrentPrice`), 점포·공간이 바뀜, 저장된 스냅샷이 없음
+- 비교 기준은 UseCase가 조회한 저장된 예약이다 — 화면이 보낸 스냅샷은 신뢰하지 않는다 (D3)
+- 판단 규칙은 `Reservation.keepsPriceSettingFor`(엔티티 extension) 하나를 상세 모달과 `ReservationUseCaseImpl.updateReservation`이 공유한다 — 규칙이 갈라지면 화면 가격과 저장 가격이 어긋난다
 
 ### Common Exceptions 레이어 배치 (D4)
 `common/exceptions/` 를 모든 레이어 공유 위치로 유지.
@@ -96,7 +102,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ### 공휴일 요금 — isHoliday 콜백 패턴 (D8)
 `PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
-- 현재 모든 호출부(`_applyCalculatedPrice`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
+- 현재 모든 호출부(`_applyPriceSetting`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
 - 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 날짜별 판단 결과를 콜백으로 전달
 
 ### 앱 최초 실행 인증 데이터 삭제 (D9)
@@ -174,6 +180,11 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `paymentMethod: PaymentMethod` enum (`lib/common/enums/payment_method.dart`)
 - Repository 조회 시 `currentUid` 필요 — StoreSummary의 color를 user의 `storeById[storeId].color`에서 조회
 - color 폴백: `StoreColor.red` (currentUser가 storeById에 해당 점포 없을 때)
+- **점포 이동**: 예약은 점포 서브컬렉션에 있으므로 점포를 바꾸면 `update`가 아니라 **이동**이다.
+  `updateReservation(fromStoreId:)`가 다르면 `moveReservation`이 트랜잭션으로 원래 문서를 지우고 새 점포에 같은 id로 만든다
+  - 작성자(`writerId`/`writerRole`)는 옮긴 사람과 새 점포에서의 역할로 바뀐다. 새 점포 멤버가 아니면 `ReservationPermissionDeniedException`
+  - `createdAt`은 원래 값 유지, 요금은 새 점포의 현재 요금표 적용 (D12)
+  - 상세 모달은 모달을 연 채 이동할 수 있으므로 삭제·안내문·권한 판단에 `widget.reservation`이 아니라 마지막 저장값(`_saved`)을 쓴다
 
 ## 중요 사항
 - 정식 출시 전이라 prod에 실데이터가 없다 — Firestore 스키마 변경 시 기존 데이터 마이그레이션은 고려하지 않아도 됨
