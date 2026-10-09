@@ -322,7 +322,6 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 
 - 최소 수정 우선
 - 여러 파일 수정 시 계획 먼저 설명
-- superpowers 플랜 문서(`writing-plans`/`executing-plans`)대로 작업할 때: 각 스텝 구현 완료 시 해당 스텝 커밋 → 플랜 문서의 체크리스트 항목 체크 표시 후 별도 `docs:` 커밋 (예: `docs: #17 - Task 1 플랜 체크리스트 완료 표시`), 스텝 단위로 반복
 
 ## Agent skills
 

@@ -373,7 +373,6 @@ fabric.properties
 # AI
 .claude/cache/
 .claude/settings.local.json
-.superpowers/
 
 firebase.json
 firebase_options.dart
