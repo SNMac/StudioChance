@@ -80,7 +80,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 예약 수정 시 점포의 현재 요금이 아니라 **예약에 저장된 요금표**로 재계산한다. 점포 요금이 바뀌어도 기존 예약 가격이 저절로 바뀌지 않게 하기 위함.
 - 현재 요금표를 쓰는 경우: 사용자가 상세 모달의 '현재 요금 적용'을 누름(`applyCurrentPrice`), 점포·공간이 바뀜, 저장된 스냅샷이 없음
 - 비교 기준은 UseCase가 조회한 저장된 예약이다 — 화면이 보낸 스냅샷은 신뢰하지 않는다 (D3)
-- 상세 모달(`_usesSavedPriceSetting`)과 `ReservationUseCaseImpl.updateReservation`의 판단 규칙이 같아야 화면 가격과 저장 가격이 일치한다. 한쪽을 바꾸면 다른 쪽도 바꿀 것
+- 판단 규칙은 `Reservation.keepsPriceSettingFor`(엔티티 extension) 하나를 상세 모달과 `ReservationUseCaseImpl.updateReservation`이 공유한다 — 규칙이 갈라지면 화면 가격과 저장 가격이 어긋난다
 
 ### Common Exceptions 레이어 배치 (D4)
 `common/exceptions/` 를 모든 레이어 공유 위치로 유지.

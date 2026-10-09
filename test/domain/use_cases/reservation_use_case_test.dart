@@ -433,10 +433,16 @@ void main() {
         () => mockStoreRepo.getStore(any()),
       ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
 
-      await useCase.createReservation(reservation: fakeReservation);
+      await useCase.createReservation(
+        // 화면이 보낸 요금표는 저장하지 않는다
+        reservation: fakeReservation.copyWith(
+          priceSetting: _weekdayHourlySetting(1),
+        ),
+      );
 
       expect(capturedCreate?.calculatedPrice, 50000);
       expect(capturedCreate?.totalPrice, 45000);
+      expect(capturedCreate?.priceSetting, isNull);
     });
 
     test('updateReservation: 저장된 요금표가 없으면 현재 요금으로 계산하고 요금표를 저장한다',
@@ -508,6 +514,20 @@ void main() {
         expect(capturedUpdate?.calculatedPrice, 24000);
         expect(capturedUpdate?.totalPrice, 19000);
         expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(10000));
+      });
+
+      test('updateReservation: 현재 요금표를 구할 수 없으면 화면이 보낸 요금표 대신 저장된 요금표를 남긴다',
+          () async {
+        when(
+          () => mockStoreRepo.getStore(any()),
+        ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
+
+        await useCase.updateReservation(
+          reservation: stored.copyWith(priceSetting: _weekdayHourlySetting(1)),
+          applyCurrentPrice: true,
+        );
+
+        expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(30000));
       });
 
       test('updateReservation: 공간이 바뀌면 새 공간의 현재 요금표를 적용한다', () async {

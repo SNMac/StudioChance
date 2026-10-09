@@ -102,7 +102,10 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   Future<Either<Exception, Reservation>> createReservation({
     required Reservation reservation,
   }) async {
-    final pricedResult = await _applyCurrentPrice(reservation);
+    // 새 예약에는 저장된 요금표가 없다 — 화면이 보낸 요금표는 쓰지 않는다
+    final pricedResult = await _applyCurrentPrice(
+      reservation.copyWith(priceSetting: null),
+    );
 
     return pricedResult.fold(
       (error) => Future.value(left(error)),
@@ -180,7 +183,6 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required Reservation reservation,
     bool applyCurrentPrice = false,
   }) async {
-    // 화면이 보낸 스냅샷은 신뢰하지 않고 저장된 예약의 스냅샷을 기준으로 삼는다
     final pricedResult = await getCurrentUserOrThrow(_userRepository)
         .flatMap(
           (currentUser) => TaskEither(
@@ -192,15 +194,16 @@ class ReservationUseCaseImpl implements ReservationUseCase {
           ),
         )
         .flatMap((stored) {
-          final snapshot = stored?.priceSetting;
+          // 화면이 보낸 요금표는 신뢰하지 않고 저장된 예약의 요금표로 바꿔 둔다 —
+          // 현재 요금표를 구하지 못해 그대로 저장되는 경로에서도 지켜지도록
+          final base = reservation.copyWith(priceSetting: stored?.priceSetting);
           final keepsSnapshot =
               !applyCurrentPrice &&
-              snapshot != null &&
-              stored!.storeSummary.id == reservation.storeSummary.id &&
-              stored.spaceOptionId == reservation.spaceOptionId;
+              stored != null &&
+              stored.keepsPriceSettingFor(base);
           return keepsSnapshot
-              ? TaskEither.right(_applyPriceSetting(reservation, snapshot))
-              : TaskEither(() => _applyCurrentPrice(reservation));
+              ? TaskEither.right(_applyPriceSetting(base, base.priceSetting!))
+              : TaskEither(() => _applyCurrentPrice(base));
         })
         .run();
 
