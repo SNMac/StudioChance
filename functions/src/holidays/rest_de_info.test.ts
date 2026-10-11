@@ -24,6 +24,15 @@ test('조회 URL은 월 단위·JSON으로 요청하고 기본값(10건)보다 �
   assert.equal(url.searchParams.get('_type'), 'json');
 });
 
+test('Encoding 인증키를 넣어도 Decoding 인증키와 같은 URL을 만든다', () => {
+  // 공공데이터포털은 같은 키를 두 형태로 준다. Encoding 키를 그대로 다시 인코딩하면
+  // %가 %25가 되어 SERVICE_KEY_IS_NOT_REGISTERED_ERROR가 난다.
+  const decodedKey = 'abc+def/ghi==';
+  const encodedKey = 'abc%2Bdef%2Fghi%3D%3D';
+
+  assert.equal(restDeInfoUrl(encodedKey, 2027, 5), restDeInfoUrl(decodedKey, 2027, 5));
+});
+
 test('항목이 여러 개면 배열로 온다', () => {
   const json = response(
     {

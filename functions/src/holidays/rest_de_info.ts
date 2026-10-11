@@ -10,10 +10,14 @@ export const REST_DE_INFO_URL =
 /**
  * 한 달 치 조회 URL. `solMonth` 생략 시 동작이 문서마다 달라 월 단위로 조회한다.
  * 한 달 공휴일은 많아야 몇 건이지만 기본값(10건)에 기대지 않도록 `numOfRows`를 넉넉히 준다.
+ *
+ * 공공데이터포털이 보여주는 인증키는 URL 인코딩된 형태(`%2B` 등)일 수 있다. 그대로 다시
+ * 인코딩하면 `%`가 `%25`가 되어 미등록 키 오류가 나므로 먼저 디코딩한다. 인코딩되지 않은
+ * 키에는 `%`가 없어 디코딩해도 그대로다.
  */
 export function restDeInfoUrl(serviceKey: string, year: number, month: number): string {
   const params = new URLSearchParams({
-    serviceKey,
+    serviceKey: decodeURIComponent(serviceKey),
     solYear: String(year),
     solMonth: String(month).padStart(2, '0'),
     numOfRows: '100',

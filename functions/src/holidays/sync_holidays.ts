@@ -46,7 +46,11 @@ export const syncHolidays = onSchedule(
         official.set(year, await fetchOfficialYear(DATA_GO_KR_SERVICE_KEY.value(), year));
       } catch (error) {
         // 일부 월만 받은 채로 교체하면 공휴일이 사라지므로 그 연도는 이번에 건너뛴다
-        logger.error('공식 공휴일 조회 실패 — 기존 문서를 유지한다', { year, error });
+        // Error 객체는 구조화 로그에서 {}로 직렬화되므로 메시지를 꺼내 남긴다
+        logger.error('공식 공휴일 조회 실패 — 기존 문서를 유지한다', {
+          year,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -90,8 +94,11 @@ async function fetchOfficialYear(serviceKey: string, year: number): Promise<Holi
   const days: HolidayDays = {};
   for (let month = 1; month <= 12; month++) {
     const response = await fetch(restDeInfoUrl(serviceKey, year, month));
-    // 게이트웨이 오류는 HTTP 401과 XML 본문으로 오기도 하므로 JSON 파싱 전에 거른다
-    if (!response.ok) throw new Error(`HTTP ${response.status} (${year}-${month})`);
+    // 게이트웨이 오류(미등록 키 등)는 HTTP 4xx와 다른 형식의 본문으로 오므로 JSON 파싱 전에 거른다
+    if (!response.ok) {
+      const body = (await response.text()).slice(0, 300);
+      throw new Error(`HTTP ${response.status} (${year}-${month}): ${body}`);
+    }
     Object.assign(days, parseRestDeInfo(await response.json()));
   }
   return days;
