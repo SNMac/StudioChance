@@ -19,7 +19,11 @@ List<DateTime> pricedDatesOf({
   final startDate = DateTime(start.year, start.month, start.day);
   if (!isAllDay) return [startDate];
   return [
-    for (int dayOffset = 0; dayOffset < end.difference(start).inDays; dayOffset++)
+    for (
+      int dayOffset = 0;
+      dayOffset < end.difference(start).inDays;
+      dayOffset++
+    )
       startDate.add(Duration(days: dayOffset)),
   ];
 }
@@ -66,11 +70,13 @@ abstract class PriceSetting with _$PriceSetting {
         end: end,
         isAllDay: true,
       )) {
-        final dayGroup = _dayGroupFor(dayDate, isHoliday: holidayChecker(dayDate));
+        final dayGroup = _dayGroupFor(
+          dayDate,
+          isHoliday: holidayChecker(dayDate),
+        );
         if (dayGroup == null) continue;
 
-        final slot =
-            dayGroup.timeSlots.where((s) => s.isAllDay).firstOrNull;
+        final slot = dayGroup.timeSlots.where((s) => s.isAllDay).firstOrNull;
         if (slot == null) continue;
 
         anyMatched = true;
@@ -118,7 +124,9 @@ abstract class PriceSetting with _$PriceSetting {
 
       anyMatched = true;
       final overlapHours = (overlapEnd - overlapStart) / 60.0;
-      int slotPrice = slot.isHourly ? (slot.price * overlapHours).round() : slot.price;
+      int slotPrice = slot.isHourly
+          ? (slot.price * overlapHours).round()
+          : slot.price;
       if (slot.isPerPerson) slotPrice *= headCount;
       totalBase += slotPrice;
     }
@@ -132,7 +140,8 @@ abstract class PriceSetting with _$PriceSetting {
     if (extraPeople > 0) {
       extraCharge = rule.headcountExtraPrice;
       if (rule.isHeadcountPerPerson) extraCharge *= extraPeople;
-      if (rule.isHeadcountHourly) extraCharge = (extraCharge * totalHours).round();
+      if (rule.isHeadcountHourly)
+        extraCharge = (extraCharge * totalHours).round();
     }
 
     return totalBase + extraCharge;
@@ -149,7 +158,9 @@ abstract class PriceSetting with _$PriceSetting {
 
     final weekdayGroup = groupOf(
       Weekday.values.firstWhere(
-        (w) => w.index + 1 == date.weekday, // Weekday.monday.index = 0, weekday = 1
+        (w) =>
+            w.index + 1 ==
+            date.weekday, // Weekday.monday.index = 0, weekday = 1
         orElse: () => Weekday.monday,
       ),
     );

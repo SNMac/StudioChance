@@ -46,9 +46,20 @@ void main() {
       final json = fakeReservationModel.toUpdateJson();
 
       const editableFields = {
-        'status', 'customerName', 'headCount', 'customerPhone', 'memo',
-        'isAllDay', 'startTime', 'endTime', 'platform', 'paymentMethod',
-        'calculatedPrice', 'priceAdjustment', 'totalPrice', 'spaceOptionId',
+        'status',
+        'customerName',
+        'headCount',
+        'customerPhone',
+        'memo',
+        'isAllDay',
+        'startTime',
+        'endTime',
+        'platform',
+        'paymentMethod',
+        'calculatedPrice',
+        'priceAdjustment',
+        'totalPrice',
+        'spaceOptionId',
       };
       for (final field in editableFields) {
         expect(json.containsKey(field), true, reason: '$field 누락');

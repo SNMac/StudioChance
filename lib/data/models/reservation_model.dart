@@ -78,10 +78,22 @@ abstract class ReservationModel with _$ReservationModel {
   Map<String, dynamic> toUpdateJson() {
     final json = toJson();
     const editableFields = {
-      'status', 'customerName', 'headCount', 'customerPhone', 'memo',
-      'isAllDay', 'startTime', 'endTime', 'platform', 'paymentMethod',
-      'calculatedPrice', 'priceAdjustment', 'totalPrice', 'spaceOptionId',
-      'priceSettings', 'holidayDates',
+      'status',
+      'customerName',
+      'headCount',
+      'customerPhone',
+      'memo',
+      'isAllDay',
+      'startTime',
+      'endTime',
+      'platform',
+      'paymentMethod',
+      'calculatedPrice',
+      'priceAdjustment',
+      'totalPrice',
+      'spaceOptionId',
+      'priceSettings',
+      'holidayDates',
     };
     return {
       for (final entry in json.entries)

@@ -118,24 +118,26 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required Reservation reservation,
   }) async {
     // 새 예약에는 저장된 스냅샷이 없다 — 화면이 보낸 스냅샷은 쓰지 않는다
-    final unpriced = reservation.copyWith(priceSetting: null, holidayDates: null);
+    final unpriced = reservation.copyWith(
+      priceSetting: null,
+      holidayDates: null,
+    );
     final calendar = await _holidayCalendarFor(unpriced);
     final pricedResult = await _applyCurrentPrice(unpriced, calendar);
 
     return pricedResult.fold(
       (error) => Future.value(left(error)),
-      (priced) =>
-          getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
-            final reservationWithWriter = priced.copyWith(
-              writer: priced.writer.copyWith(user: currentUser),
-            );
+      (priced) => getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+        final reservationWithWriter = priced.copyWith(
+          writer: priced.writer.copyWith(user: currentUser),
+        );
 
-            return TaskEither(
-              () => _reservationRepository.createReservation(
-                reservation: reservationWithWriter,
-              ),
-            );
-          }).run(),
+        return TaskEither(
+          () => _reservationRepository.createReservation(
+            reservation: reservationWithWriter,
+          ),
+        );
+      }).run(),
     );
   }
 
@@ -179,18 +181,19 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required DateTime start,
     required DateTime end,
   }) {
-    return Stream.fromFuture(getCurrentUserOrThrow(_userRepository).run())
-        .asyncExpand(
-          (result) => result.fold(
-            (error) => Stream.error(error),
-            (user) => _reservationRepository.watchReservationsByDateRange(
-              storeId: storeId,
-              currentUid: user.id,
-              start: start,
-              end: end,
-            ),
-          ),
-        );
+    return Stream.fromFuture(
+      getCurrentUserOrThrow(_userRepository).run(),
+    ).asyncExpand(
+      (result) => result.fold(
+        (error) => Stream.error(error),
+        (user) => _reservationRepository.watchReservationsByDateRange(
+          storeId: storeId,
+          currentUid: user.id,
+          start: start,
+          end: end,
+        ),
+      ),
+    );
   }
 
   @override

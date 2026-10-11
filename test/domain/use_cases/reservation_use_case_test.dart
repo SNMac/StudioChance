@@ -170,33 +170,38 @@ void main() {
   // =========================================================================
 
   group('createReservation', () {
-    test('writer.user만 현재 로그인 유저로 교체하고 writer.role은 유지하여 Repository를 호출한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+    test(
+      'writer.user만 현재 로그인 유저로 교체하고 writer.role은 유지하여 Repository를 호출한다',
+      () async {
+        when(
+          () => mockUserRepo.getCurrentUser(),
+        ).thenAnswer((_) async => right(fakeUser));
 
-      Reservation? capturedReservation;
-      when(
-        () => mockReservationRepo.createReservation(
-          reservation: any(named: 'reservation'),
-        ),
-      ).thenAnswer((invocation) async {
-        capturedReservation =
-            invocation.namedArguments[#reservation] as Reservation;
-        return right(capturedReservation!);
-      });
+        Reservation? capturedReservation;
+        when(
+          () => mockReservationRepo.createReservation(
+            reservation: any(named: 'reservation'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedReservation =
+              invocation.namedArguments[#reservation] as Reservation;
+          return right(capturedReservation!);
+        });
 
-      final result = await useCase.createReservation(
-        reservation: fakeReservation,
-      );
+        final result = await useCase.createReservation(
+          reservation: fakeReservation,
+        );
 
-      result.fold((error) => fail(error.toString()), (_) {});
-      expect(capturedReservation?.writer.user.id, fakeUser.id);
-      expect(capturedReservation?.writer.role, UserRole.admin);
-    });
+        result.fold((error) => fail(error.toString()), (_) {});
+        expect(capturedReservation?.writer.user.id, fakeUser.id);
+        expect(capturedReservation?.writer.role, UserRole.admin);
+      },
+    );
 
     test('유저 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => left(Exception('유저 없음')));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => left(Exception('유저 없음')));
 
       final result = await useCase.createReservation(
         reservation: fakeReservation,
@@ -211,8 +216,9 @@ void main() {
     });
 
     test('현재 유저가 null이면 left를 반환한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(null));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(null));
 
       final result = await useCase.createReservation(
         reservation: fakeReservation,
@@ -222,8 +228,9 @@ void main() {
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -265,8 +272,9 @@ void main() {
     final end = DateTime(2026, 5, 31);
 
     test('currentUid를 자동으로 획득하여 Repository를 호출한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.getReservationsByDateRange(
           storeId: any(named: 'storeId'),
@@ -294,8 +302,9 @@ void main() {
     });
 
     test('유저 조회 실패 시 left를 반환한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => left(Exception('유저 없음')));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => left(Exception('유저 없음')));
 
       final result = await useCase.getReservationsByDateRange(
         storeId: 'store-123',
@@ -307,8 +316,9 @@ void main() {
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.getReservationsByDateRange(
           storeId: any(named: 'storeId'),
@@ -334,8 +344,9 @@ void main() {
 
   group('updateReservation', () {
     setUp(() {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       // 기본값: 저장된 예약 없음 → 요금표 스냅샷이 없어 현재 요금 경로
       when(
         () => mockReservationRepo.getReservation(
@@ -359,9 +370,8 @@ void main() {
 
       result.fold((error) => fail(error.toString()), (_) {});
       verify(
-        () => mockReservationRepo.updateReservation(
-          reservation: fakeReservation,
-        ),
+        () =>
+            mockReservationRepo.updateReservation(reservation: fakeReservation),
       ).called(1);
     });
 
@@ -416,8 +426,9 @@ void main() {
     setUp(() {
       capturedCreate = null;
       capturedUpdate = null;
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -454,25 +465,27 @@ void main() {
       ).thenAnswer((_) async => right(stored));
     }
 
-    test('createReservation: 점포 요금 설정으로 calculatedPrice/totalPrice를 계산해 저장한다',
-        () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(_pricedStore));
+    test(
+      'createReservation: 점포 요금 설정으로 calculatedPrice/totalPrice를 계산해 저장한다',
+      () async {
+        when(
+          () => mockStoreRepo.getStore(any()),
+        ).thenAnswer((_) async => right(_pricedStore));
 
-      final result = await useCase.createReservation(
-        reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
-      );
+        final result = await useCase.createReservation(
+          reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
+        );
 
-      result.fold((error) => fail(error.toString()), (_) {});
-      verify(() => mockStoreRepo.getStore(fakeStoreSummary.id)).called(1);
-      // 기본 10,000 × 2시간 + 추가 인원 2명 × 1,000 × 2시간 = 24,000
-      expect(capturedCreate?.calculatedPrice, 24000);
-      // 24,000 + (-5,000)
-      expect(capturedCreate?.totalPrice, 19000);
-      // 이후 수정 시 재계산 기준이 되도록 사용한 요금표를 함께 저장한다
-      expect(capturedCreate?.priceSetting, _weekdayHourlySetting(10000));
-    });
+        result.fold((error) => fail(error.toString()), (_) {});
+        verify(() => mockStoreRepo.getStore(fakeStoreSummary.id)).called(1);
+        // 기본 10,000 × 2시간 + 추가 인원 2명 × 1,000 × 2시간 = 24,000
+        expect(capturedCreate?.calculatedPrice, 24000);
+        // 24,000 + (-5,000)
+        expect(capturedCreate?.totalPrice, 19000);
+        // 이후 수정 시 재계산 기준이 되도록 사용한 요금표를 함께 저장한다
+        expect(capturedCreate?.priceSetting, _weekdayHourlySetting(10000));
+      },
+    );
 
     test('createReservation: spaceOptionId에 해당하는 공간의 요금 설정을 사용한다', () async {
       when(
@@ -505,8 +518,7 @@ void main() {
       expect(capturedCreate?.priceSetting, isNull);
     });
 
-    test('updateReservation: 저장된 요금표가 없으면 현재 요금으로 계산하고 요금표를 저장한다',
-        () async {
+    test('updateReservation: 저장된 요금표가 없으면 현재 요금으로 계산하고 요금표를 저장한다', () async {
       when(
         () => mockStoreRepo.getStore(any()),
       ).thenAnswer((_) async => right(_pricedStore));
@@ -564,31 +576,37 @@ void main() {
         verifyNever(() => mockStoreRepo.getStore(any()));
       });
 
-      test('updateReservation: applyCurrentPrice면 현재 요금표로 재계산하고 요금표를 교체한다',
-          () async {
-        await useCase.updateReservation(
-          reservation: stored,
-          applyCurrentPrice: true,
-        );
+      test(
+        'updateReservation: applyCurrentPrice면 현재 요금표로 재계산하고 요금표를 교체한다',
+        () async {
+          await useCase.updateReservation(
+            reservation: stored,
+            applyCurrentPrice: true,
+          );
 
-        expect(capturedUpdate?.calculatedPrice, 24000);
-        expect(capturedUpdate?.totalPrice, 19000);
-        expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(10000));
-      });
+          expect(capturedUpdate?.calculatedPrice, 24000);
+          expect(capturedUpdate?.totalPrice, 19000);
+          expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(10000));
+        },
+      );
 
-      test('updateReservation: 현재 요금표를 구할 수 없으면 화면이 보낸 요금표 대신 저장된 요금표를 남긴다',
-          () async {
-        when(
-          () => mockStoreRepo.getStore(any()),
-        ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
+      test(
+        'updateReservation: 현재 요금표를 구할 수 없으면 화면이 보낸 요금표 대신 저장된 요금표를 남긴다',
+        () async {
+          when(() => mockStoreRepo.getStore(any())).thenAnswer(
+            (_) async => right(fakeStore.copyWith(spaceOptions: [])),
+          );
 
-        await useCase.updateReservation(
-          reservation: stored.copyWith(priceSetting: _weekdayHourlySetting(1)),
-          applyCurrentPrice: true,
-        );
+          await useCase.updateReservation(
+            reservation: stored.copyWith(
+              priceSetting: _weekdayHourlySetting(1),
+            ),
+            applyCurrentPrice: true,
+          );
 
-        expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(30000));
-      });
+          expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(30000));
+        },
+      );
 
       test('updateReservation: 공간이 바뀌면 새 공간의 현재 요금표를 적용한다', () async {
         await useCase.updateReservation(
@@ -622,8 +640,9 @@ void main() {
 
     setUp(() {
       captured = null;
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.getStore(any()),
       ).thenAnswer((_) async => right(_holidayPricedStore));
@@ -699,16 +718,18 @@ void main() {
         expect(captured?.holidayDates, isEmpty);
       });
 
-      test('updateReservation: applyCurrentPrice면 현재 공휴일 달력으로 재계산하고 스냅샷을 교체한다',
-          () async {
-        await useCase.updateReservation(
-          reservation: stored,
-          applyCurrentPrice: true,
-        );
+      test(
+        'updateReservation: applyCurrentPrice면 현재 공휴일 달력으로 재계산하고 스냅샷을 교체한다',
+        () async {
+          await useCase.updateReservation(
+            reservation: stored,
+            applyCurrentPrice: true,
+          );
 
-        expect(captured?.calculatedPrice, 100000);
-        expect(captured?.holidayDates, ['2026-05-01']);
-      });
+          expect(captured?.calculatedPrice, 100000);
+          expect(captured?.holidayDates, ['2026-05-01']);
+        },
+      );
 
       test('updateReservation: 저장된 기간 밖으로 옮긴 날짜는 현재 공휴일 달력으로 판정한다', () async {
         await useCase.updateReservation(
@@ -736,9 +757,10 @@ void main() {
       priceSetting: _weekdayHourlySetting(30000),
     );
     // 원래 점포는 ADMIN, 옮길 점포는 STAFF인 사용자
-    final mover = fakeUserWithStores([fakeStoreSummary.id, storeB.id]).copyWith(
-      id: 'user-mover',
-    );
+    final mover = fakeUserWithStores([
+      fakeStoreSummary.id,
+      storeB.id,
+    ]).copyWith(id: 'user-mover');
     final moverInStoreB = mover.copyWith(
       storeInfos: [
         mover.storeInfos.first,
@@ -750,8 +772,9 @@ void main() {
 
     setUp(() {
       capturedMove = null;
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(moverInStoreB));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(moverInStoreB));
       when(
         () => mockReservationRepo.getReservation(
           storeId: fakeStoreSummary.id,
@@ -808,8 +831,9 @@ void main() {
     });
 
     test('새 점포의 멤버가 아니면 left를 반환하고 이동하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUserWithStores([fakeStoreSummary.id])));
+      when(() => mockUserRepo.getCurrentUser()).thenAnswer(
+        (_) async => right(fakeUserWithStores([fakeStoreSummary.id])),
+      );
 
       final result = await useCase.updateReservation(
         reservation: stored.copyWith(storeSummary: storeB),
@@ -922,8 +946,9 @@ void main() {
     final end = DateTime(2026, 5, 31);
 
     test('유저 조회 실패 시 스트림이 에러를 방출한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => left(Exception('유저 없음')));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => left(Exception('유저 없음')));
 
       final stream = useCase.watchReservationsByDateRange(
         storeId: 'store-123',
@@ -935,8 +960,9 @@ void main() {
     });
 
     test('유저가 null이면 스트림이 AuthUserNotFoundException을 방출한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(null));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(null));
 
       final stream = useCase.watchReservationsByDateRange(
         storeId: 'store-123',
@@ -948,8 +974,9 @@ void main() {
     });
 
     test('유저 조회 성공 시 Repository 스트림을 그대로 전달한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.watchReservationsByDateRange(
           storeId: any(named: 'storeId'),
