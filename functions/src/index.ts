@@ -11,6 +11,7 @@ import { collectNewWaitingUids } from './notifications/waiting_member_diff.js';
 initializeApp();
 
 export { lookupInviteCode } from './invite/lookup_invite_code.js';
+export { syncHolidays } from './holidays/sync_holidays.js';
 
 /**
  * 점포 대기 명단(`waitingMemberById`)에 새 신청자가 추가되면

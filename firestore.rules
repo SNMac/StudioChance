@@ -150,5 +150,14 @@ service cloud.firestore {
       allow write: if request.auth != null
           && request.resource.data.probe == request.time;
     }
+
+    // ─── holidays 컬렉션 (공휴일 달력) ──────────────────────────────────────
+    // 경로: holidays/{year}
+    //
+    // 읽기: 인증된 모든 사용자 허용 — 예약 가격 계산에 필요한 공개 정보
+    // 쓰기: 금지 — Cloud Functions(syncHolidays, Admin SDK)만 쓴다 (ADR-0001)
+    match /holidays/{year} {
+      allow read: if request.auth != null;
+    }
   }
 }
