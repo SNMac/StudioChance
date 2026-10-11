@@ -543,5 +543,32 @@ void main() {
       );
       expect(result, 140000); // 월 50,000(평일) + 화 90,000(공휴일)
     });
+
+    test('공휴일 요일 그룹이 없으면 공휴일에 그 날짜의 실제 요일 요금을 적용한다', () {
+      // 공휴일을 어느 요일 그룹에도 넣지 않은 점포 — 0원이 되면 안 된다
+      final setting = _makeWeekdaySetting(price: 10000, isHourly: false);
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 18, 10, 0), // 월요일
+        end: DateTime(2026, 5, 18, 12, 0),
+        headCount: 1,
+        isHoliday: (date) => true,
+      );
+      expect(result, 10000);
+    });
+
+    test('공휴일 요일 그룹이 없으면 다일 예약의 공휴일 날짜도 실제 요일 요금을 적용한다', () {
+      final setting = _makeWeekendSplitSetting(
+        weekdayPrice: 50000,
+        weekendPrice: 80000,
+      );
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 15), // 금요일
+        end: DateTime(2026, 5, 17), // 2일: 5/15(금), 5/16(토)
+        headCount: 1,
+        isAllDay: true,
+        isHoliday: (date) => date.day == 15, // 5/15(금)만 공휴일
+      );
+      expect(result, 130000); // 금 50,000(평일 그룹) + 토 80,000(주말 그룹)
+    });
   });
 }

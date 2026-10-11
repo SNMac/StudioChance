@@ -38,6 +38,7 @@ abstract class ReservationModel with _$ReservationModel {
     required UserRole writerRole,
     String? spaceOptionId,
     @JsonKey(includeIfNull: false) PriceSettingsModel? priceSettings,
+    @JsonKey(includeIfNull: false) List<String>? holidayDates,
     @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? createdAt,
   }) = _ReservationModel;
 
@@ -67,6 +68,7 @@ abstract class ReservationModel with _$ReservationModel {
       priceSettings: entity.priceSetting == null
           ? null
           : PriceSettingsModel.fromEntity(entity.priceSetting!),
+      holidayDates: entity.holidayDates,
       createdAt: entity.createdAt,
     );
   }
@@ -79,7 +81,7 @@ abstract class ReservationModel with _$ReservationModel {
       'status', 'customerName', 'headCount', 'customerPhone', 'memo',
       'isAllDay', 'startTime', 'endTime', 'platform', 'paymentMethod',
       'calculatedPrice', 'priceAdjustment', 'totalPrice', 'spaceOptionId',
-      'priceSettings',
+      'priceSettings', 'holidayDates',
     };
     return {
       for (final entry in json.entries)
@@ -107,6 +109,7 @@ abstract class ReservationModel with _$ReservationModel {
       totalPrice: totalPrice,
       spaceOptionId: spaceOptionId,
       priceSetting: priceSettings?.toEntity(),
+      holidayDates: holidayDates,
       createdAt: createdAt,
     );
   }

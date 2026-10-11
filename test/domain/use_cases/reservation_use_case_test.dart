@@ -6,12 +6,14 @@ import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/common/enums/weekday.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
+import 'package:studio_chance/domain/entities/holiday_calendar.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/domain/repository_interfaces/holiday_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
@@ -24,6 +26,8 @@ class MockReservationRepository extends Mock implements ReservationRepository {}
 class MockUserRepository extends Mock implements UserRepository {}
 
 class MockStoreRepository extends Mock implements StoreRepository {}
+
+class MockHolidayRepository extends Mock implements HolidayRepository {}
 
 class FakeReservation extends Fake implements Reservation {}
 
@@ -79,11 +83,58 @@ final _pricedStore = fakeStore.copyWith(
   ],
 );
 
+/// 평일(월~금) 시간당 10,000원, 공휴일 시간당 50,000원인 요금표 (인원 추가 요금 없음)
+PriceSetting _holidaySplitSetting() {
+  DayGroup group(List<Weekday> days, int hourlyPrice) => DayGroup(
+    days: days,
+    headcountRule: const HeadcountRule(
+      headcountBase: 999,
+      headcountExtraPrice: 0,
+      isHeadcountHourly: false,
+      isHeadcountPerPerson: false,
+    ),
+    timeSlots: [
+      TimeSlot(
+        isAllDay: false,
+        startTime: 0,
+        endTime: 1440,
+        price: hourlyPrice,
+        isHourly: true,
+        isPerPerson: false,
+      ),
+    ],
+  );
+
+  return PriceSetting(
+    dayGroups: [
+      group([
+        Weekday.monday,
+        Weekday.tuesday,
+        Weekday.wednesday,
+        Weekday.thursday,
+        Weekday.friday,
+      ], 10000),
+      group([Weekday.holiday], 50000),
+    ],
+  );
+}
+
+final _holidayPricedStore = fakeStore.copyWith(
+  spaceOptions: [
+    SpaceOption(
+      id: 'space-h',
+      name: '공휴일 요금 공간',
+      priceSetting: _holidaySplitSetting(),
+    ),
+  ],
+);
+
 void main() {
   late ReservationUseCaseImpl useCase;
   late MockReservationRepository mockReservationRepo;
   late MockUserRepository mockUserRepo;
   late MockStoreRepository mockStoreRepo;
+  late MockHolidayRepository mockHolidayRepo;
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -99,10 +150,18 @@ void main() {
     when(
       () => mockStoreRepo.getStore(any()),
     ).thenAnswer((_) async => right(null));
+    mockHolidayRepo = MockHolidayRepository();
+    // 기본값: 공휴일이 하나도 없는 공휴일 달력
+    when(
+      () => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')),
+    ).thenAnswer(
+      (_) async => right(const HolidayCalendar(daysByYear: {2026: {}})),
+    );
     useCase = ReservationUseCaseImpl(
       reservationRepository: mockReservationRepo,
       userRepository: mockUserRepo,
       storeRepository: mockStoreRepo,
+      holidayRepository: mockHolidayRepo,
     );
   });
 
@@ -540,6 +599,127 @@ void main() {
         expect(capturedUpdate?.calculatedPrice, 44000);
         expect(capturedUpdate?.totalPrice, 39000);
         expect(capturedUpdate?.priceSetting, _weekdayHourlySetting(20000));
+      });
+    });
+  });
+
+  // =========================================================================
+  // 공휴일 요금 (ADR-0003)
+  // =========================================================================
+
+  group('공휴일 요금', () {
+    // 2026-05-01(금) 10~12시 예약 — 평일이면 20,000원, 공휴일이면 100,000원
+    final reservation = fakeReservation.copyWith(spaceOptionId: 'space-h');
+    const mayFirstHoliday = HolidayCalendar(
+      daysByYear: {
+        2026: {
+          '2026-05-01': ['노동절'],
+          '2026-05-08': ['임시공휴일'],
+        },
+      },
+    );
+    Reservation? captured;
+
+    setUp(() {
+      captured = null;
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockStoreRepo.getStore(any()),
+      ).thenAnswer((_) async => right(_holidayPricedStore));
+      when(
+        () => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')),
+      ).thenAnswer((_) async => right(mayFirstHoliday));
+      when(
+        () => mockReservationRepo.createReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      ).thenAnswer((invocation) async {
+        captured = invocation.namedArguments[#reservation] as Reservation;
+        return right(captured!);
+      });
+      when(
+        () => mockReservationRepo.updateReservation(
+          reservation: any(named: 'reservation'),
+        ),
+      ).thenAnswer((invocation) async {
+        captured = invocation.namedArguments[#reservation] as Reservation;
+        return right(null);
+      });
+    });
+
+    void stubStored(Reservation stored) {
+      when(
+        () => mockReservationRepo.getReservation(
+          storeId: stored.storeSummary.id,
+          reservationId: stored.id,
+          currentUid: fakeUser.id,
+        ),
+      ).thenAnswer((_) async => right(stored));
+    }
+
+    test('createReservation: 현재 공휴일 달력으로 계산하고 공휴일 스냅샷을 저장한다', () async {
+      await useCase.createReservation(reservation: reservation);
+
+      expect(captured?.calculatedPrice, 100000);
+      expect(captured?.holidayDates, ['2026-05-01']);
+    });
+
+    test('createReservation: 공휴일 달력을 읽지 못하면 평일로 계산한다', () async {
+      when(
+        () => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')),
+      ).thenAnswer((_) async => left(Exception('네트워크 오류')));
+
+      final result = await useCase.createReservation(reservation: reservation);
+
+      result.fold((error) => fail(error.toString()), (_) {});
+      expect(captured?.calculatedPrice, 20000);
+      expect(captured?.holidayDates, isEmpty);
+    });
+
+    group('저장된 공휴일 스냅샷이 있을 때', () {
+      // 예약 당시에는 5/1이 공휴일이 아니었다
+      final stored = reservation.copyWith(
+        priceSetting: _holidaySplitSetting(),
+        holidayDates: [],
+      );
+
+      setUp(() => stubStored(stored));
+
+      test('updateReservation: 공휴일 달력이 바뀌어도 저장된 공휴일 판정으로 재계산한다', () async {
+        await useCase.updateReservation(
+          // 화면이 보낸 스냅샷은 신뢰하지 않는다
+          reservation: stored.copyWith(
+            memo: '메모 변경',
+            holidayDates: ['2026-05-01'],
+          ),
+        );
+
+        expect(captured?.calculatedPrice, 20000);
+        expect(captured?.holidayDates, isEmpty);
+      });
+
+      test('updateReservation: applyCurrentPrice면 현재 공휴일 달력으로 재계산하고 스냅샷을 교체한다',
+          () async {
+        await useCase.updateReservation(
+          reservation: stored,
+          applyCurrentPrice: true,
+        );
+
+        expect(captured?.calculatedPrice, 100000);
+        expect(captured?.holidayDates, ['2026-05-01']);
+      });
+
+      test('updateReservation: 저장된 기간 밖으로 옮긴 날짜는 현재 공휴일 달력으로 판정한다', () async {
+        await useCase.updateReservation(
+          reservation: stored.copyWith(
+            startTime: DateTime(2026, 5, 8, 10),
+            endTime: DateTime(2026, 5, 8, 12),
+          ),
+        );
+
+        expect(captured?.calculatedPrice, 100000);
+        expect(captured?.holidayDates, ['2026-05-08']);
       });
     });
   });

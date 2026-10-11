@@ -24,6 +24,7 @@ import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reser
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/three_day_calendar.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
@@ -38,6 +39,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isLoadingForModal = false;
   bool _showLoadingOverlay = false;
   Timer? _overlayTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // 예약 모달이 열리자마자 공휴일 요금을 계산할 수 있도록 올해·내년분을 미리 불러온다
+    final thisYear = DateTime.now().year;
+    ref
+        .read(holidayCalendarControllerProvider.notifier)
+        .ensureYears({thisYear, thisYear + 1});
+  }
 
   @override
   void dispose() {
