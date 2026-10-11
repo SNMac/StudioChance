@@ -117,6 +117,10 @@ class _ReservationCreateModalState
     _scrollController = ScrollController();
     _initFields(widget.initialReservation);
     _spaceOptionId = widget.initialReservation.spaceOptionId;
+    // 앱을 켜둔 사이 공휴일 달력이 바뀌었을 수 있으므로 모달을 열 때 다시 조회한다
+    ref
+        .read(holidayCalendarControllerProvider.notifier)
+        .refreshYears(widget.initialReservation.pricedYears);
 
     final initial = widget.initialSpaceOptions;
     if (initial != null) {
@@ -246,9 +250,10 @@ class _ReservationCreateModalState
 
   /// 새 예약에는 공휴일 스냅샷이 없으므로 현재 공휴일 달력으로 판정한다.
   /// 모르는 연도는 공휴일이 아닌 것으로 본다 (UseCase와 같은 규칙).
-  bool _isHoliday(DateTime date) =>
-      ref.read(holidayCalendarControllerProvider).calendar.isHoliday(date) ??
-      false;
+  bool _isHoliday(DateTime date) => ref
+      .read(holidayCalendarControllerProvider)
+      .calendar
+      .isHolidayForPricing(date);
 
   void _recalculatePrice() {
     final priceSetting = _priceSetting;
@@ -257,11 +262,7 @@ class _ReservationCreateModalState
     ref
         .read(holidayCalendarControllerProvider.notifier)
         .ensureYears(
-          pricedDatesOf(
-            start: _startTime,
-            end: _endTime,
-            isAllDay: _isAllDay,
-          ).map((date) => date.year).toSet(),
+          pricedYearsOf(start: _startTime, end: _endTime, isAllDay: _isAllDay),
         );
     final headCount = int.tryParse(_headCountController.text) ?? 0;
     final price = priceSetting.calculatePrice(

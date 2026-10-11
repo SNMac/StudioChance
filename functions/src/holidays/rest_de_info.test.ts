@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { parseRestDeInfo } from './rest_de_info.js';
+import { parseRestDeInfo, restDeInfoUrl } from './rest_de_info.js';
 
 // 특일 정보 API(getRestDeInfo, _type=json) 실제 응답 형태
 function response(items: unknown, totalCount: number) {
@@ -12,6 +12,17 @@ function response(items: unknown, totalCount: number) {
     },
   };
 }
+
+test('조회 URL은 월 단위·JSON으로 요청하고 기본값(10건)보다 넉넉히 받는다', () => {
+  const url = new URL(restDeInfoUrl('test-key', 2027, 5));
+
+  assert.equal(url.origin + url.pathname, 'https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo');
+  assert.equal(url.searchParams.get('serviceKey'), 'test-key');
+  assert.equal(url.searchParams.get('solYear'), '2027');
+  assert.equal(url.searchParams.get('solMonth'), '05');
+  assert.equal(url.searchParams.get('numOfRows'), '100');
+  assert.equal(url.searchParams.get('_type'), 'json');
+});
 
 test('항목이 여러 개면 배열로 온다', () => {
   const json = response(

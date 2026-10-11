@@ -116,4 +116,31 @@ void main() {
     verify(() => useCase.getHolidayCalendar(years: {2030})).called(1);
     verify(() => useCase.getHolidayCalendar(years: {2031})).called(1);
   });
+
+  test('refreshYears는 이미 불러온 연도도 다시 조회해 바뀐 공휴일 달력을 반영한다', () async {
+    // 앱 실행 중에 서버 동기화로 임시공휴일이 추가된 상황
+    var calls = 0;
+    when(() => useCase.getHolidayCalendar(years: {2030})).thenAnswer((_) async {
+      calls++;
+      return right(
+        HolidayCalendar(
+          daysByYear: {
+            2030: calls == 1
+                ? {}
+                : {
+                    '2030-05-07': ['임시공휴일'],
+                  },
+          },
+        ),
+      );
+    });
+    final container = buildContainer();
+    final notifier = container.read(holidayCalendarControllerProvider.notifier);
+
+    await notifier.ensureYears({2030});
+    await notifier.refreshYears({2030});
+
+    final state = container.read(holidayCalendarControllerProvider);
+    expect(state.calendar.isHoliday(DateTime(2030, 5, 7)), isTrue);
+  });
 }

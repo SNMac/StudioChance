@@ -31,6 +31,12 @@ abstract class HolidayCalendar with _$HolidayCalendar {
     return days.containsKey(holidayDateKey(date));
   }
 
+  /// 가격 계산용 공휴일 판정 — 모르는 연도는 공휴일이 아닌 것으로 본다.
+  ///
+  /// 공휴일 달력을 읽지 못해도 예약 저장을 막지 않기 위한 규칙이다. UseCase와 두 예약
+  /// 모달이 이 메서드를 공유해야 화면 가격과 저장 가격이 어긋나지 않는다.
+  bool isHolidayForPricing(DateTime date) => isHoliday(date) ?? false;
+
   /// [date]의 공휴일 이름들. 공휴일이 아니거나 그 연도를 모르면 빈 목록.
   List<String> namesOn(DateTime date) =>
       daysByYear[date.year]?[holidayDateKey(date)] ?? const [];

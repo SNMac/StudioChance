@@ -44,40 +44,55 @@ class HolidayCalendarController extends _$HolidayCalendarController {
   ///
   /// 문서가 없던 연도(동기화 범위 밖)는 다시 조회하지 않는다 — 모달은 입력이 바뀔
   /// 때마다 호출하므로, 다시 조회하면 키 입력마다 네트워크 읽기가 일어난다.
-  Future<void> ensureYears(Set<int> years) async {
-    final missing = years
+  Future<void> ensureYears(Set<int> years) => _load(
+    years
         .where(
           (year) =>
-              (!state.settledYears.contains(year) ||
-                  _failedYears.contains(year)) &&
-              !_loadingYears.contains(year),
+              !state.settledYears.contains(year) || _failedYears.contains(year),
         )
-        .toSet();
-    if (missing.isEmpty) return;
+        .toSet(),
+  );
 
-    _loadingYears.addAll(missing);
+  /// [years]를 이미 불러왔더라도 다시 조회한다.
+  ///
+  /// 앱을 켜둔 사이 서버 동기화로 공휴일 달력이 바뀌면(임시공휴일, 예측→공식 교체)
+  /// 모달은 예전 달력으로, UseCase는 새 달력으로 계산해 화면 가격과 저장 가격이 어긋난다.
+  /// 예약 모달을 열 때 호출해 공간 옵션을 새로 받는 것과 같은 수준으로 맞춘다.
+  Future<void> refreshYears(Set<int> years) => _load(years);
+
+  Future<void> _load(Set<int> years) async {
+    final targets = years.where((y) => !_loadingYears.contains(y)).toSet();
+    if (targets.isEmpty) return;
+
+    _loadingYears.addAll(targets);
     final result = await ref
         .read(holidayUseCaseProvider)
-        .getHolidayCalendar(years: missing);
-    _loadingYears.removeAll(missing);
+        .getHolidayCalendar(years: targets);
+    _loadingYears.removeAll(targets);
     if (!ref.mounted) return;
 
     final calendar = result.fold(
       (error) {
-        _logger.w('공휴일 달력 조회 실패 — years: $missing', error: error);
-        _failedYears.addAll(missing);
+        _logger.w('공휴일 달력 조회 실패 — years: $targets', error: error);
+        _failedYears.addAll(targets);
         return state.calendar;
       },
       (loaded) {
-        _failedYears.removeAll(missing);
+        _failedYears.removeAll(targets);
+        // 다시 조회한 연도는 결과로 통째로 바꾼다 — 문서가 사라진 연도도 반영되도록
+        final kept = {
+          for (final MapEntry(key: year, value: days)
+              in state.calendar.daysByYear.entries)
+            if (!targets.contains(year)) year: days,
+        };
         return state.calendar.copyWith(
-          daysByYear: {...state.calendar.daysByYear, ...loaded.daysByYear},
+          daysByYear: {...kept, ...loaded.daysByYear},
         );
       },
     );
     state = state.copyWith(
       calendar: calendar,
-      settledYears: {...state.settledYears, ...missing},
+      settledYears: {...state.settledYears, ...targets},
     );
   }
 }

@@ -202,7 +202,10 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       _loadSpaceOptions(widget.reservation.storeSummary.id);
     }
     _loadReservationCount();
-    _ensureHolidayYears();
+    // 앱을 켜둔 사이 공휴일 달력이 바뀌었을 수 있으므로 모달을 열 때 다시 조회한다
+    ref
+        .read(holidayCalendarControllerProvider.notifier)
+        .refreshYears(_editedForPricing.pricedYears);
   }
 
   @override
@@ -432,7 +435,12 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
 
   /// 현재 공휴일 달력으로만 판정. 모르는 연도는 공휴일이 아닌 것으로 본다.
   bool _currentHolidayChecker(DateTime date) =>
-      _currentHolidays.isHoliday(date) ?? false;
+      _currentHolidays.isHolidayForPricing(date);
+
+  /// 공휴일 스냅샷으로 판정하는 날짜 키들. '현재 요금 적용'을 눌렀으면 없다.
+  Set<String> get _holidaySnapshotKeys => _applyCurrentPrice
+      ? const {}
+      : _saved.holidaySnapshotKeysFor(_editedForPricing);
 
   /// 가격 계산에 쓸 공휴일 판정 — ReservationUseCase.updateReservation과 같은 규칙 (ADR-0003)
   bool Function(DateTime date) get _holidayChecker => _applyCurrentPrice
@@ -473,13 +481,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
   void _ensureHolidayYears() {
     ref
         .read(holidayCalendarControllerProvider.notifier)
-        .ensureYears(
-          pricedDatesOf(
-            start: _startTime,
-            end: _endTime,
-            isAllDay: _isAllDay,
-          ).map((date) => date.year).toSet(),
-        );
+        .ensureYears(_editedForPricing.pricedYears);
   }
 
   void _recalculatePrice() {
@@ -1274,6 +1276,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       isAllDay: _isAllDay,
       isHoliday: _holidayChecker,
       holidays: ref.watch(holidayCalendarControllerProvider),
+      snapshotKeys: _holidaySnapshotKeys,
     );
     return note == null ? null : HolidayPriceNoteText(note);
   }

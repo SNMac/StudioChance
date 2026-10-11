@@ -2,7 +2,8 @@ import 'package:studio_chance/common/exceptions/app_exception.dart';
 
 /// 공휴일 달력(DB) 관련 최상위 예외
 ///
-/// 공휴일 달력을 읽지 못해도 예약은 평일 요금으로 계산되므로(ADR-0002) 사용자에게
+/// 공휴일 달력을 읽지 못해도 예약은 공휴일이 아닌 것으로 계산되므로
+/// (`HolidayCalendar.isHolidayForPricing`) 사용자에게
 /// 다이얼로그로 알리지 않고, 화면은 가격 근처의 안내 문구로만 드러낸다.
 sealed class HolidayException extends AppException {
   HolidayException(super.message, {super.code});

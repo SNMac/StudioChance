@@ -14,8 +14,11 @@ const DATA_GO_KR_SERVICE_KEY = defineSecret('DATA_GO_KR_SERVICE_KEY');
 /** 공식 공휴일을 조회하는 범위 (올해 기준). 작년은 최초 배포 때 지난 예약 수정에 대비해 채운다. */
 const OFFICIAL_YEAR_OFFSETS = [-1, 0, 1, 2];
 
-/** 예측 공휴일로 채우는 범위 (올해 기준). 음력 변환 한계로 2050년을 넘으면 건너뛴다. */
-const PREDICTED_YEAR_OFFSETS = Array.from({ length: 11 }, (_, i) => i);
+/**
+ * 예측 공휴일로 채우는 마지막 연도 — `korean-lunar-calendar`가 양력 2050-12-31까지만 지원한다.
+ * 올해부터 이 연도까지 채우며, 2051년 이후 예약은 공휴일 여부를 확인할 수 없다.
+ */
+const PREDICTED_LAST_YEAR = 2050;
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -48,9 +51,9 @@ export const syncHolidays = onSchedule(
     }
 
     const predicted = new Map<number, HolidayDays>();
-    for (const offset of PREDICTED_YEAR_OFFSETS) {
-      const days = predictHolidays(thisYear + offset);
-      if (days) predicted.set(thisYear + offset, days);
+    for (let year = thisYear; year <= PREDICTED_LAST_YEAR; year++) {
+      const days = predictHolidays(year);
+      if (days) predicted.set(year, days);
     }
 
     const db = getFirestore();

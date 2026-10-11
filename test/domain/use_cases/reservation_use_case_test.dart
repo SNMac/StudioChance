@@ -830,6 +830,25 @@ void main() {
       expect(capturedMove?.priceSetting, _weekdayHourlySetting(10000));
     });
 
+    test('공휴일 스냅샷도 현재 공휴일 달력으로 다시 만든다', () async {
+      // 원래 점포에서는 5/1을 공휴일로 계산해 저장했지만, 현재 공휴일 달력에는 공휴일이 없다
+      final storedWithHoliday = stored.copyWith(holidayDates: ['2026-05-01']);
+      when(
+        () => mockReservationRepo.getReservation(
+          storeId: fakeStoreSummary.id,
+          reservationId: stored.id,
+          currentUid: moverInStoreB.id,
+        ),
+      ).thenAnswer((_) async => right(storedWithHoliday));
+
+      await useCase.updateReservation(
+        reservation: storedWithHoliday.copyWith(storeSummary: storeB),
+        fromStoreId: fakeStoreSummary.id,
+      );
+
+      expect(capturedMove?.holidayDates, isEmpty);
+    });
+
     test('새 점포의 멤버가 아니면 left를 반환하고 이동하지 않는다', () async {
       when(() => mockUserRepo.getCurrentUser()).thenAnswer(
         (_) async => right(fakeUserWithStores([fakeStoreSummary.id])),

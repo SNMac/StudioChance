@@ -200,4 +200,46 @@ void main() {
       expect(saved.holidaysDifferFromCurrent(edited, current), isFalse);
     });
   });
+
+  group('holidaySnapshotKeysFor', () {
+    // 2026-05-04 ~ 05-06 하루종일 예약 (3일)
+    final saved = fakeReservation.copyWith(
+      spaceOptionId: 'space-a',
+      priceSetting: const PriceSetting(dayGroups: []),
+      holidayDates: ['2026-05-05'],
+      isAllDay: true,
+      startTime: DateTime(2026, 5, 4),
+      endTime: DateTime(2026, 5, 7),
+    );
+
+    test('요금표를 유지하는 수정이면 저장된 예약 기간의 날짜들을 돌려준다', () {
+      expect(saved.holidaySnapshotKeysFor(saved), {
+        '2026-05-04',
+        '2026-05-05',
+        '2026-05-06',
+      });
+    });
+
+    test('요금표를 유지하지 않는 수정이면 비어 있다', () {
+      final edited = saved.copyWith(spaceOptionId: 'space-b');
+
+      expect(saved.holidaySnapshotKeysFor(edited), isEmpty);
+    });
+
+    test('공휴일 스냅샷이 없으면 비어 있다', () {
+      final noSnapshot = saved.copyWith(holidayDates: null);
+
+      expect(noSnapshot.holidaySnapshotKeysFor(noSnapshot), isEmpty);
+    });
+  });
+
+  test('pricedYears는 가격 계산에 쓰는 날짜들의 연도다 (연말을 넘는 하루종일 예약)', () {
+    final yearEnd = fakeReservation.copyWith(
+      isAllDay: true,
+      startTime: DateTime(2026, 12, 31),
+      endTime: DateTime(2027, 1, 2),
+    );
+
+    expect(yearEnd.pricedYears, {2026, 2027});
+  });
 }

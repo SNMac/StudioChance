@@ -62,66 +62,58 @@ extension ReservationPriceSnapshot on Reservation {
         spaceOptionId == edited.spaceOptionId;
   }
 
+  /// [PriceSetting.calculatePrice]가 공휴일 여부를 판단하는 이 예약의 날짜들.
+  List<DateTime> get pricedDates =>
+      pricedDatesOf(start: startTime, end: endTime, isAllDay: isAllDay);
+
+  /// [pricedDates]의 연도들 — 가격 계산에 필요한 공휴일 달력 범위.
+  Set<int> get pricedYears =>
+      pricedYearsOf(start: startTime, end: endTime, isAllDay: isAllDay);
+
+  /// 이 예약(저장된 상태)을 [edited]로 수정할 때 공휴일 스냅샷을 따르는 날짜 키들.
+  ///
+  /// 요금표를 유지하는 수정([keepsPriceSettingFor])이고 스냅샷이 있으면 이 예약이
+  /// 판정했던 날짜들([pricedDates])이고, 아니면 비어 있다(모든 날짜를 현재 공휴일 달력으로 판정).
+  Set<String> holidaySnapshotKeysFor(Reservation edited) {
+    if (holidayDates == null || !keepsPriceSettingFor(edited)) return const {};
+    return pricedDates.map(holidayDateKey).toSet();
+  }
+
   /// 이 예약(저장된 상태)을 [edited]로 수정할 때 쓸 날짜별 공휴일 판정.
   ///
-  /// 요금표를 유지하는 수정([keepsPriceSettingFor])이면 이 예약이 판정했던 날짜는
-  /// 공휴일 스냅샷을 따르고, 그 밖의 날짜(날짜를 옮긴 경우)는 [current]를 따른다.
-  /// 요금표를 유지하지 않거나 스냅샷이 없으면 모든 날짜를 [current]로 판정한다.
-  /// [current]가 모르는 연도는 공휴일이 아닌 것으로 본다.
+  /// [holidaySnapshotKeysFor]에 든 날짜는 공휴일 스냅샷을 따르고, 그 밖의 날짜
+  /// (날짜를 옮긴 경우 등)는 [current]를 따른다.
   bool Function(DateTime date) holidayCheckerFor(
     Reservation edited,
     HolidayCalendar current,
   ) {
-    bool currentChecker(DateTime date) => current.isHoliday(date) ?? false;
-
-    final snapshot = holidayDates;
-    if (snapshot == null || !keepsPriceSettingFor(edited)) {
-      return currentChecker;
-    }
-
-    final judgedKeys = pricedDatesOf(
-      start: startTime,
-      end: endTime,
-      isAllDay: isAllDay,
-    ).map(holidayDateKey).toSet();
+    final snapshotKeys = holidaySnapshotKeysFor(edited);
+    final snapshot = holidayDates ?? const [];
     return (date) {
       final key = holidayDateKey(date);
-      return judgedKeys.contains(key)
+      return snapshotKeys.contains(key)
           ? snapshot.contains(key)
-          : currentChecker(date);
+          : current.isHolidayForPricing(date);
     };
   }
 
   /// [isHoliday]로 판정했을 때 이 예약의 공휴일 스냅샷 — 공휴일인 날짜 키만 담는다.
   List<String> holidayDatesWith(bool Function(DateTime date) isHoliday) {
-    return pricedDatesOf(start: startTime, end: endTime, isAllDay: isAllDay)
-        .where(isHoliday)
-        .map(holidayDateKey)
-        .toList();
+    return pricedDates.where(isHoliday).map(holidayDateKey).toList();
   }
 
   /// [edited]로 수정할 때 공휴일 스냅샷을 따르는 날짜 중 [current]와 판정이 다른 날짜가
   /// 있는지 여부. '현재 요금 적용'을 제안할지 판단하는 데 쓴다.
   ///
-  /// 스냅샷을 따르지 않는 수정이면 어차피 [current]로 계산하므로 false다.
-  /// [current]가 모르는 연도의 날짜는 비교하지 않는다.
+  /// 스냅샷을 따르지 않는 날짜는 어차피 [current]로 계산하므로 비교하지 않는다.
+  /// [current]가 모르는 연도의 날짜도 비교하지 않는다.
   bool holidaysDifferFromCurrent(Reservation edited, HolidayCalendar current) {
-    final snapshot = holidayDates;
-    if (snapshot == null || !keepsPriceSettingFor(edited)) return false;
-
-    final judgedKeys = pricedDatesOf(
-      start: startTime,
-      end: endTime,
-      isAllDay: isAllDay,
-    ).map(holidayDateKey).toSet();
-    return pricedDatesOf(
-      start: edited.startTime,
-      end: edited.endTime,
-      isAllDay: edited.isAllDay,
-    ).any((date) {
+    final snapshotKeys = holidaySnapshotKeysFor(edited);
+    final snapshot = holidayDates ?? const [];
+    return edited.pricedDates.any((date) {
       final key = holidayDateKey(date);
       final currentJudgement = current.isHoliday(date);
-      return judgedKeys.contains(key) &&
+      return snapshotKeys.contains(key) &&
           currentJudgement != null &&
           currentJudgement != snapshot.contains(key);
     });

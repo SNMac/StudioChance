@@ -104,7 +104,9 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 `PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
 - 판단 근거는 공휴일 달력(`HolidayCalendar`, `holidays/{year}`) — 아래 "공휴일 달력" 섹션 참고
-  - UseCase: `HolidayRepository`를 주입받아 직접 판정. 읽기 실패 시 평일로 계산(저장을 막지 않음)
+  - UseCase: `HolidayRepository`를 주입받아 직접 판정. 읽기 실패 시 공휴일이 아닌 것으로 계산(저장을 막지 않음)
+  - "모르는 연도는 공휴일 아님" 규칙은 `HolidayCalendar.isHolidayForPricing` 하나로 UseCase·두 모달이 공유한다
+  - 모달을 열 때 `refreshYears`로 그 연도를 다시 조회한다 — 앱을 켜둔 사이 달력이 바뀌면 화면 가격과 저장 가격이 어긋나기 때문
   - 모달: keepAlive `HolidayCalendarController`의 동기 조회. 홈 진입 시 올해·내년분 선로딩
 - 공휴일 요일 그룹이 없는 요금표는 공휴일에 **실제 요일 요금**을 받는다 (`PriceSetting._dayGroupFor`)
 - 판정한 날짜 범위는 `pricedDatesOf` 하나로 정한다 (하루종일=각 날짜, 시간 지정=시작 날짜). 계산과 공휴일 스냅샷이 이 함수를 공유해야 어긋나지 않는다
@@ -297,7 +299,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 설계: `docs/adr/0001`(Functions 동기화) · `0002`(예측 공휴일, 연도째 교체) · `0003`(공휴일 스냅샷)
 - **`syncHolidays`** (`functions/src/holidays/`): 매일 04:00 KST. 연도는 KST로 계산
   - 공식: 특일 정보 API `getRestDeInfo` 작년~+2년, 월 단위 12회 호출. 한 달이라도 실패하면 그 연도는 건너뛴다
-  - 예측: 올해~+10년 중 공식이 없는 연도. `korean-lunar-calendar`가 2050년까지만 지원해 그 이후는 문서가 없다
+  - 예측: 올해~2050년 중 공식이 없는 연도. `korean-lunar-calendar`가 2050년까지만 지원해 그 이후는 문서가 없다 (해가 지날수록 범위가 줄어든다 — ADR-0002)
     — 중국 음력 라이브러리(`lunar-javascript` 등)는 설날이 하루 어긋나는 해가 있어 쓰면 안 된다
   - 문서 `holidays/{year} = { days: {'yyyy-MM-dd': [이름...]}, source, syncedAt }`. `source`는 덮어쓰기 판단용이며 앱은 읽지 않는다
 - **법령이 바뀌면 `predict_holidays.ts`를 고친다**: 대체공휴일 대상(관공서 공휴일 규정 제3조), 선거 임기 기준일 상수 `ELECTIONS`(궐위·조기 선거 시)

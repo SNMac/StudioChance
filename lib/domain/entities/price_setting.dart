@@ -28,6 +28,17 @@ List<DateTime> pricedDatesOf({
   ];
 }
 
+/// [pricedDatesOf]의 연도들 — 가격 계산에 필요한 공휴일 달력 범위.
+Set<int> pricedYearsOf({
+  required DateTime start,
+  required DateTime end,
+  required bool isAllDay,
+}) => pricedDatesOf(
+  start: start,
+  end: end,
+  isAllDay: isAllDay,
+).map((date) => date.year).toSet();
+
 @freezed
 abstract class PriceSetting with _$PriceSetting {
   const PriceSetting._();
@@ -140,8 +151,9 @@ abstract class PriceSetting with _$PriceSetting {
     if (extraPeople > 0) {
       extraCharge = rule.headcountExtraPrice;
       if (rule.isHeadcountPerPerson) extraCharge *= extraPeople;
-      if (rule.isHeadcountHourly)
+      if (rule.isHeadcountHourly) {
         extraCharge = (extraCharge * totalHours).round();
+      }
     }
 
     return totalBase + extraCharge;

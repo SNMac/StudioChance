@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:studio_chance/domain/entities/holiday_calendar.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
@@ -8,6 +9,9 @@ import 'package:studio_chance/presentation/providers/holiday_calendar_controller
 ///
 /// 요금표에 공휴일 요일 그룹이 없으면 공휴일 여부가 가격에 영향을 주지 않으므로
 /// 아무것도 표시하지 않는다. 예측 공휴일과 공식 공휴일은 구분하지 않는다 (ADR-0002).
+///
+/// [snapshotKeys]는 공휴일 스냅샷으로 판정하는 날짜들이다. 이 날짜들은 현재 공휴일 달력을
+/// 읽지 못해도 스냅샷대로 계산하므로 "확인 불가"로 보지 않는다.
 String? holidayPriceNote({
   required PriceSetting? priceSetting,
   required DateTime start,
@@ -15,11 +19,17 @@ String? holidayPriceNote({
   required bool isAllDay,
   required bool Function(DateTime date) isHoliday,
   required HolidayCalendarState holidays,
+  Set<String> snapshotKeys = const {},
 }) {
   if (priceSetting == null || !priceSetting.hasHolidayDayGroup) return null;
 
   final dates = pricedDatesOf(start: start, end: end, isAllDay: isAllDay);
-  if (dates.any(holidays.isUnconfirmed)) return '공휴일 확인 불가';
+  final hasUnconfirmed = dates.any(
+    (date) =>
+        !snapshotKeys.contains(holidayDateKey(date)) &&
+        holidays.isUnconfirmed(date),
+  );
+  if (hasUnconfirmed) return '공휴일 확인 불가';
 
   final holidayDates = dates.where(isHoliday).toList();
   if (holidayDates.isEmpty) return null;

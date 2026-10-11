@@ -320,17 +320,13 @@ class ReservationUseCaseImpl implements ReservationUseCase {
 
   /// [reservation]의 가격 계산에 필요한 연도의 공휴일 달력.
   ///
-  /// 읽지 못하면 빈 달력(모든 연도를 모름)을 돌려줘 평일로 계산되게 한다 —
+  /// 읽지 못하면 빈 달력(모든 연도를 모름)을 돌려줘 공휴일이 아닌 것으로 계산되게 한다 —
   /// 공휴일 판정 실패로 예약 저장을 막지 않는다.
   Future<HolidayCalendar> _holidayCalendarFor(Reservation reservation) async {
-    final years = pricedDatesOf(
-      start: reservation.startTime,
-      end: reservation.endTime,
-      isAllDay: reservation.isAllDay,
-    ).map((date) => date.year).toSet();
+    final years = reservation.pricedYears;
     final result = await _holidayRepository.getHolidayCalendar(years: years);
     return result.fold((error) {
-      _logger.w('공휴일 달력 조회 실패 — 평일로 계산한다. years: $years', error: error);
+      _logger.w('공휴일 달력 조회 실패 — 공휴일이 아닌 것으로 계산한다. years: $years', error: error);
       return const HolidayCalendar();
     }, (calendar) => calendar);
   }
@@ -367,7 +363,7 @@ class ReservationUseCaseImpl implements ReservationUseCase {
           _applyPriceSetting(
             reservation,
             priceSetting,
-            (date) => calendar.isHoliday(date) ?? false,
+            calendar.isHolidayForPricing,
           ),
         );
       },
