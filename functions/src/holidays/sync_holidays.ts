@@ -46,10 +46,9 @@ export const syncHolidays = onSchedule(
         official.set(year, await fetchOfficialYear(DATA_GO_KR_SERVICE_KEY.value(), year));
       } catch (error) {
         // 일부 월만 받은 채로 교체하면 공휴일이 사라지므로 그 연도는 이번에 건너뛴다
-        // Error 객체는 구조화 로그에서 {}로 직렬화되므로 메시지를 꺼내 남긴다
         logger.error('공식 공휴일 조회 실패 — 기존 문서를 유지한다', {
           year,
-          error: error instanceof Error ? error.message : String(error),
+          error: describeError(error),
         });
       }
     }
@@ -102,4 +101,18 @@ async function fetchOfficialYear(serviceKey: string, year: number): Promise<Holi
     Object.assign(days, parseRestDeInfo(await response.json()));
   }
   return days;
+}
+
+/**
+ * 로그용 오류 설명. Error 객체는 구조화 로그에서 {}로 직렬화되므로 문자열로 꺼낸다.
+ * fetch는 네트워크 실패를 모두 "fetch failed"로 던지고 실제 원인(연결 시간 초과 등)을
+ * `cause`에 담으므로 함께 남긴다.
+ */
+function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause;
+  if (cause === undefined) return error.message;
+  const code = (cause as { code?: unknown }).code;
+  const causeText = cause instanceof Error ? cause.message : String(cause);
+  return `${error.message} (cause: ${code ? `${String(code)} ` : ''}${causeText})`;
 }
