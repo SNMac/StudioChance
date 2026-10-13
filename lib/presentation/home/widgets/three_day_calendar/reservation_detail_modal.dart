@@ -1267,7 +1267,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
 
   // ── 섹션 4: 결제 정보 ────────────────────────────────────────────────────
 
-  /// 요금 옆 공휴일 안내. 표시할 것이 없으면 null.
+  /// 결제 정보 footer의 공휴일 안내. 표시할 것이 없으면 null.
   Widget? get _holidayPriceNoteText {
     final note = holidayPriceNote(
       priceSetting: _effectivePriceSetting,
@@ -1287,15 +1287,21 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           _adjustmentController.text.replaceAll(',', '').replaceAll('원', ''),
         ) ??
         0;
+    final holidayNoteText = _holidayPriceNoteText;
     return GroupedFormContainer(
+      footer: holidayNoteText == null
+          ? null
+          : Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: horizontalPadding,
+                top: 8,
+              ),
+              child: holidayNoteText,
+            ),
       children: [
         TitleTextLabel(title: '예약 플랫폼', content: _platform.displayName),
         TitleTextLabel(title: '결제 방식', content: _paymentMethod.displayName),
-        TitleTextLabel(
-          title: '요금',
-          content: _calculatedPrice.formattedPrice,
-          leading: _holidayPriceNoteText,
-        ),
+        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
         TitleTextLabel(title: '추가 요금/할인', content: adjustment.formattedPrice),
         TitleTextLabel(
           title: '최종 요금',
@@ -1325,6 +1331,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           children: [
             if (!_usesSavedPriceSetting && _currentPriceSetting != null)
               Text('요금은 점포의 현재 요금 기준으로 계산됩니다', style: footerStyle),
+            ?_holidayPriceNoteText,
             Text('할인인 경우 -[값]을 입력해주세요 (예: -2,000)', style: footerStyle),
           ],
         ),
@@ -1354,11 +1361,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextLabel(
-          title: '요금',
-          content: _calculatedPrice.formattedPrice,
-          leading: _holidayPriceNoteText,
-        ),
+        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,

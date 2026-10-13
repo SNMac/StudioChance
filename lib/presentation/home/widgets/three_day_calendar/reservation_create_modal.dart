@@ -755,15 +755,31 @@ class _ReservationCreateModalState
   // ── 섹션 4: 결제 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection4(TextTheme textTheme) {
+    final holidayNote = holidayPriceNote(
+      priceSetting: _priceSetting,
+      start: _startTime,
+      end: _endTime,
+      isAllDay: _isAllDay,
+      isHoliday: _isHoliday,
+      holidays: ref.watch(holidayCalendarControllerProvider),
+    );
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
           start: horizontalPadding,
           top: 8,
         ),
-        child: Text(
-          '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
-          style: textTheme.labelMedium?.copyWith(color: context.secondaryLabel),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (holidayNote != null) HolidayPriceNoteText(holidayNote),
+            Text(
+              '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
+              style: textTheme.labelMedium?.copyWith(
+                color: context.secondaryLabel,
+              ),
+            ),
+          ],
         ),
       ),
       children: [
@@ -791,21 +807,7 @@ class _ReservationCreateModalState
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextLabel(
-          title: '요금',
-          content: _calculatedPrice.formattedPrice,
-          leading: switch (holidayPriceNote(
-            priceSetting: _priceSetting,
-            start: _startTime,
-            end: _endTime,
-            isAllDay: _isAllDay,
-            isHoliday: _isHoliday,
-            holidays: ref.watch(holidayCalendarControllerProvider),
-          )) {
-            final note? => HolidayPriceNoteText(note),
-            null => null,
-          },
-        ),
+        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
