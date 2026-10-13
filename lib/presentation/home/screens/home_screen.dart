@@ -24,6 +24,7 @@ import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reser
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_detail_modal.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/three_day_calendar.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 
@@ -38,6 +39,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isLoadingForModal = false;
   bool _showLoadingOverlay = false;
   Timer? _overlayTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // 예약 모달이 열리자마자 공휴일 요금을 계산할 수 있도록 올해·내년분을 미리 불러온다
+    final thisYear = DateTime.now().year;
+    ref.read(holidayCalendarControllerProvider.notifier).ensureYears({
+      thisYear,
+      thisYear + 1,
+    });
+  }
 
   @override
   void dispose() {
@@ -123,7 +135,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           floatingActionButton: canCreateReservation
               ? _AddReservationFab(
                   enabled: !_isLoadingForModal,
-                  onPressed: () => _onAddReservation(storeInfos, selectedStartDate),
+                  onPressed: () =>
+                      _onAddReservation(storeInfos, selectedStartDate),
                 )
               : null,
           bottomNavigationBar: const HomeTabBar(),
@@ -140,10 +153,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_isLoadingForModal) return;
 
     setState(() => _isLoadingForModal = true);
-    _overlayTimer = Timer(
-      const Duration(seconds: 1),
-      () { if (mounted) setState(() => _showLoadingOverlay = true); },
-    );
+    _overlayTimer = Timer(const Duration(seconds: 1), () {
+      if (mounted) setState(() => _showLoadingOverlay = true);
+    });
 
     List<SpaceOption>? spaceOptions;
     try {
@@ -194,7 +206,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_isLoadingForModal) return;
 
     final creatableInfos = storeInfos
-        .where((info) => info.role == UserRole.admin || info.role == UserRole.staff)
+        .where(
+          (info) => info.role == UserRole.admin || info.role == UserRole.staff,
+        )
         .toList();
     final defaultInfo = creatableInfos.first;
     final defaultStoreSummary = StoreSummary(
@@ -203,7 +217,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       color: defaultInfo.color,
     );
     final availableStores = creatableInfos
-        .map((info) => StoreSummary(id: info.id, name: info.name, color: info.color))
+        .map(
+          (info) =>
+              StoreSummary(id: info.id, name: info.name, color: info.color),
+        )
         .toList();
 
     final start = DateTime(
@@ -216,10 +233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final initialReservation = Reservation(
       id: '',
       storeSummary: defaultStoreSummary,
-      writer: StoreMemberInfo(
-        user: currentUser,
-        role: defaultInfo.role,
-      ),
+      writer: StoreMemberInfo(user: currentUser, role: defaultInfo.role),
       status: ReservationStatus.pending,
       customerName: '',
       headCount: 0,
@@ -237,10 +251,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // 공간 옵션 선 조회 — fetch 중에만 버튼 비활성화, 1초 이상 지연 시 LoadingOverlay 표시
     setState(() => _isLoadingForModal = true);
-    _overlayTimer = Timer(
-      const Duration(seconds: 1),
-      () { if (mounted) setState(() => _showLoadingOverlay = true); },
-    );
+    _overlayTimer = Timer(const Duration(seconds: 1), () {
+      if (mounted) setState(() => _showLoadingOverlay = true);
+    });
 
     List<SpaceOption>? initialSpaceOptions;
     try {

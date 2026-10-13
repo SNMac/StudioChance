@@ -19,7 +19,12 @@ mixin _$Reservation {
 /// 예약 수정 시 점포의 현재 요금이 아니라 이 요금표로 재계산하므로, 점포 요금이
 /// 바뀌어도 예약 가격이 저절로 바뀌지 않는다. null이면 스냅샷이 없는 예약
 /// (점포에 공간이 없었거나 스냅샷 도입 전 예약)이다.
- PriceSetting? get priceSetting; DateTime? get createdAt;
+ PriceSetting? get priceSetting;/// 가격 계산 때 공휴일로 판정한 날짜들의 스냅샷 (`yyyy-MM-dd`).
+///
+/// 공휴일 달력이 바뀌어도(임시공휴일 지정, 예측 공휴일 교체) 예약 가격이 저절로
+/// 바뀌지 않게 한다 (ADR-0003). 판정한 날짜 범위는 이 예약의 [pricedDatesOf]이므로
+/// 공휴일이 아닌 날짜는 담지 않는다. null이면 스냅샷이 없는 예약이다.
+ List<String>? get holidayDates; DateTime? get createdAt;
 /// Create a copy of Reservation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,16 +35,16 @@ $ReservationCopyWith<Reservation> get copyWith => _$ReservationCopyWithImpl<Rese
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&const DeepCollectionEquality().equals(other.holidayDates, holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,createdAt]);
+int get hashCode => Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,const DeepCollectionEquality().hash(holidayDates),createdAt]);
 
 @override
 String toString() {
-  return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, createdAt: $createdAt)';
+  return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, holidayDates: $holidayDates, createdAt: $createdAt)';
 }
 
 
@@ -50,7 +55,7 @@ abstract mixin class $ReservationCopyWith<$Res>  {
   factory $ReservationCopyWith(Reservation value, $Res Function(Reservation) _then) = _$ReservationCopyWithImpl;
 @useResult
 $Res call({
- String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, ReservationPlatform platform, PaymentMethod paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice, String? spaceOptionId, PriceSetting? priceSetting, DateTime? createdAt
+ String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, ReservationPlatform platform, PaymentMethod paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice, String? spaceOptionId, PriceSetting? priceSetting, List<String>? holidayDates, DateTime? createdAt
 });
 
 
@@ -67,7 +72,7 @@ class _$ReservationCopyWithImpl<$Res>
 
 /// Create a copy of Reservation
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeSummary = null,Object? writer = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? memo = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? platform = null,Object? paymentMethod = null,Object? calculatedPrice = null,Object? priceAdjustment = null,Object? totalPrice = null,Object? spaceOptionId = freezed,Object? priceSetting = freezed,Object? createdAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeSummary = null,Object? writer = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? memo = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? platform = null,Object? paymentMethod = null,Object? calculatedPrice = null,Object? priceAdjustment = null,Object? totalPrice = null,Object? spaceOptionId = freezed,Object? priceSetting = freezed,Object? holidayDates = freezed,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeSummary: null == storeSummary ? _self.storeSummary : storeSummary // ignore: cast_nullable_to_non_nullable
@@ -87,7 +92,8 @@ as int,priceAdjustment: null == priceAdjustment ? _self.priceAdjustment : priceA
 as int,totalPrice: null == totalPrice ? _self.totalPrice : totalPrice // ignore: cast_nullable_to_non_nullable
 as int,spaceOptionId: freezed == spaceOptionId ? _self.spaceOptionId : spaceOptionId // ignore: cast_nullable_to_non_nullable
 as String?,priceSetting: freezed == priceSetting ? _self.priceSetting : priceSetting // ignore: cast_nullable_to_non_nullable
-as PriceSetting?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as PriceSetting?,holidayDates: freezed == holidayDates ? _self.holidayDates : holidayDates // ignore: cast_nullable_to_non_nullable
+as List<String>?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
@@ -203,10 +209,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice,  String? spaceOptionId,  PriceSetting? priceSetting,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice,  String? spaceOptionId,  PriceSetting? priceSetting,  List<String>? holidayDates,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Reservation() when $default != null:
-return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice,_that.spaceOptionId,_that.priceSetting,_that.createdAt);case _:
+return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice,_that.spaceOptionId,_that.priceSetting,_that.holidayDates,_that.createdAt);case _:
   return orElse();
 
 }
@@ -224,10 +230,10 @@ return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.cust
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice,  String? spaceOptionId,  PriceSetting? priceSetting,  DateTime? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice,  String? spaceOptionId,  PriceSetting? priceSetting,  List<String>? holidayDates,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Reservation():
-return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice,_that.spaceOptionId,_that.priceSetting,_that.createdAt);case _:
+return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice,_that.spaceOptionId,_that.priceSetting,_that.holidayDates,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -244,10 +250,10 @@ return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.cust
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice,  String? spaceOptionId,  PriceSetting? priceSetting,  DateTime? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  StoreSummary storeSummary,  StoreMemberInfo writer,  ReservationStatus status,  String customerName,  int headCount,  String customerPhone,  String memo,  bool isAllDay,  DateTime startTime,  DateTime endTime,  ReservationPlatform platform,  PaymentMethod paymentMethod,  int calculatedPrice,  int priceAdjustment,  int totalPrice,  String? spaceOptionId,  PriceSetting? priceSetting,  List<String>? holidayDates,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Reservation() when $default != null:
-return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice,_that.spaceOptionId,_that.priceSetting,_that.createdAt);case _:
+return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.customerName,_that.headCount,_that.customerPhone,_that.memo,_that.isAllDay,_that.startTime,_that.endTime,_that.platform,_that.paymentMethod,_that.calculatedPrice,_that.priceAdjustment,_that.totalPrice,_that.spaceOptionId,_that.priceSetting,_that.holidayDates,_that.createdAt);case _:
   return null;
 
 }
@@ -259,7 +265,7 @@ return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.cust
 
 
 class _Reservation implements Reservation {
-  const _Reservation({required this.id, required this.storeSummary, required this.writer, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.memo, required this.isAllDay, required this.startTime, required this.endTime, required this.platform, required this.paymentMethod, required this.calculatedPrice, required this.priceAdjustment, required this.totalPrice, this.spaceOptionId, this.priceSetting, this.createdAt});
+  const _Reservation({required this.id, required this.storeSummary, required this.writer, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.memo, required this.isAllDay, required this.startTime, required this.endTime, required this.platform, required this.paymentMethod, required this.calculatedPrice, required this.priceAdjustment, required this.totalPrice, this.spaceOptionId, this.priceSetting, final  List<String>? holidayDates, this.createdAt}): _holidayDates = holidayDates;
   
 
 @override final  String id;
@@ -285,6 +291,25 @@ class _Reservation implements Reservation {
 /// 바뀌어도 예약 가격이 저절로 바뀌지 않는다. null이면 스냅샷이 없는 예약
 /// (점포에 공간이 없었거나 스냅샷 도입 전 예약)이다.
 @override final  PriceSetting? priceSetting;
+/// 가격 계산 때 공휴일로 판정한 날짜들의 스냅샷 (`yyyy-MM-dd`).
+///
+/// 공휴일 달력이 바뀌어도(임시공휴일 지정, 예측 공휴일 교체) 예약 가격이 저절로
+/// 바뀌지 않게 한다 (ADR-0003). 판정한 날짜 범위는 이 예약의 [pricedDatesOf]이므로
+/// 공휴일이 아닌 날짜는 담지 않는다. null이면 스냅샷이 없는 예약이다.
+ final  List<String>? _holidayDates;
+/// 가격 계산 때 공휴일로 판정한 날짜들의 스냅샷 (`yyyy-MM-dd`).
+///
+/// 공휴일 달력이 바뀌어도(임시공휴일 지정, 예측 공휴일 교체) 예약 가격이 저절로
+/// 바뀌지 않게 한다 (ADR-0003). 판정한 날짜 범위는 이 예약의 [pricedDatesOf]이므로
+/// 공휴일이 아닌 날짜는 담지 않는다. null이면 스냅샷이 없는 예약이다.
+@override List<String>? get holidayDates {
+  final value = _holidayDates;
+  if (value == null) return null;
+  if (_holidayDates is EqualUnmodifiableListView) return _holidayDates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 @override final  DateTime? createdAt;
 
 /// Create a copy of Reservation
@@ -297,16 +322,16 @@ _$ReservationCopyWith<_Reservation> get copyWith => __$ReservationCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&const DeepCollectionEquality().equals(other._holidayDates, _holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,createdAt]);
+int get hashCode => Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,const DeepCollectionEquality().hash(_holidayDates),createdAt]);
 
 @override
 String toString() {
-  return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, createdAt: $createdAt)';
+  return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, holidayDates: $holidayDates, createdAt: $createdAt)';
 }
 
 
@@ -317,7 +342,7 @@ abstract mixin class _$ReservationCopyWith<$Res> implements $ReservationCopyWith
   factory _$ReservationCopyWith(_Reservation value, $Res Function(_Reservation) _then) = __$ReservationCopyWithImpl;
 @override @useResult
 $Res call({
- String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, ReservationPlatform platform, PaymentMethod paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice, String? spaceOptionId, PriceSetting? priceSetting, DateTime? createdAt
+ String id, StoreSummary storeSummary, StoreMemberInfo writer, ReservationStatus status, String customerName, int headCount, String customerPhone, String memo, bool isAllDay, DateTime startTime, DateTime endTime, ReservationPlatform platform, PaymentMethod paymentMethod, int calculatedPrice, int priceAdjustment, int totalPrice, String? spaceOptionId, PriceSetting? priceSetting, List<String>? holidayDates, DateTime? createdAt
 });
 
 
@@ -334,7 +359,7 @@ class __$ReservationCopyWithImpl<$Res>
 
 /// Create a copy of Reservation
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? storeSummary = null,Object? writer = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? memo = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? platform = null,Object? paymentMethod = null,Object? calculatedPrice = null,Object? priceAdjustment = null,Object? totalPrice = null,Object? spaceOptionId = freezed,Object? priceSetting = freezed,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? storeSummary = null,Object? writer = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? memo = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? platform = null,Object? paymentMethod = null,Object? calculatedPrice = null,Object? priceAdjustment = null,Object? totalPrice = null,Object? spaceOptionId = freezed,Object? priceSetting = freezed,Object? holidayDates = freezed,Object? createdAt = freezed,}) {
   return _then(_Reservation(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeSummary: null == storeSummary ? _self.storeSummary : storeSummary // ignore: cast_nullable_to_non_nullable
@@ -354,7 +379,8 @@ as int,priceAdjustment: null == priceAdjustment ? _self.priceAdjustment : priceA
 as int,totalPrice: null == totalPrice ? _self.totalPrice : totalPrice // ignore: cast_nullable_to_non_nullable
 as int,spaceOptionId: freezed == spaceOptionId ? _self.spaceOptionId : spaceOptionId // ignore: cast_nullable_to_non_nullable
 as String?,priceSetting: freezed == priceSetting ? _self.priceSetting : priceSetting // ignore: cast_nullable_to_non_nullable
-as PriceSetting?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as PriceSetting?,holidayDates: freezed == holidayDates ? _self._holidayDates : holidayDates // ignore: cast_nullable_to_non_nullable
+as List<String>?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }

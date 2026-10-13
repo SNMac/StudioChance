@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:studio_chance/data/repositories/holiday_repository_impl.dart';
 import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
@@ -11,10 +12,12 @@ ReservationUseCase reservationUseCase(Ref ref) {
   final reservationRepository = ref.watch(reservationRepositoryProvider);
   final userRepository = ref.watch(userRepositoryProvider);
   final storeRepository = ref.watch(storeRepositoryProvider);
+  final holidayRepository = ref.watch(holidayRepositoryProvider);
 
   return ReservationUseCaseImpl(
     reservationRepository: reservationRepository,
     userRepository: userRepository,
     storeRepository: storeRepository,
+    holidayRepository: holidayRepository,
   );
 }

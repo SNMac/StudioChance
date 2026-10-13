@@ -14,6 +14,13 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - 한국어로 커밋 메시지, 주석 작성
 - 앱 내에서 ID를 자체 생성할 때는 `uuid` 패키지의 `const Uuid().v4()` 사용 (`DateTime.now().millisecondsSinceEpoch` 금지)
 
+## 마크다운 작성
+- 마크다운으로 쓰는 모든 글(저장소 문서, PR·이슈 본문 등)에서 범위를 물결표로 쓸 때는 `\~`로 이스케이프한다
+  - GitHub 등 여러 마크다운 렌더러가 `~`로 감싼 부분을 취소선으로 바꾸므로, 한 문단에 `~`가 두 번 나오면 그 사이가 취소선이 된다
+  - 렌더러마다 다르게 보이지 않도록 GitHub에 올리지 않는 문서도 같은 규칙을 따른다
+  - 예: `약 11~13회, 약 25~30회`는 "13회, 약 25"에 취소선이 그어진다. `약 11\~13회`로 쓴다
+  - 백틱 코드 표기 안의 `~`는 그대로 둔다
+
 ## 라이브러리 문서 조회
 - Deprecated API 사용은 지양 — 항상 최신 권장 API/패턴으로 구현할 것
 - Context7 MCP가 응답하지 않거나 사용량 초과 등으로 사용 불가한 상태여도 작업을 멈추지 말고, 기존 지식으로 진행할 것. 단, 기존 지식만으로 해결이 어려우면 공식 문서를 별도로 확인할 것
@@ -81,6 +88,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 현재 요금표를 쓰는 경우: 사용자가 상세 모달의 '현재 요금 적용'을 누름(`applyCurrentPrice`), 점포·공간이 바뀜, 저장된 스냅샷이 없음
 - 비교 기준은 UseCase가 조회한 저장된 예약이다 — 화면이 보낸 스냅샷은 신뢰하지 않는다 (D3)
 - 판단 규칙은 `Reservation.keepsPriceSettingFor`(엔티티 extension) 하나를 상세 모달과 `ReservationUseCaseImpl.updateReservation`이 공유한다 — 규칙이 갈라지면 화면 가격과 저장 가격이 어긋난다
+- **공휴일 스냅샷도 같은 원칙** (`Reservation.holidayDates`, ADR-0003): 저장된 예약 기간 안의 날짜는 스냅샷, 밖으로 옮긴 날짜는 현재 공휴일 달력으로 판정(`holidayCheckerFor`). '현재 요금 적용'은 요금표 또는 공휴일 판정(`holidaysDifferFromCurrent`)이 다를 때 노출
 
 ### Common Exceptions 레이어 배치 (D4)
 `common/exceptions/` 를 모든 레이어 공유 위치로 유지.
@@ -102,8 +110,13 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ### 공휴일 요금 — isHoliday 콜백 패턴 (D8)
 `PriceSetting.calculatePrice(isHoliday: bool Function(DateTime date)?)`로 날짜별 공휴일 판단을 호출부 콜백에 위임 (다일 예약 시 날짜별로 다른 공휴일 여부를 반영하기 위함).
 - `Weekday.holiday`(JsonValue=8)는 `DateTime.weekday`(max=7)로 절대 매칭 불가 — 외부 판단 필수
-- 현재 모든 호출부(`_applyPriceSetting`, 두 예약 모달)는 `isHoliday: (date) => false` 고정 (TODO 주석)
-- 향후 공공데이터포털 특일 정보 API 연동 시 `HolidayRepository`를 주입해 날짜별 판단 결과를 콜백으로 전달
+- 판단 근거는 공휴일 달력(`HolidayCalendar`, `holidays/{year}`) — 아래 "공휴일 달력" 섹션 참고
+  - UseCase: `HolidayRepository`를 주입받아 직접 판정. 읽기 실패 시 공휴일이 아닌 것으로 계산(저장을 막지 않음)
+  - "모르는 연도는 공휴일 아님" 규칙은 `HolidayCalendar.isHolidayForPricing` 하나로 UseCase·두 모달이 공유한다
+  - 모달을 열 때 `refreshYears`로 그 연도를 다시 조회한다 — 앱을 켜둔 사이 달력이 바뀌면 화면 가격과 저장 가격이 어긋나기 때문
+  - 모달: keepAlive `HolidayCalendarController`의 동기 조회. 홈 진입 시 올해·내년분 선로딩
+- 공휴일 요일 그룹이 없는 요금표는 공휴일에 **실제 요일 요금**을 받는다 (`PriceSetting._dayGroupFor`)
+- 판정한 날짜 범위는 `pricedDatesOf` 하나로 정한다 (하루종일=각 날짜, 시간 지정=시작 날짜). 계산과 공휴일 스냅샷이 이 함수를 공유해야 어긋나지 않는다
 
 ### 앱 최초 실행 인증 데이터 삭제 (D9)
 `SharedPreferences` `hasLaunchedBefore` 플래그로 앱 최초 설치 실행을 감지하여 기존 인증 데이터 삭제.
@@ -287,6 +300,20 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - `createTestEnv(suffix)`는 **파일마다 고유한 projectId**를 쓴다 —
   `node --test`가 파일을 병렬 실행해 `clearFirestore()`가 서로의 시드를 지우기 때문.
 - Rules를 고쳤으면 이 테스트를 반드시 돌린다. `fake_cloud_firestore`는 Rules를 적용하지 않는다.
+
+## 공휴일 달력
+
+- 설계: `docs/adr/0001`(Functions 동기화) · `0002`(예측 공휴일, 연도째 교체) · `0003`(공휴일 스냅샷)
+- **`syncHolidays`** (`functions/src/holidays/`): 매일 04:00 KST. 연도는 KST로 계산
+  - 공식: 특일 정보 API `getRestDeInfo` 작년\~+2년, 월 단위 12회 호출. 한 달이라도 실패하면 그 연도는 건너뛴다
+  - 예측: 올해\~2050년 중 공식이 없는 연도. `korean-lunar-calendar`가 2050년까지만 지원해 그 이후는 문서가 없다 (해가 지날수록 범위가 줄어든다 — ADR-0002)
+    — 중국 음력 라이브러리(`lunar-javascript` 등)는 설날이 하루 어긋나는 해가 있어 쓰면 안 된다
+  - 문서 `holidays/{year} = { days: {'yyyy-MM-dd': [이름...]}, source, syncedAt }`. `source`는 덮어쓰기 판단용이며 앱은 읽지 않는다
+- **법령이 바뀌면 `predict_holidays.ts`를 고친다**: 대체공휴일 대상(관공서 공휴일 규정 제3조), 선거 임기 기준일 상수 `ELECTIONS`(궐위·조기 선거 시)
+  - 「공휴일에 관한 법률」과 「관공서의 공휴일에 관한 규정」은 선거일·임시공휴일의 **호 번호가 다르다** — 주석에 번호를 적을 때 섞지 말 것
+- **배포 전 Secret 설정**(dev·prod 각각): `firebase functions:secrets:set DATA_GO_KR_SERVICE_KEY -P dev`
+- **배포 직후 1회 수동 실행**: 스케줄 첫 실행이 다음 날 새벽이므로 Cloud Scheduler 콘솔에서 `syncHolidays` 작업을 "강제 실행"
+- 날짜 키 `yyyy-MM-dd` 형식은 서버(`HolidayDays`)·앱(`holidayDateKey`)·스냅샷이 공유한다
 
 ## Firestore Rules / Functions 배포 순서
 

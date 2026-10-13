@@ -7,6 +7,38 @@ import 'package:studio_chance/common/enums/weekday.dart';
 
 part 'price_setting.freezed.dart';
 
+/// [PriceSetting.calculatePrice]가 요일(공휴일 여부)을 판단하는 날짜들.
+///
+/// 하루종일 예약은 예약 기간의 각 날짜, 시간 지정 예약은 시작 날짜 하나다.
+/// 공휴일 스냅샷도 이 날짜들만 다뤄야 계산과 어긋나지 않는다.
+List<DateTime> pricedDatesOf({
+  required DateTime start,
+  required DateTime end,
+  required bool isAllDay,
+}) {
+  final startDate = DateTime(start.year, start.month, start.day);
+  if (!isAllDay) return [startDate];
+  return [
+    for (
+      int dayOffset = 0;
+      dayOffset < end.difference(start).inDays;
+      dayOffset++
+    )
+      startDate.add(Duration(days: dayOffset)),
+  ];
+}
+
+/// [pricedDatesOf]의 연도들 — 가격 계산에 필요한 공휴일 달력 범위.
+Set<int> pricedYearsOf({
+  required DateTime start,
+  required DateTime end,
+  required bool isAllDay,
+}) => pricedDatesOf(
+  start: start,
+  end: end,
+  isAllDay: isAllDay,
+).map((date) => date.year).toSet();
+
 @freezed
 abstract class PriceSetting with _$PriceSetting {
   const PriceSetting._();
@@ -15,6 +47,10 @@ abstract class PriceSetting with _$PriceSetting {
       _PriceSetting;
 
   factory PriceSetting.empty() => PriceSetting(dayGroups: [DayGroup.empty()]);
+
+  /// 공휴일 요금을 따로 정했는지 여부. 없으면 공휴일 여부가 가격에 영향을 주지 않는다.
+  bool get hasHolidayDayGroup =>
+      dayGroups.any((g) => g.days.contains(Weekday.holiday));
 
   /// 예약 시간 및 인원 기반 기본 요금 계산.
   ///
@@ -37,26 +73,21 @@ abstract class PriceSetting with _$PriceSetting {
     //    - isHourly=false 다일 예약 시 일 수 반영
     //    - 날짜 경계를 넘는 다일 예약 시 각 날짜의 DayGroup 적용
     if (isAllDay) {
-      final numberOfDays = end.difference(start).inDays;
       int totalPrice = 0;
       bool anyMatched = false;
 
-      for (int dayOffset = 0; dayOffset < numberOfDays; dayOffset++) {
-        final dayDate = start.add(Duration(days: dayOffset));
-        // holidayChecker(dayDate)가 true이면 해당 날짜만 공휴일로 처리
-        final dayWeekday = holidayChecker(dayDate)
-            ? Weekday.holiday
-            : Weekday.values.firstWhere(
-                (w) => w.index + 1 == dayDate.weekday,
-                orElse: () => Weekday.monday,
-              );
-
-        final dayGroup =
-            dayGroups.where((g) => g.days.contains(dayWeekday)).firstOrNull;
+      for (final dayDate in pricedDatesOf(
+        start: start,
+        end: end,
+        isAllDay: true,
+      )) {
+        final dayGroup = _dayGroupFor(
+          dayDate,
+          isHoliday: holidayChecker(dayDate),
+        );
         if (dayGroup == null) continue;
 
-        final slot =
-            dayGroup.timeSlots.where((s) => s.isAllDay).firstOrNull;
+        final slot = dayGroup.timeSlots.where((s) => s.isAllDay).firstOrNull;
         if (slot == null) continue;
 
         anyMatched = true;
@@ -80,16 +111,8 @@ abstract class PriceSetting with _$PriceSetting {
       return anyMatched ? totalPrice : 0;
     }
 
-    // 2. 시간 지정 예약: 예약 요일의 DayGroup 탐색
-    // holidayChecker(start)가 true이면 Weekday.holiday 그룹 우선 적용
-    final weekday = holidayChecker(start)
-        ? Weekday.holiday
-        : Weekday.values.firstWhere(
-            (w) => w.index + 1 == start.weekday, // Weekday.monday.index = 0, weekday = 1
-            orElse: () => Weekday.monday,
-          );
-
-    final group = dayGroups.where((g) => g.days.contains(weekday)).firstOrNull;
+    // 2. 시간 지정 예약: 예약 시작 날짜의 DayGroup 탐색
+    final group = _dayGroupFor(start, isHoliday: holidayChecker(start));
     if (group == null) return 0;
 
     final totalHours = end.difference(start).inMinutes / 60.0;
@@ -112,7 +135,9 @@ abstract class PriceSetting with _$PriceSetting {
 
       anyMatched = true;
       final overlapHours = (overlapEnd - overlapStart) / 60.0;
-      int slotPrice = slot.isHourly ? (slot.price * overlapHours).round() : slot.price;
+      int slotPrice = slot.isHourly
+          ? (slot.price * overlapHours).round()
+          : slot.price;
       if (slot.isPerPerson) slotPrice *= headCount;
       totalBase += slotPrice;
     }
@@ -126,9 +151,32 @@ abstract class PriceSetting with _$PriceSetting {
     if (extraPeople > 0) {
       extraCharge = rule.headcountExtraPrice;
       if (rule.isHeadcountPerPerson) extraCharge *= extraPeople;
-      if (rule.isHeadcountHourly) extraCharge = (extraCharge * totalHours).round();
+      if (rule.isHeadcountHourly) {
+        extraCharge = (extraCharge * totalHours).round();
+      }
     }
 
     return totalBase + extraCharge;
+  }
+
+  /// [date]에 적용할 DayGroup.
+  ///
+  /// 공휴일이면 공휴일 DayGroup을 우선 쓰고, 공휴일이 어느 DayGroup에도 없으면
+  /// 그 날짜의 실제 요일 DayGroup으로 대체한다. 공휴일 요금을 따로 정하지 않은
+  /// 점포는 공휴일에도 평소 요금을 받는다는 뜻이기 때문이다.
+  DayGroup? _dayGroupFor(DateTime date, {required bool isHoliday}) {
+    DayGroup? groupOf(Weekday weekday) =>
+        dayGroups.where((g) => g.days.contains(weekday)).firstOrNull;
+
+    final weekdayGroup = groupOf(
+      Weekday.values.firstWhere(
+        (w) =>
+            w.index + 1 ==
+            date.weekday, // Weekday.monday.index = 0, weekday = 1
+        orElse: () => Weekday.monday,
+      ),
+    );
+    if (!isHoliday) return weekdayGroup;
+    return groupOf(Weekday.holiday) ?? weekdayGroup;
   }
 }

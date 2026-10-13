@@ -18,33 +18,35 @@ PriceSetting _makeWeekdaySetting({
   bool isHeadcountPerPerson = true,
   bool isHeadcountHourly = true,
 }) {
-  return PriceSetting(dayGroups: [
-    DayGroup(
-      days: [
-        Weekday.monday,
-        Weekday.tuesday,
-        Weekday.wednesday,
-        Weekday.thursday,
-        Weekday.friday,
-      ],
-      headcountRule: HeadcountRule(
-        headcountBase: headcountBase,
-        headcountExtraPrice: headcountExtraPrice,
-        isHeadcountHourly: isHeadcountHourly,
-        isHeadcountPerPerson: isHeadcountPerPerson,
-      ),
-      timeSlots: [
-        TimeSlot(
-          isAllDay: isAllDay,
-          startTime: startTime,
-          endTime: endTime,
-          price: price,
-          isHourly: isHourly,
-          isPerPerson: isPerPerson,
+  return PriceSetting(
+    dayGroups: [
+      DayGroup(
+        days: [
+          Weekday.monday,
+          Weekday.tuesday,
+          Weekday.wednesday,
+          Weekday.thursday,
+          Weekday.friday,
+        ],
+        headcountRule: HeadcountRule(
+          headcountBase: headcountBase,
+          headcountExtraPrice: headcountExtraPrice,
+          isHeadcountHourly: isHeadcountHourly,
+          isHeadcountPerPerson: isHeadcountPerPerson,
         ),
-      ],
-    ),
-  ]);
+        timeSlots: [
+          TimeSlot(
+            isAllDay: isAllDay,
+            startTime: startTime,
+            endTime: endTime,
+            price: price,
+            isHourly: isHourly,
+            isPerPerson: isPerPerson,
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 // 평일 DayGroup + 주말 DayGroup — isAllDay 다일 경계 테스트용
@@ -59,52 +61,54 @@ PriceSetting _makeWeekendSplitSetting({
   bool isHeadcountPerPerson = true,
   bool isHeadcountHourly = false,
 }) {
-  return PriceSetting(dayGroups: [
-    DayGroup(
-      days: [
-        Weekday.monday,
-        Weekday.tuesday,
-        Weekday.wednesday,
-        Weekday.thursday,
-        Weekday.friday,
-      ],
-      headcountRule: HeadcountRule(
-        headcountBase: weekdayHeadcountBase,
-        headcountExtraPrice: weekdayHeadcountExtraPrice,
-        isHeadcountHourly: isHeadcountHourly,
-        isHeadcountPerPerson: isHeadcountPerPerson,
-      ),
-      timeSlots: [
-        TimeSlot(
-          isAllDay: true,
-          startTime: 0,
-          endTime: 1440,
-          price: weekdayPrice,
-          isHourly: isHourly,
-          isPerPerson: false,
+  return PriceSetting(
+    dayGroups: [
+      DayGroup(
+        days: [
+          Weekday.monday,
+          Weekday.tuesday,
+          Weekday.wednesday,
+          Weekday.thursday,
+          Weekday.friday,
+        ],
+        headcountRule: HeadcountRule(
+          headcountBase: weekdayHeadcountBase,
+          headcountExtraPrice: weekdayHeadcountExtraPrice,
+          isHeadcountHourly: isHeadcountHourly,
+          isHeadcountPerPerson: isHeadcountPerPerson,
         ),
-      ],
-    ),
-    DayGroup(
-      days: [Weekday.saturday, Weekday.sunday],
-      headcountRule: HeadcountRule(
-        headcountBase: weekendHeadcountBase,
-        headcountExtraPrice: weekendHeadcountExtraPrice,
-        isHeadcountHourly: isHeadcountHourly,
-        isHeadcountPerPerson: isHeadcountPerPerson,
+        timeSlots: [
+          TimeSlot(
+            isAllDay: true,
+            startTime: 0,
+            endTime: 1440,
+            price: weekdayPrice,
+            isHourly: isHourly,
+            isPerPerson: false,
+          ),
+        ],
       ),
-      timeSlots: [
-        TimeSlot(
-          isAllDay: true,
-          startTime: 0,
-          endTime: 1440,
-          price: weekendPrice,
-          isHourly: isHourly,
-          isPerPerson: false,
+      DayGroup(
+        days: [Weekday.saturday, Weekday.sunday],
+        headcountRule: HeadcountRule(
+          headcountBase: weekendHeadcountBase,
+          headcountExtraPrice: weekendHeadcountExtraPrice,
+          isHeadcountHourly: isHeadcountHourly,
+          isHeadcountPerPerson: isHeadcountPerPerson,
         ),
-      ],
-    ),
-  ]);
+        timeSlots: [
+          TimeSlot(
+            isAllDay: true,
+            startTime: 0,
+            endTime: 1440,
+            price: weekendPrice,
+            isHourly: isHourly,
+            isPerPerson: false,
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 // 평일 DayGroup + Weekday.holiday DayGroup — isHoliday 콜백 테스트용
@@ -116,52 +120,54 @@ PriceSetting _makeHolidaySplitSetting({
   int startTime = 0,
   int endTime = 1440,
 }) {
-  return PriceSetting(dayGroups: [
-    DayGroup(
-      days: [
-        Weekday.monday,
-        Weekday.tuesday,
-        Weekday.wednesday,
-        Weekday.thursday,
-        Weekday.friday,
-      ],
-      headcountRule: HeadcountRule(
-        headcountBase: 999,
-        headcountExtraPrice: 0,
-        isHeadcountHourly: false,
-        isHeadcountPerPerson: false,
-      ),
-      timeSlots: [
-        TimeSlot(
-          isAllDay: isAllDay,
-          startTime: startTime,
-          endTime: endTime,
-          price: weekdayPrice,
-          isHourly: isHourly,
-          isPerPerson: false,
+  return PriceSetting(
+    dayGroups: [
+      DayGroup(
+        days: [
+          Weekday.monday,
+          Weekday.tuesday,
+          Weekday.wednesday,
+          Weekday.thursday,
+          Weekday.friday,
+        ],
+        headcountRule: HeadcountRule(
+          headcountBase: 999,
+          headcountExtraPrice: 0,
+          isHeadcountHourly: false,
+          isHeadcountPerPerson: false,
         ),
-      ],
-    ),
-    DayGroup(
-      days: [Weekday.holiday],
-      headcountRule: HeadcountRule(
-        headcountBase: 999,
-        headcountExtraPrice: 0,
-        isHeadcountHourly: false,
-        isHeadcountPerPerson: false,
+        timeSlots: [
+          TimeSlot(
+            isAllDay: isAllDay,
+            startTime: startTime,
+            endTime: endTime,
+            price: weekdayPrice,
+            isHourly: isHourly,
+            isPerPerson: false,
+          ),
+        ],
       ),
-      timeSlots: [
-        TimeSlot(
-          isAllDay: isAllDay,
-          startTime: startTime,
-          endTime: endTime,
-          price: holidayPrice,
-          isHourly: isHourly,
-          isPerPerson: false,
+      DayGroup(
+        days: [Weekday.holiday],
+        headcountRule: HeadcountRule(
+          headcountBase: 999,
+          headcountExtraPrice: 0,
+          isHeadcountHourly: false,
+          isHeadcountPerPerson: false,
         ),
-      ],
-    ),
-  ]);
+        timeSlots: [
+          TimeSlot(
+            isAllDay: isAllDay,
+            startTime: startTime,
+            endTime: endTime,
+            price: holidayPrice,
+            isHourly: isHourly,
+            isPerPerson: false,
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 void main() {
@@ -190,8 +196,11 @@ void main() {
     });
 
     test('단일 슬롯 내 예약 — isPerPerson=true', () {
-      final setting =
-          _makeWeekdaySetting(price: 5000, isHourly: true, isPerPerson: true);
+      final setting = _makeWeekdaySetting(
+        price: 5000,
+        isHourly: true,
+        isPerPerson: true,
+      );
       final result = setting.calculatePrice(
         start: DateTime(2026, 5, 18, 10, 0),
         end: DateTime(2026, 5, 18, 11, 0),
@@ -203,35 +212,37 @@ void main() {
     test('다중 슬롯 경계 걸침 — 11:55~16:05', () {
       // 슬롯 A: 10:00(600)~14:00(840) @ 8,000/h
       // 슬롯 B: 14:00(840)~18:00(1080) @ 12,000/h
-      final setting = PriceSetting(dayGroups: [
-        DayGroup(
-          days: [Weekday.monday],
-          headcountRule: HeadcountRule(
-            headcountBase: 999,
-            headcountExtraPrice: 0,
-            isHeadcountHourly: true,
-            isHeadcountPerPerson: true,
+      final setting = PriceSetting(
+        dayGroups: [
+          DayGroup(
+            days: [Weekday.monday],
+            headcountRule: HeadcountRule(
+              headcountBase: 999,
+              headcountExtraPrice: 0,
+              isHeadcountHourly: true,
+              isHeadcountPerPerson: true,
+            ),
+            timeSlots: [
+              TimeSlot(
+                isAllDay: false,
+                startTime: 600,
+                endTime: 840,
+                price: 8000,
+                isHourly: true,
+                isPerPerson: false,
+              ),
+              TimeSlot(
+                isAllDay: false,
+                startTime: 840,
+                endTime: 1080,
+                price: 12000,
+                isHourly: true,
+                isPerPerson: false,
+              ),
+            ],
           ),
-          timeSlots: [
-            TimeSlot(
-              isAllDay: false,
-              startTime: 600,
-              endTime: 840,
-              price: 8000,
-              isHourly: true,
-              isPerPerson: false,
-            ),
-            TimeSlot(
-              isAllDay: false,
-              startTime: 840,
-              endTime: 1080,
-              price: 12000,
-              isHourly: true,
-              isPerPerson: false,
-            ),
-          ],
-        ),
-      ]);
+        ],
+      );
       // 슬롯 A 겹침: 715~840 = 125min → (8000 × 125/60).round() = 16667
       // 슬롯 B 겹침: 840~965 = 125min → (12000 × 125/60).round() = 25000
       final result = setting.calculatePrice(
@@ -318,44 +329,47 @@ void main() {
       expect(result, 19000); // 10,000 + 9,000
     });
 
-    test('isPerPerson=false, isHourly=true → (extraPrice × totalHours).round()',
-        () {
-      final setting = _makeWeekdaySetting(
-        price: 10000,
-        isHourly: true,
-        headcountBase: 2,
-        headcountExtraPrice: 2000,
-        isHeadcountPerPerson: false,
-        isHeadcountHourly: true,
-      );
-      // 3명, 3시간 → extraPeople=1, extraCharge=(2,000×3).round()=6,000
-      final result = setting.calculatePrice(
-        start: DateTime(2026, 5, 18, 10, 0),
-        end: DateTime(2026, 5, 18, 13, 0),
-        headCount: 3,
-      );
-      expect(result, 36000); // 30,000 + 6,000
-    });
+    test(
+      'isPerPerson=false, isHourly=true → (extraPrice × totalHours).round()',
+      () {
+        final setting = _makeWeekdaySetting(
+          price: 10000,
+          isHourly: true,
+          headcountBase: 2,
+          headcountExtraPrice: 2000,
+          isHeadcountPerPerson: false,
+          isHeadcountHourly: true,
+        );
+        // 3명, 3시간 → extraPeople=1, extraCharge=(2,000×3).round()=6,000
+        final result = setting.calculatePrice(
+          start: DateTime(2026, 5, 18, 10, 0),
+          end: DateTime(2026, 5, 18, 13, 0),
+          headCount: 3,
+        );
+        expect(result, 36000); // 30,000 + 6,000
+      },
+    );
 
     test(
-        'isPerPerson=true, isHourly=true → (extraPrice × extraPeople × totalHours).round()',
-        () {
-      final setting = _makeWeekdaySetting(
-        price: 10000,
-        isHourly: true,
-        headcountBase: 2,
-        headcountExtraPrice: 1000,
-        isHeadcountPerPerson: true,
-        isHeadcountHourly: true,
-      );
-      // 4명, 2시간 → extraPeople=2, extraCharge=(1,000×2×2).round()=4,000
-      final result = setting.calculatePrice(
-        start: DateTime(2026, 5, 18, 10, 0),
-        end: DateTime(2026, 5, 18, 12, 0),
-        headCount: 4,
-      );
-      expect(result, 24000); // 20,000 + 4,000
-    });
+      'isPerPerson=true, isHourly=true → (extraPrice × extraPeople × totalHours).round()',
+      () {
+        final setting = _makeWeekdaySetting(
+          price: 10000,
+          isHourly: true,
+          headcountBase: 2,
+          headcountExtraPrice: 1000,
+          isHeadcountPerPerson: true,
+          isHeadcountHourly: true,
+        );
+        // 4명, 2시간 → extraPeople=2, extraCharge=(1,000×2×2).round()=4,000
+        final result = setting.calculatePrice(
+          start: DateTime(2026, 5, 18, 10, 0),
+          end: DateTime(2026, 5, 18, 12, 0),
+          headCount: 4,
+        );
+        expect(result, 24000); // 20,000 + 4,000
+      },
+    );
 
     test('headCount ≤ headcountBase → extraCharge = 0', () {
       final setting = _makeWeekdaySetting(
@@ -542,6 +556,33 @@ void main() {
         isHoliday: (date) => date.day == 19, // 5/19(화)만 공휴일로 지정
       );
       expect(result, 140000); // 월 50,000(평일) + 화 90,000(공휴일)
+    });
+
+    test('공휴일 요일 그룹이 없으면 공휴일에 그 날짜의 실제 요일 요금을 적용한다', () {
+      // 공휴일을 어느 요일 그룹에도 넣지 않은 점포 — 0원이 되면 안 된다
+      final setting = _makeWeekdaySetting(price: 10000, isHourly: false);
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 18, 10, 0), // 월요일
+        end: DateTime(2026, 5, 18, 12, 0),
+        headCount: 1,
+        isHoliday: (date) => true,
+      );
+      expect(result, 10000);
+    });
+
+    test('공휴일 요일 그룹이 없으면 다일 예약의 공휴일 날짜도 실제 요일 요금을 적용한다', () {
+      final setting = _makeWeekendSplitSetting(
+        weekdayPrice: 50000,
+        weekendPrice: 80000,
+      );
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 15), // 금요일
+        end: DateTime(2026, 5, 17), // 2일: 5/15(금), 5/16(토)
+        headCount: 1,
+        isAllDay: true,
+        isHoliday: (date) => date.day == 15, // 5/15(금)만 공휴일
+      );
+      expect(result, 130000); // 금 50,000(평일 그룹) + 토 80,000(주말 그룹)
     });
   });
 }

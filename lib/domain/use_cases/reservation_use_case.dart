@@ -1,11 +1,13 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
+import 'package:studio_chance/domain/entities/holiday_calendar.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
+import 'package:studio_chance/domain/repository_interfaces/holiday_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
@@ -54,12 +56,15 @@ abstract interface class ReservationUseCase {
 
   /// 예약 정보 수정
   ///
-  /// 가격은 저장된 예약의 요금표 스냅샷([Reservation.priceSetting])으로 재계산하므로,
-  /// 점포 요금이 바뀌어도 예약 가격이 저절로 바뀌지 않는다. 다음 경우에만 점포의
-  /// 현재 요금표로 재계산하고 스냅샷을 교체한다.
+  /// 가격은 저장된 예약의 요금표 스냅샷([Reservation.priceSetting])과 공휴일 스냅샷
+  /// ([Reservation.holidayDates])으로 재계산하므로, 점포 요금이나 공휴일 달력이 바뀌어도
+  /// 예약 가격이 저절로 바뀌지 않는다. 다음 경우에만 점포의 현재 요금표와 현재 공휴일
+  /// 달력으로 재계산하고 두 스냅샷을 교체한다.
   /// - [applyCurrentPrice]가 true (사용자가 현재 요금 적용을 선택)
   /// - 점포나 공간이 바뀜 (원래 스냅샷은 다른 공간의 요금표)
   /// - 저장된 스냅샷이 없음
+  ///
+  /// 요금표를 유지하더라도 저장된 예약 기간 밖으로 옮긴 날짜는 현재 공휴일 달력으로 판정한다.
   ///
   /// [fromStoreId]가 [reservation]의 점포와 다르면 예약을 그 점포에서 새 점포로 이동한다.
   /// 이때 작성자는 현재 사용자와 새 점포에서의 역할로 바뀌며, 새 점포의 멤버가 아니면
@@ -95,39 +100,44 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   final ReservationRepository _reservationRepository;
   final UserRepository _userRepository;
   final StoreRepository _storeRepository;
+  final HolidayRepository _holidayRepository;
   final Logger _logger = Logger();
 
   ReservationUseCaseImpl({
     required ReservationRepository reservationRepository,
     required UserRepository userRepository,
     required StoreRepository storeRepository,
+    required HolidayRepository holidayRepository,
   }) : _reservationRepository = reservationRepository,
        _userRepository = userRepository,
-       _storeRepository = storeRepository;
+       _storeRepository = storeRepository,
+       _holidayRepository = holidayRepository;
 
   @override
   Future<Either<Exception, Reservation>> createReservation({
     required Reservation reservation,
   }) async {
-    // 새 예약에는 저장된 요금표가 없다 — 화면이 보낸 요금표는 쓰지 않는다
-    final pricedResult = await _applyCurrentPrice(
-      reservation.copyWith(priceSetting: null),
+    // 새 예약에는 저장된 스냅샷이 없다 — 화면이 보낸 스냅샷은 쓰지 않는다
+    final unpriced = reservation.copyWith(
+      priceSetting: null,
+      holidayDates: null,
     );
+    final calendar = await _holidayCalendarFor(unpriced);
+    final pricedResult = await _applyCurrentPrice(unpriced, calendar);
 
     return pricedResult.fold(
       (error) => Future.value(left(error)),
-      (priced) =>
-          getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
-            final reservationWithWriter = priced.copyWith(
-              writer: priced.writer.copyWith(user: currentUser),
-            );
+      (priced) => getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+        final reservationWithWriter = priced.copyWith(
+          writer: priced.writer.copyWith(user: currentUser),
+        );
 
-            return TaskEither(
-              () => _reservationRepository.createReservation(
-                reservation: reservationWithWriter,
-              ),
-            );
-          }).run(),
+        return TaskEither(
+          () => _reservationRepository.createReservation(
+            reservation: reservationWithWriter,
+          ),
+        );
+      }).run(),
     );
   }
 
@@ -171,18 +181,19 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required DateTime start,
     required DateTime end,
   }) {
-    return Stream.fromFuture(getCurrentUserOrThrow(_userRepository).run())
-        .asyncExpand(
-          (result) => result.fold(
-            (error) => Stream.error(error),
-            (user) => _reservationRepository.watchReservationsByDateRange(
-              storeId: storeId,
-              currentUid: user.id,
-              start: start,
-              end: end,
-            ),
-          ),
-        );
+    return Stream.fromFuture(
+      getCurrentUserOrThrow(_userRepository).run(),
+    ).asyncExpand(
+      (result) => result.fold(
+        (error) => Stream.error(error),
+        (user) => _reservationRepository.watchReservationsByDateRange(
+          storeId: storeId,
+          currentUid: user.id,
+          start: start,
+          end: end,
+        ),
+      ),
+    );
   }
 
   @override
@@ -217,20 +228,32 @@ class ReservationUseCaseImpl implements ReservationUseCase {
             ),
           )
           .flatMap((stored) {
-            // 화면이 보낸 요금표는 신뢰하지 않고 저장된 예약의 요금표로 바꿔 둔다 —
+            // 화면이 보낸 스냅샷은 신뢰하지 않고 저장된 예약의 스냅샷으로 바꿔 둔다 —
             // 현재 요금표를 구하지 못해 그대로 저장되는 경로에서도 지켜지도록
             final base = reservation.copyWith(
               priceSetting: stored?.priceSetting,
+              holidayDates: stored?.holidayDates,
             );
-            final keepsSnapshot =
+            // 스냅샷을 유지하는 수정이면 그 기준이 되는 저장된 예약, 아니면 null
+            final snapshotSource =
                 !applyCurrentPrice &&
-                stored != null &&
-                stored.keepsPriceSettingFor(base);
-            return keepsSnapshot
-                ? TaskEither<Exception, Reservation>.right(
-                    _applyPriceSetting(base, base.priceSetting!),
-                  )
-                : TaskEither(() => _applyCurrentPrice(base));
+                    stored != null &&
+                    stored.keepsPriceSettingFor(base)
+                ? stored
+                : null;
+            return TaskEither<Exception, Reservation>(() async {
+              final calendar = await _holidayCalendarFor(base);
+              if (snapshotSource == null) {
+                return _applyCurrentPrice(base, calendar);
+              }
+              return right(
+                _applyPriceSetting(
+                  base,
+                  base.priceSetting!,
+                  snapshotSource.holidayCheckerFor(base, calendar),
+                ),
+              );
+            });
           })
           .flatMap(
             (priced) => isMoving
@@ -295,12 +318,26 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   // Private Helpers
   // ===========================================================================
 
-  /// Store의 현재 PriceSetting으로 가격을 계산하고, 그 요금표를 스냅샷으로 저장한 예약 반환.
+  /// [reservation]의 가격 계산에 필요한 연도의 공휴일 달력.
+  ///
+  /// 읽지 못하면 빈 달력(모든 연도를 모름)을 돌려줘 공휴일이 아닌 것으로 계산되게 한다 —
+  /// 공휴일 판정 실패로 예약 저장을 막지 않는다.
+  Future<HolidayCalendar> _holidayCalendarFor(Reservation reservation) async {
+    final years = reservation.pricedYears;
+    final result = await _holidayRepository.getHolidayCalendar(years: years);
+    return result.fold((error) {
+      _logger.w('공휴일 달력 조회 실패 — 공휴일이 아닌 것으로 계산한다. years: $years', error: error);
+      return const HolidayCalendar();
+    }, (calendar) => calendar);
+  }
+
+  /// Store의 현재 PriceSetting과 현재 공휴일 달력으로 가격을 계산하고, 두 스냅샷을 저장한 예약 반환.
   ///
   /// Store 조회 자체가 실패(네트워크 등)하면 에러를 그대로 전파한다.
   /// Store가 존재하지 않거나 공간(요금표)이 없으면 기존 값을 유지한다.
   Future<Either<Exception, Reservation>> _applyCurrentPrice(
     Reservation reservation,
+    HolidayCalendar calendar,
   ) async {
     final storeResult = await _storeRepository.getStore(
       reservation.storeSummary.id,
@@ -322,26 +359,35 @@ class ReservationUseCaseImpl implements ReservationUseCase {
         );
         if (priceSetting == null) return right(reservation);
 
-        return right(_applyPriceSetting(reservation, priceSetting));
+        return right(
+          _applyPriceSetting(
+            reservation,
+            priceSetting,
+            calendar.isHolidayForPricing,
+          ),
+        );
       },
     );
   }
 
-  /// [priceSetting]으로 calculatedPrice, totalPrice를 계산하고 스냅샷으로 함께 담은 예약 반환.
+  /// [priceSetting]과 [isHoliday]로 calculatedPrice, totalPrice를 계산하고
+  /// 요금표·공휴일 판정을 스냅샷으로 함께 담은 예약 반환.
   Reservation _applyPriceSetting(
     Reservation reservation,
     PriceSetting priceSetting,
+    bool Function(DateTime date) isHoliday,
   ) {
     final calculatedPrice = priceSetting.calculatePrice(
       start: reservation.startTime,
       end: reservation.endTime,
       headCount: reservation.headCount,
       isAllDay: reservation.isAllDay,
-      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
+      isHoliday: isHoliday,
     );
 
     return reservation.copyWith(
       priceSetting: priceSetting,
+      holidayDates: reservation.holidayDatesWith(isHoliday),
       calculatedPrice: calculatedPrice,
       totalPrice: calculatedPrice + reservation.priceAdjustment,
     );

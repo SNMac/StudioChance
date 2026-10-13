@@ -46,9 +46,20 @@ void main() {
       final json = fakeReservationModel.toUpdateJson();
 
       const editableFields = {
-        'status', 'customerName', 'headCount', 'customerPhone', 'memo',
-        'isAllDay', 'startTime', 'endTime', 'platform', 'paymentMethod',
-        'calculatedPrice', 'priceAdjustment', 'totalPrice', 'spaceOptionId',
+        'status',
+        'customerName',
+        'headCount',
+        'customerPhone',
+        'memo',
+        'isAllDay',
+        'startTime',
+        'endTime',
+        'platform',
+        'paymentMethod',
+        'calculatedPrice',
+        'priceAdjustment',
+        'totalPrice',
+        'spaceOptionId',
       };
       for (final field in editableFields) {
         expect(json.containsKey(field), true, reason: '$field 누락');
@@ -93,6 +104,41 @@ void main() {
 
       expect(json.containsKey('priceSettings'), false);
       expect(restored.priceSetting, isNull);
+    });
+  });
+
+  group('공휴일 스냅샷', () {
+    test('엔티티 → JSON → 엔티티 왕복 후에도 유지된다', () {
+      final json = ReservationModel.fromEntity(
+        fakeReservation.copyWith(holidayDates: ['2026-05-01']),
+      ).toJson();
+
+      final restored = ReservationModel.fromJson({
+        ...json,
+        'id': fakeReservation.id,
+      }).toEntity(fakeReservation.storeSummary, fakeReservation.writer);
+
+      expect(restored.holidayDates, ['2026-05-01']);
+    });
+
+    test('수정 JSON에 포함한다', () {
+      final json = ReservationModel.fromEntity(
+        fakeReservation.copyWith(holidayDates: []),
+      ).toUpdateJson();
+
+      expect(json['holidayDates'], isEmpty);
+    });
+
+    test('스냅샷이 없는 문서는 null로 읽는다', () {
+      final json = fakeReservationModel.toJson();
+
+      final restored = ReservationModel.fromJson({
+        ...json,
+        'id': fakeReservationModel.id,
+      }).toEntity(fakeReservation.storeSummary, fakeReservation.writer);
+
+      expect(json.containsKey('holidayDates'), false);
+      expect(restored.holidayDates, isNull);
     });
   });
 }

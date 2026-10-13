@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
@@ -27,6 +28,8 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/holiday_price_note.dart';
+import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/domain/entities/reservation_ocr_result.dart';
@@ -114,12 +117,20 @@ class _ReservationCreateModalState
     _scrollController = ScrollController();
     _initFields(widget.initialReservation);
     _spaceOptionId = widget.initialReservation.spaceOptionId;
+    // 앱을 켜둔 사이 공휴일 달력이 바뀌었을 수 있으므로 모달을 열 때 다시 조회한다
+    ref
+        .read(holidayCalendarControllerProvider.notifier)
+        .refreshYears(widget.initialReservation.pricedYears);
 
     final initial = widget.initialSpaceOptions;
     if (initial != null) {
       _isLoadingSpaceOptions = false;
       _spaceOptions = initial;
       _spaceOptionId ??= initial.isNotEmpty ? initial.first.id : null;
+      // 공간 옵션을 미리 받았으면 로드 완료 콜백이 없으므로 첫 프레임 뒤 직접 계산한다
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _recalculatePrice();
+      });
     } else {
       _loadSpaceOptions(widget.initialReservation.storeSummary.id);
     }
@@ -228,23 +239,38 @@ class _ReservationCreateModalState
     _showOcrUnmatchedAlert(unmatched);
   }
 
-  void _recalculatePrice() {
+  /// 선택된 공간의 요금표. 공간 목록이 비어 있으면 null.
+  PriceSetting? get _priceSetting {
     final spaces = _spaceOptions;
-    if (spaces.isEmpty) return;
-    final priceSetting = _spaceOptionId != null
-        ? (spaces
-                  .where((s) => s.id == _spaceOptionId)
-                  .firstOrNull
-                  ?.priceSetting ??
-              spaces.first.priceSetting)
-        : spaces.first.priceSetting;
+    if (spaces.isEmpty) return null;
+    return (spaces.where((s) => s.id == _spaceOptionId).firstOrNull ??
+            spaces.first)
+        .priceSetting;
+  }
+
+  /// 새 예약에는 공휴일 스냅샷이 없으므로 현재 공휴일 달력으로 판정한다.
+  /// 모르는 연도는 공휴일이 아닌 것으로 본다 (UseCase와 같은 규칙).
+  bool _isHoliday(DateTime date) => ref
+      .read(holidayCalendarControllerProvider)
+      .calendar
+      .isHolidayForPricing(date);
+
+  void _recalculatePrice() {
+    final priceSetting = _priceSetting;
+    if (priceSetting == null) return;
+    // 날짜가 바뀌어 다른 연도가 필요하면 불러온다 — 도착하면 build의 listen이 다시 계산한다
+    ref
+        .read(holidayCalendarControllerProvider.notifier)
+        .ensureYears(
+          pricedYearsOf(start: _startTime, end: _endTime, isAllDay: _isAllDay),
+        );
     final headCount = int.tryParse(_headCountController.text) ?? 0;
     final price = priceSetting.calculatePrice(
       start: _startTime,
       end: _endTime,
       headCount: headCount,
       isAllDay: _isAllDay,
-      isHoliday: (date) => false, // TODO: 공휴일 API 연동 후 실제 판단 로직 전달
+      isHoliday: _isHoliday,
     );
     setState(() => _calculatedPrice = price);
   }
@@ -389,6 +415,11 @@ class _ReservationCreateModalState
 
   @override
   Widget build(BuildContext context) {
+    // 공휴일 달력이 도착하거나 바뀌면 가격을 다시 계산한다
+    ref.listen(
+      holidayCalendarControllerProvider.select((s) => s.calendar),
+      (_, _) => _recalculatePrice(),
+    );
     ref.listen(reservationOcrControllerProvider, (_, next) {
       next.whenOrNull(
         data: (result) {
@@ -724,15 +755,31 @@ class _ReservationCreateModalState
   // ── 섹션 4: 결제 정보 ────────────────────────────────────────────────────
 
   Widget _buildSection4(TextTheme textTheme) {
+    final holidayNote = holidayPriceNote(
+      priceSetting: _priceSetting,
+      start: _startTime,
+      end: _endTime,
+      isAllDay: _isAllDay,
+      isHoliday: _isHoliday,
+      holidays: ref.watch(holidayCalendarControllerProvider),
+    );
     return GroupedFormContainer(
       footer: Padding(
         padding: const EdgeInsetsDirectional.only(
           start: horizontalPadding,
           top: 8,
         ),
-        child: Text(
-          '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
-          style: textTheme.labelMedium?.copyWith(color: context.secondaryLabel),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (holidayNote != null) HolidayPriceNoteText(holidayNote),
+            Text(
+              '할인인 경우 -[값]을 입력해주세요 (예: -2,000)',
+              style: textTheme.labelMedium?.copyWith(
+                color: context.secondaryLabel,
+              ),
+            ),
+          ],
         ),
       ),
       children: [
