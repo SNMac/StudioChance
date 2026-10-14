@@ -369,23 +369,29 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final currAsync = ref.watch(homeReservationsProvider(currMonth));
     final nextAsync = ref.watch(homeReservationsProvider(nextMonth));
     final next2Async = ref.watch(homeReservationsProvider(next2Month));
+    // 사용자·필터가 바뀌어 다시 구독하는 동안에도 직전 예약을 보여준다 — 기본값이면 loading으로 빠져
+    // 캘린더가 비었다가 다시 채워진다 (점포 수정 저장 후 currentUser 갱신 등)
     final reservationsList = [
       ...prevAsync.when(
+        skipLoadingOnReload: true,
         data: (r) => r,
         loading: () => const <Reservation>[],
         error: (_, _) => const <Reservation>[],
       ),
       ...currAsync.when(
+        skipLoadingOnReload: true,
         data: (r) => r,
         loading: () => const <Reservation>[],
         error: (_, _) => const <Reservation>[],
       ),
       ...nextAsync.when(
+        skipLoadingOnReload: true,
         data: (r) => r,
         loading: () => const <Reservation>[],
         error: (_, _) => const <Reservation>[],
       ),
       ...next2Async.when(
+        skipLoadingOnReload: true,
         data: (r) => r,
         loading: () => const <Reservation>[],
         error: (_, _) => const <Reservation>[],
