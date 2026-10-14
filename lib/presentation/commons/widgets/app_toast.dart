@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/presentation/colors.dart';
 
 const Duration _toastDuration = Duration(seconds: 2);
 
@@ -11,8 +14,8 @@ const EdgeInsets _toastPadding = EdgeInsets.symmetric(
   vertical: 12,
 );
 
-/// 하단 탭바 위로 띄우는 간격
-const double _toastGapAboveTabBar = 24;
+/// 하단 탭바(또는 키보드)와 캡슐 사이 간격
+const double _toastGap = 24;
 
 /// 앱 전체를 감싸는 바깥 Scaffold — `MaterialApp.builder`에서 Navigator를 감싼다.
 ///
@@ -46,12 +49,10 @@ void showAppToast(BuildContext context, String message) {
   // 화면 크기와 키보드 높이는 앱 최상단 기준으로 읽는다 — 화면 Scaffold 안쪽에서는 키보드 높이가 지워진다
   final appMediaQuery = MediaQuery.of(messenger.context);
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  final capsuleColor = isDark
-      ? const Color(0xE6595959)
-      : const Color(0xE6323232);
+  final capsuleColor = isDark ? toastBackgroundDarkColor : toastBackgroundColor;
   final textStyle = Theme.of(
     context,
-  ).textTheme.bodyMedium?.copyWith(color: Colors.white);
+  ).textTheme.bodyMedium?.copyWith(color: toastTextColor);
 
   final maxTextWidth =
       appMediaQuery.size.width -
@@ -69,6 +70,15 @@ void showAppToast(BuildContext context, String message) {
   painter.dispose();
   final sideMargin = (appMediaQuery.size.width - capsuleWidth) / 2;
 
+  // floating SnackBar는 화면 아래에서 하단 안전 영역(viewPadding)만큼 올라간 선을 기준으로 놓인다.
+  // 키보드 높이(viewInsets)는 화면 맨 아래부터 재므로 그 안전 영역을 이미 포함하고, 키보드가 떠 있으면
+  // 탭바도 가려지므로 둘 다 빼야 키보드 바로 위에 뜬다
+  final keyboardHeight = appMediaQuery.viewInsets.bottom;
+  final bottomMargin = keyboardHeight > 0
+      ? math.max(keyboardHeight - appMediaQuery.viewPadding.bottom, 0.0) +
+            _toastGap
+      : tabBarHeight + _toastGap;
+
   messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -82,12 +92,7 @@ void showAppToast(BuildContext context, String message) {
         backgroundColor: Colors.transparent,
         elevation: 0,
         padding: EdgeInsets.zero,
-        margin: EdgeInsets.fromLTRB(
-          sideMargin,
-          0,
-          sideMargin,
-          tabBarHeight + _toastGapAboveTabBar + appMediaQuery.viewInsets.bottom,
-        ),
+        margin: EdgeInsets.fromLTRB(sideMargin, 0, sideMargin, bottomMargin),
         duration: _toastDuration,
       ),
       snackBarAnimationStyle: AnimationStyle.noAnimation,

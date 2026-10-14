@@ -114,4 +114,35 @@ void main() {
     await tester.tapAt(Offset(10, toastCenter.dy));
     expect(tapped, 1);
   });
+
+  testWidgets('키보드가 떠 있으면 키보드 바로 위에 뜬다', (tester) async {
+    // iOS처럼 하단 안전 영역(34)이 있고 키보드(300)가 그 영역까지 덮은 상태
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(400, 800)
+      ..viewPadding = const FakeViewPadding(bottom: 34)
+      ..padding = FakeViewPadding.zero
+      ..viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.reset);
+
+    await pumpApp(
+      tester,
+      Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showAppToast(context, '키보드 위 알림'),
+            child: const Text('띄우기'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('띄우기'));
+    await pumpUntilShown(tester);
+
+    const keyboardTop = 800 - 300;
+    final toastBottom = tester.getBottomLeft(find.text('키보드 위 알림')).dy;
+    expect(toastBottom, lessThanOrEqualTo(keyboardTop));
+    // 안전 영역·탭바 높이가 키보드 높이에 겹쳐 더해지면 키보드에서 동떨어져 뜬다
+    expect(toastBottom, greaterThan(keyboardTop - 49));
+  });
 }
