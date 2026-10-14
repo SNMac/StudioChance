@@ -664,27 +664,29 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
         // 로딩 중에도 행을 항상 렌더링해 레이아웃을 안정적으로 유지.
         // 애니메이션 완료 후 setState가 실행되므로 애니메이션 끊김 없음.
         // 에러로 빈 배열이 되면 행을 숨김 (크래시 방지).
-        if (_isLoadingSpaceOptions || _spaceOptions.isNotEmpty)
+        if (_isLoadingSpaceOptions)
+          // TitleTextLabel은 좌우 여백을 스스로 가지므로 감싸지 않는다 — 감싸면 로딩 중에만
+          // 여백이 두 번 들어가 '예약 공간'이 밀렸다가 돌아온다
+          const TitleTextLabel(title: '예약 공간', content: '—')
+        else if (_spaceOptions.isNotEmpty)
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
-            child: _isLoadingSpaceOptions
-                ? const TitleTextLabel(title: '예약 공간', content: '—')
-                : TitlePopupButton<SpaceOption>(
-                    title: '예약 공간',
-                    selectedValue:
-                        _spaceOptions
-                            .where((s) => s.id == _spaceOptionId)
-                            .firstOrNull ??
-                        _spaceOptions.first,
-                    items: _spaceOptions,
-                    itemLabelBuilder: (s) => s.name,
-                    onSelected: (s) {
-                      setState(() => _spaceOptionId = s.id);
-                      _recalculatePrice();
-                    },
-                  ),
+            child: TitlePopupButton<SpaceOption>(
+              title: '예약 공간',
+              selectedValue:
+                  _spaceOptions
+                      .where((s) => s.id == _spaceOptionId)
+                      .firstOrNull ??
+                  _spaceOptions.first,
+              items: _spaceOptions,
+              itemLabelBuilder: (s) => s.name,
+              onSelected: (s) {
+                setState(() => _spaceOptionId = s.id);
+                _recalculatePrice();
+              },
+            ),
           ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(
