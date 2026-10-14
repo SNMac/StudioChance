@@ -95,6 +95,49 @@ void main() {
     });
   });
 
+  group('멤버 사용자 문서가 깨진 점포 조회', () {
+    test('한 멤버의 사용자 문서를 읽지 못해도 점포는 조회되고 그 멤버만 빠진다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final brokenUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final storeId = expectRight(
+        await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ).id;
+
+      // 점포에는 대기 멤버로 있지만 사용자 문서의 점포 항목에 role이 없어 파싱에 실패한다
+      await fakeFirestore.collection('users').doc(brokenUid).set(
+        <String, dynamic>{
+          'email': 'broken@example.com',
+          'name': '깨진 유저',
+          'authProviders': <String>[],
+          'storeById': <String, dynamic>{
+            storeId: <String, dynamic>{'name': '통합 테스트 점포'},
+          },
+        },
+      );
+      await fakeFirestore.collection('stores').doc(storeId).update({
+        'waitingMemberById.$brokenUid': <String, dynamic>{'role': 'STAFF'},
+      });
+
+      final store = expectRight(await repository.getStore(storeId))!;
+
+      expect(store.memberInfos.map((m) => m.user.id), [ownerUid]);
+      expect(store.waitingMemberInfos, isEmpty);
+    });
+  });
+
   // =========================================================================
   // legacy fallback (spaceOptions 없는 구버전 점포)
   // =========================================================================
