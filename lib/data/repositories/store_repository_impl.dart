@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -107,24 +108,23 @@ class StoreRepositoryImpl implements StoreRepository {
 
   @override
   Future<Either<Exception, void>> updateStore({
+    required Store original,
     required Store store,
     required String uid,
     required StoreColor color,
     required String memo,
   }) async {
     try {
-      final storeModel = StoreModel.fromEntity(store);
-
-      // 점포명 변경이 전체 멤버(승인+대기)의 storeById.name 캐시에 반영되도록 uid 목록 전달
-      final memberUids = {
-        ...store.memberInfos.map((info) => info.user.id),
-        ...store.waitingMemberInfos.map((info) => info.user.id),
-      }.toList();
-
+      final originalJson = _comparableEditableJson(
+        StoreModel.fromEntity(original),
+      );
       await _storeDataSource.updateStore(
         store.id,
-        storeModel.toEditableJson(),
-        memberUids,
+        StoreModel.fromEntity(store).toEditableJson(),
+        isUnchanged: (current) => const DeepCollectionEquality().equals(
+          _comparableEditableJson(current),
+          originalJson,
+        ),
       );
 
       // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
@@ -336,6 +336,19 @@ class StoreRepositoryImpl implements StoreRepository {
       ],
     );
   }
+
+  /// 동시 수정 비교(D13)용 편집 가능 필드.
+  /// 폼의 점포는 legacy fallback을 거친 엔티티이므로 저장 직전 문서도 같은 fallback과
+  /// 같은 엔티티 → 모델 변환을 거쳐야 한다. 그러지 않으면 spaceOptions가 빈 구버전 점포는
+  /// 저장할 때마다 충돌로 판정된다.
+  Map<String, dynamic> _comparableEditableJson(StoreModel model) =>
+      StoreModel.fromEntity(
+        _toStoreEntity(
+          model,
+          memberInfos: const [],
+          waitingMemberInfos: const [],
+        ),
+      ).toEditableJson();
 
   /// StoreMemberInfoModel Map을 받아 StoreMemberInfo Entity 목록으로 변환
   /// - input: `Map<UserID, StoreMemberInfoModel>`

@@ -63,9 +63,9 @@ class StoreCreationController extends _$StoreCreationController
   }
 
   @override
-  Future<void> submit() async {
+  Future<bool> submit() async {
     final data = getFormData();
-    if (data == null) return;
+    if (data == null) return false;
 
     state = state.copyWith(status: const AsyncLoading());
 
@@ -79,16 +79,20 @@ class StoreCreationController extends _$StoreCreationController
       );
       final stackTrace = StackTrace.current;
 
-      result.fold(
-        (exception) =>
-            state = state.copyWith(status: AsyncError(exception, stackTrace)),
+      return result.fold<bool>(
+        (exception) {
+          state = state.copyWith(status: AsyncError(exception, stackTrace));
+          return false;
+        },
         (_) {
           ref.invalidate(currentUserProvider);
           state = state.copyWith(status: const AsyncData(null));
+          return true;
         },
       );
     } catch (e, st) {
       state = state.copyWith(status: AsyncError(e, st));
+      return false;
     }
   }
 }

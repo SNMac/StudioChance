@@ -46,6 +46,7 @@ void main() {
       ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.updateStore(
+          original: any(named: 'original'),
           store: any(named: 'store'),
           uid: any(named: 'uid'),
           color: any(named: 'color'),
@@ -53,8 +54,11 @@ void main() {
         ),
       ).thenAnswer((_) async => right(null));
 
+      // 폼을 연 시점의 점포(original)를 그대로 넘겨야 Repository가 동시 수정을 판정한다
+      final edited = fakeStore.copyWith(address: '바뀐 주소');
       final result = await useCase.updateStore(
-        store: fakeStore,
+        original: fakeStore,
+        store: edited,
         color: StoreColor.blue,
         memo: '새 메모',
       );
@@ -62,7 +66,8 @@ void main() {
       expect(result.isRight(), true);
       verify(
         () => mockStoreRepo.updateStore(
-          store: fakeStore,
+          original: fakeStore,
+          store: edited,
           uid: fakeUser.id,
           color: StoreColor.blue,
           memo: '새 메모',
@@ -77,6 +82,7 @@ void main() {
       ).thenAnswer((_) async => left(exception));
 
       final result = await useCase.updateStore(
+        original: fakeStore,
         store: fakeStore,
         color: StoreColor.blue,
         memo: '새 메모',
@@ -85,6 +91,7 @@ void main() {
       expect(result.isLeft(), true);
       verifyNever(
         () => mockStoreRepo.updateStore(
+          original: any(named: 'original'),
           store: any(named: 'store'),
           uid: any(named: 'uid'),
           color: any(named: 'color'),
@@ -99,6 +106,7 @@ void main() {
       ).thenAnswer((_) async => right(null));
 
       final result = await useCase.updateStore(
+        original: fakeStore,
         store: fakeStore,
         color: StoreColor.blue,
         memo: '새 메모',
@@ -114,6 +122,7 @@ void main() {
       ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.updateStore(
+          original: any(named: 'original'),
           store: any(named: 'store'),
           uid: any(named: 'uid'),
           color: any(named: 'color'),
@@ -122,6 +131,7 @@ void main() {
       ).thenAnswer((_) async => left(exception));
 
       final result = await useCase.updateStore(
+        original: fakeStore,
         store: fakeStore,
         color: StoreColor.blue,
         memo: '새 메모',
@@ -152,6 +162,7 @@ void main() {
         final duplicateNameStore = fakeStore.copyWith(name: '다른 점포');
 
         final result = await useCase.updateStore(
+          original: duplicateNameStore,
           store: duplicateNameStore,
           color: StoreColor.blue,
           memo: '메모',
@@ -164,6 +175,7 @@ void main() {
         );
         verifyNever(
           () => mockStoreRepo.updateStore(
+            original: any(named: 'original'),
             store: any(named: 'store'),
             uid: any(named: 'uid'),
             color: any(named: 'color'),
@@ -179,6 +191,7 @@ void main() {
       ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.updateStore(
+          original: any(named: 'original'),
           store: any(named: 'store'),
           uid: any(named: 'uid'),
           color: any(named: 'color'),
@@ -188,6 +201,7 @@ void main() {
 
       // fakeStore.id == fakeUser.storeInfos.first.id, name도 동일 — 자기 자신이므로 통과해야 함
       final result = await useCase.updateStore(
+        original: fakeStore,
         store: fakeStore,
         color: StoreColor.blue,
         memo: '메모',
@@ -221,6 +235,7 @@ void main() {
       );
 
       final result = await useCase.updateStore(
+        original: duplicateSpaceStore,
         store: duplicateSpaceStore,
         color: StoreColor.blue,
         memo: '메모',

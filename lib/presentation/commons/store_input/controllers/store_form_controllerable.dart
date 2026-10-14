@@ -49,8 +49,8 @@ abstract interface class StoreFormControllerable {
   /// 현재 폼 데이터를 반환 (유효하지 않으면 null)
   ({Store store, StoreColor color, String memo})? getFormData();
 
-  /// API 요청 실행
-  Future<void> submit();
+  /// API 요청 실행. 저장에 성공하면 true — 실패 원인은 `state.status`의 에러로 남는다
+  Future<bool> submit();
 }
 
 mixin StoreFormMixin {

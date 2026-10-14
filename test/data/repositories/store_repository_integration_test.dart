@@ -11,6 +11,7 @@ import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
 
@@ -170,6 +171,7 @@ void main() {
       final storeWithStaff = fetched.getRight().toNullable()!;
 
       await repository.updateStore(
+        original: storeWithStaff,
         store: storeWithStaff.copyWith(name: '변경된 점포명'),
         uid: ownerUid,
         color: StoreColor.green,
@@ -183,6 +185,117 @@ void main() {
       final staffStoreById =
           staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
+    });
+
+    group('동시 수정 감지 (D13)', () {
+      late String ownerUid;
+      late Store opened;
+
+      setUp(() async {
+        ownerUid = FirestoreEmulatorHelper.generateId();
+        await _seedUserDoc(fakeFirestore, ownerUid);
+        final adminUser = User(
+          id: ownerUid,
+          name: '테스트 유저',
+          email: 'test@example.com',
+          nickname: null,
+          authProviders: [],
+          storeInfos: [],
+        );
+        final created = await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        );
+        final storeId = created.getRight().toNullable()!.id;
+        opened = (await repository.getStore(storeId)).getRight().toNullable()!;
+      });
+
+      Future<Store> saved() async =>
+          (await repository.getStore(opened.id)).getRight().toNullable()!;
+
+      test('폼을 연 뒤 아무도 바꾸지 않았으면 저장된다', () async {
+        final result = await repository.updateStore(
+          original: opened,
+          store: opened.copyWith(name: '변경된 점포명'),
+          uid: ownerUid,
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expect(result.isRight(), true);
+        expect((await saved()).name, '변경된 점포명');
+      });
+
+      test('다른 관리자가 편집 필드를 먼저 바꿨으면 충돌로 실패하고 덮어쓰지 않는다', () async {
+        await fakeFirestore.collection('stores').doc(opened.id).update({
+          'address': '다른 관리자가 바꾼 주소',
+        });
+
+        final result = await repository.updateStore(
+          original: opened,
+          store: opened.copyWith(name: '내가 바꾼 점포명'),
+          uid: ownerUid,
+          color: StoreColor.green,
+          memo: '',
+        );
+
+        expect(
+          result.getLeft().toNullable(),
+          isA<StoreUpdateConflictException>(),
+        );
+        final current = await saved();
+        expect(current.name, '통합 테스트 점포');
+        expect(current.address, '다른 관리자가 바꾼 주소');
+      });
+
+      test('폼을 연 뒤 가입 신청·승인만 있었으면 충돌로 보지 않는다', () async {
+        final staffUid = FirestoreEmulatorHelper.generateId();
+        await _seedUserDoc(fakeFirestore, staffUid);
+        await repository.requestJoinStore(
+          storeId: opened.id,
+          uid: staffUid,
+          role: UserRole.staff,
+          color: StoreColor.red,
+          storeAlias: '통합 테스트 점포',
+          memo: '',
+        );
+        await repository.approveMember(
+          storeId: opened.id,
+          uid: staffUid,
+          role: UserRole.staff,
+        );
+
+        final result = await repository.updateStore(
+          original: opened,
+          store: opened.copyWith(name: '변경된 점포명'),
+          uid: ownerUid,
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expect(result.isRight(), true);
+        expect((await saved()).name, '변경된 점포명');
+      });
+
+      test('spaceOptions가 빈 구버전 점포도 충돌 없이 저장된다', () async {
+        // getStore가 legacy_default 공간을 채워 돌려주므로 문서와 폼의 공간 목록이 다르다
+        await fakeFirestore.collection('stores').doc(opened.id).update({
+          'spaceOptions': <dynamic>[],
+        });
+        final legacy = await saved();
+
+        final result = await repository.updateStore(
+          original: legacy,
+          store: legacy.copyWith(name: '변경된 점포명'),
+          uid: ownerUid,
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expect(result.isRight(), true);
+        expect((await saved()).name, '변경된 점포명');
+      });
     });
   });
 

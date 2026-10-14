@@ -3,9 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
-import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/fake_data.dart';
 
@@ -30,13 +28,18 @@ void main() {
   group('updateStore', () {
     test('StoreDataSource와 UserDataSource가 올바른 파라미터로 호출된다', () async {
       when(
-        () => mockStoreDataSource.updateStore(any(), any(), any()),
+        () => mockStoreDataSource.updateStore(
+          any(),
+          any(),
+          isUnchanged: any(named: 'isUnchanged'),
+        ),
       ).thenAnswer((_) async {});
       when(
         () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
       ).thenAnswer((_) async {});
 
       final result = await repository.updateStore(
+        original: fakeStore,
         store: fakeStore,
         uid: fakeUser.id,
         color: StoreColor.blue,
@@ -50,7 +53,7 @@ void main() {
         () => mockStoreDataSource.updateStore(
           captureAny(),
           captureAny(),
-          captureAny(),
+          isUnchanged: captureAny(named: 'isUnchanged'),
         ),
       ).captured;
       expect(capturedStoreArgs[0], fakeStore.id);
@@ -77,51 +80,17 @@ void main() {
       expect(userStoreData['memo'], '새 메모');
     });
 
-    test(
-      'store의 memberInfos, waitingMemberInfos uid가 memberUids로 전달된다',
-      () async {
-        when(
-          () => mockStoreDataSource.updateStore(any(), any(), any()),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
-        ).thenAnswer((_) async {});
-
-        final storeWithMembers = fakeStore.copyWith(
-          memberInfos: [StoreMemberInfo(user: fakeUser, role: UserRole.admin)],
-          waitingMemberInfos: [
-            StoreMemberInfo(
-              user: fakeUser.copyWith(id: 'waiting-user-456'),
-              role: UserRole.staff,
-            ),
-          ],
-        );
-
-        await repository.updateStore(
-          store: storeWithMembers,
-          uid: fakeUser.id,
-          color: StoreColor.blue,
-          memo: '새 메모',
-        );
-
-        final capturedStoreArgs = verify(
-          () => mockStoreDataSource.updateStore(
-            captureAny(),
-            captureAny(),
-            captureAny(),
-          ),
-        ).captured;
-        final memberUids = capturedStoreArgs[2] as List<String>;
-        expect(memberUids, containsAll([fakeUser.id, 'waiting-user-456']));
-      },
-    );
-
     test('StoreDataSource 실패 시 left(exception)를 반환한다', () async {
       when(
-        () => mockStoreDataSource.updateStore(any(), any(), any()),
+        () => mockStoreDataSource.updateStore(
+          any(),
+          any(),
+          isUnchanged: any(named: 'isUnchanged'),
+        ),
       ).thenThrow(Exception('Firestore 오류'));
 
       final result = await repository.updateStore(
+        original: fakeStore,
         store: fakeStore,
         uid: fakeUser.id,
         color: StoreColor.blue,
@@ -136,13 +105,18 @@ void main() {
 
     test('UserDataSource 실패 시 left(exception)를 반환한다', () async {
       when(
-        () => mockStoreDataSource.updateStore(any(), any(), any()),
+        () => mockStoreDataSource.updateStore(
+          any(),
+          any(),
+          isUnchanged: any(named: 'isUnchanged'),
+        ),
       ).thenAnswer((_) async {});
       when(
         () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
       ).thenThrow(Exception('유저 정보 업데이트 오류'));
 
       final result = await repository.updateStore(
+        original: fakeStore,
         store: fakeStore,
         uid: fakeUser.id,
         color: StoreColor.blue,

@@ -27,13 +27,16 @@ abstract interface class StoreDataSource {
   Future<StoreModel?> getStore(String storeId);
 
   /// 점포 정보 수정
-  /// - `memberUids`: `data`에 `name`이 포함된 경우, 해당 uid 목록(멤버+대기 멤버)의
+  /// - [isUnchanged]: 트랜잭션에서 읽은 저장 직전 문서가 수정 폼을 연 시점과 같은지 판정한다.
+  ///   false면 다른 관리자가 먼저 저장한 것이므로 [StoreUpdateConflictException]을 던지고
+  ///   쓰지 않는다 (D13). 비교 규칙은 legacy fallback을 아는 Repository가 정한다.
+  /// - `data`에 `name`이 포함되면 저장 시점의 멤버+대기 멤버 전원의
   ///   `storeById.{storeId}.name` 캐시를 함께 동기화한다.
   Future<void> updateStore(
     String storeId,
-    Map<String, dynamic> data,
-    List<String> memberUids,
-  );
+    Map<String, dynamic> data, {
+    required bool Function(StoreModel current) isUnchanged,
+  });
 
   /// 점포 삭제 (Soft Delete)
   /// - [memberUids]: 삭제 시점의 멤버+대기 멤버 uid 목록. 각 사용자의
@@ -178,27 +181,46 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   @override
   Future<void> updateStore(
     String storeId,
-    Map<String, dynamic> data,
-    List<String> memberUids,
-  ) async {
+    Map<String, dynamic> data, {
+    required bool Function(StoreModel current) isUnchanged,
+  }) async {
     try {
-      final batch = _firestore.batch();
-
-      final updates = Map<String, dynamic>.from(data);
-      updates['updatedAt'] = FieldValue.serverTimestamp();
-      batch.update(_storeDocRef(storeId), updates);
-
-      final newName = data['name'] as String?;
-      if (newName != null) {
-        for (final uid in memberUids) {
-          batch.update(_firestore.collection('users').doc(uid), {
-            'storeById.$storeId.name': newName,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+      final storeRef = _storeDocRef(storeId);
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(storeRef);
+        final json = snapshot.data();
+        if (!snapshot.exists || json == null || json['deletedAt'] != null) {
+          throw StoreNotFoundException(message: '수정할 점포가 없습니다: $storeId');
         }
-      }
+        json['id'] = snapshot.id;
+        final current = StoreModel.fromJson(json);
 
-      await batch.commit();
+        if (!isUnchanged(current)) {
+          throw StoreUpdateConflictException(
+            message: '폼을 연 뒤 점포 설정이 바뀌었습니다: $storeId',
+          );
+        }
+
+        transaction.update(storeRef, {
+          ...data,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        final newName = data['name'] as String?;
+        if (newName != null) {
+          // 폼을 연 뒤 들어온 가입 신청까지 반영되도록 저장 시점의 멤버 목록을 쓴다
+          final memberUids = {
+            ...current.memberById.keys,
+            ...current.waitingMemberById.keys,
+          };
+          for (final uid in memberUids) {
+            transaction.update(_firestore.collection('users').doc(uid), {
+              'storeById.$storeId.name': newName,
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      });
     } catch (e) {
       throw handleFirestoreError(e);
     }
