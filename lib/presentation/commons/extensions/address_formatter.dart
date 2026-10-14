@@ -4,7 +4,7 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/state
 
 /// 주소 표시용 문자열 (예: "오산시 경기대로285번길" or "주소 검색")
 ///
-/// 도로명 주소는 `postal_ko`가 돌려준 값이 그대로 저장되므로
+/// 도로명 주소는 `kpostal`이 돌려준 값이 그대로 저장되므로
 /// "경기 오산시 경기대로285번길 26"처럼 토큰이 4개인 경우가 일반적이다.
 String formatShortAddress(String address, String addressDetail) {
   if (address.isEmpty) {
