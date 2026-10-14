@@ -2,6 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
+import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
@@ -70,8 +74,8 @@ class ReservationCreateModal extends ConsumerStatefulWidget {
       _ReservationCreateModalState();
 }
 
-class _ReservationCreateModalState
-    extends ConsumerState<ReservationCreateModal> {
+class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
+    with StoreEditLauncher {
   // ── 편집 상태 ─────────────────────────────────────────────────────────────
   late StoreSummary _storeSummary;
   late ReservationStatus _status;
@@ -236,8 +240,9 @@ class _ReservationCreateModalState
           _spaceOptionId ??= loaded.first.id;
           unmatched.add('공간');
         }
-      } else {
-        _spaceOptionId ??= loaded.first.id;
+      } else if (!loaded.any((s) => s.id == _spaceOptionId)) {
+        // 처음 불러왔거나, 요금 설정에서 선택했던 공간을 지우고 돌아온 경우
+        _spaceOptionId = loaded.first.id;
       }
       _pendingSpaceNameFromOcr = null;
     });
@@ -306,7 +311,31 @@ class _ReservationCreateModalState
           .read(holidayCalendarControllerProvider)
           .calendar
           .namesOn,
+      onOpenPriceSetting: _isAdminOf(_storeSummary.id)
+          ? _openPriceSetting
+          : null,
     );
+  }
+
+  /// 요금 설정 바로가기는 그 점포의 ADMIN에게만 보여준다 — 요금표는 ADMIN만 고칠 수 있다
+  bool _isAdminOf(String storeId) {
+    final info = ref
+        .read(currentUserProvider)
+        .value
+        ?.storeInfos
+        .where((i) => i.id == storeId)
+        .firstOrNull;
+    return info?.role == UserRole.admin;
+  }
+
+  /// 모달을 연 채 그 위에 점포 요금 설정을 연다. 저장하고 돌아오면 공간 목록을 다시 불러와
+  /// 요금을 다시 계산한다 — 입력 중인 예약은 그대로 남는다
+  Future<void> _openPriceSetting() async {
+    final storeId = _storeSummary.id;
+    final saved = await openStoreEdit(storeId, spaceOptionId: _spaceOptionId);
+    if (!saved || !mounted || _storeSummary.id != storeId) return;
+    setState(() => _isLoadingSpaceOptions = true);
+    _loadSpaceOptions(storeId);
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -489,32 +518,38 @@ class _ReservationCreateModalState
           top: Radius.circular(modalTopCornerRadius),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            const Opacity(opacity: 0.0, child: ModalGrabber()),
-            ModalAppBar(
-              title: '예약 등록',
-              leading: AppBarActionButton(
-                label: '취소',
-                isRegularWeight: true,
-                onPressed: _onCancelPressed,
-              ),
-              actions: [
-                AppBarActionButton(
-                  label: '저장',
-                  onPressed: _isValid ? _onSavePressed : null,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Opacity(opacity: 0.0, child: ModalGrabber()),
+                ModalAppBar(
+                  title: '예약 등록',
+                  leading: AppBarActionButton(
+                    label: '취소',
+                    isRegularWeight: true,
+                    onPressed: _onCancelPressed,
+                  ),
+                  actions: [
+                    AppBarActionButton(
+                      label: '저장',
+                      onPressed: _isValid ? _onSavePressed : null,
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: _buildBody(textTheme),
+                  ),
                 ),
               ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                child: _buildBody(textTheme),
-              ),
-            ),
+            LoadingOverlay(isLoading: showStoreEditOverlay),
           ],
         ),
       ),

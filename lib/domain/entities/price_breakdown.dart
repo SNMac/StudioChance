@@ -14,6 +14,10 @@ abstract class PriceBreakdown with _$PriceBreakdown {
       _PriceBreakdown;
 
   int get total => days.fold(0, (sum, day) => sum + day.subtotal);
+
+  /// 요금 설정이 없어 0원으로 계산된 시간대가 있는지 — 요금표를 채워야 한다는 신호다
+  bool get hasUnpricedRange =>
+      days.any((day) => day.items.any((item) => item is UnpricedRange));
 }
 
 /// 요금 계산 내역의 한 날짜.

@@ -1,20 +1,16 @@
-import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
-import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_form_screen.dart';
-import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
+import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -28,7 +24,6 @@ import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
 import 'package:studio_chance/presentation/providers/sign_out_controller.dart';
-import 'package:studio_chance/presentation/providers/store_edit_controller.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -60,49 +55,8 @@ class MyPageScreen extends ConsumerStatefulWidget {
   ConsumerState<MyPageScreen> createState() => _MyPageScreenState();
 }
 
-class _MyPageScreenState extends ConsumerState<MyPageScreen> {
-  bool _isLoadingStore = false;
-  bool _showLoadingOverlay = false;
-  Timer? _overlayTimer;
-
-  @override
-  void dispose() {
-    _overlayTimer?.cancel();
-    super.dispose();
-  }
-
-  /// 점포를 새로 조회한 뒤 수정 화면을 연다 — 1초 넘게 걸리면 LoadingOverlay를 띄운다
-  Future<void> _onEditStore(String storeId) async {
-    if (_isLoadingStore) return;
-
-    setState(() => _isLoadingStore = true);
-    _overlayTimer = Timer(const Duration(seconds: 1), () {
-      if (mounted) setState(() => _showLoadingOverlay = true);
-    });
-
-    final Either<Exception, Store> result;
-    try {
-      result = await ref
-          .read(storeEditControllerProvider.notifier)
-          .loadStoreForEdit(storeId);
-    } finally {
-      _overlayTimer?.cancel();
-      _overlayTimer = null;
-      if (mounted) {
-        setState(() {
-          _isLoadingStore = false;
-          _showLoadingOverlay = false;
-        });
-      }
-    }
-
-    if (!mounted) return;
-    result.fold(
-      (e) => _showErrorDialog(context, e),
-      (store) => pushStoreEdit(context, store),
-    );
-  }
-
+class _MyPageScreenState extends ConsumerState<MyPageScreen>
+    with StoreEditLauncher {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).asData?.value;
@@ -165,7 +119,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       for (final info in user?.storeInfos ?? <UserStoreInfo>[])
                         _StoreRow(
                           info: info,
-                          onEdit: () => _onEditStore(info.id),
+                          onEdit: () => openStoreEdit(info.id),
                         ),
                       TitleNavigationButton(
                         title: '점포 추가',
@@ -199,7 +153,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             ),
           ),
         ),
-        LoadingOverlay(isLoading: _showLoadingOverlay),
+        LoadingOverlay(isLoading: showStoreEditOverlay),
       ],
     );
   }

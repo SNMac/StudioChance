@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
+import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/router/router_path.dart';
@@ -96,7 +98,7 @@ class ReservationDetailModal extends ConsumerStatefulWidget {
 }
 
 class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, StoreEditLauncher {
   // ── 모드 상태 ─────────────────────────────────────────────────────────────
   bool _isEditing = false;
 
@@ -525,7 +527,30 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           ) ??
           0,
       holidayNamesOf: _currentHolidays.namesOn,
+      onOpenPriceSetting: _isAdminOf(_storeSummary.id)
+          ? _openPriceSetting
+          : null,
     );
+  }
+
+  /// 요금 설정 바로가기는 그 점포의 ADMIN에게만 보여준다 — 요금표는 ADMIN만 고칠 수 있다
+  bool _isAdminOf(String storeId) {
+    final info = ref
+        .read(currentUserProvider)
+        .value
+        ?.storeInfos
+        .where((i) => i.id == storeId)
+        .firstOrNull;
+    return info?.role == UserRole.admin;
+  }
+
+  /// 모달을 연 채 그 위에 점포 요금 설정을 연다. 저장하고 돌아오면 공간 목록을 다시 불러온다.
+  /// 저장된 요금표를 쓰는 예약은 가격이 그대로이고 '현재 요금 적용'으로 새 요금을 고른다 (D12)
+  Future<void> _openPriceSetting() async {
+    final storeId = _storeSummary.id;
+    final saved = await openStoreEdit(storeId, spaceOptionId: _spaceOptionId);
+    if (!saved || !mounted || _storeSummary.id != storeId) return;
+    _loadSpaceOptions(storeId);
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -782,118 +807,122 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           top: Radius.circular(modalTopCornerRadius),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            // 그라버·앱바 영역 드래그 → 시트 높이 직접 제어.
-            // Listener(raw pointer)로 제스처 아레나 완전 우회.
-            Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (event) {
-                _grabberDragStartSize = _sheetController.value;
-                _grabberDragStartY = event.position.dy;
-              },
-              onPointerMove: (event) {
-                if (_isEditing) return;
-                final delta = -event.delta.dy / widget.maxAvailableHeight;
-                _sheetController.value = (_sheetController.value + delta).clamp(
-                  _kModalInitialSize,
-                  _kModalMaxSize,
-                );
-              },
-              onPointerUp: (event) {
-                if (_isEditing) return;
-                final totalDy = event.position.dy - _grabberDragStartY;
-                if (totalDy.abs() < 10) return;
-                if (totalDy > 30) {
-                  if (_grabberDragStartSize <= _kModalInitialSize + 0.05) {
-                    _dismissModal();
-                  } else {
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 그라버·앱바 영역 드래그 → 시트 높이 직접 제어.
+                // Listener(raw pointer)로 제스처 아레나 완전 우회.
+                Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: (event) {
+                    _grabberDragStartSize = _sheetController.value;
+                    _grabberDragStartY = event.position.dy;
+                  },
+                  onPointerMove: (event) {
+                    if (_isEditing) return;
+                    final delta = -event.delta.dy / widget.maxAvailableHeight;
+                    _sheetController.value = (_sheetController.value + delta)
+                        .clamp(_kModalInitialSize, _kModalMaxSize);
+                  },
+                  onPointerUp: (event) {
+                    if (_isEditing) return;
+                    final totalDy = event.position.dy - _grabberDragStartY;
+                    if (totalDy.abs() < 10) return;
+                    if (totalDy > 30) {
+                      if (_grabberDragStartSize <= _kModalInitialSize + 0.05) {
+                        _dismissModal();
+                      } else {
+                        _sheetController.animateTo(
+                          _kModalInitialSize,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    } else if (totalDy < -30) {
+                      _sheetController.animateTo(
+                        _kModalMaxSize,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    } else {
+                      const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
+                      _sheetController.animateTo(
+                        _sheetController.value >= mid
+                            ? _kModalMaxSize
+                            : _kModalInitialSize,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  },
+                  onPointerCancel: (_) {
+                    if (_isEditing) return;
+                    const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
                     _sheetController.animateTo(
-                      _kModalInitialSize,
+                      _sheetController.value >= mid
+                          ? _kModalMaxSize
+                          : _kModalInitialSize,
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOut,
                     );
-                  }
-                } else if (totalDy < -30) {
-                  _sheetController.animateTo(
-                    _kModalMaxSize,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                } else {
-                  const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
-                  _sheetController.animateTo(
-                    _sheetController.value >= mid
-                        ? _kModalMaxSize
-                        : _kModalInitialSize,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              },
-              onPointerCancel: (_) {
-                if (_isEditing) return;
-                const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
-                _sheetController.animateTo(
-                  _sheetController.value >= mid
-                      ? _kModalMaxSize
-                      : _kModalInitialSize,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Opacity(
-                    opacity: _isEditing ? 0.0 : 1.0,
-                    child: const ModalGrabber(),
-                  ),
-                  ModalAppBar(
-                    title: _isEditing ? '예약 수정' : '예약 정보',
-                    leading: AppBarActionButton(
-                      label: _isEditing ? '취소' : '닫기',
-                      isRegularWeight: true,
-                      onPressed: _onCancelPressed,
-                    ),
-                    actions: [
-                      if (_isEditing)
-                        AppBarActionButton(
-                          label: '완료',
-                          onPressed: _isValid ? _onComplete : null,
-                        )
-                      else if (_canEdit)
-                        AppBarActionButton(
-                          label: '편집',
-                          onPressed: () {
-                            _sheetController.animateTo(
-                              _kModalMaxSize,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                            );
-                            _syncScrollPosition(toEdit: true);
-                            setState(() => _isEditing = true);
-                          },
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Opacity(
+                        opacity: _isEditing ? 0.0 : 1.0,
+                        child: const ModalGrabber(),
+                      ),
+                      ModalAppBar(
+                        title: _isEditing ? '예약 수정' : '예약 정보',
+                        leading: AppBarActionButton(
+                          label: _isEditing ? '취소' : '닫기',
+                          isRegularWeight: true,
+                          onPressed: _onCancelPressed,
                         ),
+                        actions: [
+                          if (_isEditing)
+                            AppBarActionButton(
+                              label: '완료',
+                              onPressed: _isValid ? _onComplete : null,
+                            )
+                          else if (_canEdit)
+                            AppBarActionButton(
+                              label: '편집',
+                              onPressed: () {
+                                _sheetController.animateTo(
+                                  _kModalMaxSize,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                );
+                                _syncScrollPosition(toEdit: true);
+                                setState(() => _isEditing = true);
+                              },
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                // 편집 모드에서 키보드 높이만큼 스크롤 뷰포트를 줄여
-                // ensureVisible이 키보드 위로 필드를 정확히 스크롤하게 함
-                padding: EdgeInsets.only(
-                  bottom: _isEditing
-                      ? MediaQuery.of(context).viewInsets.bottom
-                      : 0,
                 ),
-                child: _buildScrollArea(textTheme),
-              ),
+                Expanded(
+                  child: Padding(
+                    // 편집 모드에서 키보드 높이만큼 스크롤 뷰포트를 줄여
+                    // ensureVisible이 키보드 위로 필드를 정확히 스크롤하게 함
+                    padding: EdgeInsets.only(
+                      bottom: _isEditing
+                          ? MediaQuery.of(context).viewInsets.bottom
+                          : 0,
+                    ),
+                    child: _buildScrollArea(textTheme),
+                  ),
+                ),
+              ],
             ),
+            LoadingOverlay(isLoading: showStoreEditOverlay),
           ],
         ),
       ),
