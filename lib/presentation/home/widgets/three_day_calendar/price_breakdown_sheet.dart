@@ -219,7 +219,7 @@ class _Separator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsetsDirectional.only(start: indent),
+      padding: EdgeInsetsDirectional.symmetric(horizontal: indent),
       child: Divider(
         height: thickness,
         thickness: thickness,
