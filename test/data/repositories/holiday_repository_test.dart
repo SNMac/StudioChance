@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:studio_chance/data/data_sources/holiday_data_source.dart';
 import 'package:studio_chance/data/repositories/holiday_repository_impl.dart';
 import 'package:studio_chance/domain/entities/holiday_calendar.dart';
+import '../../helpers/either_expectations.dart';
 
 void main() {
   late FakeFirebaseFirestore firestore;
@@ -34,7 +35,7 @@ void main() {
   test('요청한 연도의 공휴일 날짜와 이름을 읽는다', () async {
     final result = await repository.getHolidayCalendar(years: {2026, 2027});
 
-    final calendar = result.getOrElse((error) => fail(error.toString()));
+    final calendar = expectRight(result);
     expect(
       calendar,
       const HolidayCalendar(
@@ -54,7 +55,7 @@ void main() {
   test('공휴일 달력이 없는 연도는 결과에서 빠져 알 수 없는 연도가 된다', () async {
     final result = await repository.getHolidayCalendar(years: {2026, 2099});
 
-    final calendar = result.getOrElse((error) => fail(error.toString()));
+    final calendar = expectRight(result);
     expect(calendar.isHoliday(DateTime(2026, 5, 1)), isTrue);
     expect(calendar.isHoliday(DateTime(2099, 1, 1)), isNull);
   });

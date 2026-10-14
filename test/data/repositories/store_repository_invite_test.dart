@@ -5,6 +5,7 @@ import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockStoreDataSource extends Mock implements StoreDataSource {}
 
@@ -40,10 +41,7 @@ void main() {
 
       final result = await repository.getStoreByInviteCode('AB3D9F');
 
-      result.fold(
-        (error) => fail('성공을 기대했으나 실패: $error'),
-        (value) => expect(value?.storeId, 'store-1'),
-      );
+      expect(expectRight(result)?.storeId, 'store-1');
     });
 
     test('코드가 없으면 right(null)을 반환한다', () async {
@@ -53,10 +51,7 @@ void main() {
 
       final result = await repository.getStoreByInviteCode('NOTFND');
 
-      result.fold(
-        (error) => fail('성공을 기대했으나 실패: $error'),
-        (value) => expect(value, isNull),
-      );
+      expect(expectRight(result), isNull);
     });
 
     test('DataSource가 던진 예외는 left로 감싼다', () async {
@@ -66,10 +61,7 @@ void main() {
 
       final result = await repository.getStoreByInviteCode('EXPIRD');
 
-      result.fold(
-        (error) => expect(error, isA<StoreInviteCodeExpiredException>()),
-        (_) => fail('실패를 기대했으나 성공'),
-      );
+      expect(expectLeft(result), isA<StoreInviteCodeExpiredException>());
     });
   });
 }

@@ -35,7 +35,7 @@ void main() {
       () => mockStoreUseCase.getStoreForEdit(fakeStore.id),
     ).thenAnswer((_) async => right(fakeStore));
 
-    expect((await load()).toNullable(), fakeStore);
+    expect(expectRight(await load()), fakeStore);
   });
 
   test('조회에 실패하면 그 예외를 그대로 돌려준다', () async {

@@ -161,11 +161,7 @@ void main() {
           memo: '메모',
         );
 
-        expectLeft(result);
-        result.fold(
-          (e) => expect(e, isA<StoreNameDuplicateException>()),
-          (_) => fail('중복된 점포명인데 성공 처리됨'),
-        );
+        expect(expectLeft(result), isA<StoreNameDuplicateException>());
         verifyNever(
           () => mockStoreRepo.createStore(
             store: any(named: 'store'),
@@ -206,11 +202,7 @@ void main() {
           memo: '메모',
         );
 
-        expectLeft(result);
-        result.fold(
-          (e) => expect(e, isA<SpaceNameDuplicateException>()),
-          (_) => fail('중복된 공간명인데 성공 처리됨'),
-        );
+        expect(expectLeft(result), isA<SpaceNameDuplicateException>());
         verifyNever(
           () => mockStoreRepo.createStore(
             store: any(named: 'store'),

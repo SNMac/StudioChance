@@ -20,6 +20,7 @@ import 'package:studio_chance/domain/repository_interfaces/user_repository.dart'
 import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockReservationRepository extends Mock implements ReservationRepository {}
 
@@ -192,7 +193,7 @@ void main() {
           reservation: fakeReservation,
         );
 
-        result.fold((error) => fail(error.toString()), (_) {});
+        expectRight(result);
         expect(capturedReservation?.writer.user.id, fakeUser.id);
         expect(capturedReservation?.writer.role, UserRole.admin);
       },
@@ -207,7 +208,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
       verifyNever(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -224,7 +225,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
@@ -241,7 +242,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
     });
 
     test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
@@ -253,7 +254,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
       verifyNever(() => mockUserRepo.getCurrentUser());
       verifyNever(
         () => mockReservationRepo.createReservation(
@@ -290,7 +291,7 @@ void main() {
         end: end,
       );
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       verify(
         () => mockReservationRepo.getReservationsByDateRange(
           storeId: 'store-123',
@@ -312,7 +313,7 @@ void main() {
         end: end,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
@@ -334,7 +335,7 @@ void main() {
         end: end,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
     });
   });
 
@@ -368,7 +369,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       verify(
         () =>
             mockReservationRepo.updateReservation(reservation: fakeReservation),
@@ -384,7 +385,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
       verifyNever(
         () => mockReservationRepo.updateReservation(
           reservation: any(named: 'reservation'),
@@ -405,7 +406,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      result.fold((_) {}, (_) => fail('실패를 예상했으나 성공했습니다'));
+      expectLeft(result);
       verifyNever(
         () => mockReservationRepo.updateReservation(
           reservation: any(named: 'reservation'),
@@ -476,7 +477,7 @@ void main() {
           reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
         );
 
-        result.fold((error) => fail(error.toString()), (_) {});
+        expectRight(result);
         verify(() => mockStoreRepo.getStore(fakeStoreSummary.id)).called(1);
         // 기본 10,000 × 2시간 + 추가 인원 2명 × 1,000 × 2시간 = 24,000
         expect(capturedCreate?.calculatedPrice, 24000);
@@ -527,7 +528,7 @@ void main() {
         reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
       );
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       verify(() => mockStoreRepo.getStore(fakeStoreSummary.id)).called(1);
       expect(capturedUpdate?.calculatedPrice, 24000);
       expect(capturedUpdate?.totalPrice, 19000);
@@ -568,7 +569,7 @@ void main() {
           ),
         );
 
-        result.fold((error) => fail(error.toString()), (_) {});
+        expectRight(result);
         // 30,000 × 2시간 + 추가 인원 1명 × 1,000 × 2시간 = 62,000
         expect(capturedUpdate?.calculatedPrice, 62000);
         expect(capturedUpdate?.totalPrice, 57000);
@@ -691,7 +692,7 @@ void main() {
 
       final result = await useCase.createReservation(reservation: reservation);
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       expect(captured?.calculatedPrice, 20000);
       expect(captured?.holidayDates, isEmpty);
     });
@@ -802,7 +803,7 @@ void main() {
         fromStoreId: fakeStoreSummary.id,
       );
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       verify(
         () => mockReservationRepo.moveReservation(
           reservation: any(named: 'reservation'),
@@ -859,10 +860,7 @@ void main() {
         fromStoreId: fakeStoreSummary.id,
       );
 
-      result.fold(
-        (error) => expect(error, isA<ReservationPermissionDeniedException>()),
-        (_) => fail('실패를 예상했으나 성공했습니다'),
-      );
+      expect(expectLeft(result), isA<ReservationPermissionDeniedException>());
       verifyNever(
         () => mockReservationRepo.moveReservation(
           reservation: any(named: 'reservation'),
@@ -915,7 +913,7 @@ void main() {
         reservationId: 'res-001',
       );
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       verify(
         () => mockReservationRepo.deleteReservation(
           storeId: 'store-123',
@@ -945,7 +943,7 @@ void main() {
         status: ReservationStatus.canceled,
       );
 
-      result.fold((error) => fail(error.toString()), (_) {});
+      expectRight(result);
       verify(
         () => mockReservationRepo.updateReservationStatus(
           storeId: 'store-123',
