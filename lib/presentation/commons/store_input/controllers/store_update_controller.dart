@@ -7,6 +7,7 @@ import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 part 'store_update_controller.g.dart';
 
@@ -105,6 +106,7 @@ class StoreUpdateController extends _$StoreUpdateController
         (_) {
           // 점포명·색상·메모는 사용자 문서의 storeById에서 읽어 화면에 보여준다
           ref.invalidate(currentUserProvider);
+          ref.invalidate(storeDetailProvider(_original.id));
           state = state.copyWith(status: const AsyncData(null));
           return true;
         },

@@ -40,48 +40,7 @@ List<GoRoute> _roleSubRoutes() => [
       GoRoute(
         path: SCRoute.storeCreation.path,
         builder: (context, state) => const StoreFormScreen(),
-        routes: [
-          GoRoute(
-            path: SCRoute.storeColor.path,
-            builder: (context, state) => const StoreColorSelectionScreen(),
-          ),
-          GoRoute(
-            path: SCRoute.storeAddress.path,
-            builder: (context, state) => const StoreAddressInputScreen(),
-          ),
-          GoRoute(
-            path: SCRoute.storePaymentInfo.path,
-            builder: (context, state) => const PaymentInfoInputScreen(),
-            routes: [
-              GoRoute(
-                path: SCRoute.paymentInstruction.path,
-                builder: (context, state) => PaymentInstructionScreen(
-                  previewStoreToEdit: state.extra as Store?,
-                ),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: SCRoute.storeGuide.path,
-            builder: (context, state) => const StoreGuideInputScreen(),
-            routes: [
-              GoRoute(
-                path: SCRoute.confirmationNotice.path,
-                builder: (context, state) => ConfirmationNoticeScreen(
-                  previewStoreToEdit: state.extra as Store?,
-                ),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: SCRoute.storePriceDays.path,
-            builder: (context, state) => const PriceDaysInputScreen(),
-          ),
-          GoRoute(
-            path: SCRoute.storePriceTime.path,
-            builder: (context, state) => const PriceTimeInputScreen(),
-          ),
-        ],
+        routes: _storeFormSubRoutes(),
       ),
       // 초대 코드 입력 (admin)
       GoRoute(
@@ -108,6 +67,48 @@ List<GoRoute> _roleSubRoutes() => [
         routes: [_inviteCodeColorRoute()],
       ),
     ],
+  ),
+];
+
+/// 점포 폼의 하위 화면 (생성·수정 공유). 하위 화면은 `pushChild`로 현재 경로 아래에 쌓인다
+List<GoRoute> _storeFormSubRoutes() => [
+  GoRoute(
+    path: SCRoute.storeColor.path,
+    builder: (context, state) => const StoreColorSelectionScreen(),
+  ),
+  GoRoute(
+    path: SCRoute.storeAddress.path,
+    builder: (context, state) => const StoreAddressInputScreen(),
+  ),
+  GoRoute(
+    path: SCRoute.storePaymentInfo.path,
+    builder: (context, state) => const PaymentInfoInputScreen(),
+    routes: [
+      GoRoute(
+        path: SCRoute.paymentInstruction.path,
+        builder: (context, state) =>
+            PaymentInstructionScreen(previewStoreToEdit: state.extra as Store?),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: SCRoute.storeGuide.path,
+    builder: (context, state) => const StoreGuideInputScreen(),
+    routes: [
+      GoRoute(
+        path: SCRoute.confirmationNotice.path,
+        builder: (context, state) =>
+            ConfirmationNoticeScreen(previewStoreToEdit: state.extra as Store?),
+      ),
+    ],
+  ),
+  GoRoute(
+    path: SCRoute.storePriceDays.path,
+    builder: (context, state) => const PriceDaysInputScreen(),
+  ),
+  GoRoute(
+    path: SCRoute.storePriceTime.path,
+    builder: (context, state) => const PriceTimeInputScreen(),
   ),
 ];
 
@@ -205,6 +206,19 @@ GoRouter goRouter(Ref ref) {
             builder: (context, state) => const MyPageNicknameScreen(),
           ),
         ],
+      ),
+
+      // 점포 수정 — 마이페이지와 예약 모달 위 어디서든 push로 연다 (`pushStoreEdit`)
+      GoRoute(
+        path: SCRoute.storeEdit.path,
+        builder: (context, state) {
+          final args = state.extra! as StoreEditArgs;
+          return StoreFormScreen(
+            storeToEdit: args.store,
+            initialSpaceOptionId: args.spaceOptionId,
+          );
+        },
+        routes: _storeFormSubRoutes(),
       ),
 
       // 온보딩 섹션

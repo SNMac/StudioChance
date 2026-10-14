@@ -10,6 +10,7 @@ enum SCRoute {
   home,
   stats,
   myPage,
+  storeEdit,
 
   // ---------------------------------------------------------------------------
   // 온보딩 전용
@@ -49,6 +50,8 @@ enum SCRoute {
         return '/stats';
       case SCRoute.myPage:
         return '/my-page';
+      case SCRoute.storeEdit:
+        return '/store-edit';
 
       case SCRoute.onboardingNickname:
         return 'nickname';
@@ -99,6 +102,8 @@ enum SCRoute {
         return '/stats';
       case SCRoute.myPage:
         return '/my-page';
+      case SCRoute.storeEdit:
+        return '/store-edit';
 
       case SCRoute.onboardingNickname:
         return '/onboarding/nickname';
