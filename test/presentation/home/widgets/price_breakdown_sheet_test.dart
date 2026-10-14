@@ -77,6 +77,41 @@ void main() {
     expect(find.text('180,000원'), findsOneWidget); // 최종 요금
   });
 
+  testWidgets('계산 요금은 모달이 넘긴 값이 아니라 내역 항목의 합계로 보여준다', (tester) async {
+    // 모달이 공간 목록을 불러오기 전이면 저장된 요금을 넘길 수 있다 — 시트 안에서는
+    // 항목 합과 계산 요금이 어긋나면 안 된다
+    final breakdown = PriceBreakdown(
+      days: [
+        PricedDay(
+          date: DateTime(2026, 10, 14),
+          holidayRateApplied: false,
+          items: const [
+            PriceItem.slot(
+              startMinute: 600,
+              endMinute: 720,
+              unitPrice: 10000,
+              isHourly: true,
+              amount: 20000,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await _pumpAndOpen(
+      tester,
+      (context) => showPriceBreakdownSheet(
+        context,
+        breakdown: breakdown,
+        calculatedPrice: 99999,
+        adjustment: -5000,
+      ),
+    );
+
+    expect(find.text('99,999원'), findsNothing);
+    expect(find.text('15,000원'), findsOneWidget); // 최종 요금 = 20,000 - 5,000
+  });
+
   testWidgets('닫기를 누르면 시트가 닫힌다', (tester) async {
     await _pumpAndOpen(
       tester,

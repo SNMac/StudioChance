@@ -26,12 +26,14 @@ extension TimeOfDayConverter on TimeOfDay {
 }
 
 extension DateTimeFormatter on DateTime {
+  /// 요일 한 글자. 예: 월, 화, …, 일
+  String get weekdayLabel =>
+      const ['월', '화', '수', '목', '금', '토', '일'][weekday - 1];
+
   /// 날짜/시간을 "YYYY. MM. DD. (요일) [HH:mm]" 형식의 문자열로 변환.
   /// [dateOnly]가 true이면 시간 부분(HH:mm)을 생략한다.
   /// 예: 2026-07-27 14:30 -> "2026. 07. 27. (월) 14:30"
   String formattedDateTime({bool dateOnly = false}) {
-    const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
-    final weekdayLabel = weekdays[weekday - 1];
     final date =
         '$year. ${month.toString().padLeft(2, '0')}. ${day.toString().padLeft(2, '0')}. ($weekdayLabel)';
     if (dateOnly) return date;

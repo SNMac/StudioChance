@@ -6,6 +6,7 @@ import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_breakdown_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
+import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
@@ -37,7 +38,8 @@ enum PriceBreakdownUnavailableReason {
 /// 예약 모달 위에 요금 계산 내역 시트를 띄운다.
 ///
 /// 시트 위에 띄우는 시트라 드래그 없는 단순 시트로 둔다. [breakdown]이 null이면
-/// [unavailableReason]을 보여준다. [calculatedPrice]와 [adjustment]는 모달에 표시 중인 값이다.
+/// [unavailableReason]을 보여준다. [calculatedPrice]와 [adjustment]는 모달에 표시 중인 값이며,
+/// 내역이 있으면 계산 요금은 [calculatedPrice] 대신 내역 합계를 쓴다.
 Future<void> showPriceBreakdownSheet(
   BuildContext context, {
   required PriceBreakdown? breakdown,
@@ -90,6 +92,9 @@ class PriceBreakdownSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final breakdown = this.breakdown;
+    // 시트 안에서는 항목 합과 계산 요금이 항상 같아야 한다 — 모달이 공간 목록을 불러오기 전이면
+    // 저장된 요금을 넘길 수 있으므로 내역이 있으면 그 합계를 쓴다
+    final calculated = breakdown?.total ?? calculatedPrice;
 
     return Material(
       color: context.systemGroupedBackground,
@@ -133,7 +138,7 @@ class PriceBreakdownSheet extends StatelessWidget {
                               ),
                             ),
                           ),
-                          _Card(children: _summaryRows()),
+                          _Card(children: _summaryRows(calculated)),
                         ]
                       : [
                           Padding(
@@ -162,7 +167,7 @@ class PriceBreakdownSheet extends StatelessWidget {
                               ],
                               const SizedBox(height: 8),
                               const _Separator(indent: 0, thickness: 1),
-                              ..._summaryRows(),
+                              ..._summaryRows(calculated),
                             ],
                           ),
                         ],
@@ -175,14 +180,14 @@ class PriceBreakdownSheet extends StatelessWidget {
     );
   }
 
-  List<Widget> _summaryRows() => [
-    TitleTextLabel(title: '계산 요금', content: calculatedPrice.formattedPrice),
+  List<Widget> _summaryRows(int calculated) => [
+    TitleTextLabel(title: '계산 요금', content: calculated.formattedPrice),
     const _Separator(),
     TitleTextLabel(title: '추가 요금/할인', content: adjustment.formattedPrice),
     const _Separator(),
     TitleTextLabel(
       title: '최종 요금',
-      content: (calculatedPrice + adjustment).formattedPrice,
+      content: (calculated + adjustment).formattedPrice,
     ),
   ];
 }
@@ -235,8 +240,6 @@ class _DayHeader extends StatelessWidget {
   final PricedDay day;
   final List<String> holidayNames;
 
-  static const _weekdays = ['월', '화', '수', '목', '금', '토', '일'];
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -255,7 +258,7 @@ class _DayHeader extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            '${date.month}월 ${date.day}일 (${_weekdays[date.weekday - 1]})',
+            '${date.month}월 ${date.day}일 (${date.weekdayLabel})',
             style: textTheme.bodySmall?.copyWith(color: context.secondaryLabel),
           ),
           if (day.holidayRateApplied)
