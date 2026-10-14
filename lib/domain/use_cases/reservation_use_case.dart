@@ -207,10 +207,7 @@ class ReservationUseCaseImpl implements ReservationUseCase {
 
     return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       // 이동하면 작성자는 옮긴 사람과 새 점포에서의 역할로 바뀐다
-      final roleInTarget = currentUser.storeInfos
-          .where((info) => info.id == reservation.storeSummary.id)
-          .firstOrNull
-          ?.role;
+      final roleInTarget = currentUser.roleIn(reservation.storeSummary.id);
       if (isMoving && roleInTarget == null) {
         return TaskEither<Exception, void>.left(
           ReservationPermissionDeniedException(

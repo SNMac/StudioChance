@@ -25,17 +25,12 @@ class StoreUpdateController extends _$StoreUpdateController
   }
 
   StoreFormState _stateOf(Store store) {
-    final currentUser = ref.read(currentUserProvider).value;
-    StoreColor color = StoreColor.red;
-    String memo = '';
-
-    if (currentUser != null) {
-      final storeInfo = currentUser.storeInfos
-          .where((e) => e.id == store.id)
-          .firstOrNull;
-      color = storeInfo?.color ?? StoreColor.red;
-      memo = storeInfo?.memo ?? '';
-    }
+    final storeInfo = ref
+        .read(currentUserProvider)
+        .value
+        ?.storeInfoOf(store.id);
+    final color = storeInfo?.color ?? StoreColor.red;
+    final memo = storeInfo?.memo ?? '';
 
     return StoreFormState(
       name: store.name,

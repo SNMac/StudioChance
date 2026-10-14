@@ -167,13 +167,11 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
 
   /// 현재 사용자가 이 예약의 점포에 대해 수정 권한(admin/staff)을 가지는지 여부.
   bool get _canEdit {
-    final storeInfos = ref.watch(
-      currentUserProvider.select((u) => u.asData?.value?.storeInfos),
-    );
-    if (storeInfos == null) return false;
     final storeId = _saved.storeSummary.id;
-    final info = storeInfos.where((i) => i.id == storeId).firstOrNull;
-    return info?.role == UserRole.admin || info?.role == UserRole.staff;
+    final role = ref.watch(
+      currentUserProvider.select((u) => u.asData?.value?.roleIn(storeId)),
+    );
+    return role == UserRole.admin || role == UserRole.staff;
   }
 
   @override

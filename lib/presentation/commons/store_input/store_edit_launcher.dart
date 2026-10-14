@@ -23,13 +23,8 @@ mixin StoreEditLauncher<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
   /// 점포 수정 진입점은 그 점포의 ADMIN에게만 보여준다 — 점포 정보와 요금표는 ADMIN만 고칠 수 있다
   bool isStoreAdmin(String storeId) {
-    final info = ref
-        .read(currentUserProvider)
-        .value
-        ?.storeInfos
-        .where((i) => i.id == storeId)
-        .firstOrNull;
-    return info?.role == UserRole.admin;
+    return ref.read(currentUserProvider).value?.roleIn(storeId) ==
+        UserRole.admin;
   }
 
   @override
