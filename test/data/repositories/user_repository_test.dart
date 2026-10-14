@@ -33,9 +33,9 @@ void main() {
   group('updateStoreInfo', () {
     test('color는 대문자 JSON 값(예: GREEN)으로 저장된다', () async {
       Map<String, dynamic>? capturedData;
-      when(
-        () => mockUserDs.updateStoreInfo(any(), any(), any()),
-      ).thenAnswer((invocation) async {
+      when(() => mockUserDs.updateStoreInfo(any(), any(), any())).thenAnswer((
+        invocation,
+      ) async {
         capturedData =
             invocation.positionalArguments[2] as Map<String, dynamic>;
       });

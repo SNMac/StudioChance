@@ -340,9 +340,7 @@ void main() {
       when(
         () => mockUserDs.getUser('user-123'),
       ).thenAnswer((_) async => fakeUserModel);
-      when(
-        () => mockUserDs.getUser('ghost-uid'),
-      ).thenAnswer((_) async => null);
+      when(() => mockUserDs.getUser('ghost-uid')).thenAnswer((_) async => null);
 
       final result = await repository
           .watchReservationsByDateRange(

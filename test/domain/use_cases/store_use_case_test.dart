@@ -44,8 +44,9 @@ void main() {
 
   group('createStore', () {
     test('현재 유저를 Admin으로 추가하여 Repository.createStore를 호출한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
 
       Store? capturedStore;
       when(
@@ -55,8 +56,7 @@ void main() {
           memo: any(named: 'memo'),
         ),
       ).thenAnswer((invocation) async {
-        capturedStore =
-            invocation.namedArguments[#store] as Store;
+        capturedStore = invocation.namedArguments[#store] as Store;
         return right(capturedStore!);
       });
 
@@ -74,8 +74,9 @@ void main() {
     });
 
     test('createStore 호출 시 color와 memo가 그대로 전달된다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.createStore(
           store: any(named: 'store'),
@@ -100,8 +101,9 @@ void main() {
     });
 
     test('유저 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => left(Exception('유저 없음')));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => left(Exception('유저 없음')));
 
       final result = await useCase.createStore(
         store: fakeStore,
@@ -120,8 +122,9 @@ void main() {
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.createStore(
           store: any(named: 'store'),
@@ -139,75 +142,83 @@ void main() {
       expect(result.isLeft(), true);
     });
 
-    test('보유한 다른 점포와 이름이 중복되면 left(StoreNameDuplicateException)를 반환하고 Repository를 호출하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+    test(
+      '보유한 다른 점포와 이름이 중복되면 left(StoreNameDuplicateException)를 반환하고 Repository를 호출하지 않는다',
+      () async {
+        when(
+          () => mockUserRepo.getCurrentUser(),
+        ).thenAnswer((_) async => right(fakeUser));
 
-      final duplicateNameStore = fakeStore.copyWith(
-        id: '',
-        name: fakeUser.storeInfos.first.name,
-      );
+        final duplicateNameStore = fakeStore.copyWith(
+          id: '',
+          name: fakeUser.storeInfos.first.name,
+        );
 
-      final result = await useCase.createStore(
-        store: duplicateNameStore,
-        color: StoreColor.blue,
-        memo: '메모',
-      );
+        final result = await useCase.createStore(
+          store: duplicateNameStore,
+          color: StoreColor.blue,
+          memo: '메모',
+        );
 
-      expect(result.isLeft(), true);
-      result.fold(
-        (e) => expect(e, isA<StoreNameDuplicateException>()),
-        (_) => fail('중복된 점포명인데 성공 처리됨'),
-      );
-      verifyNever(
-        () => mockStoreRepo.createStore(
-          store: any(named: 'store'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
-        ),
-      );
-    });
-
-    test('같은 점포 내 공간명이 중복되면 left(SpaceNameDuplicateException)를 반환하고 Repository를 호출하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
-
-      final duplicateSpaceStore = fakeStore.copyWith(
-        id: '',
-        name: '새 점포',
-        spaceOptions: [
-          SpaceOption(
-            id: 'space-1',
-            name: '공간A',
-            priceSetting: PriceSetting.empty(),
+        expect(result.isLeft(), true);
+        result.fold(
+          (e) => expect(e, isA<StoreNameDuplicateException>()),
+          (_) => fail('중복된 점포명인데 성공 처리됨'),
+        );
+        verifyNever(
+          () => mockStoreRepo.createStore(
+            store: any(named: 'store'),
+            color: any(named: 'color'),
+            memo: any(named: 'memo'),
           ),
-          SpaceOption(
-            id: 'space-2',
-            name: '공간A',
-            priceSetting: PriceSetting.empty(),
+        );
+      },
+    );
+
+    test(
+      '같은 점포 내 공간명이 중복되면 left(SpaceNameDuplicateException)를 반환하고 Repository를 호출하지 않는다',
+      () async {
+        when(
+          () => mockUserRepo.getCurrentUser(),
+        ).thenAnswer((_) async => right(fakeUser));
+
+        final duplicateSpaceStore = fakeStore.copyWith(
+          id: '',
+          name: '새 점포',
+          spaceOptions: [
+            SpaceOption(
+              id: 'space-1',
+              name: '공간A',
+              priceSetting: PriceSetting.empty(),
+            ),
+            SpaceOption(
+              id: 'space-2',
+              name: '공간A',
+              priceSetting: PriceSetting.empty(),
+            ),
+          ],
+        );
+
+        final result = await useCase.createStore(
+          store: duplicateSpaceStore,
+          color: StoreColor.blue,
+          memo: '메모',
+        );
+
+        expect(result.isLeft(), true);
+        result.fold(
+          (e) => expect(e, isA<SpaceNameDuplicateException>()),
+          (_) => fail('중복된 공간명인데 성공 처리됨'),
+        );
+        verifyNever(
+          () => mockStoreRepo.createStore(
+            store: any(named: 'store'),
+            color: any(named: 'color'),
+            memo: any(named: 'memo'),
           ),
-        ],
-      );
-
-      final result = await useCase.createStore(
-        store: duplicateSpaceStore,
-        color: StoreColor.blue,
-        memo: '메모',
-      );
-
-      expect(result.isLeft(), true);
-      result.fold(
-        (e) => expect(e, isA<SpaceNameDuplicateException>()),
-        (_) => fail('중복된 공간명인데 성공 처리됨'),
-      );
-      verifyNever(
-        () => mockStoreRepo.createStore(
-          store: any(named: 'store'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
-        ),
-      );
-    });
+        );
+      },
+    );
   });
 
   // =========================================================================
@@ -216,8 +227,9 @@ void main() {
 
   group('getStoreByInviteCode', () {
     test('초대 코드를 그대로 Repository에 전달한다', () async {
-      when(() => mockStoreRepo.getStoreByInviteCode(any()))
-          .thenAnswer((_) async => right(null));
+      when(
+        () => mockStoreRepo.getStoreByInviteCode(any()),
+      ).thenAnswer((_) async => right(null));
 
       await useCase.getStoreByInviteCode('VALID1');
 
