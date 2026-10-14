@@ -3,6 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 
 void main() {
+  /// 토스트 애니메이션은 표시 시간 내내 돌아서 pumpAndSettle은 사라질 때까지 진행한다 —
+  /// 페이드 인이 끝난 시점까지만 진행한다
+  Future<void> pumpUntilShown(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
   /// 실제 앱처럼 MaterialApp.builder에서 ToastHost로 Navigator를 감싼다
   Future<void> pumpApp(WidgetTester tester, Widget home) => tester.pumpWidget(
     MaterialApp(
@@ -25,7 +32,7 @@ void main() {
     );
 
     await tester.tap(find.text('띄우기'));
-    await tester.pumpAndSettle();
+    await pumpUntilShown(tester);
     expect(find.text('저장했습니다'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 5));
@@ -62,7 +69,7 @@ void main() {
     await tester.tap(find.text('시트 열기'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('시트에서 띄우기'));
-    await tester.pumpAndSettle();
+    await pumpUntilShown(tester);
 
     // 가장 위에서 터치를 받는 위치에 있어야 사용자 눈에도 보인다
     expect(find.text('시트 위 알림').hitTestable(), findsOneWidget);
@@ -100,7 +107,7 @@ void main() {
     );
 
     await tester.tap(find.text('띄우기'));
-    await tester.pumpAndSettle();
+    await pumpUntilShown(tester);
     expect(find.text('짧은 알림'), findsOneWidget);
 
     final toastCenter = tester.getCenter(find.text('짧은 알림'));

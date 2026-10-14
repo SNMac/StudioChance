@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 
 const Duration _toastDuration = Duration(seconds: 2);
+
+/// 나타날 때·사라질 때 페이드 시간
+const Duration _toastFadeDuration = Duration(milliseconds: 200);
 const EdgeInsets _toastPadding = EdgeInsets.symmetric(
   horizontal: 20,
   vertical: 12,
@@ -35,11 +38,17 @@ class ToastHost extends StatelessWidget {
 ///
 /// [ToastHost] 아래에서 호출하면 어떤 화면·모달 위에서든 보인다. 캡슐은 글자 폭만큼만
 /// 차지해 바깥 터치를 막지 않으며, 키보드가 떠 있으면 키보드 위로 올라간다.
+///
+/// Material 3 floating SnackBar는 아래에서 위로 펼쳐지며 등장하므로 SnackBar 애니메이션은 끄고
+/// 투명한 SnackBar 안에서 캡슐이 직접 페이드 인·아웃한다.
 void showAppToast(BuildContext context, String message) {
   final messenger = ScaffoldMessenger.of(context);
   // 화면 크기와 키보드 높이는 앱 최상단 기준으로 읽는다 — 화면 Scaffold 안쪽에서는 키보드 높이가 지워진다
   final appMediaQuery = MediaQuery.of(messenger.context);
   final isDark = Theme.of(context).brightness == Brightness.dark;
+  final capsuleColor = isDark
+      ? const Color(0xE6595959)
+      : const Color(0xE6323232);
   final textStyle = Theme.of(
     context,
   ).textTheme.bodyMedium?.copyWith(color: Colors.white);
@@ -64,14 +73,15 @@ void showAppToast(BuildContext context, String message) {
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text(message, style: textStyle, textAlign: TextAlign.center),
+        content: _ToastCapsule(
+          message: message,
+          style: textStyle,
+          color: capsuleColor,
+        ),
         behavior: SnackBarBehavior.floating,
-        shape: const StadiumBorder(),
-        backgroundColor: isDark
-            ? const Color(0xE6595959)
-            : const Color(0xE6323232),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        padding: _toastPadding,
+        padding: EdgeInsets.zero,
         margin: EdgeInsets.fromLTRB(
           sideMargin,
           0,
@@ -80,5 +90,74 @@ void showAppToast(BuildContext context, String message) {
         ),
         duration: _toastDuration,
       ),
+      snackBarAnimationStyle: AnimationStyle.noAnimation,
     );
+}
+
+/// 표시 시간 동안 페이드 인 → 유지 → 페이드 아웃하는 캡슐
+class _ToastCapsule extends StatefulWidget {
+  const _ToastCapsule({
+    required this.message,
+    required this.style,
+    required this.color,
+  });
+
+  final String message;
+  final TextStyle? style;
+  final Color color;
+
+  @override
+  State<_ToastCapsule> createState() => _ToastCapsuleState();
+}
+
+class _ToastCapsuleState extends State<_ToastCapsule>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _toastDuration,
+  )..forward();
+
+  /// 표시 시간 전체를 0→1로 보고, 앞뒤 [_toastFadeDuration]만 페이드한다
+  late final Animation<double> _opacity = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween(begin: 0.0, end: 1.0),
+      weight: _toastFadeDuration.inMilliseconds.toDouble(),
+    ),
+    TweenSequenceItem(
+      tween: ConstantTween(1.0),
+      weight: (_toastDuration - _toastFadeDuration * 2).inMilliseconds
+          .toDouble(),
+    ),
+    TweenSequenceItem(
+      tween: Tween(begin: 1.0, end: 0.0),
+      weight: _toastFadeDuration.inMilliseconds.toDouble(),
+    ),
+  ]).animate(_controller);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          shape: const StadiumBorder(),
+          color: widget.color,
+        ),
+        child: Padding(
+          padding: _toastPadding,
+          child: Text(
+            widget.message,
+            style: widget.style,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
 }
