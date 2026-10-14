@@ -113,8 +113,8 @@ void main() {
     stubUpdate(left(StoreUpdateConflictException(message: '충돌')));
     final latest = opened.copyWith(name: '다른 관리자가 바꾼 이름');
     when(
-      () => mockStoreUseCase.getStore(opened.id),
-    ).thenAnswer((_) async => right<Exception, Store?>(latest));
+      () => mockStoreUseCase.getStoreForEdit(opened.id),
+    ).thenAnswer((_) async => right<Exception, Store>(latest));
     await openEditScreen(tester);
 
     await tester.enterText(find.widgetWithText(TextField, opened.name), '내 이름');

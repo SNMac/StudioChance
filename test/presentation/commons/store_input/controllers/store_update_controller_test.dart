@@ -97,7 +97,7 @@ void main() {
 
     test('최신 점포로 폼을 다시 채우고, 이후 저장은 최신 점포를 original로 쓴다', () async {
       when(
-        () => mockStoreUseCase.getStore(opened.id),
+        () => mockStoreUseCase.getStoreForEdit(opened.id),
       ).thenAnswer((_) async => right(latest));
       stubUpdate(right(null));
       final notifier = notifierFor(opened);
@@ -123,9 +123,9 @@ void main() {
     });
 
     test('점포가 삭제됐으면 상태에 StoreNotFoundException을 남긴다', () async {
-      when(
-        () => mockStoreUseCase.getStore(opened.id),
-      ).thenAnswer((_) async => right(null));
+      when(() => mockStoreUseCase.getStoreForEdit(opened.id)).thenAnswer(
+        (_) async => left(StoreNotFoundException(message: '삭제된 점포')),
+      );
       final notifier = notifierFor(opened);
 
       await notifier.reloadLatest();

@@ -248,4 +248,37 @@ void main() {
       );
     });
   });
+
+  group('getStoreForEdit', () {
+    test('점포가 있으면 그대로 돌려준다', () async {
+      when(
+        () => mockStoreRepo.getStore(fakeStore.id),
+      ).thenAnswer((_) async => right(fakeStore));
+
+      final result = await useCase.getStoreForEdit(fakeStore.id);
+
+      expect(result.getRight().toNullable(), fakeStore);
+    });
+
+    test('삭제됐거나 없는 점포면 StoreNotFoundException으로 실패한다', () async {
+      when(
+        () => mockStoreRepo.getStore(fakeStore.id),
+      ).thenAnswer((_) async => right(null));
+
+      final result = await useCase.getStoreForEdit(fakeStore.id);
+
+      expect(result.getLeft().toNullable(), isA<StoreNotFoundException>());
+    });
+
+    test('조회에 실패하면 그 예외를 그대로 돌려준다', () async {
+      final error = StoreNetworkException(message: '네트워크');
+      when(
+        () => mockStoreRepo.getStore(fakeStore.id),
+      ).thenAnswer((_) async => left(error));
+
+      final result = await useCase.getStoreForEdit(fakeStore.id);
+
+      expect(result.getLeft().toNullable(), error);
+    });
+  });
 }

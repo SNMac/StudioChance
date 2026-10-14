@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
@@ -122,21 +121,14 @@ class StoreUpdateController extends _$StoreUpdateController
   Future<void> reloadLatest() async {
     state = state.copyWith(status: const AsyncLoading());
 
-    final result = await ref.read(storeUseCaseProvider).getStore(_original.id);
+    final result = await ref
+        .read(storeUseCaseProvider)
+        .getStoreForEdit(_original.id);
     final stackTrace = StackTrace.current;
     result.fold(
       (exception) =>
           state = state.copyWith(status: AsyncError(exception, stackTrace)),
       (latest) {
-        if (latest == null) {
-          state = state.copyWith(
-            status: AsyncError(
-              StoreNotFoundException(message: '삭제된 점포: ${_original.id}'),
-              stackTrace,
-            ),
-          );
-          return;
-        }
         _original = latest;
         state = _stateOf(latest);
       },

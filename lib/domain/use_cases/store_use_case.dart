@@ -23,6 +23,10 @@ abstract interface class StoreUseCase {
   /// 점포 조회
   Future<Either<Exception, Store?>> getStore(String storeId);
 
+  /// 수정할 점포 조회 — 삭제됐거나 없으면 `StoreNotFoundException`으로 실패한다.
+  /// 점포 수정 화면 진입과 충돌 후 다시 불러오기가 함께 쓴다 (D13)
+  Future<Either<Exception, Store>> getStoreForEdit(String storeId);
+
   /// 초대 코드로 점포 조회 (참여 요청 전 확인용)
   Future<Either<Exception, InviteStorePreview?>> getStoreByInviteCode(
     String inviteCode,
@@ -152,6 +156,16 @@ class StoreUseCaseImpl implements StoreUseCase {
   @override
   Future<Either<Exception, Store?>> getStore(String storeId) {
     return _storeRepository.getStore(storeId);
+  }
+
+  @override
+  Future<Either<Exception, Store>> getStoreForEdit(String storeId) async {
+    final result = await _storeRepository.getStore(storeId);
+    return result.flatMap<Store>(
+      (store) => store == null
+          ? left(StoreNotFoundException(message: '삭제된 점포: $storeId'))
+          : right(store),
+    );
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
@@ -98,11 +99,12 @@ void main() {
       final mockStoreUseCase = MockStoreUseCase();
       // 마이페이지 캐시와 다른 최신 값 — 진입할 때 새로 조회했는지 구분한다
       final latest = fakeStore.copyWith(address: '최신 주소');
-      var calls = 0;
-      when(() => mockStoreUseCase.getStore(any())).thenAnswer((_) async {
-        calls++;
-        return right(calls == 1 ? fakeStore : latest);
-      });
+      when(
+        () => mockStoreUseCase.getStore(any()),
+      ).thenAnswer((_) async => right(fakeStore));
+      when(
+        () => mockStoreUseCase.getStoreForEdit(any()),
+      ).thenAnswer((_) async => right(latest));
 
       await tester.pumpWidget(wrap(mockStoreUseCase));
       await tester.pumpAndSettle();
@@ -130,11 +132,12 @@ void main() {
 
     testWidgets('점포를 불러오지 못하면 오류를 알리고 마이페이지에 머문다', (tester) async {
       final mockStoreUseCase = MockStoreUseCase();
-      var calls = 0;
-      when(() => mockStoreUseCase.getStore(any())).thenAnswer((_) async {
-        calls++;
-        return calls == 1 ? right(fakeStore) : right(null);
-      });
+      when(
+        () => mockStoreUseCase.getStore(any()),
+      ).thenAnswer((_) async => right(fakeStore));
+      when(() => mockStoreUseCase.getStoreForEdit(any())).thenAnswer(
+        (_) async => left(StoreNotFoundException(message: '삭제된 점포')),
+      );
 
       await tester.pumpWidget(wrap(mockStoreUseCase));
       await tester.pumpAndSettle();

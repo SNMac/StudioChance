@@ -29,29 +29,18 @@ void main() {
       .read(storeEditControllerProvider.notifier)
       .loadStoreForEdit(fakeStore.id);
 
-  test('점포를 새로 조회해 돌려준다', () async {
+  test('수정할 점포 조회 결과를 그대로 돌려준다', () async {
     when(
-      () => mockStoreUseCase.getStore(fakeStore.id),
+      () => mockStoreUseCase.getStoreForEdit(fakeStore.id),
     ).thenAnswer((_) async => right(fakeStore));
 
     expect((await load()).toNullable(), fakeStore);
   });
 
-  test('삭제된 점포면 StoreNotFoundException으로 실패한다', () async {
-    when(
-      () => mockStoreUseCase.getStore(fakeStore.id),
-    ).thenAnswer((_) async => right(null));
-
-    expect(
-      (await load()).getLeft().toNullable(),
-      isA<StoreNotFoundException>(),
-    );
-  });
-
   test('조회에 실패하면 그 예외를 그대로 돌려준다', () async {
-    final error = StoreNetworkException(message: '네트워크');
+    final error = StoreNotFoundException(message: '삭제된 점포');
     when(
-      () => mockStoreUseCase.getStore(fakeStore.id),
+      () => mockStoreUseCase.getStoreForEdit(fakeStore.id),
     ).thenAnswer((_) async => left(error));
 
     expect((await load()).getLeft().toNullable(), error);
