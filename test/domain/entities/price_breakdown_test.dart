@@ -140,6 +140,28 @@ void main() {
     });
   });
 
+  test('시간당 인원 추가 요금은 기존 계산과 같이 단가 × (분/60)을 반올림한다', () {
+    // 30원 × 123분: 30 × (123/60) = 61.4999… → 61. 30 × 123 / 60 = 61.5 → 62로 어긋난다
+    final setting = _setting(
+      [Weekday.wednesday],
+      [_hourly(0, 24, 0)],
+      rule: const HeadcountRule(
+        headcountBase: 1,
+        headcountExtraPrice: 30,
+        isHeadcountHourly: true,
+        isHeadcountPerPerson: false,
+      ),
+    );
+
+    final breakdown = setting.breakdownPrice(
+      start: DateTime(2026, 10, 14, 10),
+      end: DateTime(2026, 10, 14, 12, 3),
+      headCount: 2,
+    );
+
+    expect(breakdown.total, 61);
+  });
+
   group('breakdownPrice — 자정을 넘는 시간 지정 예약', () {
     test('날짜별로 나눠 각 날짜의 요일 그룹으로 계산한다', () {
       final setting = PriceSetting(

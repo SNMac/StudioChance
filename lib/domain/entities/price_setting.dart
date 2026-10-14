@@ -112,7 +112,7 @@ abstract class PriceSetting with _$PriceSetting {
     }
 
     final days = <PricedDay>[];
-    var oneTimeHeadcountDecided = false;
+    var oneTimeHeadcountCharged = false;
     for (final date in dates) {
       final nextDate = DateTime(date.year, date.month, date.day + 1);
       final startMinute = start.isAfter(date)
@@ -131,13 +131,13 @@ abstract class PriceSetting with _$PriceSetting {
       HeadcountCharge? headcount;
       if (group != null && slots.isNotEmpty) {
         final rule = group.headcountRule;
-        if (rule.isHeadcountHourly || !oneTimeHeadcountDecided) {
+        if (rule.isHeadcountHourly || !oneTimeHeadcountCharged) {
           headcount = _headcountCharge(
             rule,
             headCount,
             minutes: endMinute - startMinute,
           );
-          if (!rule.isHeadcountHourly) oneTimeHeadcountDecided = true;
+          if (!rule.isHeadcountHourly) oneTimeHeadcountCharged = true;
         }
       }
 
@@ -173,23 +173,30 @@ abstract class PriceSetting with _$PriceSetting {
       final overlapStart = max(startMinute, slot.startTime);
       final overlapEnd = min(endMinute, slotEnd);
       if (overlapStart >= overlapEnd) continue;
-      final overlapHours = (overlapEnd - overlapStart) / 60.0;
-      int amount = slot.isHourly
-          ? (slot.price * overlapHours).round()
-          : slot.price;
-      if (slot.isPerPerson) amount *= headCount;
-      charges.add(
-        SlotCharge(
-          startMinute: overlapStart,
-          endMinute: overlapEnd,
-          unitPrice: slot.price,
-          isHourly: slot.isHourly,
-          perPersonCount: slot.isPerPerson ? headCount : null,
-          amount: amount,
-        ),
-      );
+      charges.add(_slotCharge(slot, overlapStart, overlapEnd, headCount));
     }
     return charges;
+  }
+
+  /// [slot]을 [startMinute]~[endMinute] 동안 이용한 요금. 시간당이면 이용 시간을,
+  /// 1인당이면 인원 수를 곱한다.
+  static SlotCharge _slotCharge(
+    TimeSlot slot,
+    int startMinute,
+    int endMinute,
+    int headCount,
+  ) {
+    final hours = (endMinute - startMinute) / 60.0;
+    int amount = slot.isHourly ? (slot.price * hours).round() : slot.price;
+    if (slot.isPerPerson) amount *= headCount;
+    return SlotCharge(
+      startMinute: startMinute,
+      endMinute: endMinute,
+      unitPrice: slot.price,
+      isHourly: slot.isHourly,
+      perPersonCount: slot.isPerPerson ? headCount : null,
+      amount: amount,
+    );
   }
 
   /// 하루종일 예약의 [date] 하루 내역. 하루종일 슬롯은 00:00~24:00 기준이다.
@@ -203,8 +210,6 @@ abstract class PriceSetting with _$PriceSetting {
         items: const [PriceItem.unpriced(startMinute: 0, endMinute: 1440)],
       );
     }
-    int amount = slot.isHourly ? (slot.price * 24).round() : slot.price;
-    if (slot.isPerPerson) amount *= headCount;
     final headcount = _headcountCharge(
       group.headcountRule,
       headCount,
@@ -213,17 +218,7 @@ abstract class PriceSetting with _$PriceSetting {
     return PricedDay(
       date: date,
       holidayRateApplied: _appliesHolidayRate(group, isHoliday: isHoliday),
-      items: [
-        SlotCharge(
-          startMinute: 0,
-          endMinute: 1440,
-          unitPrice: slot.price,
-          isHourly: slot.isHourly,
-          perPersonCount: slot.isPerPerson ? headCount : null,
-          amount: amount,
-        ),
-        ?headcount,
-      ],
+      items: [_slotCharge(slot, 0, 1440, headCount), ?headcount],
     );
   }
 
@@ -246,7 +241,8 @@ abstract class PriceSetting with _$PriceSetting {
     if (extraPeople == 0 || rule.headcountExtraPrice == 0) return null;
     int amount = rule.headcountExtraPrice;
     if (rule.isHeadcountPerPerson) amount *= extraPeople;
-    if (rule.isHeadcountHourly) amount = (amount * minutes / 60.0).round();
+    // 기존 계산과 같은 순서로 곱한다 — 단가 × 분 ÷ 60은 .5 경계에서 반올림이 1원 달라진다
+    if (rule.isHeadcountHourly) amount = (amount * (minutes / 60.0)).round();
     return HeadcountCharge(
       headcountBase: rule.headcountBase,
       extraPeople: extraPeople,
