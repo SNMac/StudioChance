@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
+import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
@@ -25,17 +27,25 @@ void main() {
   // HomeTabBar는 GoRouterState.of(context)를 호출하므로 GoRouter 없이는 pump 시 즉시 throw한다.
   // showCustomAlertDialog의 확인 버튼도 go_router의 context.pop()을 쓰므로
   // (custom_alert_dialog.dart) 어차피 GoRouter 하네스가 필요하다.
-  Widget wrap(MockStoreUseCase mockStoreUseCase) {
+  Widget wrap(MockStoreUseCase mockStoreUseCase, {User? user}) {
     final router = GoRouter(
       initialLocation: '/my-page',
       routes: [
         GoRoute(path: '/my-page', builder: (_, _) => const MyPageScreen()),
+        GoRoute(
+          path: '/store-edit',
+          builder: (_, state) => Scaffold(
+            body: Text(
+              '수정 화면: ${(state.extra! as StoreEditArgs).store.address}',
+            ),
+          ),
+        ),
       ],
     );
 
     return ProviderScope(
       overrides: [
-        currentUserProvider.overrideWith((ref) async => fakeUser),
+        currentUserProvider.overrideWith((ref) async => user ?? fakeUser),
         storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
       ],
       child: MaterialApp.router(routerConfig: router),
@@ -81,5 +91,59 @@ void main() {
     // (본문은 showCustomAlertDialog가 insertZwj()로 글자 사이에 ZWJ를 삽입해
     // 정확한 문자열 매칭이 되지 않으므로 title만 검증한다.)
     expect(find.text('오류'), findsOneWidget);
+  });
+
+  group('점포 수정 진입', () {
+    testWidgets('관리자 점포의 수정 버튼을 누르면 새로 조회한 점포로 수정 화면을 연다', (tester) async {
+      final mockStoreUseCase = MockStoreUseCase();
+      // 마이페이지 캐시와 다른 최신 값 — 진입할 때 새로 조회했는지 구분한다
+      final latest = fakeStore.copyWith(address: '최신 주소');
+      var calls = 0;
+      when(() => mockStoreUseCase.getStore(any())).thenAnswer((_) async {
+        calls++;
+        return right(calls == 1 ? fakeStore : latest);
+      });
+
+      await tester.pumpWidget(wrap(mockStoreUseCase));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('테스트 점포 수정'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('수정 화면: 최신 주소'), findsOneWidget);
+    });
+
+    testWidgets('관리자가 아닌 점포에는 수정 버튼이 없다', (tester) async {
+      final mockStoreUseCase = MockStoreUseCase();
+      when(
+        () => mockStoreUseCase.getStore(any()),
+      ).thenAnswer((_) async => right(fakeStore));
+      final staffUser = fakeUser.copyWith(
+        storeInfos: [fakeUser.storeInfos.first.copyWith(role: UserRole.staff)],
+      );
+
+      await tester.pumpWidget(wrap(mockStoreUseCase, user: staffUser));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('테스트 점포 수정'), findsNothing);
+    });
+
+    testWidgets('점포를 불러오지 못하면 오류를 알리고 마이페이지에 머문다', (tester) async {
+      final mockStoreUseCase = MockStoreUseCase();
+      var calls = 0;
+      when(() => mockStoreUseCase.getStore(any())).thenAnswer((_) async {
+        calls++;
+        return calls == 1 ? right(fakeStore) : right(null);
+      });
+
+      await tester.pumpWidget(wrap(mockStoreUseCase));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('테스트 점포 수정'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('점포를 찾을 수 없습니다'), findsOneWidget);
+      expect(find.textContaining('수정 화면'), findsNothing);
+    });
   });
 }
