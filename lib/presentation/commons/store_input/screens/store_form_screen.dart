@@ -255,7 +255,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             onChanged: notifier.setMemo,
                             maxLength: maxMemoCharCount,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(maxMemoCharCount),
+                              LengthLimitingTextInputFormatter(
+                                maxMemoCharCount,
+                              ),
                             ],
                           ),
                         ],
@@ -264,8 +266,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                       ...state.spaceOptions.asMap().entries.map((spaceEntry) {
                         final int si = spaceEntry.key;
                         final SpaceOption so = spaceEntry.value;
-                        final bool isExpanded =
-                            _expandedSpaceIds.contains(so.id);
+                        final bool isExpanded = _expandedSpaceIds.contains(
+                          so.id,
+                        );
                         final controller = _spaceNameControllers.putIfAbsent(
                           so.id,
                           () => TextEditingController(text: so.name),
@@ -290,11 +293,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               onNameChanged: (v) =>
                                   notifier.setSpaceOptionName(si, v),
                               onDelete: () {
-                                _spaceNameControllers
-                                    .remove(so.id)
-                                    ?.dispose();
-                                setState(() =>
-                                    _expandedSpaceIds.remove(so.id));
+                                _spaceNameControllers.remove(so.id)?.dispose();
+                                setState(() => _expandedSpaceIds.remove(so.id));
                                 notifier.removeSpaceOption(si);
                               },
                               onCopy: () {
@@ -305,8 +305,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                     .last;
                                 _spaceNameControllers[newSo.id] =
                                     TextEditingController(text: newSo.name);
-                                setState(() =>
-                                    _expandedSpaceIds.add(newSo.id));
+                                setState(() => _expandedSpaceIds.add(newSo.id));
                                 _scrollAfterBuild(toBottom: false);
                               },
                               onAdd: () {
@@ -317,8 +316,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                     .last;
                                 _spaceNameControllers[newSo.id] =
                                     TextEditingController(text: newSo.name);
-                                setState(() =>
-                                    _expandedSpaceIds.add(newSo.id));
+                                setState(() => _expandedSpaceIds.add(newSo.id));
                                 _scrollAfterBuild();
                               },
                             ),
@@ -329,8 +327,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                 alignment: Alignment.topCenter,
                                 child: isExpanded
                                     ? Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 20),
+                                        padding: const EdgeInsets.only(top: 20),
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           spacing: 20,
@@ -339,54 +336,60 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                                 .asMap()
                                                 .entries
                                                 .map((groupEntry) {
-                                              final int gi = groupEntry.key;
-                                              final DayGroup dg =
-                                                  groupEntry.value;
-                                              return PriceSettingInputForm(
-                                                index: gi,
-                                                dayGroup: dg,
-                                                showAdd: so.priceSetting
-                                                        .dayGroups.length <
-                                                    8,
-                                                showDelete: true,
-                                                onDelete: () => notifier
-                                                    .removeDayGroup(si, gi),
-                                                onCopy: () {
-                                                  notifier.copyDayGroup(
-                                                      si, gi);
-                                                  _scrollAfterBuild(
-                                                      toBottom: false);
-                                                },
-                                                onAdd: () {
-                                                  notifier.addDayGroup(si);
-                                                  _scrollAfterBuild();
-                                                },
-                                                onPressedDaySetting: () {
-                                                  SCRoute.storePriceDays
-                                                      .pushChild(
-                                                    context,
-                                                    extra: {
-                                                      'store':
-                                                          widget.storeToEdit,
-                                                      'spaceIndex': si,
-                                                      'groupIndex': gi,
+                                                  final int gi = groupEntry.key;
+                                                  final DayGroup dg =
+                                                      groupEntry.value;
+                                                  return PriceSettingInputForm(
+                                                    index: gi,
+                                                    dayGroup: dg,
+                                                    showAdd:
+                                                        so
+                                                            .priceSetting
+                                                            .dayGroups
+                                                            .length <
+                                                        8,
+                                                    showDelete: true,
+                                                    onDelete: () => notifier
+                                                        .removeDayGroup(si, gi),
+                                                    onCopy: () {
+                                                      notifier.copyDayGroup(
+                                                        si,
+                                                        gi,
+                                                      );
+                                                      _scrollAfterBuild(
+                                                        toBottom: false,
+                                                      );
+                                                    },
+                                                    onAdd: () {
+                                                      notifier.addDayGroup(si);
+                                                      _scrollAfterBuild();
+                                                    },
+                                                    onPressedDaySetting: () {
+                                                      SCRoute.storePriceDays
+                                                          .pushChild(
+                                                            context,
+                                                            extra: {
+                                                              'store': widget
+                                                                  .storeToEdit,
+                                                              'spaceIndex': si,
+                                                              'groupIndex': gi,
+                                                            },
+                                                          );
+                                                    },
+                                                    onPressedTimeSetting: () {
+                                                      SCRoute.storePriceTime
+                                                          .pushChild(
+                                                            context,
+                                                            extra: {
+                                                              'store': widget
+                                                                  .storeToEdit,
+                                                              'spaceIndex': si,
+                                                              'groupIndex': gi,
+                                                            },
+                                                          );
                                                     },
                                                   );
-                                                },
-                                                onPressedTimeSetting: () {
-                                                  SCRoute.storePriceTime
-                                                      .pushChild(
-                                                    context,
-                                                    extra: {
-                                                      'store':
-                                                          widget.storeToEdit,
-                                                      'spaceIndex': si,
-                                                      'groupIndex': gi,
-                                                    },
-                                                  );
-                                                },
-                                              );
-                                            }),
+                                                }),
                                           ],
                                         ),
                                       )
@@ -396,7 +399,6 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                           ],
                         );
                       }),
-
                     ],
                   ),
                 ),
@@ -543,11 +545,7 @@ class _SpaceOptionHeader extends StatelessWidget {
         ),
         // 접힌 상태에서만 하단 구분선 표시
         if (!isExpanded)
-          Divider(
-            height: 0.5,
-            thickness: 0.5,
-            color: context.separator,
-          ),
+          Divider(height: 0.5, thickness: 0.5, color: context.separator),
       ],
     );
   }
