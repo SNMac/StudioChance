@@ -25,12 +25,14 @@ import 'package:studio_chance/presentation/commons/extensions/time_formatter.dar
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/holiday_price_note.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/price_breakdown_sheet.dart';
 import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_date_time_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_popup_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -495,6 +497,35 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     // _recalculatePrice의 setState가 함께 반영한다
     _applyCurrentPrice = true;
     _recalculatePrice();
+  }
+
+  /// 요금 계산 내역 시트 — 화면 가격과 같은 요금표·공휴일 판정으로 내역을 만든다
+  void _onPricePressed() {
+    final spaces = _spaceOptions;
+    showPriceBreakdownSheet(
+      context,
+      breakdown: _effectivePriceSetting?.breakdownPrice(
+        start: _startTime,
+        end: _endTime,
+        headCount: int.tryParse(_headCountController.text) ?? 0,
+        isAllDay: _isAllDay,
+        isHoliday: _holidayChecker,
+      ),
+      basis: _usesSavedPriceSetting
+          ? PriceBreakdownBasis.saved
+          : PriceBreakdownBasis.current,
+      // 공간 목록이 null이면 아직 불러오는 중이거나 실패한 것이다
+      unavailableReason: spaces != null && spaces.isEmpty
+          ? PriceBreakdownUnavailableReason.noSpacePrice
+          : PriceBreakdownUnavailableReason.notLoaded,
+      calculatedPrice: _calculatedPrice,
+      adjustment:
+          int.tryParse(
+            _adjustmentController.text.replaceAll(',', '').replaceAll('원', ''),
+          ) ??
+          0,
+      holidayNamesOf: _currentHolidays.namesOn,
+    );
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -1301,7 +1332,11 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       children: [
         TitleTextLabel(title: '예약 플랫폼', content: _platform.displayName),
         TitleTextLabel(title: '결제 방식', content: _paymentMethod.displayName),
-        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
+        TitleNavigationButton(
+          title: '요금',
+          content: _calculatedPrice.formattedPrice,
+          onPressed: _onPricePressed,
+        ),
         TitleTextLabel(title: '추가 요금/할인', content: adjustment.formattedPrice),
         TitleTextLabel(
           title: '최종 요금',
@@ -1361,7 +1396,11 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
+        TitleNavigationButton(
+          title: '요금',
+          content: _calculatedPrice.formattedPrice,
+          onPressed: _onPricePressed,
+        ),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
