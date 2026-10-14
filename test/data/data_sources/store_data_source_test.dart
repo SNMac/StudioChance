@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/models/space_option_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
@@ -239,6 +240,8 @@ void main() {
   // =========================================================================
 
   group('updateStore', () {
+    bool unchanged(StoreModel _) => true;
+
     test('지정 필드를 업데이트한다', () async {
       final uid = FirestoreEmulatorHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
@@ -248,7 +251,9 @@ void main() {
         _creatorInfo,
       );
 
-      await dataSource.updateStore(created.id, {'name': '변경된 점포명'}, []);
+      await dataSource.updateStore(created.id, {
+        'name': '변경된 점포명',
+      }, isUnchanged: unchanged);
 
       final updated = await dataSource.getStore(created.id);
       expect(updated?.name, '변경된 점포명');
@@ -257,43 +262,61 @@ void main() {
       expect(updated?.addressDetail, '101호');
     });
 
-    test('memberUids로 전달된 유저들의 storeById.name 캐시가 함께 갱신된다', () async {
+    test('저장 직전 문서의 멤버·대기 멤버 storeById.name 캐시가 함께 갱신된다', () async {
       final storeId = FirestoreEmulatorHelper.generateId();
-      final adminUid = FirestoreEmulatorHelper.generateId();
       final staffUid = FirestoreEmulatorHelper.generateId();
-      await _seedUserWithStore(fakeFirestore, adminUid, storeId);
       await _seedUserWithStore(fakeFirestore, staffUid, storeId);
       await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
 
-      await dataSource.updateStore(
-        storeId,
-        {'name': '변경된 점포명'},
-        [adminUid, staffUid],
-      );
+      // 폼을 연 뒤 가입 신청이 들어와도 그 사용자의 캐시까지 갱신해야 한다
+      final waitingUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserWithStore(fakeFirestore, waitingUid, storeId);
+      await fakeFirestore.collection('stores').doc(storeId).update({
+        'waitingMemberById.$waitingUid': <String, dynamic>{'role': 'STAFF'},
+      });
 
-      final adminDoc = await fakeFirestore
-          .collection('users')
-          .doc(adminUid)
-          .get();
-      final staffDoc = await fakeFirestore
-          .collection('users')
-          .doc(staffUid)
-          .get();
-      final adminStoreById =
-          adminDoc.data()?['storeById'] as Map<String, dynamic>?;
-      final staffStoreById =
-          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
-      expect(adminStoreById?[storeId]['name'], '변경된 점포명');
-      expect(staffStoreById?[storeId]['name'], '변경된 점포명');
+      await dataSource.updateStore(storeId, {
+        'name': '변경된 점포명',
+      }, isUnchanged: unchanged);
+
+      for (final uid in [staffUid, waitingUid]) {
+        final userDoc = await fakeFirestore.collection('users').doc(uid).get();
+        final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
+        expect(storeById?[storeId]['name'], '변경된 점포명', reason: uid);
+      }
     });
 
-    test('data에 name이 없으면 memberUids의 storeById.name을 건드리지 않는다', () async {
+    test('사용자 문서에 그 점포 항목이 없으면 이름 캐시를 새로 만들지 않는다', () async {
+      // 점포에는 대기 멤버로 남아 있지만 사용자 문서에서는 항목이 지워진 어긋난 상태.
+      // 점 경로 update는 role 없는 {name} 항목을 만들어, 그 사용자 문서를 읽는
+      // 점포 조회(멤버 hydrate)를 전부 실패하게 만든다
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final waitingUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, waitingUid);
+      await _seedStoreWithWaitingMember(fakeFirestore, storeId, waitingUid);
+
+      await dataSource.updateStore(storeId, {
+        'name': '변경된 점포명',
+      }, isUnchanged: unchanged);
+
+      final userDoc = await fakeFirestore
+          .collection('users')
+          .doc(waitingUid)
+          .get();
+      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(storeById?.containsKey(storeId), isFalse);
+      expect((await dataSource.getStore(storeId))?.name, '변경된 점포명');
+    });
+
+    test('data에 name이 없으면 멤버의 storeById.name을 건드리지 않는다', () async {
       final storeId = FirestoreEmulatorHelper.generateId();
       final staffUid = FirestoreEmulatorHelper.generateId();
       await _seedUserWithStore(fakeFirestore, staffUid, storeId);
       await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
 
-      await dataSource.updateStore(storeId, {'address': '변경된 주소'}, [staffUid]);
+      await dataSource.updateStore(storeId, {
+        'address': '변경된 주소',
+      }, isUnchanged: unchanged);
 
       final staffDoc = await fakeFirestore
           .collection('users')
@@ -302,6 +325,46 @@ void main() {
       final staffStoreById =
           staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[storeId]['name'], '테스트 점포');
+    });
+
+    test('isUnchanged에 저장 직전 문서를 넘기고, false면 충돌 예외를 던지고 쓰지 않는다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      await _seedEmptyStore(fakeFirestore, storeId);
+      await fakeFirestore.collection('stores').doc(storeId).update({
+        'address': '다른 관리자가 바꾼 주소',
+      });
+
+      StoreModel? seen;
+      await expectLater(
+        dataSource.updateStore(
+          storeId,
+          {'name': '내가 바꾼 점포명'},
+          isUnchanged: (current) {
+            seen = current;
+            return false;
+          },
+        ),
+        throwsA(isA<StoreUpdateConflictException>()),
+      );
+
+      expect(seen?.address, '다른 관리자가 바꾼 주소');
+      final current = await dataSource.getStore(storeId);
+      expect(current?.name, '테스트 점포');
+    });
+
+    test('삭제된 점포를 수정하면 StoreNotFoundException을 던진다', () async {
+      final storeId = FirestoreEmulatorHelper.generateId();
+      await _seedEmptyStore(fakeFirestore, storeId);
+      await fakeFirestore.collection('stores').doc(storeId).update({
+        'deletedAt': Timestamp.now(),
+      });
+
+      await expectLater(
+        dataSource.updateStore(storeId, {
+          'name': '변경된 점포명',
+        }, isUnchanged: unchanged),
+        throwsA(isA<StoreNotFoundException>()),
+      );
     });
   });
 

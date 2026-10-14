@@ -5,6 +5,7 @@ import 'package:studio_chance/domain/repository_interfaces/user_repository.dart'
 import 'package:studio_chance/domain/use_cases/user_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
 
@@ -36,7 +37,7 @@ void main() {
         nickname: '새닉네임',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(
         () => mockRepo.updateUser(
           uid: fakeUser.id,

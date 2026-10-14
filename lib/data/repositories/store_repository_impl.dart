@@ -1,14 +1,17 @@
+import 'package:collection/collection.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/common/exceptions/user_exceptions.dart';
 import 'package:studio_chance/common/utils/exception_utils.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
 import 'package:studio_chance/data/models/store_model.dart';
+import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
@@ -107,24 +110,23 @@ class StoreRepositoryImpl implements StoreRepository {
 
   @override
   Future<Either<Exception, void>> updateStore({
+    required Store original,
     required Store store,
     required String uid,
     required StoreColor color,
     required String memo,
   }) async {
     try {
-      final storeModel = StoreModel.fromEntity(store);
-
-      // 점포명 변경이 전체 멤버(승인+대기)의 storeById.name 캐시에 반영되도록 uid 목록 전달
-      final memberUids = {
-        ...store.memberInfos.map((info) => info.user.id),
-        ...store.waitingMemberInfos.map((info) => info.user.id),
-      }.toList();
-
+      final originalJson = _comparableEditableJson(
+        StoreModel.fromEntity(original),
+      );
       await _storeDataSource.updateStore(
         store.id,
-        storeModel.toEditableJson(),
-        memberUids,
+        StoreModel.fromEntity(store).toEditableJson(),
+        isUnchanged: (current) => const DeepCollectionEquality().equals(
+          _comparableEditableJson(current),
+          originalJson,
+        ),
       );
 
       // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
@@ -337,6 +339,34 @@ class StoreRepositoryImpl implements StoreRepository {
     );
   }
 
+  /// 동시 수정 비교(D13)용 편집 가능 필드.
+  /// 폼의 점포는 legacy fallback을 거친 엔티티이므로 저장 직전 문서도 같은 fallback과
+  /// 같은 엔티티 → 모델 변환을 거쳐야 한다. 그러지 않으면 spaceOptions가 빈 구버전 점포는
+  /// 저장할 때마다 충돌로 판정된다.
+  Map<String, dynamic> _comparableEditableJson(StoreModel model) =>
+      StoreModel.fromEntity(
+        _toStoreEntity(
+          model,
+          memberInfos: const [],
+          waitingMemberInfos: const [],
+        ),
+      ).toEditableJson();
+
+  /// 멤버 한 명의 사용자 문서. 문서가 깨져 읽지 못하면 그 멤버만 건너뛴다(null).
+  ///
+  /// 한 명의 문서 때문에 점포 조회 전체가 실패하면 공간·요금·승인 대기 화면이 모두 막힌다.
+  /// 네트워크 오류는 모든 멤버에 똑같이 걸리므로 멤버가 조용히 사라져 보이지 않도록 그대로 던진다.
+  Future<UserModel?> _getMemberUserOrSkip(String uid) async {
+    try {
+      return await _userDataSource.getUser(uid);
+    } on UserNetworkException {
+      rethrow;
+    } catch (e) {
+      _logger.e('멤버 사용자 문서를 읽지 못해 제외\nuid: $uid', error: e);
+      return null;
+    }
+  }
+
   /// StoreMemberInfoModel Map을 받아 StoreMemberInfo Entity 목록으로 변환
   /// - input: `Map<UserID, StoreMemberInfoModel>`
   Future<List<StoreMemberInfo>> _fetchMembersWithRoles(
@@ -346,7 +376,7 @@ class StoreRepositoryImpl implements StoreRepository {
 
     final userIds = memberMap.keys.toList();
 
-    final futures = userIds.map((uid) => _userDataSource.getUser(uid));
+    final futures = userIds.map(_getMemberUserOrSkip);
     final userModels = await Future.wait(futures);
 
     return userModels.where((model) => model != null).map((userModel) {

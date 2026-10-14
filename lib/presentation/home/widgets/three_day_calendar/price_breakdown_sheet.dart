@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
@@ -40,6 +41,9 @@ enum PriceBreakdownUnavailableReason {
 /// 시트 위에 띄우는 시트라 드래그 없는 단순 시트로 둔다. [breakdown]이 null이면
 /// [unavailableReason]을 보여준다. [calculatedPrice]와 [adjustment]는 모달에 표시 중인 값이며,
 /// 내역이 있으면 계산 요금은 [calculatedPrice] 대신 내역 합계를 쓴다.
+///
+/// [onOpenPriceSetting]을 주면(점포 ADMIN) 요금표가 비어 있을 때 요금 설정으로 가는 버튼을
+/// 보여준다. 버튼을 누르면 시트를 닫은 뒤 호출한다 — 예약 모달은 열어 둔 채 그 위로 이동한다.
 Future<void> showPriceBreakdownSheet(
   BuildContext context, {
   required PriceBreakdown? breakdown,
@@ -49,6 +53,7 @@ Future<void> showPriceBreakdownSheet(
   required int calculatedPrice,
   required int adjustment,
   List<String> Function(DateTime date) holidayNamesOf = _noHolidayNames,
+  VoidCallback? onOpenPriceSetting,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -64,6 +69,7 @@ Future<void> showPriceBreakdownSheet(
       calculatedPrice: calculatedPrice,
       adjustment: adjustment,
       holidayNamesOf: holidayNamesOf,
+      onOpenPriceSetting: onOpenPriceSetting,
     ),
   );
 }
@@ -79,6 +85,7 @@ class PriceBreakdownSheet extends StatelessWidget {
     required this.calculatedPrice,
     required this.adjustment,
     required this.holidayNamesOf,
+    this.onOpenPriceSetting,
   });
 
   final PriceBreakdown? breakdown;
@@ -87,6 +94,26 @@ class PriceBreakdownSheet extends StatelessWidget {
   final int calculatedPrice;
   final int adjustment;
   final List<String> Function(DateTime date) holidayNamesOf;
+  final VoidCallback? onOpenPriceSetting;
+
+  /// 요금표를 채우면 해결되는 상황인지 — 불러오기 실패는 요금 설정으로 고칠 수 없다
+  bool get _needsPriceSetting => switch (breakdown) {
+    final breakdown? => breakdown.hasUnpricedRange,
+    null => unavailableReason == PriceBreakdownUnavailableReason.noSpacePrice,
+  };
+
+  Widget? _priceSettingShortcut(BuildContext context) {
+    final onOpen = onOpenPriceSetting;
+    if (onOpen == null || !_needsPriceSetting) return null;
+    return _PriceSettingShortcut(
+      // 공간이 없을 때는 위의 원인 문구가 이미 설명한다
+      hint: breakdown == null ? null : '요금이 설정되지 않은 시간이 있습니다',
+      onPressed: () {
+        Navigator.of(context).pop();
+        onOpen();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +122,7 @@ class PriceBreakdownSheet extends StatelessWidget {
     // 시트 안에서는 항목 합과 계산 요금이 항상 같아야 한다 — 모달이 공간 목록을 불러오기 전이면
     // 저장된 요금을 넘길 수 있으므로 내역이 있으면 그 합계를 쓴다
     final calculated = breakdown?.total ?? calculatedPrice;
+    final shortcut = _priceSettingShortcut(context);
 
     return Material(
       color: context.systemGroupedBackground,
@@ -138,6 +166,7 @@ class PriceBreakdownSheet extends StatelessWidget {
                               ),
                             ),
                           ),
+                          ?shortcut,
                           _Card(children: _summaryRows(calculated)),
                         ]
                       : [
@@ -170,6 +199,7 @@ class PriceBreakdownSheet extends StatelessWidget {
                               ..._summaryRows(calculated),
                             ],
                           ),
+                          ?shortcut,
                         ],
                 ),
               ),
@@ -190,6 +220,47 @@ class PriceBreakdownSheet extends StatelessWidget {
       content: (calculated + adjustment).formattedPrice,
     ),
   ];
+}
+
+/// 요금 설정 화면으로 가는 버튼과 그 이유
+class _PriceSettingShortcut extends StatelessWidget {
+  const _PriceSettingShortcut({required this.hint, required this.onPressed});
+
+  final String? hint;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        spacing: 4,
+        children: [
+          if (hint != null)
+            Text(
+              hint!,
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: context.secondaryLabel,
+              ),
+            ),
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            minimumSize: Size.zero,
+            onPressed: onPressed,
+            child: Text(
+              '요금 설정',
+              style: textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// [GroupedFormContainer]와 같은 카드지만 행 사이 구분선을 직접 둔다 — 한 날짜의 항목끼리는

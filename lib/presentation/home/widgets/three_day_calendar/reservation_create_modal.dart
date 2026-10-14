@@ -17,6 +17,7 @@ import 'package:studio_chance/presentation/commons/extensions/phone_formatter.da
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
+import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -27,6 +28,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_popu
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/holiday_price_note.dart';
@@ -70,8 +72,8 @@ class ReservationCreateModal extends ConsumerStatefulWidget {
       _ReservationCreateModalState();
 }
 
-class _ReservationCreateModalState
-    extends ConsumerState<ReservationCreateModal> {
+class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
+    with StoreEditLauncher {
   // ── 편집 상태 ─────────────────────────────────────────────────────────────
   late StoreSummary _storeSummary;
   late ReservationStatus _status;
@@ -236,8 +238,9 @@ class _ReservationCreateModalState
           _spaceOptionId ??= loaded.first.id;
           unmatched.add('공간');
         }
-      } else {
-        _spaceOptionId ??= loaded.first.id;
+      } else if (!loaded.any((s) => s.id == _spaceOptionId)) {
+        // 처음 불러왔거나, 요금 설정에서 선택했던 공간을 지우고 돌아온 경우
+        _spaceOptionId = loaded.first.id;
       }
       _pendingSpaceNameFromOcr = null;
     });
@@ -306,7 +309,20 @@ class _ReservationCreateModalState
           .read(holidayCalendarControllerProvider)
           .calendar
           .namesOn,
+      onOpenPriceSetting: isStoreAdmin(_storeSummary.id)
+          ? _openPriceSetting
+          : null,
     );
+  }
+
+  /// 모달을 연 채 그 위에 점포 요금 설정을 연다. 저장하고 돌아오면 공간 목록을 다시 불러와
+  /// 요금을 다시 계산한다 — 입력 중인 예약은 그대로 남는다
+  Future<void> _openPriceSetting() async {
+    final storeId = _storeSummary.id;
+    final saved = await openStoreEdit(storeId, spaceOptionId: _spaceOptionId);
+    if (!saved || !mounted || _storeSummary.id != storeId) return;
+    setState(() => _isLoadingSpaceOptions = true);
+    _loadSpaceOptions(storeId);
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -489,32 +505,38 @@ class _ReservationCreateModalState
           top: Radius.circular(modalTopCornerRadius),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            const Opacity(opacity: 0.0, child: ModalGrabber()),
-            ModalAppBar(
-              title: '예약 등록',
-              leading: AppBarActionButton(
-                label: '취소',
-                isRegularWeight: true,
-                onPressed: _onCancelPressed,
-              ),
-              actions: [
-                AppBarActionButton(
-                  label: '저장',
-                  onPressed: _isValid ? _onSavePressed : null,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Opacity(opacity: 0.0, child: ModalGrabber()),
+                ModalAppBar(
+                  title: '예약 등록',
+                  leading: AppBarActionButton(
+                    label: '취소',
+                    isRegularWeight: true,
+                    onPressed: _onCancelPressed,
+                  ),
+                  actions: [
+                    AppBarActionButton(
+                      label: '저장',
+                      onPressed: _isValid ? _onSavePressed : null,
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: _buildBody(textTheme),
+                  ),
                 ),
               ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                child: _buildBody(textTheme),
-              ),
-            ),
+            LoadingOverlay(isLoading: showStoreEditOverlay),
           ],
         ),
       ),
@@ -642,27 +664,29 @@ class _ReservationCreateModalState
         // 로딩 중에도 행을 항상 렌더링해 레이아웃을 안정적으로 유지.
         // 애니메이션 완료 후 setState가 실행되므로 애니메이션 끊김 없음.
         // 에러로 빈 배열이 되면 행을 숨김 (크래시 방지).
-        if (_isLoadingSpaceOptions || _spaceOptions.isNotEmpty)
+        if (_isLoadingSpaceOptions)
+          // TitleTextLabel은 좌우 여백을 스스로 가지므로 감싸지 않는다 — 감싸면 로딩 중에만
+          // 여백이 두 번 들어가 '예약 공간'이 밀렸다가 돌아온다
+          const TitleTextLabel(title: '예약 공간', content: '—')
+        else if (_spaceOptions.isNotEmpty)
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
-            child: _isLoadingSpaceOptions
-                ? const TitleTextLabel(title: '예약 공간', content: '—')
-                : TitlePopupButton<SpaceOption>(
-                    title: '예약 공간',
-                    selectedValue:
-                        _spaceOptions
-                            .where((s) => s.id == _spaceOptionId)
-                            .firstOrNull ??
-                        _spaceOptions.first,
-                    items: _spaceOptions,
-                    itemLabelBuilder: (s) => s.name,
-                    onSelected: (s) {
-                      setState(() => _spaceOptionId = s.id);
-                      _recalculatePrice();
-                    },
-                  ),
+            child: TitlePopupButton<SpaceOption>(
+              title: '예약 공간',
+              selectedValue:
+                  _spaceOptions
+                      .where((s) => s.id == _spaceOptionId)
+                      .firstOrNull ??
+                  _spaceOptions.first,
+              items: _spaceOptions,
+              itemLabelBuilder: (s) => s.name,
+              onSelected: (s) {
+                setState(() => _spaceOptionId = s.id);
+                _recalculatePrice();
+              },
+            ),
           ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(

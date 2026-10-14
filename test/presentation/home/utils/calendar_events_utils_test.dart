@@ -479,4 +479,37 @@ void main() {
       expect(allDayRowHeightFor(maxCount: 20, isExpanded: true), capped);
     });
   });
+
+  group('visibleReservationsOf', () {
+    final storeA = fakeReservation.copyWith(id: 'a1');
+    final storeB = fakeReservation.copyWith(
+      id: 'b1',
+      storeSummary: fakeStoreSummary.copyWith(id: 'store-b'),
+    );
+
+    test('여러 달의 예약을 합치고 아직 불러오지 못한 달은 건너뛴다', () {
+      final visible = visibleReservationsOf(
+        [
+          [storeA],
+          null,
+          [storeB],
+        ],
+        selectedStoreIds: {fakeStoreSummary.id, 'store-b'},
+      );
+
+      expect(visible.map((r) => r.id), ['a1', 'b1']);
+    });
+
+    test('필터에서 해제한 점포의 예약은 새 데이터가 오기 전이라도 뺀다', () {
+      // 필터를 바꾸면 예약 구독을 다시 여는 동안 직전 목록(해제한 점포 포함)이 남아 있다
+      final visible = visibleReservationsOf(
+        [
+          [storeA, storeB],
+        ],
+        selectedStoreIds: {fakeStoreSummary.id},
+      );
+
+      expect(visible.map((r) => r.id), ['a1']);
+    });
+  });
 }

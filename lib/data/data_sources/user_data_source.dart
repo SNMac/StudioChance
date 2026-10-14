@@ -36,9 +36,6 @@ abstract interface class UserDataSource {
     Map<String, dynamic> data,
   );
 
-  /// 점포 정보 삭제
-  Future<void> removeStoreInfo(String uid, String storeId);
-
   /// FCM 토큰 추가
   Future<void> addFcmToken(String uid, String token);
 
@@ -230,18 +227,6 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
       await _userDocRef(uid).update(updates);
-    } catch (e) {
-      throw handleFirestoreError(e);
-    }
-  }
-
-  @override
-  Future<void> removeStoreInfo(String uid, String storeId) async {
-    try {
-      await _userDocRef(uid).update({
-        'storeById.$storeId': FieldValue.delete(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
     } catch (e) {
       throw handleFirestoreError(e);
     }

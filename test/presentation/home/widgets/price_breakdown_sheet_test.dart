@@ -130,4 +130,123 @@ void main() {
 
     expect(find.text('요금 계산 내역'), findsNothing);
   });
+
+  group('요금 설정 바로가기', () {
+    /// 오전은 요금이 있고 오후는 요금표가 비어 있는 내역
+    final partlyUnpriced = PriceBreakdown(
+      days: [
+        PricedDay(
+          date: DateTime(2026, 10, 14),
+          holidayRateApplied: false,
+          items: const [
+            PriceItem.slot(
+              startMinute: 600,
+              endMinute: 720,
+              unitPrice: 10000,
+              isHourly: true,
+              amount: 20000,
+            ),
+            PriceItem.unpriced(startMinute: 720, endMinute: 840),
+          ],
+        ),
+      ],
+    );
+
+    testWidgets('요금이 없는 시간이 있으면 안내와 버튼을 보여주고, 누르면 시트를 닫고 이동한다', (tester) async {
+      var opened = 0;
+      await _pumpAndOpen(
+        tester,
+        (context) => showPriceBreakdownSheet(
+          context,
+          breakdown: partlyUnpriced,
+          calculatedPrice: 20000,
+          adjustment: 0,
+          onOpenPriceSetting: () => opened++,
+        ),
+      );
+
+      expect(find.textContaining('요금이 설정되지 않은 시간'), findsOneWidget);
+      await tester.tap(find.text('요금 설정'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('요금 계산 내역'), findsNothing);
+      expect(opened, 1);
+    });
+
+    testWidgets('이동 콜백이 없으면(관리자가 아니면) 버튼을 보여주지 않는다', (tester) async {
+      await _pumpAndOpen(
+        tester,
+        (context) => showPriceBreakdownSheet(
+          context,
+          breakdown: partlyUnpriced,
+          calculatedPrice: 20000,
+          adjustment: 0,
+        ),
+      );
+
+      expect(find.text('요금 설정'), findsNothing);
+    });
+
+    testWidgets('모든 시간에 요금이 있으면 버튼을 보여주지 않는다', (tester) async {
+      await _pumpAndOpen(
+        tester,
+        (context) => showPriceBreakdownSheet(
+          context,
+          breakdown: PriceBreakdown(
+            days: [
+              PricedDay(
+                date: DateTime(2026, 10, 14),
+                holidayRateApplied: false,
+                items: const [
+                  PriceItem.slot(
+                    startMinute: 600,
+                    endMinute: 720,
+                    unitPrice: 10000,
+                    isHourly: true,
+                    amount: 20000,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          calculatedPrice: 20000,
+          adjustment: 0,
+          onOpenPriceSetting: () {},
+        ),
+      );
+
+      expect(find.text('요금 설정'), findsNothing);
+    });
+
+    testWidgets('점포에 공간 요금이 없으면 버튼을 보여준다', (tester) async {
+      await _pumpAndOpen(
+        tester,
+        (context) => showPriceBreakdownSheet(
+          context,
+          breakdown: null,
+          unavailableReason: PriceBreakdownUnavailableReason.noSpacePrice,
+          calculatedPrice: 0,
+          adjustment: 0,
+          onOpenPriceSetting: () {},
+        ),
+      );
+      expect(find.text('요금 설정'), findsOneWidget);
+    });
+
+    testWidgets('요금 정보를 불러오지 못했으면 버튼을 보여주지 않는다', (tester) async {
+      await _pumpAndOpen(
+        tester,
+        (context) => showPriceBreakdownSheet(
+          context,
+          breakdown: null,
+          unavailableReason: PriceBreakdownUnavailableReason.notLoaded,
+          calculatedPrice: 0,
+          adjustment: 0,
+          onOpenPriceSetting: () {},
+        ),
+      );
+
+      expect(find.text('요금 설정'), findsNothing);
+    });
+  });
 }

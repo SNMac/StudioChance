@@ -11,8 +11,10 @@ import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
+import '../../helpers/either_expectations.dart';
 
 // lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
 // 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
@@ -81,15 +83,58 @@ void main() {
         color: StoreColor.blue,
         memo: '',
       );
-      final storeId = created.getRight().toNullable()!.id;
+      final storeId = expectRight(created).id;
 
       final fetched = await repository.getStore(storeId);
 
-      final store = fetched.getRight().toNullable()!;
+      final store = expectRight(fetched)!;
       expect(store.name, '통합 테스트 점포');
       expect(store.memberInfos.length, 1);
       expect(store.memberInfos.first.user.id, uid);
       expect(store.memberInfos.first.role, UserRole.admin);
+    });
+  });
+
+  group('멤버 사용자 문서가 깨진 점포 조회', () {
+    test('한 멤버의 사용자 문서를 읽지 못해도 점포는 조회되고 그 멤버만 빠진다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final brokenUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final storeId = expectRight(
+        await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ).id;
+
+      // 점포에는 대기 멤버로 있지만 사용자 문서의 점포 항목에 role이 없어 파싱에 실패한다
+      await fakeFirestore.collection('users').doc(brokenUid).set(
+        <String, dynamic>{
+          'email': 'broken@example.com',
+          'name': '깨진 유저',
+          'authProviders': <String>[],
+          'storeById': <String, dynamic>{
+            storeId: <String, dynamic>{'name': '통합 테스트 점포'},
+          },
+        },
+      );
+      await fakeFirestore.collection('stores').doc(storeId).update({
+        'waitingMemberById.$brokenUid': <String, dynamic>{'role': 'STAFF'},
+      });
+
+      final store = expectRight(await repository.getStore(storeId))!;
+
+      expect(store.memberInfos.map((m) => m.user.id), [ownerUid]);
+      expect(store.waitingMemberInfos, isEmpty);
     });
   });
 
@@ -119,7 +164,7 @@ void main() {
 
       final fetched = await repository.getStore(storeId);
 
-      final store = fetched.getRight().toNullable()!;
+      final store = expectRight(fetched)!;
       expect(store.spaceOptions.length, 1);
       expect(store.spaceOptions.first.id, 'legacy_default');
       expect(store.spaceOptions.first.name, '기본 공간');
@@ -150,7 +195,7 @@ void main() {
         color: StoreColor.blue,
         memo: '',
       );
-      final createdStore = created.getRight().toNullable()!;
+      final createdStore = expectRight(created);
 
       await repository.requestJoinStore(
         storeId: createdStore.id,
@@ -167,9 +212,10 @@ void main() {
       );
 
       final fetched = await repository.getStore(createdStore.id);
-      final storeWithStaff = fetched.getRight().toNullable()!;
+      final storeWithStaff = expectRight(fetched)!;
 
       await repository.updateStore(
+        original: storeWithStaff,
         store: storeWithStaff.copyWith(name: '변경된 점포명'),
         uid: ownerUid,
         color: StoreColor.green,
@@ -183,6 +229,114 @@ void main() {
       final staffStoreById =
           staffDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
+    });
+
+    group('동시 수정 감지 (D13)', () {
+      late String ownerUid;
+      late Store opened;
+
+      setUp(() async {
+        ownerUid = FirestoreEmulatorHelper.generateId();
+        await _seedUserDoc(fakeFirestore, ownerUid);
+        final adminUser = User(
+          id: ownerUid,
+          name: '테스트 유저',
+          email: 'test@example.com',
+          nickname: null,
+          authProviders: [],
+          storeInfos: [],
+        );
+        final created = await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        );
+        final storeId = expectRight(created).id;
+        opened = expectRight(await repository.getStore(storeId))!;
+      });
+
+      Future<Store> saved() async =>
+          expectRight(await repository.getStore(opened.id))!;
+
+      test('폼을 연 뒤 아무도 바꾸지 않았으면 저장된다', () async {
+        final result = await repository.updateStore(
+          original: opened,
+          store: opened.copyWith(name: '변경된 점포명'),
+          uid: ownerUid,
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expectRight(result);
+        expect((await saved()).name, '변경된 점포명');
+      });
+
+      test('다른 관리자가 편집 필드를 먼저 바꿨으면 충돌로 실패하고 덮어쓰지 않는다', () async {
+        await fakeFirestore.collection('stores').doc(opened.id).update({
+          'address': '다른 관리자가 바꾼 주소',
+        });
+
+        final result = await repository.updateStore(
+          original: opened,
+          store: opened.copyWith(name: '내가 바꾼 점포명'),
+          uid: ownerUid,
+          color: StoreColor.green,
+          memo: '',
+        );
+
+        expect(expectLeft(result), isA<StoreUpdateConflictException>());
+        final current = await saved();
+        expect(current.name, '통합 테스트 점포');
+        expect(current.address, '다른 관리자가 바꾼 주소');
+      });
+
+      test('폼을 연 뒤 가입 신청·승인만 있었으면 충돌로 보지 않는다', () async {
+        final staffUid = FirestoreEmulatorHelper.generateId();
+        await _seedUserDoc(fakeFirestore, staffUid);
+        await repository.requestJoinStore(
+          storeId: opened.id,
+          uid: staffUid,
+          role: UserRole.staff,
+          color: StoreColor.red,
+          storeAlias: '통합 테스트 점포',
+          memo: '',
+        );
+        await repository.approveMember(
+          storeId: opened.id,
+          uid: staffUid,
+          role: UserRole.staff,
+        );
+
+        final result = await repository.updateStore(
+          original: opened,
+          store: opened.copyWith(name: '변경된 점포명'),
+          uid: ownerUid,
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expectRight(result);
+        expect((await saved()).name, '변경된 점포명');
+      });
+
+      test('spaceOptions가 빈 구버전 점포도 충돌 없이 저장된다', () async {
+        // getStore가 legacy_default 공간을 채워 돌려주므로 문서와 폼의 공간 목록이 다르다
+        await fakeFirestore.collection('stores').doc(opened.id).update({
+          'spaceOptions': <dynamic>[],
+        });
+        final legacy = await saved();
+
+        final result = await repository.updateStore(
+          original: legacy,
+          store: legacy.copyWith(name: '변경된 점포명'),
+          uid: ownerUid,
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expectRight(result);
+        expect((await saved()).name, '변경된 점포명');
+      });
     });
   });
 
@@ -209,7 +363,7 @@ void main() {
         color: StoreColor.blue,
         memo: '',
       );
-      final storeId = created.getRight().toNullable()!.id;
+      final storeId = expectRight(created).id;
 
       await repository.requestJoinStore(
         storeId: storeId,
@@ -265,15 +419,12 @@ void main() {
         color: StoreColor.blue,
         memo: '',
       );
-      final storeId = created.getRight().toNullable()!.id;
+      final storeId = expectRight(created).id;
 
       final first = await repository.createInviteCode(storeId);
       final second = await repository.createInviteCode(storeId);
 
-      expect(
-        first.getRight().toNullable()!.inviteCode,
-        second.getRight().toNullable()!.inviteCode,
-      );
+      expect(expectRight(first).inviteCode, expectRight(second).inviteCode);
     });
   });
 
@@ -304,7 +455,7 @@ void main() {
         color: StoreColor.blue,
         memo: '',
       );
-      final storeId = created.getRight().toNullable()!.id;
+      final storeId = expectRight(created).id;
 
       await repository.requestJoinStore(
         storeId: storeId,
@@ -321,7 +472,7 @@ void main() {
       );
 
       final fetched = await repository.getStore(storeId);
-      final store = fetched.getRight().toNullable()!;
+      final store = expectRight(fetched)!;
       final memberIds = store.memberInfos.map((m) => m.user.id).toList();
       expect(memberIds.contains(memberUid), isTrue);
     });
@@ -350,7 +501,7 @@ void main() {
         color: StoreColor.blue,
         memo: '',
       );
-      final storeId = created.getRight().toNullable()!.id;
+      final storeId = expectRight(created).id;
 
       // 멤버 추가: requestJoin → approve
       await repository.requestJoinStore(
@@ -378,17 +529,9 @@ void main() {
       final members = doc.data()?['memberById'] as Map<String, dynamic>?;
       expect(members?[memberUid]['role'], 'ADMIN');
 
-      // getStore 호출 시 역직렬화가 성공해야 함
-      final fetched = await repository.getStore(storeId);
-      expect(
-        fetched.isRight(),
-        true,
-        reason: 'updateMemberRole 후 getStore가 실패하면 role 직렬화 버그임',
-      );
-      final updatedMember = fetched
-          .getRight()
-          .toNullable()!
-          .memberInfos
+      // getStore 호출 시 역직렬화가 성공해야 함 — updateMemberRole 후 실패하면 role 직렬화 버그다
+      final fetched = expectRight(await repository.getStore(storeId));
+      final updatedMember = fetched!.memberInfos
           .where((m) => m.user.id == memberUid)
           .firstOrNull;
       expect(updatedMember?.role, UserRole.admin);

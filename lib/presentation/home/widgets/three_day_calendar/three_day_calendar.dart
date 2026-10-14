@@ -15,6 +15,7 @@ import 'package:studio_chance/presentation/home/widgets/three_day_calendar/time_
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
+import 'package:studio_chance/presentation/providers/home_store_filter_controller.dart';
 
 /// 3일 캘린더 최상위 위젯
 /// - 좌측 고정 시간 열 (시간 레이블 + 현재 시간 캡슐)
@@ -365,32 +366,10 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
         );
       }),
     );
-    final prevAsync = ref.watch(homeReservationsProvider(prevMonth));
-    final currAsync = ref.watch(homeReservationsProvider(currMonth));
-    final nextAsync = ref.watch(homeReservationsProvider(nextMonth));
-    final next2Async = ref.watch(homeReservationsProvider(next2Month));
-    final reservationsList = [
-      ...prevAsync.when(
-        data: (r) => r,
-        loading: () => const <Reservation>[],
-        error: (_, _) => const <Reservation>[],
-      ),
-      ...currAsync.when(
-        data: (r) => r,
-        loading: () => const <Reservation>[],
-        error: (_, _) => const <Reservation>[],
-      ),
-      ...nextAsync.when(
-        data: (r) => r,
-        loading: () => const <Reservation>[],
-        error: (_, _) => const <Reservation>[],
-      ),
-      ...next2Async.when(
-        data: (r) => r,
-        loading: () => const <Reservation>[],
-        error: (_, _) => const <Reservation>[],
-      ),
-    ];
+    final reservationsList = visibleReservationsOf([
+      for (final month in [prevMonth, currMonth, nextMonth, next2Month])
+        ref.watch(homeReservationsProvider(month)).value,
+    ], selectedStoreIds: ref.watch(homeStoreFilterControllerProvider));
     final (allEvents, reservationsMap, allDayCountByDate) =
         buildEventsFromReservations(reservationsList);
     // 종일 행 높이는 보이는 3일이 공유 — 열마다 다르면 행이 어긋난다.

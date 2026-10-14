@@ -5,6 +5,11 @@ const Color modalGrabberColor = Color(0xFFB5B5BB);
 const Color modalGrabberDarkColor = Color(0xFF585858);
 const Color modalBarrierColor = Color(0x33000000);
 
+/// 토스트 캡슐 — 다크 모드에서는 배경보다 밝은 회색으로 띄운다
+const Color toastBackgroundColor = Color(0xE6323232);
+const Color toastBackgroundDarkColor = Color(0xE6595959);
+const Color toastTextColor = Color(0xFFFFFFFF);
+
 const googleSignInBackgroundColor = Color(0xFFFFFFFF);
 const googleSignInBackgroundDarkColor = Color(0xFF131314);
 const googleSignInBorderColor = Color(0xFF747775);

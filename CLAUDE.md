@@ -90,6 +90,14 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 판단 규칙은 `Reservation.keepsPriceSettingFor`(엔티티 extension) 하나를 상세 모달과 `ReservationUseCaseImpl.updateReservation`이 공유한다 — 규칙이 갈라지면 화면 가격과 저장 가격이 어긋난다
 - **공휴일 스냅샷도 같은 원칙** (`Reservation.holidayDates`, ADR-0003): 저장된 예약 기간 안의 날짜는 스냅샷, 밖으로 옮긴 날짜는 현재 공휴일 달력으로 판정(`holidayCheckerFor`). '현재 요금 적용'은 요금표 또는 공휴일 판정(`holidaysDifferFromCurrent`)이 다를 때 노출
 
+### 점포 수정 동시 수정 감지 (D13)
+점포 수정은 트랜잭션에서 **편집 가능 필드**(`StoreModel.toEditableJson`)를 폼을 연 시점의 값과 비교하고, 다르면 `StoreUpdateConflictException`으로 실패한다. 화면은 안내 후 최신 점포로 폼을 다시 채운다(사용자 수정분은 버림 — 요금표는 중첩 구조라 병합하면 상대 변경이 조용히 사라진다).
+- `updatedAt`·문서 갱신 시각으로 비교하지 않는다 — 가입 승인·역할 변경도 바꾸므로 멤버가 들어올 때마다 오탐한다
+- 버전 필드 + Rules 검증 대신 필드 비교를 고른 이유: 클라이언트가 이 앱 하나뿐이라 서버 강제의 가치가 작고, 스키마·Rules·배포 순서가 늘지 않는다
+- 비교는 Repository가 한다(`StoreRepositoryImpl._comparableEditableJson`). 폼의 점포는 legacy fallback(`legacy_default` 공간)을 거친 엔티티이므로 저장 직전 문서도 같은 fallback·변환을 거쳐야 한다. DataSource는 `isUnchanged` 콜백만 실행한다
+- 수정 화면에 넘기는 점포는 진입 직전에 새로 조회한다(`StoreEditController.loadStoreForEdit`) — 캐시된 `storeDetailProvider` 값이면 저장할 때마다 충돌한다
+- 점포명 캐시(`users/{uid}.storeById.{storeId}.name`)는 같은 트랜잭션에서 사용자 문서를 먼저 읽어 **그 점포 항목이 이미 있는 사용자에게만** 쓴다. 점포 문서에는 대기 멤버로 남았는데 사용자 문서에는 항목이 없는 어긋난 데이터에 점 경로 update를 하면 role 없는 `{name}` 항목이 생겨, 그 사용자를 읽는 점포 조회(멤버 hydrate)가 전부 파싱에 실패한다
+
 ### Common Exceptions 레이어 배치 (D4)
 `common/exceptions/` 를 모든 레이어 공유 위치로 유지.
 - Firebase 에러 코드 기반이지만 도메인 의미를 가진 경계 예외
@@ -176,6 +184,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ## 테스트 작성 규칙
 - 위젯 테스트는 픽셀 크기·색상 hex·폰트 스타일·레이아웃 구조 등 UI 구현 디테일을 직접 assert하지 않음 — 상태 전이·콜백 호출·크래시 방지 등 동작(behavior)만 검증 (UI 리팩터링 시 무관한 테스트가 깨지는 것 방지)
 - 예외: 테스트 대상 자체가 색상 팔레트 등 디자인 토큰 lookup table인 경우(`store_color_extensions_test.dart`)는 정확한 값 검증이 불가피하므로 허용
+- Either 결과는 `test/helpers/either_expectations.dart`의 `expectRight`·`expectLeft`로 검증한다 — 테스트에서도 `isRight()`·`getRight().toNullable()` 명령형 스타일을 쓰지 않는다 (실패 시 실제 예외·값이 메시지에 찍힌다)
 
 ## 폰트 및 디자인
 - 기본 폰트: Pretendard (400, 500, 600, 700)
@@ -326,7 +335,15 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 예약 통계(`stats`) 탭은 화면이 없어 탭해도 아무 동작도 하지 않는다 (`_onTabTapped`의 TODO).
 - `/my-page` 하위는 온보딩과 동일한 `_roleSubRoutes()`를 재사용한다 — 점포 추가 플로우를 중복 구현하지 않는다.
 - 승인 대기 멤버 관리는 `showPendingMemberModal(context, storeId)` 모달이며, 마이페이지의 ADMIN 점포 행과 FCM 알림 딥링크 두 곳에서 같은 모달을 연다.
+- 점포 수정은 최상위 `/store-edit` 라우트(`pushStoreEdit`)다. 마이페이지 ADMIN 행의 연필 버튼과 예약 계산 내역 시트의 '요금 설정' 버튼이 `StoreEditLauncher` mixin으로 연다. 시트에서 열 때는 예약 모달을 닫지 않고 그 위에 쌓는다.
 - 승인 시 역할은 **신청자가 초대 코드 단계에서 고른 값을 그대로** 쓴다. 관리자가 역할을 바꾸려면 승인 후 `updateMemberRole`을 쓴다 (해당 UI는 미구현).
+
+## 토스트 알림
+
+- 짧은 알림은 `showAppToast(context, message)`(`commons/widgets/app_toast.dart`)를 쓴다. `ScaffoldMessenger.showSnackBar`를 직접 부르지 않는다
+  - 화면 Scaffold의 SnackBar는 그 화면 위에 열린 바텀시트에 가려진다. 예약 모달 위에서 점포 수정을 저장하고 돌아오면 알림이 보이지 않았다
+- `MyApp`의 `MaterialApp.builder`가 Navigator를 `ToastHost`(바깥 Scaffold)로 감싼다. ScaffoldMessenger는 중첩된 Scaffold 중 가장 바깥 것에만 SnackBar를 그리므로 토스트는 모든 route 위에 뜬다
+- 캡슐은 글자 폭만큼만 차지해 바깥 터치를 막지 않는다. 화면 크기·키보드 높이는 앱 최상단 MediaQuery 기준으로 읽는다 (화면 Scaffold 안쪽에서는 키보드 높이가 지워진다)
 
 ## 모달 시트 패턴
 

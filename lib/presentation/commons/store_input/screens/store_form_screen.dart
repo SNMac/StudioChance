@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
@@ -22,6 +23,7 @@ import 'package:studio_chance/presentation/commons/store_input/widgets/price_set
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -31,11 +33,43 @@ import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart'
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
 
+/// 점포 수정 화면(`/store-edit`) 진입 인자
+class StoreEditArgs {
+  const StoreEditArgs({required this.store, this.spaceOptionId});
+
+  /// 진입 직전에 새로 조회한 점포 — 저장 시 동시 수정 판정의 기준이 된다 (D13)
+  final Store store;
+
+  /// 처음 보여줄 공간. 화면을 열면 이 공간 섹션으로 스크롤한다
+  final String? spaceOptionId;
+}
+
+/// 점포 수정 화면을 연다. 저장하고 닫혔으면 true.
+///
+/// 최상위 라우트라 마이페이지에서도, 예약 모달을 연 채로도 그 위에 쌓였다가 돌아온다.
+Future<bool> pushStoreEdit(
+  BuildContext context,
+  Store store, {
+  String? spaceOptionId,
+}) async =>
+    await context.push<bool>(
+      SCRoute.storeEdit.fullPath,
+      extra: StoreEditArgs(store: store, spaceOptionId: spaceOptionId),
+    ) ??
+    false;
+
 class StoreFormScreen extends ConsumerStatefulWidget {
   /// null이면 생성 모드, 값이 있으면 수정 모드
   final Store? storeToEdit;
 
-  const StoreFormScreen({super.key, this.storeToEdit});
+  /// 수정 모드에서 처음 보여줄 공간 id
+  final String? initialSpaceOptionId;
+
+  const StoreFormScreen({
+    super.key,
+    this.storeToEdit,
+    this.initialSpaceOptionId,
+  });
 
   @override
   ConsumerState<StoreFormScreen> createState() => _StoreFormScreenState();
@@ -47,6 +81,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
   late final TextEditingController _memoController;
   final Set<String> _expandedSpaceIds = {};
   final Map<String, TextEditingController> _spaceNameControllers = {};
+  final Map<String, GlobalKey> _spaceSectionKeys = {};
 
   ProviderListenable<StoreFormState> get _currentProvider {
     if (widget.storeToEdit != null) {
@@ -90,6 +125,65 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     showCancel: false,
   );
 
+  /// 처음 보여줄 공간 섹션으로 스크롤한다 — 공간 섹션은 모두 펼친 채 시작한다
+  void _scrollToInitialSpace() {
+    final spaceId = widget.initialSpaceOptionId;
+    if (spaceId == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sectionContext = _spaceSectionKeys[spaceId]?.currentContext;
+      if (sectionContext == null || !sectionContext.mounted) return;
+      Scrollable.ensureVisible(
+        sectionContext,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  /// 다른 관리자가 먼저 저장했을 때 최신 점포로 폼과 입력창을 다시 채운다 (D13)
+  Future<void> _reloadLatest() async {
+    await ref
+        .read(storeUpdateControllerProvider(widget.storeToEdit!).notifier)
+        .reloadLatest();
+    if (!mounted) return;
+
+    final latest = ref.read(_currentProvider);
+    _nameController.text = latest.name;
+    _memoController.text = latest.memo;
+
+    // 아직 TextField에 붙어 있는 컨트롤러는 다음 프레임에 해제한다
+    final latestIds = latest.spaceOptions.map((s) => s.id).toSet();
+    final staleIds = _spaceNameControllers.keys
+        .where((id) => !latestIds.contains(id))
+        .toList();
+    final stale = [
+      for (final id in staleIds) _spaceNameControllers.remove(id)!,
+    ];
+    for (final space in latest.spaceOptions) {
+      (_spaceNameControllers[space.id] ??= TextEditingController()).text =
+          space.name;
+    }
+    setState(() {
+      _expandedSpaceIds
+        ..clear()
+        ..addAll(latestIds);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final controller in stale) {
+        controller.dispose();
+      }
+    });
+  }
+
+  Future<void> _submit(StoreFormControllerable notifier) async {
+    final succeeded = await notifier.submit();
+    if (!succeeded || widget.storeToEdit == null || !mounted) return;
+
+    // 예약 모달 위에서 열렸어도 보이도록 앱 최상단 토스트로 알린다
+    showAppToast(context, '점포 정보를 저장했습니다');
+    context.pop(true);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +196,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
       _expandedSpaceIds.add(space.id);
       _spaceNameControllers[space.id] = TextEditingController(text: space.name);
     }
+    _scrollToInitialSpace();
   }
 
   @override
@@ -130,7 +225,15 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
         data: (_) {},
         loading: () {},
         error: (error, stackTrace) {
-          if (error is AppException) {
+          if (error is StoreUpdateConflictException) {
+            showCustomAlertDialog(
+              context: context,
+              title: error.title,
+              content: error.content,
+              showCancel: false,
+              onConfirmAfterPop: _reloadLatest,
+            );
+          } else if (error is AppException) {
             _showErrorDialog(error.title, error.content);
           } else {
             _showErrorDialog(
@@ -149,7 +252,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
 
         showCustomAlertDialog(
           context: context,
-          title: '점포 등록 화면으로 돌아갈까요?',
+          title: isEditMode ? '점포 수정을 취소할까요?' : '점포 등록 화면으로 돌아갈까요?',
+          content: isEditMode ? '수정한 내용은 저장되지 않습니다.' : null,
           onConfirmBeforePop: () {
             if (context.mounted && context.canPop()) {
               context.pop();
@@ -171,9 +275,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
             AppBarActionButton(
               label: '완료',
               onPressed: (state.isValid && !isLoading)
-                  ? () async {
-                      await notifier.submit();
-                    }
+                  ? () => _submit(notifier)
                   : null,
             ),
           ],
@@ -255,7 +357,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             onChanged: notifier.setMemo,
                             maxLength: maxMemoCharCount,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(maxMemoCharCount),
+                              LengthLimitingTextInputFormatter(
+                                maxMemoCharCount,
+                              ),
                             ],
                           ),
                         ],
@@ -264,14 +368,19 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                       ...state.spaceOptions.asMap().entries.map((spaceEntry) {
                         final int si = spaceEntry.key;
                         final SpaceOption so = spaceEntry.value;
-                        final bool isExpanded =
-                            _expandedSpaceIds.contains(so.id);
+                        final bool isExpanded = _expandedSpaceIds.contains(
+                          so.id,
+                        );
                         final controller = _spaceNameControllers.putIfAbsent(
                           so.id,
                           () => TextEditingController(text: so.name),
                         );
 
                         return Column(
+                          key: _spaceSectionKeys.putIfAbsent(
+                            so.id,
+                            GlobalKey.new,
+                          ),
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -290,11 +399,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               onNameChanged: (v) =>
                                   notifier.setSpaceOptionName(si, v),
                               onDelete: () {
-                                _spaceNameControllers
-                                    .remove(so.id)
-                                    ?.dispose();
-                                setState(() =>
-                                    _expandedSpaceIds.remove(so.id));
+                                _spaceNameControllers.remove(so.id)?.dispose();
+                                setState(() => _expandedSpaceIds.remove(so.id));
                                 notifier.removeSpaceOption(si);
                               },
                               onCopy: () {
@@ -305,8 +411,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                     .last;
                                 _spaceNameControllers[newSo.id] =
                                     TextEditingController(text: newSo.name);
-                                setState(() =>
-                                    _expandedSpaceIds.add(newSo.id));
+                                setState(() => _expandedSpaceIds.add(newSo.id));
                                 _scrollAfterBuild(toBottom: false);
                               },
                               onAdd: () {
@@ -317,8 +422,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                     .last;
                                 _spaceNameControllers[newSo.id] =
                                     TextEditingController(text: newSo.name);
-                                setState(() =>
-                                    _expandedSpaceIds.add(newSo.id));
+                                setState(() => _expandedSpaceIds.add(newSo.id));
                                 _scrollAfterBuild();
                               },
                             ),
@@ -329,8 +433,7 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                 alignment: Alignment.topCenter,
                                 child: isExpanded
                                     ? Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 20),
+                                        padding: const EdgeInsets.only(top: 20),
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           spacing: 20,
@@ -339,54 +442,60 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                                                 .asMap()
                                                 .entries
                                                 .map((groupEntry) {
-                                              final int gi = groupEntry.key;
-                                              final DayGroup dg =
-                                                  groupEntry.value;
-                                              return PriceSettingInputForm(
-                                                index: gi,
-                                                dayGroup: dg,
-                                                showAdd: so.priceSetting
-                                                        .dayGroups.length <
-                                                    8,
-                                                showDelete: true,
-                                                onDelete: () => notifier
-                                                    .removeDayGroup(si, gi),
-                                                onCopy: () {
-                                                  notifier.copyDayGroup(
-                                                      si, gi);
-                                                  _scrollAfterBuild(
-                                                      toBottom: false);
-                                                },
-                                                onAdd: () {
-                                                  notifier.addDayGroup(si);
-                                                  _scrollAfterBuild();
-                                                },
-                                                onPressedDaySetting: () {
-                                                  SCRoute.storePriceDays
-                                                      .pushChild(
-                                                    context,
-                                                    extra: {
-                                                      'store':
-                                                          widget.storeToEdit,
-                                                      'spaceIndex': si,
-                                                      'groupIndex': gi,
+                                                  final int gi = groupEntry.key;
+                                                  final DayGroup dg =
+                                                      groupEntry.value;
+                                                  return PriceSettingInputForm(
+                                                    index: gi,
+                                                    dayGroup: dg,
+                                                    showAdd:
+                                                        so
+                                                            .priceSetting
+                                                            .dayGroups
+                                                            .length <
+                                                        8,
+                                                    showDelete: true,
+                                                    onDelete: () => notifier
+                                                        .removeDayGroup(si, gi),
+                                                    onCopy: () {
+                                                      notifier.copyDayGroup(
+                                                        si,
+                                                        gi,
+                                                      );
+                                                      _scrollAfterBuild(
+                                                        toBottom: false,
+                                                      );
+                                                    },
+                                                    onAdd: () {
+                                                      notifier.addDayGroup(si);
+                                                      _scrollAfterBuild();
+                                                    },
+                                                    onPressedDaySetting: () {
+                                                      SCRoute.storePriceDays
+                                                          .pushChild(
+                                                            context,
+                                                            extra: {
+                                                              'store': widget
+                                                                  .storeToEdit,
+                                                              'spaceIndex': si,
+                                                              'groupIndex': gi,
+                                                            },
+                                                          );
+                                                    },
+                                                    onPressedTimeSetting: () {
+                                                      SCRoute.storePriceTime
+                                                          .pushChild(
+                                                            context,
+                                                            extra: {
+                                                              'store': widget
+                                                                  .storeToEdit,
+                                                              'spaceIndex': si,
+                                                              'groupIndex': gi,
+                                                            },
+                                                          );
                                                     },
                                                   );
-                                                },
-                                                onPressedTimeSetting: () {
-                                                  SCRoute.storePriceTime
-                                                      .pushChild(
-                                                    context,
-                                                    extra: {
-                                                      'store':
-                                                          widget.storeToEdit,
-                                                      'spaceIndex': si,
-                                                      'groupIndex': gi,
-                                                    },
-                                                  );
-                                                },
-                                              );
-                                            }),
+                                                }),
                                           ],
                                         ),
                                       )
@@ -396,7 +505,6 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                           ],
                         );
                       }),
-
                     ],
                   ),
                 ),
@@ -543,11 +651,7 @@ class _SpaceOptionHeader extends StatelessWidget {
         ),
         // 접힌 상태에서만 하단 구분선 표시
         if (!isExpanded)
-          Divider(
-            height: 0.5,
-            thickness: 0.5,
-            color: context.separator,
-          ),
+          Divider(height: 0.5, thickness: 0.5, color: context.separator),
       ],
     );
   }

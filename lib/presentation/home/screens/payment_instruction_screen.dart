@@ -12,12 +12,17 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/store
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 class PaymentInstructionScreen extends ConsumerWidget {
   /// [reservation]이 null이면 미리보기 모드
   /// [previewStoreToEdit] — 수정 모드일 때 어느 폼 컨트롤러를 읽을지 결정 (null = 생성 모드)
-  const PaymentInstructionScreen({super.key, this.reservation, this.previewStoreToEdit});
+  const PaymentInstructionScreen({
+    super.key,
+    this.reservation,
+    this.previewStoreToEdit,
+  });
 
   final Reservation? reservation;
   final Store? previewStoreToEdit;
@@ -47,7 +52,11 @@ class PaymentInstructionScreen extends ConsumerWidget {
     );
   }
 
-  Scaffold _buildScaffold(BuildContext context, TextTheme textTheme, String text) {
+  Scaffold _buildScaffold(
+    BuildContext context,
+    TextTheme textTheme,
+    String text,
+  ) {
     return Scaffold(
       appBar: CustomAppBar(
         title: '입금 안내문',
@@ -60,9 +69,7 @@ class PaymentInstructionScreen extends ConsumerWidget {
             icon: Icon(CupertinoIcons.doc_on_doc, color: context.systemBlue),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('복사 완료')),
-              );
+              showAppToast(context, '복사 완료');
             },
           ),
         ],
@@ -71,7 +78,11 @@ class PaymentInstructionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, TextTheme textTheme, Store? store) {
+  Widget _buildContent(
+    BuildContext context,
+    TextTheme textTheme,
+    Store? store,
+  ) {
     return _buildScaffold(context, textTheme, _buildText(reservation!, store));
   }
 
@@ -135,16 +146,19 @@ class PaymentInstructionScreen extends ConsumerWidget {
     if (r.isAllDay) {
       // iCal 관례: 종일 endTime = 다음날 자정(exclusive) → -1일 보정
       final displayEnd = r.endTime.subtract(const Duration(days: 1));
-      final isSameDay = r.startTime.year == displayEnd.year &&
+      final isSameDay =
+          r.startTime.year == displayEnd.year &&
           r.startTime.month == displayEnd.month &&
           r.startTime.day == displayEnd.day;
       if (isSameDay) {
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) 하루종일';
       } else {
         final endWeekday = weekdays[displayEnd.weekday - 1];
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) ~ '
             '${displayEnd.year}년 '
@@ -153,11 +167,13 @@ class PaymentInstructionScreen extends ConsumerWidget {
       }
     } else {
       final durationHours = r.endTime.difference(r.startTime).inHours;
-      final isSameDay = r.startTime.year == r.endTime.year &&
+      final isSameDay =
+          r.startTime.year == r.endTime.year &&
           r.startTime.month == r.endTime.month &&
           r.startTime.day == r.endTime.day;
       if (isSameDay) {
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) '
             '${r.startTime.hour.toString().padLeft(2, '0')}시 ~ '
@@ -165,7 +181,8 @@ class PaymentInstructionScreen extends ConsumerWidget {
             '($durationHours시간)';
       } else {
         final endWeekday = weekdays[r.endTime.weekday - 1];
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) '
             '${r.startTime.hour.toString().padLeft(2, '0')}시 ~ '

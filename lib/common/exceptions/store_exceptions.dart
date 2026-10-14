@@ -19,6 +19,7 @@ sealed class StoreException extends AppException {
 
     // 4. 데이터 충돌/처리 실패/취소
     StoreTransactionException() => '처리에 실패했습니다',
+    StoreUpdateConflictException() => '다른 관리자가 먼저 수정했습니다',
     StoreCancelledException() => '작업이 취소되었습니다',
 
     // 5. 앱 버전/파싱 문제
@@ -50,6 +51,8 @@ sealed class StoreException extends AppException {
 
     // 4. 처리 과정
     StoreTransactionException() => '일시적인 충돌이 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+    StoreUpdateConflictException() =>
+      '최신 점포 정보를 다시 불러옵니다.\n수정한 내용을 다시 입력해 주세요.',
     StoreCancelledException() => '작업이 중단되었습니다.',
 
     // 5. 파싱 에러
@@ -78,6 +81,7 @@ sealed class StoreException extends AppException {
     StoreNetworkException() ||
     StoreResourceExhaustedException() ||
     StoreTransactionException() ||
+    StoreUpdateConflictException() ||
     StoreDataParsingException() ||
     StoreValidationException() ||
     StoreInviteCodeExpiredException() ||
@@ -123,6 +127,15 @@ class StoreNetworkException extends StoreException {
 /// Firebase Code: `aborted`, `failed-precondition`
 class StoreTransactionException extends StoreException {
   StoreTransactionException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 점포 수정 폼을 연 뒤 다른 관리자가 같은 점포의 설정을 먼저 저장했을 때 발생하는 예외
+///
+/// 저장 트랜잭션에서 편집 가능 필드를 폼을 연 시점의 값과 비교해 판정한다 (D13).
+/// 덮어쓰면 다른 관리자의 요금표 변경이 조용히 사라지므로 최신 값을 다시 불러와야 한다.
+class StoreUpdateConflictException extends StoreException {
+  StoreUpdateConflictException({required String message, String? code})
     : super(message, code: code);
 }
 
