@@ -41,8 +41,9 @@ void main() {
 
   group('updateStore', () {
     test('현재 유저와 함께 Repository.updateStore를 올바른 파라미터로 호출한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.updateStore(
           store: any(named: 'store'),
@@ -71,8 +72,9 @@ void main() {
 
     test('현재 유저 조회 실패 시 left(exception)를 반환한다', () async {
       final exception = Exception('유저 조회 실패');
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => left(exception));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => left(exception));
 
       final result = await useCase.updateStore(
         store: fakeStore,
@@ -92,8 +94,9 @@ void main() {
     });
 
     test('현재 유저가 null이면 left(exception)를 반환한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(null));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(null));
 
       final result = await useCase.updateStore(
         store: fakeStore,
@@ -106,8 +109,9 @@ void main() {
 
     test('Repository 실패 시 left(exception)를 전파한다', () async {
       final exception = Exception('점포 업데이트 실패');
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.updateStore(
           store: any(named: 'store'),
@@ -126,48 +130,53 @@ void main() {
       expect(result.isLeft(), true);
     });
 
-    test('보유한 다른 점포와 이름이 중복되면 left(StoreNameDuplicateException)를 반환하고 Repository를 호출하지 않는다', () async {
-      final userWithTwoStores = fakeUser.copyWith(
-        storeInfos: [
-          ...fakeUser.storeInfos,
-          UserStoreInfo(
-            id: 'store-456',
-            name: '다른 점포',
-            role: UserRole.admin,
-            color: StoreColor.blue,
-            memo: '',
+    test(
+      '보유한 다른 점포와 이름이 중복되면 left(StoreNameDuplicateException)를 반환하고 Repository를 호출하지 않는다',
+      () async {
+        final userWithTwoStores = fakeUser.copyWith(
+          storeInfos: [
+            ...fakeUser.storeInfos,
+            UserStoreInfo(
+              id: 'store-456',
+              name: '다른 점포',
+              role: UserRole.admin,
+              color: StoreColor.blue,
+              memo: '',
+            ),
+          ],
+        );
+        when(
+          () => mockUserRepo.getCurrentUser(),
+        ).thenAnswer((_) async => right(userWithTwoStores));
+
+        final duplicateNameStore = fakeStore.copyWith(name: '다른 점포');
+
+        final result = await useCase.updateStore(
+          store: duplicateNameStore,
+          color: StoreColor.blue,
+          memo: '메모',
+        );
+
+        expect(result.isLeft(), true);
+        result.fold(
+          (e) => expect(e, isA<StoreNameDuplicateException>()),
+          (_) => fail('중복된 점포명인데 성공 처리됨'),
+        );
+        verifyNever(
+          () => mockStoreRepo.updateStore(
+            store: any(named: 'store'),
+            uid: any(named: 'uid'),
+            color: any(named: 'color'),
+            memo: any(named: 'memo'),
           ),
-        ],
-      );
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(userWithTwoStores));
-
-      final duplicateNameStore = fakeStore.copyWith(name: '다른 점포');
-
-      final result = await useCase.updateStore(
-        store: duplicateNameStore,
-        color: StoreColor.blue,
-        memo: '메모',
-      );
-
-      expect(result.isLeft(), true);
-      result.fold(
-        (e) => expect(e, isA<StoreNameDuplicateException>()),
-        (_) => fail('중복된 점포명인데 성공 처리됨'),
-      );
-      verifyNever(
-        () => mockStoreRepo.updateStore(
-          store: any(named: 'store'),
-          uid: any(named: 'uid'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('자기 자신의 기존 이름은 중복으로 취급하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.updateStore(
           store: any(named: 'store'),
@@ -192,8 +201,9 @@ void main() {
     // updateStore도 같은 private 메서드를 재사용하므로, 여기서는
     // updateStore 경로에서도 그 검증이 실제로 걸리는지(wiring)만 확인한다.
     test('같은 점포 내 공간명이 중복되면 left(SpaceNameDuplicateException)를 반환한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(fakeUser));
 
       final duplicateSpaceStore = fakeStore.copyWith(
         spaceOptions: [

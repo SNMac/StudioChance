@@ -77,43 +77,44 @@ void main() {
       expect(userStoreData['memo'], '새 메모');
     });
 
-    test('store의 memberInfos, waitingMemberInfos uid가 memberUids로 전달된다', () async {
-      when(
-        () => mockStoreDataSource.updateStore(any(), any(), any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
-      ).thenAnswer((_) async {});
+    test(
+      'store의 memberInfos, waitingMemberInfos uid가 memberUids로 전달된다',
+      () async {
+        when(
+          () => mockStoreDataSource.updateStore(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
+        ).thenAnswer((_) async {});
 
-      final storeWithMembers = fakeStore.copyWith(
-        memberInfos: [
-          StoreMemberInfo(user: fakeUser, role: UserRole.admin),
-        ],
-        waitingMemberInfos: [
-          StoreMemberInfo(
-            user: fakeUser.copyWith(id: 'waiting-user-456'),
-            role: UserRole.staff,
+        final storeWithMembers = fakeStore.copyWith(
+          memberInfos: [StoreMemberInfo(user: fakeUser, role: UserRole.admin)],
+          waitingMemberInfos: [
+            StoreMemberInfo(
+              user: fakeUser.copyWith(id: 'waiting-user-456'),
+              role: UserRole.staff,
+            ),
+          ],
+        );
+
+        await repository.updateStore(
+          store: storeWithMembers,
+          uid: fakeUser.id,
+          color: StoreColor.blue,
+          memo: '새 메모',
+        );
+
+        final capturedStoreArgs = verify(
+          () => mockStoreDataSource.updateStore(
+            captureAny(),
+            captureAny(),
+            captureAny(),
           ),
-        ],
-      );
-
-      await repository.updateStore(
-        store: storeWithMembers,
-        uid: fakeUser.id,
-        color: StoreColor.blue,
-        memo: '새 메모',
-      );
-
-      final capturedStoreArgs = verify(
-        () => mockStoreDataSource.updateStore(
-          captureAny(),
-          captureAny(),
-          captureAny(),
-        ),
-      ).captured;
-      final memberUids = capturedStoreArgs[2] as List<String>;
-      expect(memberUids, containsAll([fakeUser.id, 'waiting-user-456']));
-    });
+        ).captured;
+        final memberUids = capturedStoreArgs[2] as List<String>;
+        expect(memberUids, containsAll([fakeUser.id, 'waiting-user-456']));
+      },
+    );
 
     test('StoreDataSource 실패 시 left(exception)를 반환한다', () async {
       when(
