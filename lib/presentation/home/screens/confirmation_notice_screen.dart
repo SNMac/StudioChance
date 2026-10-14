@@ -67,9 +67,9 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
             icon: Icon(CupertinoIcons.doc_on_doc, color: context.systemBlue),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('복사됐습니다.')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('복사됐습니다.')));
             },
           ),
         ],
@@ -78,7 +78,11 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, TextTheme textTheme, Store? store) {
+  Widget _buildContent(
+    BuildContext context,
+    TextTheme textTheme,
+    Store? store,
+  ) {
     return _buildScaffold(context, textTheme, _buildText(store));
   }
 
@@ -131,16 +135,19 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
     final String timeStr;
     if (r.isAllDay) {
       final displayEnd = r.endTime.subtract(const Duration(days: 1));
-      final isSameDay = r.startTime.year == displayEnd.year &&
+      final isSameDay =
+          r.startTime.year == displayEnd.year &&
           r.startTime.month == displayEnd.month &&
           r.startTime.day == displayEnd.day;
       if (isSameDay) {
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) 하루종일';
       } else {
         final endWeekday = weekdays[displayEnd.weekday - 1];
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) ~ '
             '${displayEnd.year}년 '
@@ -149,11 +156,13 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
       }
     } else {
       final durationHours = r.endTime.difference(r.startTime).inHours;
-      final isSameDay = r.startTime.year == r.endTime.year &&
+      final isSameDay =
+          r.startTime.year == r.endTime.year &&
           r.startTime.month == r.endTime.month &&
           r.startTime.day == r.endTime.day;
       if (isSameDay) {
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) '
             '${r.startTime.hour.toString().padLeft(2, '0')}시 ~ '
@@ -161,7 +170,8 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
             '($durationHours시간)';
       } else {
         final endWeekday = weekdays[r.endTime.weekday - 1];
-        timeStr = '${r.startTime.year}년 '
+        timeStr =
+            '${r.startTime.year}년 '
             '${r.startTime.month.toString().padLeft(2, '0')}월 '
             '${r.startTime.day.toString().padLeft(2, '0')}일 ($weekday) '
             '${r.startTime.hour.toString().padLeft(2, '0')}시 ~ '
@@ -174,9 +184,11 @@ class ConfirmationNoticeScreen extends ConsumerWidget {
     }
 
     final addressParts = store != null
-        ? [store.address, store.addressDetail, store.addressGuide]
-            .where((s) => s.isNotEmpty)
-            .join(' ')
+        ? [
+            store.address,
+            store.addressDetail,
+            store.addressGuide,
+          ].where((s) => s.isNotEmpty).join(' ')
         : '';
 
     final infoSection = (store?.infoNotes?.isNotEmpty == true)
