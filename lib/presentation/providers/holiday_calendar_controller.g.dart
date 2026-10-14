@@ -54,7 +54,7 @@ final class HolidayCalendarControllerProvider
 }
 
 String _$holidayCalendarControllerHash() =>
-    r'a7aa8b2c295de4f1a29f10ce205fd029d110e4da';
+    r'4805766931e2325c3662c48ca42bd175a1199b99';
 
 /// 예약 모달이 가격을 동기로 계산할 수 있도록 공휴일 달력을 연도별로 들고 있는 컨트롤러.
 ///
