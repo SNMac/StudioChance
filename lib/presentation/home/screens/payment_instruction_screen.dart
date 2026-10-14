@@ -12,6 +12,7 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/store
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 class PaymentInstructionScreen extends ConsumerWidget {
@@ -68,9 +69,7 @@ class PaymentInstructionScreen extends ConsumerWidget {
             icon: Icon(CupertinoIcons.doc_on_doc, color: context.systemBlue),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('복사 완료')));
+              showAppToast(context, '복사 완료');
             },
           ),
         ],

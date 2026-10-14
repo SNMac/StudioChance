@@ -336,6 +336,13 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 - 점포 수정은 최상위 `/store-edit` 라우트(`pushStoreEdit`)다. 마이페이지 ADMIN 행의 연필 버튼과 예약 계산 내역 시트의 '요금 설정' 버튼이 `StoreEditLauncher` mixin으로 연다. 시트에서 열 때는 예약 모달을 닫지 않고 그 위에 쌓는다.
 - 승인 시 역할은 **신청자가 초대 코드 단계에서 고른 값을 그대로** 쓴다. 관리자가 역할을 바꾸려면 승인 후 `updateMemberRole`을 쓴다 (해당 UI는 미구현).
 
+## 토스트 알림
+
+- 짧은 알림은 `showAppToast(context, message)`(`commons/widgets/app_toast.dart`)를 쓴다. `ScaffoldMessenger.showSnackBar`를 직접 부르지 않는다
+  - 화면 Scaffold의 SnackBar는 그 화면 위에 열린 바텀시트에 가려진다. 예약 모달 위에서 점포 수정을 저장하고 돌아오면 알림이 보이지 않았다
+- `MyApp`의 `MaterialApp.builder`가 Navigator를 `ToastHost`(바깥 Scaffold)로 감싼다. ScaffoldMessenger는 중첩된 Scaffold 중 가장 바깥 것에만 SnackBar를 그리므로 토스트는 모든 route 위에 뜬다
+- 캡슐은 글자 폭만큼만 차지해 바깥 터치를 막지 않는다. 화면 크기·키보드 높이는 앱 최상단 MediaQuery 기준으로 읽는다 (화면 Scaffold 안쪽에서는 키보드 높이가 지워진다)
+
 ## 모달 시트 패턴
 
 - `DraggableScrollableSheet` 사용 금지 — 내부 gesture tracking이 `BottomSheet.onClosing → Navigator.pop`을 독립 호출, `GestureDetector`/`Listener` 우회 불가

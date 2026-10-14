@@ -23,6 +23,7 @@ import 'package:studio_chance/presentation/commons/store_input/widgets/price_set
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -178,9 +179,8 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
     final succeeded = await notifier.submit();
     if (!succeeded || widget.storeToEdit == null || !mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('점포 정보를 저장했습니다')));
+    // 예약 모달 위에서 열렸어도 보이도록 앱 최상단 토스트로 알린다
+    showAppToast(context, '점포 정보를 저장했습니다');
     context.pop(true);
   }
 
