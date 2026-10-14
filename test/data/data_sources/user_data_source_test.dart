@@ -310,7 +310,7 @@ void main() {
   });
 
   // =========================================================================
-  // updateStoreInfo / removeStoreInfo
+  // updateStoreInfo
   // =========================================================================
 
   group('updateStoreInfo', () {
@@ -343,38 +343,6 @@ void main() {
       expect(storeInfo['memo'], '새 메모');
       expect(storeInfo['name'], '테스트 점포');
       expect(storeInfo['role'], 'ADMIN');
-    });
-  });
-
-  group('removeStoreInfo', () {
-    test('해당 점포 정보만 삭제하고 다른 점포 정보는 유지한다', () async {
-      final user = _testUser();
-      await fakeFirestore.collection('users').doc(user.id).set({
-        'email': user.email,
-        'name': user.name,
-        'authProviders': <String>[],
-        'storeById': <String, dynamic>{
-          'store-1': <String, dynamic>{
-            'name': '점포 1',
-            'role': 'STAFF',
-            'color': 'RED',
-            'memo': '',
-          },
-          'store-2': <String, dynamic>{
-            'name': '점포 2',
-            'role': 'STAFF',
-            'color': 'BLUE',
-            'memo': '',
-          },
-        },
-      });
-
-      await dataSource.removeStoreInfo(user.id, 'store-1');
-
-      final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      final storeById = doc.data()?['storeById'] as Map<String, dynamic>;
-      expect(storeById.containsKey('store-1'), isFalse);
-      expect(storeById.containsKey('store-2'), isTrue);
     });
   });
 
