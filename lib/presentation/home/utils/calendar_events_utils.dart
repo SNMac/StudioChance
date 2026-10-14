@@ -3,6 +3,20 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/reservation_summary.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/reservation_cell.dart';
 
+/// 캘린더에 그릴 예약 — 월별 예약 목록을 합치고 [selectedStoreIds] 점포의 예약만 남긴다.
+///
+/// [monthly]의 null은 아직 한 번도 불러오지 못한 달이다. 호출부는 `AsyncValue.value`를 넘긴다:
+/// 사용자·필터가 바뀌어 다시 구독하는 동안에도 직전 목록을 돌려주므로 캘린더가 비지 않는다.
+/// 그 직전 목록에는 필터에서 방금 해제한 점포의 예약도 들어 있으므로 여기서 거른다.
+List<Reservation> visibleReservationsOf(
+  Iterable<List<Reservation>?> monthly, {
+  required Set<String> selectedStoreIds,
+}) => [
+  for (final reservations in monthly)
+    for (final r in reservations ?? const <Reservation>[])
+      if (selectedStoreIds.contains(r.storeSummary.id)) r,
+];
+
 /// Reservation 목록을 화면 표시용 데이터 구조로 변환한다.
 ///
 /// 반환: (ReservationDisplayData 목록, id → Reservation 맵, 날짜 → 종일 예약 수 맵)
