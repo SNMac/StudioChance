@@ -1,5 +1,6 @@
 import 'package:studio_chance/domain/entities/price_breakdown.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 
 /// 요금 계산 내역 항목의 표시 문구.
 extension PriceItemFormatter on PriceItem {
@@ -53,11 +54,11 @@ String _joinFactors(List<String> factors) =>
     factors.length == 1 ? '1회 요금' : factors.join(' × ');
 
 String _rangeTitle(int startMinute, int endMinute) {
-  if (startMinute == 0 && endMinute == 1440) return '하루종일';
+  if (startMinute == 0 && endMinute == minutesPerDay) return '하루종일';
   return '${_clock(startMinute)} – ${_clock(endMinute)}';
 }
 
-/// 분을 "HH:mm"으로. 날짜 끝(1440)은 "24:00"으로 표시해 시작 시각 00:00과 구분한다.
+/// 분을 "HH:mm"으로. 날짜 끝([minutesPerDay])은 "24:00"으로 표시해 시작 시각 00:00과 구분한다.
 String _clock(int minute) =>
     '${(minute ~/ 60).toString().padLeft(2, '0')}:'
     '${(minute % 60).toString().padLeft(2, '0')}';

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/headcount_rule.dart';
 import 'package:studio_chance/domain/entities/price_breakdown.dart';
@@ -120,7 +121,7 @@ abstract class PriceSetting with _$PriceSetting {
           : 0;
       final endMinute = end.isBefore(nextDate)
           ? end.difference(date).inMinutes
-          : 1440;
+          : minutesPerDay;
       final dayIsHoliday = holidayChecker(date);
       final group = _dayGroupFor(date, isHoliday: dayIsHoliday);
       final slots = _slotChargesOf(group, startMinute, endMinute, headCount);
@@ -168,8 +169,8 @@ abstract class PriceSetting with _$PriceSetting {
     final charges = <SlotCharge>[];
     for (final slot in group?.timeSlots ?? const <TimeSlot>[]) {
       if (slot.isAllDay) continue;
-      // 저장된 endTime 0은 하위 호환을 위해 1440으로 처리
-      final slotEnd = slot.endTime == 0 ? 1440 : slot.endTime;
+      // 저장된 endTime 0은 하위 호환을 위해 하루의 끝으로 처리
+      final slotEnd = slot.endTime == 0 ? minutesPerDay : slot.endTime;
       final overlapStart = max(startMinute, slot.startTime);
       final overlapEnd = min(endMinute, slotEnd);
       if (overlapStart >= overlapEnd) continue;
@@ -207,18 +208,20 @@ abstract class PriceSetting with _$PriceSetting {
       return PricedDay(
         date: date,
         holidayRateApplied: _appliesHolidayRate(group, isHoliday: isHoliday),
-        items: const [PriceItem.unpriced(startMinute: 0, endMinute: 1440)],
+        items: const [
+          PriceItem.unpriced(startMinute: 0, endMinute: minutesPerDay),
+        ],
       );
     }
     final headcount = _headcountCharge(
       group.headcountRule,
       headCount,
-      minutes: 1440,
+      minutes: minutesPerDay,
     );
     return PricedDay(
       date: date,
       holidayRateApplied: _appliesHolidayRate(group, isHoliday: isHoliday),
-      items: [_slotCharge(slot, 0, 1440, headCount), ?headcount],
+      items: [_slotCharge(slot, 0, minutesPerDay, headCount), ?headcount],
     );
   }
 

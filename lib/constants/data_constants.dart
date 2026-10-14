@@ -18,3 +18,6 @@ const int holidayValue = 8;
 
 /// 비어있는 값 표시용
 const int emptyValue = -1;
+
+/// 하루의 분 수. 시간대는 그날 00:00부터의 분으로 다루므로 하루의 끝(24:00)이기도 하다
+const int minutesPerDay = 24 * 60;
