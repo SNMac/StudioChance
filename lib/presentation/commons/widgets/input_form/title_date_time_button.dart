@@ -84,10 +84,16 @@ class TitleDateTimeButton extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               child: Column(
                 children: [
-                  Divider(
-                    height: dividerHeight,
-                    thickness: 0.5,
-                    color: context.separator,
+                  // GroupedFormContainer의 행 구분선과 같은 좌우 여백
+                  Padding(
+                    padding: const EdgeInsetsDirectional.symmetric(
+                      horizontal: horizontalPadding,
+                    ),
+                    child: Divider(
+                      height: dividerHeight,
+                      thickness: 0.5,
+                      color: context.separator,
+                    ),
                   ),
 
                   SizedBox(
