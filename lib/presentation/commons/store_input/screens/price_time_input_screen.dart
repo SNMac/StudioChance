@@ -72,7 +72,8 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
   void _togglePicker(int slotIndex, {required bool isStart}) {
     setState(() {
-      if (_openPicker?.slotIndex == slotIndex && _openPicker?.isStart == isStart) {
+      if (_openPicker?.slotIndex == slotIndex &&
+          _openPicker?.isStart == isStart) {
         _openPicker = null;
       } else {
         _openPicker = (slotIndex: slotIndex, isStart: isStart);
@@ -156,7 +157,9 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
     if (storeToEdit != null) {
       spaceOptions = ref.watch(
-        storeUpdateControllerProvider(storeToEdit).select((s) => s.spaceOptions),
+        storeUpdateControllerProvider(
+          storeToEdit,
+        ).select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {

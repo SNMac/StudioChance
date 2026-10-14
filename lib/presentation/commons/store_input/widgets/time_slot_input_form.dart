@@ -61,7 +61,9 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
     super.initState();
     _priceFocusNode = FocusNode();
     _priceController = TextEditingController(
-      text: widget.timeSlot.price == -1 ? '' : widget.timeSlot.price.formattedPrice,
+      text: widget.timeSlot.price == -1
+          ? ''
+          : widget.timeSlot.price.formattedPrice,
     );
 
     _priceController.addListener(_onPriceChanged);
@@ -77,7 +79,9 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
 
   /// 요금 텍스트 변경 시 호출
   void _onPriceChanged() {
-    final priceText = _priceController.text.replaceAll(',', '').replaceAll('원', '');
+    final priceText = _priceController.text
+        .replaceAll(',', '')
+        .replaceAll('원', '');
     final int price = int.tryParse(priceText) ?? -1;
 
     if (widget.timeSlot.price != price) {
@@ -220,10 +224,9 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
             initialDateTime: _getInitialDate(widget.timeSlot.endTime),
             onDateTimeChanged: (newDate) {
               // 끝 시간 00:00 선택 = 자정(하루 끝) → 1440분으로 처리
-              final int newMinutes =
-                  newDate.hour == 0 && newDate.minute == 0
-                      ? 1440
-                      : newDate.hour * 60 + newDate.minute;
+              final int newMinutes = newDate.hour == 0 && newDate.minute == 0
+                  ? 1440
+                  : newDate.hour * 60 + newDate.minute;
               if (newMinutes <= widget.timeSlot.startTime) {
                 final newStart = (newMinutes - 60).clamp(0, 1440);
                 widget.onChanged(
