@@ -286,6 +286,28 @@ void main() {
       }
     });
 
+    test('사용자 문서에 그 점포 항목이 없으면 이름 캐시를 새로 만들지 않는다', () async {
+      // 점포에는 대기 멤버로 남아 있지만 사용자 문서에서는 항목이 지워진 어긋난 상태.
+      // 점 경로 update는 role 없는 {name} 항목을 만들어, 그 사용자 문서를 읽는
+      // 점포 조회(멤버 hydrate)를 전부 실패하게 만든다
+      final storeId = FirestoreEmulatorHelper.generateId();
+      final waitingUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, waitingUid);
+      await _seedStoreWithWaitingMember(fakeFirestore, storeId, waitingUid);
+
+      await dataSource.updateStore(storeId, {
+        'name': '변경된 점포명',
+      }, isUnchanged: unchanged);
+
+      final userDoc = await fakeFirestore
+          .collection('users')
+          .doc(waitingUid)
+          .get();
+      final storeById = userDoc.data()?['storeById'] as Map<String, dynamic>?;
+      expect(storeById?.containsKey(storeId), isFalse);
+      expect((await dataSource.getStore(storeId))?.name, '변경된 점포명');
+    });
+
     test('data에 name이 없으면 멤버의 storeById.name을 건드리지 않는다', () async {
       final storeId = FirestoreEmulatorHelper.generateId();
       final staffUid = FirestoreEmulatorHelper.generateId();

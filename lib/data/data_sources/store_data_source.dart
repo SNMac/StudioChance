@@ -30,8 +30,8 @@ abstract interface class StoreDataSource {
   /// - [isUnchanged]: 트랜잭션에서 읽은 저장 직전 문서가 수정 폼을 연 시점과 같은지 판정한다.
   ///   false면 다른 관리자가 먼저 저장한 것이므로 [StoreUpdateConflictException]을 던지고
   ///   쓰지 않는다 (D13). 비교 규칙은 legacy fallback을 아는 Repository가 정한다.
-  /// - `data`에 `name`이 포함되면 저장 시점의 멤버+대기 멤버 전원의
-  ///   `storeById.{storeId}.name` 캐시를 함께 동기화한다.
+  /// - `data`에 `name`이 포함되면 저장 시점의 멤버+대기 멤버 중 사용자 문서에 그 점포
+  ///   항목이 있는 사람의 `storeById.{storeId}.name` 캐시를 함께 동기화한다.
   Future<void> updateStore(
     String storeId,
     Map<String, dynamic> data, {
@@ -201,12 +201,9 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
           );
         }
 
-        transaction.update(storeRef, {
-          ...data,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-
+        // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 이름 캐시 대상부터 읽는다
         final newName = data['name'] as String?;
+        final cacheTargets = <DocumentReference<Map<String, dynamic>>>[];
         if (newName != null) {
           // 폼을 연 뒤 들어온 가입 신청까지 반영되도록 저장 시점의 멤버 목록을 쓴다
           final memberUids = {
@@ -214,11 +211,26 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
             ...current.waitingMemberById.keys,
           };
           for (final uid in memberUids) {
-            transaction.update(_firestore.collection('users').doc(uid), {
-              'storeById.$storeId.name': newName,
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+            final userRef = _firestore.collection('users').doc(uid);
+            final userSnapshot = await transaction.get(userRef);
+            final storeById = userSnapshot.data()?['storeById'];
+            // 사용자 문서에 그 점포 항목이 없으면 건너뛴다 — 점 경로 update가 role 없는
+            // {name} 항목을 만들면 그 사용자를 읽는 점포 조회가 전부 파싱에 실패한다
+            if (storeById is Map && storeById.containsKey(storeId)) {
+              cacheTargets.add(userRef);
+            }
           }
+        }
+
+        transaction.update(storeRef, {
+          ...data,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        for (final userRef in cacheTargets) {
+          transaction.update(userRef, {
+            'storeById.$storeId.name': newName,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
         }
       });
     } catch (e) {
