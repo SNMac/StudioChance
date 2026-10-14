@@ -140,6 +140,96 @@ void main() {
     });
   });
 
+  group('breakdownPrice — 자정을 넘는 시간 지정 예약', () {
+    test('날짜별로 나눠 각 날짜의 요일 그룹으로 계산한다', () {
+      final setting = PriceSetting(
+        dayGroups: [
+          DayGroup(
+            days: [Weekday.friday],
+            headcountRule: _noExtra,
+            timeSlots: [_hourly(18, 24, 10000)],
+          ),
+          DayGroup(
+            days: [Weekday.saturday],
+            headcountRule: _noExtra,
+            timeSlots: [_hourly(0, 6, 20000)],
+          ),
+        ],
+      );
+
+      final breakdown = setting.breakdownPrice(
+        start: DateTime(2026, 10, 16, 22), // 금요일
+        end: DateTime(2026, 10, 17, 2), // 토요일
+        headCount: 1,
+      );
+
+      expect(breakdown.days, [
+        PricedDay(
+          date: DateTime(2026, 10, 16),
+          holidayRateApplied: false,
+          items: const [
+            PriceItem.slot(
+              startMinute: 1320,
+              endMinute: 1440,
+              unitPrice: 10000,
+              isHourly: true,
+              amount: 20000,
+            ),
+          ],
+        ),
+        PricedDay(
+          date: DateTime(2026, 10, 17),
+          holidayRateApplied: false,
+          items: const [
+            PriceItem.slot(
+              startMinute: 0,
+              endMinute: 120,
+              unitPrice: 20000,
+              isHourly: true,
+              amount: 40000,
+            ),
+          ],
+        ),
+      ]);
+      expect(breakdown.total, 60000);
+    });
+
+    test('인원 추가 요금은 시간당이면 날짜별 시간만큼, 1회 요금이면 예약당 한 번 받는다', () {
+      HeadcountRule rule({required bool hourly}) => HeadcountRule(
+        headcountBase: 2,
+        headcountExtraPrice: 1000,
+        isHeadcountHourly: hourly,
+        isHeadcountPerPerson: false,
+      );
+      PriceSetting settingWith(HeadcountRule r) => _setting(
+        [Weekday.friday, Weekday.saturday],
+        [_hourly(0, 24, 10000)],
+        rule: r,
+      );
+      List<int?> headcountMinutes(PriceBreakdown b) => [
+        for (final day in b.days)
+          for (final item in day.items)
+            if (item is HeadcountCharge) item.minutes ?? -1,
+      ];
+
+      final hourly = settingWith(rule(hourly: true)).breakdownPrice(
+        start: DateTime(2026, 10, 16, 23), // 금 23:00
+        end: DateTime(2026, 10, 17, 2), // 토 02:00
+        headCount: 3,
+      );
+      final oneTime = settingWith(rule(hourly: false)).breakdownPrice(
+        start: DateTime(2026, 10, 16, 23),
+        end: DateTime(2026, 10, 17, 2),
+        headCount: 3,
+      );
+
+      expect(headcountMinutes(hourly), [60, 120]);
+      expect(hourly.total, 30000 + 1000 + 2000);
+      expect(headcountMinutes(oneTime), [-1]); // 금요일에 1회
+      expect(oneTime.total, 30000 + 1000);
+    });
+  });
+
   group('breakdownPrice — 하루종일 예약', () {
     test('날짜마다 하루종일 요금과 인원 추가 요금을 받고, 요금 설정이 없는 날짜는 하루 전체가 0원이다', () {
       final setting = _setting(
