@@ -116,7 +116,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   - 모달을 열 때 `refreshYears`로 그 연도를 다시 조회한다 — 앱을 켜둔 사이 달력이 바뀌면 화면 가격과 저장 가격이 어긋나기 때문
   - 모달: keepAlive `HolidayCalendarController`의 동기 조회. 홈 진입 시 올해·내년분 선로딩
 - 공휴일 요일 그룹이 없는 요금표는 공휴일에 **실제 요일 요금**을 받는다 (`PriceSetting._dayGroupFor`)
-- 판정한 날짜 범위는 `pricedDatesOf` 하나로 정한다 (하루종일=각 날짜, 시간 지정=시작 날짜). 계산과 공휴일 스냅샷이 이 함수를 공유해야 어긋나지 않는다
+- 판정한 날짜 범위는 `pricedDatesOf` 하나로 정한다 (하루종일=각 날짜, 시간 지정=예약이 걸친 모든 날짜 — 자정을 넘으면 날짜별 요일 그룹으로 나눠 계산). 계산과 공휴일 스냅샷이 이 함수를 공유해야 어긋나지 않는다
 
 ### 앱 최초 실행 인증 데이터 삭제 (D9)
 `SharedPreferences` `hasLaunchedBefore` 플래그로 앱 최초 설치 실행을 감지하여 기존 인증 데이터 삭제.

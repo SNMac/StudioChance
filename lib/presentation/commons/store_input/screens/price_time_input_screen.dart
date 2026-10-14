@@ -18,6 +18,7 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_actio
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 
 class PriceTimeInputScreen extends ConsumerStatefulWidget {
   const PriceTimeInputScreen({super.key});
@@ -72,7 +73,8 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
   void _togglePicker(int slotIndex, {required bool isStart}) {
     setState(() {
-      if (_openPicker?.slotIndex == slotIndex && _openPicker?.isStart == isStart) {
+      if (_openPicker?.slotIndex == slotIndex &&
+          _openPicker?.isStart == isStart) {
         _openPicker = null;
       } else {
         _openPicker = (slotIndex: slotIndex, isStart: isStart);
@@ -156,7 +158,9 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
     if (storeToEdit != null) {
       spaceOptions = ref.watch(
-        storeUpdateControllerProvider(storeToEdit).select((s) => s.spaceOptions),
+        storeUpdateControllerProvider(
+          storeToEdit,
+        ).select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
@@ -195,9 +199,9 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
           // isAllDay == true인 슬롯은 다른 모든 슬롯과 중복
           final aStart = a.isAllDay ? 0 : a.startTime;
-          final aEnd = a.isAllDay ? 1440 : a.endTime;
+          final aEnd = a.isAllDay ? minutesPerDay : a.endTime;
           final bStart = b.isAllDay ? 0 : b.startTime;
-          final bEnd = b.isAllDay ? 1440 : b.endTime;
+          final bEnd = b.isAllDay ? minutesPerDay : b.endTime;
 
           final overlapStart = aStart > bStart ? aStart : bStart;
           final overlapEnd = aEnd < bEnd ? aEnd : bEnd;

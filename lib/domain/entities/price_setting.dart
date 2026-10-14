@@ -2,22 +2,36 @@ import 'dart:math';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/day_group.dart';
+import 'package:studio_chance/domain/entities/headcount_rule.dart';
+import 'package:studio_chance/domain/entities/price_breakdown.dart';
+import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/common/enums/weekday.dart';
 
 part 'price_setting.freezed.dart';
 
 /// [PriceSetting.calculatePrice]가 요일(공휴일 여부)을 판단하는 날짜들.
 ///
-/// 하루종일 예약은 예약 기간의 각 날짜, 시간 지정 예약은 시작 날짜 하나다.
-/// 공휴일 스냅샷도 이 날짜들만 다뤄야 계산과 어긋나지 않는다.
+/// 하루종일 예약은 예약 기간의 각 날짜, 시간 지정 예약은 예약이 걸친 모든 날짜다
+/// (자정을 넘으면 날짜별 요일 그룹으로 나눠 계산하므로). 종료가 정확히 00:00이면 그 날짜는
+/// 포함하지 않는다. 공휴일 스냅샷도 이 날짜들만 다뤄야 계산과 어긋나지 않는다.
 List<DateTime> pricedDatesOf({
   required DateTime start,
   required DateTime end,
   required bool isAllDay,
 }) {
   final startDate = DateTime(start.year, start.month, start.day);
-  if (!isAllDay) return [startDate];
+  if (!isAllDay) {
+    return [
+      for (
+        var date = startDate;
+        date.isBefore(end);
+        date = DateTime(date.year, date.month, date.day + 1)
+      )
+        date,
+    ];
+  }
   return [
     for (
       int dayOffset = 0;
@@ -52,10 +66,10 @@ abstract class PriceSetting with _$PriceSetting {
   bool get hasHolidayDayGroup =>
       dayGroups.any((g) => g.days.contains(Weekday.holiday));
 
-  /// 예약 시간 및 인원 기반 기본 요금 계산.
+  /// 예약 시간 및 인원 기반 기본 요금 계산 — [breakdownPrice]의 합계.
   ///
-  /// 예약 구간과 겹치는 모든 TimeSlot을 순회하여 겹치는 시간만큼 각각 계산 후 합산.
-  /// DayGroup/TimeSlot이 매칭되지 않으면 0 반환.
+  /// 계산 규칙은 [breakdownPrice] 한 곳에만 둔다. 내역과 합계를 따로 계산하면
+  /// 화면의 계산 내역과 저장되는 요금이 어긋날 수 있기 때문이다.
   ///
   /// [isHoliday]는 날짜별 공휴일 여부를 판단하는 콜백이다. 다일(allDay) 예약은
   /// 날짜마다 다른 결과를 받을 수 있어야 하므로 단일 `bool`이 아닌 함수로 받는다.
@@ -66,97 +80,208 @@ abstract class PriceSetting with _$PriceSetting {
     required int headCount,
     bool isAllDay = false,
     bool Function(DateTime date)? isHoliday,
+  }) => breakdownPrice(
+    start: start,
+    end: end,
+    headCount: headCount,
+    isAllDay: isAllDay,
+    isHoliday: isHoliday,
+  ).total;
+
+  /// 요금 계산 내역. 인자는 [calculatePrice]와 같다.
+  ///
+  /// 하루종일 예약은 날짜마다 그 날짜 요일 그룹의 하루종일 슬롯 요금을 받는다.
+  /// 시간 지정 예약은 예약 구간과 겹치는 모든 슬롯을 겹친 시간만큼 계산해 더하고,
+  /// 자정을 넘으면 날짜별로 나눠 각 날짜의 요일 그룹으로 계산한다.
+  /// 요일 그룹이나 슬롯이 없는 날짜·시간대는 0원 항목([UnpricedRange])으로 남긴다.
+  PriceBreakdown breakdownPrice({
+    required DateTime start,
+    required DateTime end,
+    required int headCount,
+    bool isAllDay = false,
+    bool Function(DateTime date)? isHoliday,
   }) {
     final holidayChecker = isHoliday ?? (_) => false;
-
-    // 1. 하루종일 예약: 날짜별로 DayGroup을 찾아 합산
-    //    - isHourly=false 다일 예약 시 일 수 반영
-    //    - 날짜 경계를 넘는 다일 예약 시 각 날짜의 DayGroup 적용
+    final dates = pricedDatesOf(start: start, end: end, isAllDay: isAllDay);
     if (isAllDay) {
-      int totalPrice = 0;
-      bool anyMatched = false;
+      return PriceBreakdown(
+        days: [
+          for (final date in dates)
+            _allDayOf(date, headCount, isHoliday: holidayChecker(date)),
+        ],
+      );
+    }
 
-      for (final dayDate in pricedDatesOf(
-        start: start,
-        end: end,
-        isAllDay: true,
-      )) {
-        final dayGroup = _dayGroupFor(
-          dayDate,
-          isHoliday: holidayChecker(dayDate),
-        );
-        if (dayGroup == null) continue;
+    final days = <PricedDay>[];
+    var oneTimeHeadcountCharged = false;
+    for (final date in dates) {
+      final nextDate = DateTime(date.year, date.month, date.day + 1);
+      final startMinute = start.isAfter(date)
+          ? start.difference(date).inMinutes
+          : 0;
+      final endMinute = end.isBefore(nextDate)
+          ? end.difference(date).inMinutes
+          : minutesPerDay;
+      final dayIsHoliday = holidayChecker(date);
+      final group = _dayGroupFor(date, isHoliday: dayIsHoliday);
+      final slots = _slotChargesOf(group, startMinute, endMinute, headCount);
 
-        final slot = dayGroup.timeSlots.where((s) => s.isAllDay).firstOrNull;
-        if (slot == null) continue;
-
-        anyMatched = true;
-
-        // 하루종일 슬롯은 00:00~24:00 기준이므로 24시간 고정
-        int dayBase = slot.isHourly ? (slot.price * 24).round() : slot.price;
-        if (slot.isPerPerson) dayBase *= headCount;
-
-        final rule = dayGroup.headcountRule;
-        final extraPeople = max(0, headCount - rule.headcountBase);
-        int dayExtra = 0;
-        if (extraPeople > 0) {
-          dayExtra = rule.headcountExtraPrice;
-          if (rule.isHeadcountPerPerson) dayExtra *= extraPeople;
-          if (rule.isHeadcountHourly) dayExtra = (dayExtra * 24).round();
+      // 인원 추가 요금은 슬롯이 하나라도 걸린 날짜에만 받는다. 시간당이면 빈 시간까지
+      // 포함한 그 날짜의 예약 시간을 곱하고, 1회 요금이면 자정을 넘겨도 예약당 한 번만
+      // (슬롯이 걸린 첫 날짜의 규칙으로) 받는다.
+      HeadcountCharge? headcount;
+      if (group != null && slots.isNotEmpty) {
+        final rule = group.headcountRule;
+        if (rule.isHeadcountHourly || !oneTimeHeadcountCharged) {
+          headcount = _headcountCharge(
+            rule,
+            headCount,
+            minutes: endMinute - startMinute,
+          );
+          if (!rule.isHeadcountHourly) oneTimeHeadcountCharged = true;
         }
-
-        totalPrice += dayBase + dayExtra;
       }
 
-      return anyMatched ? totalPrice : 0;
+      days.add(
+        PricedDay(
+          date: date,
+          holidayRateApplied: _appliesHolidayRate(
+            group,
+            isHoliday: dayIsHoliday,
+          ),
+          items: [
+            ..._withUnpricedGaps(slots, startMinute, endMinute),
+            ?headcount,
+          ],
+        ),
+      );
     }
+    return PriceBreakdown(days: days);
+  }
 
-    // 2. 시간 지정 예약: 예약 시작 날짜의 DayGroup 탐색
-    final group = _dayGroupFor(start, isHoliday: holidayChecker(start));
-    if (group == null) return 0;
-
-    final totalHours = end.difference(start).inMinutes / 60.0;
-    final startMinutes = start.hour * 60 + start.minute;
-    final rawEndMinutes = end.hour * 60 + end.minute;
-    // 끝 시간 00:00은 자정(1440분)으로 처리
-    final endMinutes = rawEndMinutes == 0 ? 1440 : rawEndMinutes;
-
-    int totalBase = 0;
-    bool anyMatched = false;
-
-    // 3. 겹치는 모든 TimeSlot의 기본 요금 합산
-    for (final slot in group.timeSlots) {
+  /// [group]의 시간대 슬롯 중 그 날짜의 [startMinute]~[endMinute] 구간과 겹치는 슬롯의 요금.
+  static List<SlotCharge> _slotChargesOf(
+    DayGroup? group,
+    int startMinute,
+    int endMinute,
+    int headCount,
+  ) {
+    final charges = <SlotCharge>[];
+    for (final slot in group?.timeSlots ?? const <TimeSlot>[]) {
       if (slot.isAllDay) continue;
-      // 저장된 endTime 0은 하위 호환을 위해 1440으로 처리
-      final slotEnd = slot.endTime == 0 ? 1440 : slot.endTime;
-      final overlapStart = max(startMinutes, slot.startTime);
-      final overlapEnd = min(endMinutes, slotEnd);
+      // 저장된 endTime 0은 하위 호환을 위해 하루의 끝으로 처리
+      final slotEnd = slot.endTime == 0 ? minutesPerDay : slot.endTime;
+      final overlapStart = max(startMinute, slot.startTime);
+      final overlapEnd = min(endMinute, slotEnd);
       if (overlapStart >= overlapEnd) continue;
-
-      anyMatched = true;
-      final overlapHours = (overlapEnd - overlapStart) / 60.0;
-      int slotPrice = slot.isHourly
-          ? (slot.price * overlapHours).round()
-          : slot.price;
-      if (slot.isPerPerson) slotPrice *= headCount;
-      totalBase += slotPrice;
+      charges.add(_slotCharge(slot, overlapStart, overlapEnd, headCount));
     }
+    return charges;
+  }
 
-    if (!anyMatched) return 0;
+  /// [slot]을 [startMinute]~[endMinute] 동안 이용한 요금. 시간당이면 이용 시간을,
+  /// 1인당이면 인원 수를 곱한다.
+  static SlotCharge _slotCharge(
+    TimeSlot slot,
+    int startMinute,
+    int endMinute,
+    int headCount,
+  ) {
+    final hours = (endMinute - startMinute) / 60.0;
+    int amount = slot.isHourly ? (slot.price * hours).round() : slot.price;
+    if (slot.isPerPerson) amount *= headCount;
+    return SlotCharge(
+      startMinute: startMinute,
+      endMinute: endMinute,
+      unitPrice: slot.price,
+      isHourly: slot.isHourly,
+      perPersonCount: slot.isPerPerson ? headCount : null,
+      amount: amount,
+    );
+  }
 
-    // 4. 인원 추가 요금 계산 (전체 예약 시간 기준)
-    final rule = group.headcountRule;
+  /// 하루종일 예약의 [date] 하루 내역. 하루종일 슬롯은 00:00~24:00 기준이다.
+  PricedDay _allDayOf(DateTime date, int headCount, {required bool isHoliday}) {
+    final group = _dayGroupFor(date, isHoliday: isHoliday);
+    final slot = group?.timeSlots.where((s) => s.isAllDay).firstOrNull;
+    if (group == null || slot == null) {
+      return PricedDay(
+        date: date,
+        holidayRateApplied: _appliesHolidayRate(group, isHoliday: isHoliday),
+        items: const [
+          PriceItem.unpriced(startMinute: 0, endMinute: minutesPerDay),
+        ],
+      );
+    }
+    final headcount = _headcountCharge(
+      group.headcountRule,
+      headCount,
+      minutes: minutesPerDay,
+    );
+    return PricedDay(
+      date: date,
+      holidayRateApplied: _appliesHolidayRate(group, isHoliday: isHoliday),
+      items: [_slotCharge(slot, 0, minutesPerDay, headCount), ?headcount],
+    );
+  }
+
+  /// 공휴일인 날짜에 [group]으로 공휴일 요일 그룹을 적용했는지 여부.
+  ///
+  /// 토·일·공휴일처럼 공휴일이 다른 요일과 함께 묶인 그룹은 공휴일이 아닌 날에도 쓰이므로
+  /// 그룹만으로 판단하지 않는다.
+  static bool _appliesHolidayRate(DayGroup? group, {required bool isHoliday}) =>
+      isHoliday && (group?.days.contains(Weekday.holiday) ?? false);
+
+  /// [headCount]가 기준 인원을 넘을 때의 인원 추가 요금. 받을 요금이 없으면 null.
+  ///
+  /// [minutes]는 시간당 요금일 때 곱할 시간(분)이다.
+  static HeadcountCharge? _headcountCharge(
+    HeadcountRule rule,
+    int headCount, {
+    required int minutes,
+  }) {
     final extraPeople = max(0, headCount - rule.headcountBase);
-    int extraCharge = 0;
-    if (extraPeople > 0) {
-      extraCharge = rule.headcountExtraPrice;
-      if (rule.isHeadcountPerPerson) extraCharge *= extraPeople;
-      if (rule.isHeadcountHourly) {
-        extraCharge = (extraCharge * totalHours).round();
-      }
-    }
+    if (extraPeople == 0 || rule.headcountExtraPrice == 0) return null;
+    int amount = rule.headcountExtraPrice;
+    if (rule.isHeadcountPerPerson) amount *= extraPeople;
+    // 기존 계산과 같은 순서로 곱한다 — 단가 × 분 ÷ 60은 .5 경계에서 반올림이 1원 달라진다
+    if (rule.isHeadcountHourly) amount = (amount * (minutes / 60.0)).round();
+    return HeadcountCharge(
+      headcountBase: rule.headcountBase,
+      extraPeople: extraPeople,
+      unitPrice: rule.headcountExtraPrice,
+      isPerPerson: rule.isHeadcountPerPerson,
+      minutes: rule.isHeadcountHourly ? minutes : null,
+      amount: amount,
+    );
+  }
 
-    return totalBase + extraCharge;
+  /// [slots] 사이와 앞뒤의 빈 시간대를 [UnpricedRange]로 채워 시간 순서로 반환한다.
+  ///
+  /// 슬롯끼리 겹치면 각각 요금을 받으므로(계산 규칙 그대로) 빈 시간대는 슬롯 구간의
+  /// 합집합 바깥만 센다.
+  static List<PriceItem> _withUnpricedGaps(
+    List<SlotCharge> slots,
+    int startMinute,
+    int endMinute,
+  ) {
+    final sorted = [...slots]
+      ..sort((a, b) => a.startMinute.compareTo(b.startMinute));
+    final items = <PriceItem>[];
+    var cursor = startMinute;
+    for (final slot in sorted) {
+      if (slot.startMinute > cursor) {
+        items.add(
+          PriceItem.unpriced(startMinute: cursor, endMinute: slot.startMinute),
+        );
+      }
+      items.add(slot);
+      cursor = max(cursor, slot.endMinute);
+    }
+    if (cursor < endMinute) {
+      items.add(PriceItem.unpriced(startMinute: cursor, endMinute: endMinute));
+    }
+    return items;
   }
 
   /// [date]에 적용할 DayGroup.

@@ -137,14 +137,25 @@ void main() {
       expect(dates, ['2026-05-05', '2026-05-06']);
     });
 
-    test('시간 지정 예약은 시작 날짜만 판정한다', () {
-      // 밤샘 예약: 5/4 22시 ~ 5/5 02시. 요금은 시작 날짜 기준이다
+    test('자정을 넘는 시간 지정 예약은 걸친 날짜를 모두 판정한다', () {
+      // 밤샘 예약: 5/4 22시 ~ 5/5 02시. 5/5 새벽은 5/5의 요일 그룹으로 계산한다
       final overnight = fakeReservation.copyWith(
         startTime: DateTime(2026, 5, 4, 22),
         endTime: DateTime(2026, 5, 5, 2),
       );
 
       final dates = overnight.holidayDatesWith((date) => date.day == 5);
+
+      expect(dates, ['2026-05-05']);
+    });
+
+    test('종료가 정확히 자정인 시간 지정 예약은 다음 날을 판정하지 않는다', () {
+      final untilMidnight = fakeReservation.copyWith(
+        startTime: DateTime(2026, 5, 4, 22),
+        endTime: DateTime(2026, 5, 5),
+      );
+
+      final dates = untilMidnight.holidayDatesWith((date) => date.day == 5);
 
       expect(dates, isEmpty);
     });

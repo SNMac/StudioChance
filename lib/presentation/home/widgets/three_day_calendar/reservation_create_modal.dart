@@ -22,6 +22,7 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/memo_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_date_time_button.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_popup_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -29,6 +30,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/holiday_price_note.dart';
+import 'package:studio_chance/presentation/home/widgets/three_day_calendar/price_breakdown_sheet.dart';
 import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservation_actions_controller.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
@@ -95,6 +97,9 @@ class _ReservationCreateModalState
   // ── 공간 옵션 / 가격 설정 ──────────────────────────────────────────────────
   List<SpaceOption> _spaceOptions = const [];
   bool _isLoadingSpaceOptions = true;
+
+  /// 공간 목록 조회가 실패했는지 — 실패와 '공간 없음'이 둘 다 빈 목록이 되므로 따로 기억한다
+  bool _spaceOptionsLoadFailed = false;
   String? _spaceOptionId;
   int _calculatedPrice = 0;
   String? _pendingSpaceNameFromOcr;
@@ -207,6 +212,7 @@ class _ReservationCreateModalState
     if (loaded.isEmpty) {
       setState(() {
         _isLoadingSpaceOptions = false;
+        _spaceOptionsLoadFailed = spaces == null;
         _pendingSpaceNameFromOcr = null;
       });
       showCustomAlertDialog(
@@ -273,6 +279,34 @@ class _ReservationCreateModalState
       isHoliday: _isHoliday,
     );
     setState(() => _calculatedPrice = price);
+  }
+
+  /// 요금 계산 내역 시트 — 새 예약은 항상 점포의 현재 요금표와 현재 공휴일 달력으로 계산한다
+  void _onPricePressed() {
+    final hasNoSpaces =
+        !_isLoadingSpaceOptions &&
+        !_spaceOptionsLoadFailed &&
+        _spaceOptions.isEmpty;
+    showPriceBreakdownSheet(
+      context,
+      breakdown: _priceSetting?.breakdownPrice(
+        start: _startTime,
+        end: _endTime,
+        headCount: int.tryParse(_headCountController.text) ?? 0,
+        isAllDay: _isAllDay,
+        isHoliday: _isHoliday,
+      ),
+      unavailableReason: hasNoSpaces
+          ? PriceBreakdownUnavailableReason.noSpacePrice
+          : PriceBreakdownUnavailableReason.notLoaded,
+      calculatedPrice: _calculatedPrice,
+      adjustment:
+          int.tryParse(_adjustmentController.text.replaceAll(',', '')) ?? 0,
+      holidayNamesOf: ref
+          .read(holidayCalendarControllerProvider)
+          .calendar
+          .namesOn,
+    );
   }
 
   void _showOcrUnmatchedAlert(List<String> unmatched) {
@@ -807,7 +841,11 @@ class _ReservationCreateModalState
             onSelected: (m) => setState(() => _paymentMethod = m),
           ),
         ),
-        TitleTextLabel(title: '요금', content: _calculatedPrice.formattedPrice),
+        TitleNavigationButton(
+          title: '요금',
+          content: _calculatedPrice.formattedPrice,
+          onPressed: _onPricePressed,
+        ),
         TitleTextField(
           title: '추가 요금/할인',
           controller: _adjustmentController,
