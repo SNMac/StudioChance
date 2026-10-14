@@ -287,9 +287,10 @@ class _InviteCodeSection extends ConsumerStatefulWidget {
 }
 
 class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
-  /// 복사 완료 피드백을 스낵바가 아닌 아이콘 전환으로 보여주기 위한 플래그.
-  /// [ScaffoldMessenger]의 스낵바는 뒤에 있는 Scaffold에 붙어 모달 시트에
-  /// 가려지므로, 이 화면에서는 사용자에게 도달하지 않는다.
+  /// 복사 완료 피드백을 토스트가 아닌 아이콘 전환으로 보여주기 위한 플래그.
+  /// 작성 당시 스낵바는 뒤에 있는 Scaffold에 붙어 이 모달 시트에 가려졌다.
+  /// 지금은 `showAppToast`가 모달 위에도 뜨지만, 누른 버튼 자리에서 바로 보이는
+  /// 아이콘 전환을 그대로 쓴다.
   bool _isCopied = false;
   Timer? _copiedResetTimer;
 
