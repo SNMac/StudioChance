@@ -9,6 +9,7 @@ import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -51,8 +52,8 @@ void main() {
 
       final result = await useCase.fetchOrCreateUser(fakeAuthInfo);
 
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), fakeUser);
+      expectRight(result);
+      expect(expectRight(result), fakeUser);
       verify(() => mockUserRepo.fetchOrCreateUser(fakeAuthInfo)).called(1);
     });
   });
@@ -72,8 +73,8 @@ void main() {
 
       final result = await useCase.signInWithGoogle();
 
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), fakeUser);
+      expectRight(result);
+      expect(expectRight(result), fakeUser);
       verify(() => mockUserRepo.fetchOrCreateUser(fakeAuthInfo)).called(1);
     });
 
@@ -84,7 +85,7 @@ void main() {
 
       final result = await useCase.signInWithGoogle();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(() => mockUserRepo.fetchOrCreateUser(any()));
     });
 
@@ -98,7 +99,7 @@ void main() {
 
       final result = await useCase.signInWithGoogle();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -117,8 +118,8 @@ void main() {
 
       final result = await useCase.signInWithApple();
 
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), fakeUser);
+      expectRight(result);
+      expect(expectRight(result), fakeUser);
       verify(() => mockUserRepo.fetchOrCreateUser(fakeAuthInfo)).called(1);
     });
 
@@ -129,7 +130,7 @@ void main() {
 
       final result = await useCase.signInWithApple();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(() => mockUserRepo.fetchOrCreateUser(any()));
     });
 
@@ -143,7 +144,7 @@ void main() {
 
       final result = await useCase.signInWithApple();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -227,7 +228,7 @@ void main() {
 
       final result = await useCase.delete();
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(() => mockStoreUseCase.softDeleteStore('store-123')).called(1);
       verify(() => mockAuthRepo.delete()).called(1);
     });
@@ -239,7 +240,7 @@ void main() {
 
       final result = await useCase.delete();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(() => mockUserRepo.softDeleteUser(any()));
       verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
       verifyNever(() => mockAuthRepo.delete());
@@ -252,7 +253,7 @@ void main() {
 
       final result = await useCase.delete();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
 
     test(
@@ -267,7 +268,7 @@ void main() {
 
         final result = await useCase.delete();
 
-        expect(result.isLeft(), true);
+        expectLeft(result);
         verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
         verifyNever(() => mockAuthRepo.delete());
       },
@@ -286,7 +287,7 @@ void main() {
 
       final result = await useCase.delete();
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(() => mockAuthRepo.delete());
     });
 
@@ -304,7 +305,7 @@ void main() {
 
       final result = await useCase.delete();
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
     });
   });

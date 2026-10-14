@@ -12,6 +12,7 @@ import 'package:studio_chance/domain/repository_interfaces/user_repository.dart'
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockStoreRepository extends Mock implements StoreRepository {}
 
@@ -66,7 +67,7 @@ void main() {
         memo: '새 점포 메모',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       expect(capturedStore?.memberInfos.length, 1);
       expect(capturedStore?.memberInfos.first.user.id, fakeUser.id);
       expect(capturedStore?.memberInfos.first.role, UserRole.admin);
@@ -111,7 +112,7 @@ void main() {
         memo: '메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(
         () => mockStoreRepo.createStore(
           store: any(named: 'store'),
@@ -139,7 +140,7 @@ void main() {
         memo: '메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
 
     test(
@@ -160,7 +161,7 @@ void main() {
           memo: '메모',
         );
 
-        expect(result.isLeft(), true);
+        expectLeft(result);
         result.fold(
           (e) => expect(e, isA<StoreNameDuplicateException>()),
           (_) => fail('중복된 점포명인데 성공 처리됨'),
@@ -205,7 +206,7 @@ void main() {
           memo: '메모',
         );
 
-        expect(result.isLeft(), true);
+        expectLeft(result);
         result.fold(
           (e) => expect(e, isA<SpaceNameDuplicateException>()),
           (_) => fail('중복된 공간명인데 성공 처리됨'),
@@ -249,7 +250,7 @@ void main() {
 
       final result = await useCase.softDeleteStore('store-123');
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
     });
   });

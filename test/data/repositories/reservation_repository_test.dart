@@ -7,6 +7,7 @@ import 'package:studio_chance/data/repositories/reservation_repository_impl.dart
 import 'package:studio_chance/common/enums/reservation_status.dart';
 
 import '../../helpers/fake_data.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockReservationDataSource extends Mock implements ReservationDataSource {}
 
@@ -46,8 +47,8 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isRight(), true);
-      final reservation = result.getRight().toNullable()!;
+      expectRight(result);
+      final reservation = expectRight(result);
       expect(reservation.id, fakeReservationModel.id);
       expect(reservation.customerName, fakeReservationModel.customerName);
     });
@@ -61,7 +62,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -85,8 +86,8 @@ void main() {
         end: end,
       );
 
-      expect(result.isRight(), true);
-      expect(result.getRight().toNullable(), isEmpty);
+      expectRight(result);
+      expect(expectRight(result), isEmpty);
       verifyNever(() => mockUserDs.getUser(any()));
     });
 
@@ -105,8 +106,8 @@ void main() {
         end: end,
       );
 
-      expect(result.isRight(), true);
-      final reservations = result.getRight().toNullable()!;
+      expectRight(result);
+      final reservations = expectRight(result);
       expect(reservations.length, 1);
       expect(reservations.first.id, 'res-001');
       expect(
@@ -128,7 +129,7 @@ void main() {
         end: end,
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -146,7 +147,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(
         () => mockReservationDs.updateReservation(
           fakeReservation.storeSummary.id,
@@ -165,7 +166,7 @@ void main() {
         reservation: fakeReservation,
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -184,7 +185,7 @@ void main() {
         fromStoreId: 'store-old',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       final model =
           verify(
                 () => mockReservationDs.moveReservation(
@@ -209,7 +210,7 @@ void main() {
         fromStoreId: 'store-old',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -228,7 +229,7 @@ void main() {
         reservationId: 'res-001',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(
         () => mockReservationDs.deleteReservation('store-123', 'res-001'),
       ).called(1);
@@ -244,7 +245,7 @@ void main() {
         reservationId: 'res-001',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 
@@ -268,7 +269,7 @@ void main() {
         status: ReservationStatus.confirmed,
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       expect(capturedData?['status'], 'CONFIRMED');
     });
 
@@ -283,7 +284,7 @@ void main() {
         status: ReservationStatus.canceled,
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 

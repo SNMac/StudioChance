@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockStoreDataSource extends Mock implements StoreDataSource {}
 
@@ -34,7 +35,7 @@ void main() {
         uid: 'user-456',
       );
 
-      expect(result.isRight(), isTrue);
+      expectRight(result);
       verify(
         () => mockStoreDataSource.removeMember('store-123', 'user-456'),
       ).called(1);
@@ -50,7 +51,7 @@ void main() {
         uid: 'user-456',
       );
 
-      expect(result.isLeft(), isTrue);
+      expectLeft(result);
     });
   });
 }

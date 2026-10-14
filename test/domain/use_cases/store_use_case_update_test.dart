@@ -13,6 +13,7 @@ import 'package:studio_chance/domain/repository_interfaces/user_repository.dart'
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockStoreRepository extends Mock implements StoreRepository {}
 
@@ -63,7 +64,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(
         () => mockStoreRepo.updateStore(
           original: fakeStore,
@@ -88,7 +89,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(
         () => mockStoreRepo.updateStore(
           original: any(named: 'original'),
@@ -112,7 +113,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
 
     test('Repository 실패 시 left(exception)를 전파한다', () async {
@@ -137,7 +138,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
 
     test(
@@ -168,7 +169,7 @@ void main() {
           memo: '메모',
         );
 
-        expect(result.isLeft(), true);
+        expectLeft(result);
         result.fold(
           (e) => expect(e, isA<StoreNameDuplicateException>()),
           (_) => fail('중복된 점포명인데 성공 처리됨'),
@@ -207,7 +208,7 @@ void main() {
         memo: '메모',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
     });
 
     // 공간명 중복 검증 로직 자체(_findDuplicateNameError)는
@@ -241,7 +242,7 @@ void main() {
         memo: '메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       result.fold(
         (e) => expect(e, isA<SpaceNameDuplicateException>()),
         (_) => fail('중복된 공간명인데 성공 처리됨'),
@@ -257,7 +258,7 @@ void main() {
 
       final result = await useCase.getStoreForEdit(fakeStore.id);
 
-      expect(result.getRight().toNullable(), fakeStore);
+      expect(expectRight(result), fakeStore);
     });
 
     test('삭제됐거나 없는 점포면 StoreNotFoundException으로 실패한다', () async {
@@ -267,7 +268,7 @@ void main() {
 
       final result = await useCase.getStoreForEdit(fakeStore.id);
 
-      expect(result.getLeft().toNullable(), isA<StoreNotFoundException>());
+      expect(expectLeft(result), isA<StoreNotFoundException>());
     });
 
     test('조회에 실패하면 그 예외를 그대로 돌려준다', () async {
@@ -278,7 +279,7 @@ void main() {
 
       final result = await useCase.getStoreForEdit(fakeStore.id);
 
-      expect(result.getLeft().toNullable(), error);
+      expect(expectLeft(result), error);
     });
   });
 }

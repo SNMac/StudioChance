@@ -9,6 +9,7 @@ import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/store_edit_controller.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockStoreUseCase extends Mock implements StoreUseCase {}
 
@@ -43,6 +44,6 @@ void main() {
       () => mockStoreUseCase.getStoreForEdit(fakeStore.id),
     ).thenAnswer((_) async => left(error));
 
-    expect((await load()).getLeft().toNullable(), error);
+    expect(expectLeft(await load()), error);
   });
 }

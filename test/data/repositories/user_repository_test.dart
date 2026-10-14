@@ -5,6 +5,7 @@ import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockAuthDataSource extends Mock implements AuthDataSource {}
 
@@ -46,7 +47,7 @@ void main() {
         color: StoreColor.green,
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
       expect(capturedData?['color'], 'GREEN');
     });
   });
@@ -57,7 +58,7 @@ void main() {
 
       final result = await repository.softDeleteUser('user-123');
 
-      expect(result.isRight(), true);
+      expectRight(result);
       verify(() => mockUserDs.softDeleteUser('user-123')).called(1);
     });
 
@@ -68,7 +69,7 @@ void main() {
 
       final result = await repository.softDeleteUser('user-123');
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 }

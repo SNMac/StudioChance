@@ -6,6 +6,7 @@ import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 
 import '../../helpers/fake_data.dart';
+import '../../helpers/either_expectations.dart';
 
 class MockStoreDataSource extends Mock implements StoreDataSource {}
 
@@ -46,7 +47,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isRight(), true);
+      expectRight(result);
 
       // 점포 문서 업데이트 호출 확인
       final capturedStoreArgs = verify(
@@ -97,7 +98,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
       verifyNever(
         () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
       );
@@ -123,7 +124,7 @@ void main() {
         memo: '새 메모',
       );
 
-      expect(result.isLeft(), true);
+      expectLeft(result);
     });
   });
 }

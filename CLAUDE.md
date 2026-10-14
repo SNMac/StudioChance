@@ -183,6 +183,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
 ## 테스트 작성 규칙
 - 위젯 테스트는 픽셀 크기·색상 hex·폰트 스타일·레이아웃 구조 등 UI 구현 디테일을 직접 assert하지 않음 — 상태 전이·콜백 호출·크래시 방지 등 동작(behavior)만 검증 (UI 리팩터링 시 무관한 테스트가 깨지는 것 방지)
 - 예외: 테스트 대상 자체가 색상 팔레트 등 디자인 토큰 lookup table인 경우(`store_color_extensions_test.dart`)는 정확한 값 검증이 불가피하므로 허용
+- Either 결과는 `test/helpers/either_expectations.dart`의 `expectRight`·`expectLeft`로 검증한다 — 테스트에서도 `isRight()`·`getRight().toNullable()` 명령형 스타일을 쓰지 않는다 (실패 시 실제 예외·값이 메시지에 찍힌다)
 
 ## 폰트 및 디자인
 - 기본 폰트: Pretendard (400, 500, 600, 700)
