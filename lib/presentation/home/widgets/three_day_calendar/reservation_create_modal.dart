@@ -2,10 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
-import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
@@ -21,6 +17,7 @@ import 'package:studio_chance/presentation/commons/extensions/phone_formatter.da
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/extensions/price_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/time_formatter.dart';
+import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/modal_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
@@ -31,6 +28,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_popu
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_switch_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_label.dart';
+import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/holiday_price_note.dart';
@@ -311,21 +309,10 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           .read(holidayCalendarControllerProvider)
           .calendar
           .namesOn,
-      onOpenPriceSetting: _isAdminOf(_storeSummary.id)
+      onOpenPriceSetting: isStoreAdmin(_storeSummary.id)
           ? _openPriceSetting
           : null,
     );
-  }
-
-  /// 요금 설정 바로가기는 그 점포의 ADMIN에게만 보여준다 — 요금표는 ADMIN만 고칠 수 있다
-  bool _isAdminOf(String storeId) {
-    final info = ref
-        .read(currentUserProvider)
-        .value
-        ?.storeInfos
-        .where((i) => i.id == storeId)
-        .firstOrNull;
-    return info?.role == UserRole.admin;
   }
 
   /// 모달을 연 채 그 위에 점포 요금 설정을 연다. 저장하고 돌아오면 공간 목록을 다시 불러와

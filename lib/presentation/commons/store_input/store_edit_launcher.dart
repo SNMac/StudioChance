@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/store_edit_controller.dart';
 
 /// 점포를 새로 조회한 뒤 점포 수정 화면을 연다 — 마이페이지와 예약 모달이 공유한다.
@@ -18,6 +20,17 @@ mixin StoreEditLauncher<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   Timer? _storeEditOverlayTimer;
 
   bool get showStoreEditOverlay => _showStoreEditOverlay;
+
+  /// 점포 수정 진입점은 그 점포의 ADMIN에게만 보여준다 — 점포 정보와 요금표는 ADMIN만 고칠 수 있다
+  bool isStoreAdmin(String storeId) {
+    final info = ref
+        .read(currentUserProvider)
+        .value
+        ?.storeInfos
+        .where((i) => i.id == storeId)
+        .firstOrNull;
+    return info?.role == UserRole.admin;
+  }
 
   @override
   void dispose() {
