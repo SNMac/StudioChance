@@ -6,12 +6,11 @@ import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/invite_store_preview.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/role_selection/controllers/role_selection_controller.dart';
 
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../../../helpers/mocks.dart';
 
 const testPreview = InviteStorePreview(
   storeId: 'store-1',

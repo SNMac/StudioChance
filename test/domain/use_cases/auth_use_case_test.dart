@@ -1,23 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
-import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockAuthRepository extends Mock implements AuthRepository {}
-
-class MockUserRepository extends Mock implements UserRepository {}
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
-
-class FakeAuthInfo extends Fake implements AuthInfo {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late AuthUseCaseImpl useCase;

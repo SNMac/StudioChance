@@ -1,7 +1,5 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
@@ -15,12 +13,11 @@ import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
 import '../../helpers/either_expectations.dart';
+import '../../helpers/mocks.dart';
 
 // lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
 // 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
 // 파라미터를 채우는 용도로만 쓰인다.
-class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
-
 Store _testStoreEntity(String uid, User adminUser) => Store(
   id: '',
   name: '통합 테스트 점포',

@@ -1,19 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
-import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
 import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 
 import '../../helpers/fake_data.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockReservationDataSource extends Mock implements ReservationDataSource {}
-
-class MockUserDataSource extends Mock implements UserDataSource {}
-
-class FakeReservationModel extends Fake implements ReservationModel {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late ReservationRepositoryImpl repository;

@@ -6,11 +6,10 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:studio_chance/domain/entities/holiday_calendar.dart';
-import 'package:studio_chance/domain/use_cases/holiday_use_case.dart';
 import 'package:studio_chance/domain/use_cases/holiday_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/holiday_calendar_controller.dart';
 
-class MockHolidayUseCase extends Mock implements HolidayUseCase {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late MockHolidayUseCase useCase;

@@ -5,14 +5,12 @@ import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:studio_chance/domain/use_cases/user_use_case.dart';
 import 'package:studio_chance/domain/use_cases/user_use_case_provider.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
 import '../../helpers/fake_entities.dart';
-
-class MockUserUseCase extends Mock implements UserUseCase {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late MockUserUseCase mockUserUseCase;

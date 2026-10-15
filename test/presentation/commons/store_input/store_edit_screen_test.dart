@@ -8,15 +8,13 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/router/router_path.dart';
 
 import '../../../helpers/fake_entities.dart';
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../../helpers/mocks.dart';
 
 // fakeStore의 공간은 이름이 비어 있어 저장 버튼이 활성화되지 않는다
 final opened = fakeStore.copyWith(

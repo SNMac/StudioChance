@@ -5,14 +5,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
 import '../../../../helpers/fake_entities.dart';
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockStoreUseCase mockStoreUseCase;

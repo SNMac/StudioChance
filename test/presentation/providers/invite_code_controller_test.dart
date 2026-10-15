@@ -4,12 +4,11 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../helpers/mocks.dart';
 
 void main() {
   const inviteInfo = InviteInfo(inviteCode: 'A7K2P9');

@@ -4,14 +4,12 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/store_edit_controller.dart';
 
 import '../../helpers/fake_entities.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late MockStoreUseCase mockStoreUseCase;

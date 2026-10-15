@@ -9,15 +9,13 @@ import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
 import '../../helpers/fake_entities.dart';
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../helpers/mocks.dart';
 
 void main() {
   setUpAll(() {

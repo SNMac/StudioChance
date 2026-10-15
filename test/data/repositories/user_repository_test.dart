@@ -1,18 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:studio_chance/data/data_sources/auth_data_source.dart';
-import 'package:studio_chance/data/data_sources/notification_data_source.dart';
-import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockAuthDataSource extends Mock implements AuthDataSource {}
-
-class MockUserDataSource extends Mock implements UserDataSource {}
-
-class MockNotificationDataSource extends Mock
-    implements NotificationDataSource {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late UserRepositoryImpl repository;
