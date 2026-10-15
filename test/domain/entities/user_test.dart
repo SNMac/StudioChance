@@ -15,4 +15,33 @@ void main() {
       expect(fakeUser.roleIn('other-store'), isNull);
     });
   });
+
+  group('승인 대기 점포', () {
+    final applicant = fakeUser.copyWith(
+      storeInfos: [
+        ...fakeUser.storeInfos,
+        fakeUser.storeInfos.first.copyWith(
+          id: 'store-pending',
+          role: UserRole.staff,
+          isPending: true,
+        ),
+      ],
+    );
+
+    test('아직 멤버가 아니므로 역할이 없는 것으로 본다', () {
+      // 표시용 정보(별칭·색상)는 그대로 조회된다
+      expect(applicant.storeInfoOf('store-pending'), isNotNull);
+      expect(applicant.roleIn('store-pending'), isNull);
+    });
+
+    test('멤버 점포 목록에서 빠진다', () {
+      expect(applicant.memberStoreInfos.map((info) => info.id), ['store-123']);
+    });
+
+    // select가 매번 바뀐 값으로 보면 사용자 정보가 다시 불릴 때마다 불필요하게
+    // 다시 그린다 (storeInfos처럼 같은 사용자 객체면 같은 값이어야 한다)
+    test('같은 사용자에게서 꺼낸 멤버 점포 목록은 서로 같다', () {
+      expect(applicant.memberStoreInfos == applicant.memberStoreInfos, isTrue);
+    });
+  });
 }

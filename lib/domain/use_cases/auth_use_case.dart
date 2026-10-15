@@ -114,7 +114,8 @@ class AuthUseCaseImpl implements AuthUseCase {
   /// 계정 삭제 시 관리자 소유 점포 레코드가 Firestore에 잔존하지 않도록
   /// 순회하며 삭제하고, 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
   TaskEither<Exception, void> _softDeleteAdminStores(User currentUser) {
-    final adminStoreIds = currentUser.storeInfos
+    // 승인 대기 점포는 아직 관리자가 아니라 삭제 권한이 없다
+    final adminStoreIds = currentUser.memberStoreInfos
         .where((info) => info.role == UserRole.admin)
         .map((info) => info.id);
 

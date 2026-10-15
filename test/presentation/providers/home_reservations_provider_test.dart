@@ -8,9 +8,21 @@ import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
+import 'package:studio_chance/presentation/providers/home_store_filter_controller.dart';
 
 import '../../helpers/fake_entities.dart';
 import '../../helpers/mocks.dart';
+
+/// 필터 상태를 고정한다. 필터가 아직 이전 사용자 정보로 계산돼 있어도
+/// homeReservations가 스스로 승인 대기 점포를 거르는지 보기 위해 쓴다.
+class _FixedStoreFilter extends HomeStoreFilterController {
+  _FixedStoreFilter(this._ids);
+
+  final Set<String> _ids;
+
+  @override
+  Set<String> build() => _ids;
+}
 
 void main() {
   late MockReservationUseCase mockUseCase;
@@ -27,11 +39,16 @@ void main() {
   ProviderContainer createContainer({
     required MockReservationUseCase useCase,
     dynamic user,
+    Set<String>? selectedStoreIds,
   }) {
     return ProviderContainer(
       overrides: [
         currentUserProvider.overrideWith((ref) async => user),
         reservationUseCaseProvider.overrideWith((ref) => useCase),
+        if (selectedStoreIds != null)
+          homeStoreFilterControllerProvider.overrideWith(
+            () => _FixedStoreFilter(selectedStoreIds),
+          ),
       ],
     );
   }
@@ -188,6 +205,8 @@ void main() {
     final container = createContainer(
       useCase: mockUseCase,
       user: userWithPendingStore,
+      // 필터는 승인 대기 점포를 이미 빼지만, 필터에 남아 있어도 구독하지 않아야 한다
+      selectedStoreIds: {'store-123', 'store-pending'},
     );
     addTearDown(container.dispose);
 
