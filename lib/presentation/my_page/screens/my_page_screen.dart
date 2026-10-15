@@ -9,7 +9,7 @@ import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
-import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_form_screen.dart';
+import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_save_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
@@ -19,7 +19,6 @@ import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart'
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
-import 'package:studio_chance/presentation/onboarding/controllers/onboarding_nickname_controller.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
@@ -315,24 +314,11 @@ class MyPageNicknameScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).asData?.value;
 
-    // 구독하지 않으면 autoDispose 컨트롤러가 저장 도중 dispose되어,
-    // 저장은 끝나도 state 갱신에서 예외가 나 화면이 닫히지 않는다.
-    ref.listen(onboardingNicknameControllerProvider, (_, next) {
-      next.whenOrNull(error: (error, _) => _showErrorDialog(context, error));
-    });
-
-    return NicknameFormScreen(
+    return NicknameSaveScreen(
       initialNickname: user?.nickname,
       title: '닉네임 변경',
-      onComplete: (nickname) async {
-        final notifier = ref.read(
-          onboardingNicknameControllerProvider.notifier,
-        );
-        await notifier.saveNicknameToRemote(nickname);
-
-        final state = ref.read(onboardingNicknameControllerProvider);
-        if (state.hasError) return;
-
+      onError: (error) => _showErrorDialog(context, error),
+      onSaved: () {
         ref.invalidate(currentUserProvider);
         if (context.mounted) context.pop();
       },
