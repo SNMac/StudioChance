@@ -36,65 +36,71 @@ class TitleNavigationButton extends StatelessWidget {
           horizontal: horizontalPadding,
         ),
         onPressed: onPressed,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // content가 길어 Expanded를 가득 채우면 title에 붙어버리므로
-          // TitleTextLabel과 동일한 최소 간격을 둔다.
-          spacing: 8,
-          children: [
-            // title이 non-flex면 긴 점포명이 Expanded를 0폭으로 만들어
-            // 고정 크기 요소(배지·chevron)가 행 밖으로 넘친다. title이 양보한다.
-            Flexible(
-              child: Text(
-                title,
-                style: textTheme.bodyLarge,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+        // title이 non-flex면 긴 점포명이 Expanded를 0폭으로 만들어 고정 크기
+        // 요소(배지·chevron)가 행 밖으로 넘치고, Flexible로 두면 content와 폭을
+        // 반씩 나눠 title이 짧아도 남는 폭이 content로 가지 않아 이메일처럼 긴
+        // content가 잘린다. TitleTextLabel처럼 title은 필요한 만큼만(최대 절반)
+        // 차지하고 나머지는 content가 쓴다.
+        child: LayoutBuilder(
+          builder: (context, constraints) => Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            // content가 길어 Expanded를 가득 채우면 title에 붙어버리므로
+            // TitleTextLabel과 동일한 최소 간격을 둔다.
+            spacing: 8,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: constraints.maxWidth / 2),
+                child: Text(
+                  title,
+                  style: textTheme.bodyLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (contentLeading != null) ...[
-                    contentLeading!,
-                    const SizedBox(width: 8),
-                  ],
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (contentLeading != null) ...[
+                      contentLeading!,
+                      const SizedBox(width: 8),
+                    ],
 
-                  if (content != null)
-                    Flexible(
-                      child: Text(
-                        content!,
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: isChangeable
-                              ? context.secondaryLabel
-                              : context.label,
+                    if (content != null)
+                      Flexible(
+                        child: Text(
+                          content!,
+                          style: textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.normal,
+                            color: isChangeable
+                                ? context.secondaryLabel
+                                : context.label,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                    if (trailing != null) ...[
+                      const SizedBox(width: 8),
+                      trailing!,
+                    ],
+
+                    const SizedBox(width: 12),
+
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 10),
+                      child: Icon(
+                        CupertinoIcons.chevron_forward,
+                        color: context.tertiaryLabel,
                       ),
                     ),
-
-                  if (trailing != null) ...[
-                    const SizedBox(width: 8),
-                    trailing!,
                   ],
-
-                  const SizedBox(width: 12),
-
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 10),
-                    child: Icon(
-                      CupertinoIcons.chevron_forward,
-                      color: context.tertiaryLabel,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
