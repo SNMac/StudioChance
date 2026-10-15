@@ -43,7 +43,7 @@ final class NotificationControllerProvider
 }
 
 String _$notificationControllerHash() =>
-    r'19b6c50b2d8867567fbe589e7b46eab750f8ec77';
+    r'4fafe19aad97c128b2e64f3132f07626e1c27bfd';
 
 /// 알림 권한 요청, FCM 토큰 등록, 수신 메시지 표시·딥링크를 담당한다.
 ///

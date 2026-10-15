@@ -1,93 +1,22 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 
-import 'package:studio_chance/domain/entities/push_message.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/use_cases/notification_use_case.dart';
 import 'package:studio_chance/domain/use_cases/notification_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/notification_controller.dart';
 
 import '../../helpers/fake_entities.dart';
-
-/// 알림 초기화가 몇 번 실행됐는지 확인하기 위해 호출을 기록하는 fake.
-class _RecordingNotificationUseCase implements NotificationUseCase {
-  final _tokenController = StreamController<String>.broadcast();
-  final _foregroundController = StreamController<PushMessage>.broadcast();
-  final _openedAppController = StreamController<PushMessage>.broadcast();
-
-  int requestPermissionCallCount = 0;
-
-  /// (uid, token) — token은 초기 등록이면 null.
-  final List<(String uid, String? token)> registerFcmTokenCalls = [];
-
-  void emitTokenRefresh(String token) => _tokenController.add(token);
-
-  Future<void> dispose() async {
-    await _tokenController.close();
-    await _foregroundController.close();
-    await _openedAppController.close();
-  }
-
-  @override
-  Future<Either<Exception, bool>> requestPermission() async {
-    requestPermissionCallCount++;
-    return right(true);
-  }
-
-  @override
-  Future<Either<Exception, void>> enableForegroundPresentation() async =>
-      right(null);
-
-  @override
-  Future<Either<Exception, void>> registerFcmToken({
-    required String uid,
-    String? token,
-  }) async {
-    registerFcmTokenCalls.add((uid, token));
-    return right(null);
-  }
-
-  @override
-  Stream<String> get onTokenRefresh => _tokenController.stream;
-
-  @override
-  Stream<PushMessage> get foregroundMessages => _foregroundController.stream;
-
-  @override
-  Stream<PushMessage> get openedAppMessages => _openedAppController.stream;
-
-  @override
-  Future<PushMessage?> getInitialMessage() async => null;
-
-  @override
-  Future<Either<Exception, void>> initLocalNotifications({
-    required void Function(String? payload) onTap,
-  }) async => right(null);
-
-  @override
-  Future<Either<Exception, void>> showLocalNotification(
-    PushMessage message,
-  ) async => right(null);
-}
-
-/// 비동기 build()와 스트림 리스너가 실행될 기회를 준다.
-Future<void> _pump() async {
-  for (var i = 0; i < 20; i++) {
-    await Future<void>.delayed(Duration.zero);
-  }
-}
+import '../../helpers/fake_notification_use_case.dart';
 
 void main() {
-  late _RecordingNotificationUseCase useCase;
+  late FakeNotificationUseCase useCase;
   late ProviderContainer container;
   User? currentUser;
 
   setUp(() {
-    useCase = _RecordingNotificationUseCase();
+    currentUser = null;
+    useCase = FakeNotificationUseCase();
     container = ProviderContainer(
       overrides: [
         currentUserProvider.overrideWith((ref) => currentUser),
@@ -107,7 +36,7 @@ void main() {
   Future<void> refreshCurrentUser(User? user) async {
     currentUser = user;
     container.invalidate(currentUserProvider);
-    await _pump();
+    await pumpEventQueue();
     await container.read(notificationControllerProvider.future);
   }
 
@@ -125,7 +54,7 @@ void main() {
     // 구독을 해제했다가 다시 걸지 않았으므로 토큰 갱신이 계속 처리돼야 한다.
     useCase.registerFcmTokenCalls.clear();
     useCase.emitTokenRefresh('new-token');
-    await _pump();
+    await pumpEventQueue();
 
     expect(useCase.registerFcmTokenCalls, [('uidA', 'new-token')]);
   });
@@ -142,7 +71,7 @@ void main() {
     // 토큰 갱신은 새 계정으로만 기록돼야 한다.
     useCase.registerFcmTokenCalls.clear();
     useCase.emitTokenRefresh('new-token');
-    await _pump();
+    await pumpEventQueue();
 
     expect(useCase.registerFcmTokenCalls, [('uidB', 'new-token')]);
   });

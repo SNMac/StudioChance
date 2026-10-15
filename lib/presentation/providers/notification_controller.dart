@@ -49,7 +49,7 @@ class NotificationController extends _$NotificationController {
   /// 강제 중단하지 않고 끝까지 실행한다 (버려지는 것은 반환값뿐). currentUserProvider가
   /// 짧은 간격으로 두 번 emit되거나(로그아웃 직후 재로그인 등) requestPermission()이
   /// OS 권한 다이얼로그에서 수 초간 블로킹되는 사이 두 build()가 겹치면, 뒤처진(오래된)
-  /// build()가 stale한 user로 구독을 덮어쓰거나 FCM 토큰을 다른 계정에 등록할 수 있다.
+  /// build()가 stale한 uid로 구독을 덮어쓰거나 FCM 토큰을 다른 계정에 등록할 수 있다.
   /// → 매 await 직후 세대 번호를 비교해 뒤처진 build()는 즉시 포기한다.
   /// (지워도 컴파일·평상시 테스트는 통과하므로 불필요해 보일 수 있으나 삭제 금지)
   int _buildGeneration = 0;
