@@ -34,11 +34,11 @@ class TitleTextLabel extends StatelessWidget {
           builder: (context, constraints) => Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 8,
+            spacing: formRowTitleContentGap,
             children: [
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: constraints.maxWidth * 2 / 3,
+                  maxWidth: constraints.maxWidth * formRowTitleMaxWidthFraction,
                 ),
                 child: Text(
                   title,

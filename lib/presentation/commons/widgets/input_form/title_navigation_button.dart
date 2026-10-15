@@ -103,10 +103,6 @@ class _TitleNavigationLayoutDelegate extends MultiChildLayoutDelegate {
 
   final TextDirection textDirection;
 
-  static const _titleMaxFraction = 2 / 3;
-
-  /// content가 길어도 title에 붙지 않도록 두는 최소 간격 (TitleTextLabel과 동일)
-  static const _titleGap = 8.0;
   static const _leadingGap = 8.0;
   static const _trailingGap = 8.0;
   static const _chevronGap = 12.0;
@@ -131,12 +127,18 @@ class _TitleNavigationLayoutDelegate extends MultiChildLayoutDelegate {
         _chevronGap +
         (hasTrailing ? trailing.width + _trailingGap : 0) +
         (hasLeading ? leading.width + _leadingGap : 0);
-    final textSpace = math.max(0.0, size.width - _titleGap - fixedWidth);
+    final textSpace = math.max(
+      0.0,
+      size.width - formRowTitleContentGap - fixedWidth,
+    );
 
     final title = layoutChild(
       _Slot.title,
       BoxConstraints(
-        maxWidth: math.min(size.width * _titleMaxFraction, textSpace),
+        maxWidth: math.min(
+          size.width * formRowTitleMaxWidthFraction,
+          textSpace,
+        ),
         maxHeight: size.height,
       ),
     );
