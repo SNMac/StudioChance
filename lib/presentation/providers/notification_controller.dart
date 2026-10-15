@@ -61,8 +61,13 @@ class NotificationController extends _$NotificationController {
     await _cancelSubscriptions();
     ref.onDispose(_cancelSubscriptions);
 
-    final user = await ref.watch(currentUserProvider.future);
-    if (generation != _buildGeneration || user == null) return;
+    // uid만 watch한다. 사용자 정보 전체를 watch하면 닉네임 변경·점포 생성 등으로
+    // currentUserProvider가 갱신될 때마다 구독 해제·FCM 토큰 쓰기가 반복되고,
+    // 다시 구독하는 사이 포그라운드 메시지를 놓칠 수 있다.
+    final uid = await ref.watch(
+      currentUserProvider.selectAsync((user) => user?.id),
+    );
+    if (generation != _buildGeneration || uid == null) return;
 
     final useCase = ref.read(notificationUseCaseProvider);
 
@@ -98,7 +103,7 @@ class NotificationController extends _$NotificationController {
       (granted) => _logger.i('알림 권한 허용 여부: $granted'),
     );
 
-    final registerResult = await useCase.registerFcmToken(uid: user.id);
+    final registerResult = await useCase.registerFcmToken(uid: uid);
     if (generation != _buildGeneration) return;
     registerResult.fold(
       (error) => _logger.w('FCM 토큰 등록 실패 (무시)', error: error),
@@ -107,7 +112,7 @@ class NotificationController extends _$NotificationController {
 
     if (generation != _buildGeneration) return;
     _tokenSubscription = useCase.onTokenRefresh.listen((token) {
-      useCase.registerFcmToken(uid: user.id, token: token);
+      useCase.registerFcmToken(uid: uid, token: token);
     });
 
     if (generation != _buildGeneration) return;
