@@ -75,9 +75,7 @@ Stream<List<Reservation>> _buildMergedStream({
 
   void emitIfReady() {
     if (respondedStores.length == storeIds.length && !controller.isClosed) {
-      controller.add([
-        for (final list in latestByStore.values) ...list,
-      ]);
+      controller.add([for (final list in latestByStore.values) ...list]);
     }
   }
 
