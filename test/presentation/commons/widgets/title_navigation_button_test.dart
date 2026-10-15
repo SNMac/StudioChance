@@ -33,17 +33,25 @@ void main() {
   // 오른쪽 요소들이 행 밖으로 넘친다.
   //
   // 375는 iOS 최소 지원 기기(iPhone SE) 논리 폭이다.
-  for (final width in [320.0, 375.0]) {
-    testWidgets('제목이 최대 길이여도 ${width.toInt()}pt에서 오버플로하지 않는다', (
-      tester,
-    ) async {
+  for (final width in [320.0, 375.0, 411.0]) {
+    testWidgets('제목이 최대 길이여도 ${width.toInt()}pt에서 오버플로하지 않는다', (tester) async {
       await tester.pumpWidget(
         _wrap(
           TitleNavigationButton(
             title: _maxLengthTitle,
             content: '관리자',
             contentLeading: Container(width: 8, height: 8, color: Colors.red),
-            trailing: Container(width: 20, height: 20, color: Colors.blue),
+            // 마이페이지 ADMIN 점포 행과 같은 구성: 두 자리 대기 배지 + 수정 버튼.
+            // 오른쪽 고정 요소가 이보다 작으면 제목 비율을 키웠을 때 생기는
+            // 오버플로를 놓친다.
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 8,
+              children: [
+                Container(width: 30, height: 20, color: Colors.blue),
+                Container(width: 28, height: 28, color: Colors.green),
+              ],
+            ),
             onPressed: () {},
           ),
           width,
