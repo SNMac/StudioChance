@@ -5,14 +5,24 @@ import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/home_reservations_provider.dart';
+import 'package:studio_chance/presentation/providers/home_store_filter_controller.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/mocks.dart';
 
-class MockReservationUseCase extends Mock implements ReservationUseCase {}
+/// 필터 상태를 고정한다. 필터가 아직 이전 사용자 정보로 계산돼 있어도
+/// homeReservations가 스스로 승인 대기 점포를 거르는지 보기 위해 쓴다.
+class _FixedStoreFilter extends HomeStoreFilterController {
+  _FixedStoreFilter(this._ids);
+
+  final Set<String> _ids;
+
+  @override
+  Set<String> build() => _ids;
+}
 
 void main() {
   late MockReservationUseCase mockUseCase;
@@ -26,11 +36,19 @@ void main() {
     mockUseCase = MockReservationUseCase();
   });
 
-  ProviderContainer createContainer({required MockReservationUseCase useCase, dynamic user}) {
+  ProviderContainer createContainer({
+    required MockReservationUseCase useCase,
+    dynamic user,
+    Set<String>? selectedStoreIds,
+  }) {
     return ProviderContainer(
       overrides: [
         currentUserProvider.overrideWith((ref) async => user),
         reservationUseCaseProvider.overrideWith((ref) => useCase),
+        if (selectedStoreIds != null)
+          homeStoreFilterControllerProvider.overrideWith(
+            () => _FixedStoreFilter(selectedStoreIds),
+          ),
       ],
     );
   }
@@ -50,16 +68,21 @@ void main() {
     final result = await readFuture(container);
 
     expect(result, isEmpty);
-    verifyNever(() => mockUseCase.watchReservationsByDateRange(
-          storeId: any(named: 'storeId'),
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        ));
+    verifyNever(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: any(named: 'storeId'),
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    );
   });
 
   test('storeInfos가 비어있으면 빈 목록을 반환한다', () async {
     final userWithNoStores = fakeUser.copyWith(storeInfos: []);
-    final container = createContainer(useCase: mockUseCase, user: userWithNoStores);
+    final container = createContainer(
+      useCase: mockUseCase,
+      user: userWithNoStores,
+    );
     addTearDown(container.dispose);
 
     final result = await readFuture(container);
@@ -68,11 +91,13 @@ void main() {
   });
 
   test('단일 점포의 예약을 반환한다', () async {
-    when(() => mockUseCase.watchReservationsByDateRange(
-          storeId: 'store-123',
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        )).thenAnswer((_) => Stream.value([fakeReservation]));
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((_) => Stream.value([fakeReservation]));
 
     final container = createContainer(useCase: mockUseCase, user: fakeUser);
     addTearDown(container.dispose);
@@ -87,11 +112,13 @@ void main() {
     DateTime? capturedStart;
     DateTime? capturedEnd;
 
-    when(() => mockUseCase.watchReservationsByDateRange(
-          storeId: any(named: 'storeId'),
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        )).thenAnswer((invocation) {
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: any(named: 'storeId'),
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((invocation) {
       capturedStart = invocation.namedArguments[#start] as DateTime;
       capturedEnd = invocation.namedArguments[#end] as DateTime;
       return Stream.value(<Reservation>[]);
@@ -110,30 +137,39 @@ void main() {
     final reservation1 = fakeReservation.copyWith(id: 'res-001');
     final reservation2 = fakeReservation.copyWith(id: 'res-002');
 
-    when(() => mockUseCase.watchReservationsByDateRange(
-          storeId: 'store-123',
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        )).thenAnswer((_) => Stream.value([reservation1]));
-
-    when(() => mockUseCase.watchReservationsByDateRange(
-          storeId: 'store-456',
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        )).thenAnswer((_) => Stream.value([reservation2]));
-
-    final userWith2Stores = fakeUser.copyWith(storeInfos: [
-      fakeUser.storeInfos.first,
-      UserStoreInfo(
-        id: 'store-456',
-        name: '두번째점포',
-        role: UserRole.admin,
-        color: StoreColor.blue,
-        memo: '',
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
       ),
-    ]);
+    ).thenAnswer((_) => Stream.value([reservation1]));
 
-    final container = createContainer(useCase: mockUseCase, user: userWith2Stores);
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-456',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((_) => Stream.value([reservation2]));
+
+    final userWith2Stores = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first,
+        UserStoreInfo(
+          id: 'store-456',
+          name: '두번째점포',
+          role: UserRole.admin,
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ],
+    );
+
+    final container = createContainer(
+      useCase: mockUseCase,
+      user: userWith2Stores,
+    );
     addTearDown(container.dispose);
 
     final result = await readFuture(container);
@@ -142,31 +178,84 @@ void main() {
     expect(result.map((r) => r.id), containsAll(['res-001', 'res-002']));
   });
 
-  test('한 점포 조회 실패 시 성공한 점포 결과만 포함한다', () async {
-    when(() => mockUseCase.watchReservationsByDateRange(
-          storeId: 'store-123',
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        )).thenAnswer((_) => Stream.value([fakeReservation]));
-
-    when(() => mockUseCase.watchReservationsByDateRange(
-          storeId: 'store-456',
-          start: any(named: 'start'),
-          end: any(named: 'end'),
-        )).thenAnswer((_) => Stream.error(Exception('네트워크 오류')));
-
-    final userWith2Stores = fakeUser.copyWith(storeInfos: [
-      fakeUser.storeInfos.first,
-      UserStoreInfo(
-        id: 'store-456',
-        name: '두번째점포',
-        role: UserRole.admin,
-        color: StoreColor.blue,
-        memo: '',
+  // 신청자는 아직 멤버가 아니라 Rules가 예약 읽기를 거부한다(PERMISSION_DENIED).
+  test('승인 대기 중인 점포의 예약은 구독하지 않는다', () async {
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
       ),
-    ]);
+    ).thenAnswer((_) => Stream.value([fakeReservation]));
 
-    final container = createContainer(useCase: mockUseCase, user: userWith2Stores);
+    final userWithPendingStore = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first,
+        UserStoreInfo(
+          id: 'store-pending',
+          name: '신청한점포',
+          role: UserRole.staff,
+          color: StoreColor.blue,
+          memo: '',
+          isPending: true,
+        ),
+      ],
+    );
+
+    final container = createContainer(
+      useCase: mockUseCase,
+      user: userWithPendingStore,
+      // 필터는 승인 대기 점포를 이미 빼지만, 필터에 남아 있어도 구독하지 않아야 한다
+      selectedStoreIds: {'store-123', 'store-pending'},
+    );
+    addTearDown(container.dispose);
+
+    final result = await readFuture(container);
+
+    expect(result.map((r) => r.id), [fakeReservation.id]);
+    verifyNever(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-pending',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    );
+  });
+
+  test('한 점포 조회 실패 시 성공한 점포 결과만 포함한다', () async {
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((_) => Stream.value([fakeReservation]));
+
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-456',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((_) => Stream.error(Exception('네트워크 오류')));
+
+    final userWith2Stores = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first,
+        UserStoreInfo(
+          id: 'store-456',
+          name: '두번째점포',
+          role: UserRole.admin,
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ],
+    );
+
+    final container = createContainer(
+      useCase: mockUseCase,
+      user: userWith2Stores,
+    );
     addTearDown(container.dispose);
 
     final result = await readFuture(container);

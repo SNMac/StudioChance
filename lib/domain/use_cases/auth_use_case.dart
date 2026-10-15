@@ -78,16 +78,13 @@ class AuthUseCaseImpl implements AuthUseCase {
     final currentUserResult = await _userRepository.getCurrentUser();
 
     // FCM 토큰 제거 실패 시에도 반드시 signOut을 실행해야 하므로 fold 후 signOut 호출
-    await currentUserResult.fold(
-      (_) async {},
-      (user) async {
-        if (user != null) {
-          try {
-            await _userRepository.removeCurrentDeviceFcmToken(user.id);
-          } catch (_) {}
-        }
-      },
-    );
+    await currentUserResult.fold((_) async {}, (user) async {
+      if (user != null) {
+        try {
+          await _userRepository.removeCurrentDeviceFcmToken(user.id);
+        } catch (_) {}
+      }
+    });
 
     await _authRepository.signOut();
   }
@@ -96,21 +93,20 @@ class AuthUseCaseImpl implements AuthUseCase {
   Future<Either<Exception, void>> delete() async {
     final currentUserResult = await _userRepository.getCurrentUser();
 
-    return currentUserResult.fold(
-      (error) => Future.value(left(error)),
-      (currentUser) {
-        if (currentUser == null) {
-          return Future.value(
-            left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
-          );
-        }
+    return currentUserResult.fold((error) => Future.value(left(error)), (
+      currentUser,
+    ) {
+      if (currentUser == null) {
+        return Future.value(
+          left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
+        );
+      }
 
-        return TaskEither(() => _userRepository.softDeleteUser(currentUser.id))
-            .flatMap((_) => _softDeleteAdminStores(currentUser))
-            .flatMap((_) => TaskEither(() => _authRepository.delete()))
-            .run();
-      },
-    );
+      return TaskEither(() => _userRepository.softDeleteUser(currentUser.id))
+          .flatMap((_) => _softDeleteAdminStores(currentUser))
+          .flatMap((_) => TaskEither(() => _authRepository.delete()))
+          .run();
+    });
   }
 
   /// 사용자가 관리자(admin)로 속한 모든 점포를 Soft Delete 처리한다.
@@ -118,7 +114,8 @@ class AuthUseCaseImpl implements AuthUseCase {
   /// 계정 삭제 시 관리자 소유 점포 레코드가 Firestore에 잔존하지 않도록
   /// 순회하며 삭제하고, 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
   TaskEither<Exception, void> _softDeleteAdminStores(User currentUser) {
-    final adminStoreIds = currentUser.storeInfos
+    // 승인 대기 점포는 아직 관리자가 아니라 삭제 권한이 없다
+    final adminStoreIds = currentUser.memberStoreInfos
         .where((info) => info.role == UserRole.admin)
         .map((info) => info.id);
 

@@ -380,7 +380,9 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       isExpanded: _isAllDayExpanded,
     );
     final storeInfos = ref.watch(
-      currentUserProvider.select((async) => async.asData?.value?.storeInfos),
+      currentUserProvider.select(
+        (async) => async.asData?.value?.memberStoreInfos,
+      ),
     );
     final filtered = storeInfos
         ?.where(

@@ -16,6 +16,9 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
     required UserRole role,
     required StoreColor color,
     required String memo,
+
+    /// 승인 전이면 true. 승인할 때 필드를 지우므로 없으면 승인된 점포다.
+    @Default(false) bool isPending,
   }) = _UserStoreInfoModel;
 
   factory UserStoreInfoModel.fromJson(Map<String, dynamic> json) =>
@@ -27,10 +30,18 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
       role: entity.role,
       color: entity.color,
       memo: entity.memo,
+      isPending: entity.isPending,
     );
   }
 
   UserStoreInfo toEntity({required String storeId}) {
-    return UserStoreInfo(id: storeId, name: name, role: role, color: color, memo: memo);
+    return UserStoreInfo(
+      id: storeId,
+      name: name,
+      role: role,
+      color: color,
+      memo: memo,
+      isPending: isPending,
+    );
   }
 }

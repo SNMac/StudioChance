@@ -2,24 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
-import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockStoreRepository extends Mock implements StoreRepository {}
-
-class MockUserRepository extends Mock implements UserRepository {}
-
-class FakeStore extends Fake implements Store {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late StoreUseCaseImpl useCase;

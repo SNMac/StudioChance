@@ -1,15 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/data/data_sources/store_data_source.dart';
-import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockStoreDataSource extends Mock implements StoreDataSource {}
-
-class MockUserDataSource extends Mock implements UserDataSource {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late StoreRepositoryImpl repository;

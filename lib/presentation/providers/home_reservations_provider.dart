@@ -22,13 +22,13 @@ part 'home_reservations_provider.g.dart';
 Stream<List<Reservation>> homeReservations(Ref ref, DateTime month) async* {
   final user = await ref.watch(currentUserProvider.future);
 
-  if (user == null || user.storeInfos.isEmpty) {
+  if (user == null || user.memberStoreInfos.isEmpty) {
     yield [];
     return;
   }
 
   final selectedIds = ref.watch(homeStoreFilterControllerProvider);
-  final storeIds = user.storeInfos
+  final storeIds = user.memberStoreInfos
       .map((info) => info.id)
       .where((id) => selectedIds.contains(id))
       .toList();
@@ -75,9 +75,7 @@ Stream<List<Reservation>> _buildMergedStream({
 
   void emitIfReady() {
     if (respondedStores.length == storeIds.length && !controller.isClosed) {
-      controller.add([
-        for (final list in latestByStore.values) ...list,
-      ]);
+      controller.add([for (final list in latestByStore.values) ...list]);
     }
   }
 

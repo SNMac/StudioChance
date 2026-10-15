@@ -13,24 +13,11 @@ import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/time_slot.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/domain/repository_interfaces/holiday_repository.dart';
-import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
-import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
-import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockReservationRepository extends Mock implements ReservationRepository {}
-
-class MockUserRepository extends Mock implements UserRepository {}
-
-class MockStoreRepository extends Mock implements StoreRepository {}
-
-class MockHolidayRepository extends Mock implements HolidayRepository {}
-
-class FakeReservation extends Fake implements Reservation {}
+import '../../helpers/mocks.dart';
 
 /// 평일(월~금) 시간당 요금 + 인원 추가 요금이 설정된 PriceSetting
 ///

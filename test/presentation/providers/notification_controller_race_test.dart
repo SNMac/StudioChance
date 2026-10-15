@@ -4,81 +4,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:studio_chance/domain/entities/push_message.dart';
 import 'package:studio_chance/domain/entities/user.dart';
-import 'package:studio_chance/domain/use_cases/notification_use_case.dart';
 import 'package:studio_chance/domain/use_cases/notification_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/notification_controller.dart';
 
 import '../../helpers/fake_entities.dart';
+import '../../helpers/fake_notification_use_case.dart';
 
 /// `requestPermission()`의 첫 호출만 [releasePermissionGate]가 호출될 때까지
 /// 블로킹해 "OS 권한 다이얼로그에서 대기 중 다른 build()가 끼어드는" 상황을
 /// 재현하는 fake. 나머지 메서드는 즉시 완료해, 뒤에 시작한 build()가 앞선
 /// build()보다 먼저 끝날 수 있게 한다.
-class _RacingNotificationUseCase implements NotificationUseCase {
-  final _tokenController = StreamController<String>.broadcast();
-  final _foregroundController = StreamController<PushMessage>.broadcast();
-  final _openedAppController = StreamController<PushMessage>.broadcast();
-
+class _RacingNotificationUseCase extends FakeNotificationUseCase {
   final _permissionGate = Completer<void>();
-  int requestPermissionCallCount = 0;
-
-  /// (uid, token) — token은 초기 등록이면 null.
-  final List<(String uid, String? token)> registerFcmTokenCalls = [];
 
   void releasePermissionGate() {
     if (!_permissionGate.isCompleted) _permissionGate.complete();
   }
 
-  /// 살아남은 구독이 어떤 build()의 것인지 확인하기 위해 토큰 갱신을 흉내낸다.
-  void emitTokenRefresh(String token) => _tokenController.add(token);
-
   @override
   Future<Either<Exception, bool>> requestPermission() async {
-    requestPermissionCallCount++;
+    final result = super.requestPermission();
     if (requestPermissionCallCount == 1) {
       // 첫 build()만 다이얼로그 대기 상황처럼 블로킹시킨다.
       await _permissionGate.future;
     }
-    return right(true);
+    return result;
   }
-
-  @override
-  Future<Either<Exception, void>> enableForegroundPresentation() async =>
-      right(null);
-
-  @override
-  Future<Either<Exception, void>> registerFcmToken({
-    required String uid,
-    String? token,
-  }) async {
-    registerFcmTokenCalls.add((uid, token));
-    return right(null);
-  }
-
-  @override
-  Stream<String> get onTokenRefresh => _tokenController.stream;
-
-  @override
-  Stream<PushMessage> get foregroundMessages => _foregroundController.stream;
-
-  @override
-  Stream<PushMessage> get openedAppMessages => _openedAppController.stream;
-
-  @override
-  Future<PushMessage?> getInitialMessage() async => null;
-
-  @override
-  Future<Either<Exception, void>> initLocalNotifications({
-    required void Function(String? payload) onTap,
-  }) async => right(null);
-
-  @override
-  Future<Either<Exception, void>> showLocalNotification(
-    PushMessage message,
-  ) async => right(null);
 }
 
 void main() {
@@ -102,9 +55,7 @@ void main() {
     container.read(notificationControllerProvider);
 
     // requestPermission()이 호출될 때까지 이벤트 루프를 펌핑한다.
-    for (var i = 0; i < 20 && useCase.requestPermissionCallCount < 1; i++) {
-      await Future<void>.delayed(Duration.zero);
-    }
+    await pumpEventQueue();
     expect(
       useCase.requestPermissionCallCount,
       1,
@@ -112,7 +63,7 @@ void main() {
     );
 
     // 2. userA의 build()가 아직 블로킹된 상태에서 userB로 즉시 전환한다.
-    //    (currentUserProvider를 watch 중이므로 재빌드가 자동으로 예약된다)
+    //    (watch 중인 uid가 바뀌므로 재빌드가 자동으로 예약된다)
     testUser = userB;
     container.invalidate(currentUserProvider);
 
@@ -121,9 +72,7 @@ void main() {
 
     // 3. 이제야 userA의 build()를 풀어준다 — 뒤늦게 재개된다.
     useCase.releasePermissionGate();
-    for (var i = 0; i < 20; i++) {
-      await Future<void>.delayed(Duration.zero);
-    }
+    await pumpEventQueue();
 
     // userB의 초기 FCM 토큰 등록만 있어야 하고, 뒤처진 userA의 등록은 없어야 한다.
     expect(useCase.registerFcmTokenCalls, [('uidB', null)]);

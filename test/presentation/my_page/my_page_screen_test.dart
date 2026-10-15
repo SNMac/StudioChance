@@ -9,15 +9,13 @@ import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
 import '../../helpers/fake_entities.dart';
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../helpers/mocks.dart';
 
 void main() {
   setUpAll(() {
@@ -92,6 +90,24 @@ void main() {
     // (본문은 showCustomAlertDialog가 insertZwj()로 글자 사이에 ZWJ를 삽입해
     // 정확한 문자열 매칭이 되지 않으므로 title만 검증한다.)
     expect(find.text('오류'), findsOneWidget);
+  });
+
+  testWidgets('승인 대기 중인 점포는 역할 대신 승인 대기로 표시한다', (tester) async {
+    final mockStoreUseCase = MockStoreUseCase();
+    final applicant = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first.copyWith(
+          role: UserRole.staff,
+          isPending: true,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(wrap(mockStoreUseCase, user: applicant));
+    await tester.pumpAndSettle();
+
+    expect(find.text('승인 대기'), findsOneWidget);
+    expect(find.text(UserRole.staff.displayName), findsNothing);
   });
 
   group('점포 수정 진입', () {

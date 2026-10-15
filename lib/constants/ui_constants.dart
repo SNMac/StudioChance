@@ -6,6 +6,13 @@ const double verticalPadding = 32.0;
 const double horizontalPadding = 16.0;
 const double formBorderRadius = 12.0;
 
+/// 입력 폼 행(TitleNavigationButton·TitleTextLabel)에서 제목이 쓸 수 있는 최대 폭
+/// 비율. 제목은 필요한 만큼만 쓰고 나머지는 내용이 쓴다.
+const double formRowTitleMaxWidthFraction = 2 / 3;
+
+/// 입력 폼 행에서 내용이 길어도 제목에 붙지 않도록 두는 최소 간격.
+const double formRowTitleContentGap = 8.0;
+
 // 모달
 const double modalTopCornerRadius = 10.0;
 

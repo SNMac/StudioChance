@@ -67,7 +67,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     final calendarHeight = monthlyCalendarHeightForMonth(displayedMonth);
     final storeInfos = ref.watch(
-      currentUserProvider.select((u) => u.asData?.value?.storeInfos ?? []),
+      currentUserProvider.select(
+        (u) => u.asData?.value?.memberStoreInfos ?? [],
+      ),
     );
     final selectedStartDate = ref.watch(
       homeCalendarControllerProvider.select((s) => s.selectedStartDate),

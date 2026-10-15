@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/models/space_option_model.dart';
@@ -13,12 +11,11 @@ import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
+import '../../helpers/mocks.dart';
 
 // lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
 // 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
 // 파라미터를 채우는 용도로만 쓰인다.
-class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
-
 // @Default({})와 @Default([])의 Freezed 기본값은 const {}와 const []로 생성되어
 // 런타임 타입이 _Map<dynamic, dynamic>/_List<dynamic>입니다.
 // fake_cloud_firestore가 이를 Map<String, dynamic>으로 캐스팅하면 TypeError가 발생하므로,

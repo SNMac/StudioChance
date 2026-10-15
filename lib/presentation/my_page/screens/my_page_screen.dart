@@ -9,7 +9,7 @@ import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
-import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_form_screen.dart';
+import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_save_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
@@ -19,7 +19,6 @@ import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart'
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
 import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
-import 'package:studio_chance/presentation/onboarding/controllers/onboarding_nickname_controller.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
@@ -234,7 +233,8 @@ class _StoreRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAdmin = info.role == UserRole.admin;
+    // 승인 전에는 멤버가 아니라 점포를 읽을 수 없으므로 관리자 기능을 열지 않는다
+    final isAdmin = info.role == UserRole.admin && !info.isPending;
 
     // 관리자인 점포만 대기 인원을 조회한다 (불필요한 Firestore 읽기 방지)
     final waitingCount = isAdmin
@@ -251,7 +251,7 @@ class _StoreRow extends ConsumerWidget {
       title: info.name,
       // 대기 인원을 content에 문자열로 붙이면 긴 점포명과 한 줄을 다투다
       // '관리자 · 신...'처럼 잘린다. 길이가 고정된 배지로 분리한다.
-      content: info.role.displayName,
+      content: info.isPending ? '승인 대기' : info.role.displayName,
       trailing: isAdmin
           ? Row(
               mainAxisSize: MainAxisSize.min,
@@ -314,18 +314,11 @@ class MyPageNicknameScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).asData?.value;
 
-    return NicknameFormScreen(
+    return NicknameSaveScreen(
       initialNickname: user?.nickname,
       title: '닉네임 변경',
-      onComplete: (nickname) async {
-        final notifier = ref.read(
-          onboardingNicknameControllerProvider.notifier,
-        );
-        await notifier.saveNicknameToRemote(nickname);
-
-        final state = ref.read(onboardingNicknameControllerProvider);
-        if (state.hasError) return;
-
+      onError: (error) => _showErrorDialog(context, error),
+      onSaved: () {
         ref.invalidate(currentUserProvider);
         if (context.mounted) context.pop();
       },

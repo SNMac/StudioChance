@@ -29,15 +29,17 @@ class TitleTextLabel extends StatelessWidget {
         height: inputFormComponentHeight,
         // title을 Flexible로 두면 content(Expanded)와 폭을 반씩 나눠, title이 짧아도
         // 남는 폭이 content로 가지 않아 일시처럼 긴 content가 잘린다.
-        // title은 필요한 만큼만(최대 절반) 차지하고 나머지는 content가 쓴다.
+        // title은 필요한 만큼만(최대 2/3) 차지하고 나머지는 content가 쓴다.
         child: LayoutBuilder(
           builder: (context, constraints) => Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 8,
+            spacing: formRowTitleContentGap,
             children: [
               ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: constraints.maxWidth / 2),
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth * formRowTitleMaxWidthFraction,
+                ),
                 child: Text(
                   title,
                   style: textTheme.bodyLarge,

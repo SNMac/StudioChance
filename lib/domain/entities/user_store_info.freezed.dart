@@ -14,7 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserStoreInfo {
 
- String get id; String get name; UserRole get role; StoreColor get color; String get memo;
+ String get id; String get name; UserRole get role; StoreColor get color; String get memo;/// 가입을 신청했지만 아직 관리자가 승인하지 않은 점포.
+/// 멤버가 아니라 Rules가 점포·예약 읽기를 거부하므로 구독하면 안 된다.
+ bool get isPending;
 /// Create a copy of UserStoreInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +27,16 @@ $UserStoreInfoCopyWith<UserStoreInfo> get copyWith => _$UserStoreInfoCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,role,color,memo);
+int get hashCode => Object.hash(runtimeType,id,name,role,color,memo,isPending);
 
 @override
 String toString() {
-  return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo)';
+  return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending)';
 }
 
 
@@ -45,7 +47,7 @@ abstract mixin class $UserStoreInfoCopyWith<$Res>  {
   factory $UserStoreInfoCopyWith(UserStoreInfo value, $Res Function(UserStoreInfo) _then) = _$UserStoreInfoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, UserRole role, StoreColor color, String memo
+ String id, String name, UserRole role, StoreColor color, String memo, bool isPending
 });
 
 
@@ -62,14 +64,15 @@ class _$UserStoreInfoCopyWithImpl<$Res>
 
 /// Create a copy of UserStoreInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? role = null,Object? color = null,Object? memo = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as UserRole,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isPending: null == isPending ? _self.isPending : isPending // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -154,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  UserRole role,  StoreColor color,  String memo)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  UserRole role,  StoreColor color,  String memo,  bool isPending)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserStoreInfo() when $default != null:
-return $default(_that.id,_that.name,_that.role,_that.color,_that.memo);case _:
+return $default(_that.id,_that.name,_that.role,_that.color,_that.memo,_that.isPending);case _:
   return orElse();
 
 }
@@ -175,10 +178,10 @@ return $default(_that.id,_that.name,_that.role,_that.color,_that.memo);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  UserRole role,  StoreColor color,  String memo)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  UserRole role,  StoreColor color,  String memo,  bool isPending)  $default,) {final _that = this;
 switch (_that) {
 case _UserStoreInfo():
-return $default(_that.id,_that.name,_that.role,_that.color,_that.memo);case _:
+return $default(_that.id,_that.name,_that.role,_that.color,_that.memo,_that.isPending);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +198,10 @@ return $default(_that.id,_that.name,_that.role,_that.color,_that.memo);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  UserRole role,  StoreColor color,  String memo)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  UserRole role,  StoreColor color,  String memo,  bool isPending)?  $default,) {final _that = this;
 switch (_that) {
 case _UserStoreInfo() when $default != null:
-return $default(_that.id,_that.name,_that.role,_that.color,_that.memo);case _:
+return $default(_that.id,_that.name,_that.role,_that.color,_that.memo,_that.isPending);case _:
   return null;
 
 }
@@ -210,7 +213,7 @@ return $default(_that.id,_that.name,_that.role,_that.color,_that.memo);case _:
 
 
 class _UserStoreInfo implements UserStoreInfo {
-  const _UserStoreInfo({required this.id, required this.name, required this.role, required this.color, required this.memo});
+  const _UserStoreInfo({required this.id, required this.name, required this.role, required this.color, required this.memo, this.isPending = false});
   
 
 @override final  String id;
@@ -218,6 +221,9 @@ class _UserStoreInfo implements UserStoreInfo {
 @override final  UserRole role;
 @override final  StoreColor color;
 @override final  String memo;
+/// 가입을 신청했지만 아직 관리자가 승인하지 않은 점포.
+/// 멤버가 아니라 Rules가 점포·예약 읽기를 거부하므로 구독하면 안 된다.
+@override@JsonKey() final  bool isPending;
 
 /// Create a copy of UserStoreInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +235,16 @@ _$UserStoreInfoCopyWith<_UserStoreInfo> get copyWith => __$UserStoreInfoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,role,color,memo);
+int get hashCode => Object.hash(runtimeType,id,name,role,color,memo,isPending);
 
 @override
 String toString() {
-  return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo)';
+  return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending)';
 }
 
 
@@ -249,7 +255,7 @@ abstract mixin class _$UserStoreInfoCopyWith<$Res> implements $UserStoreInfoCopy
   factory _$UserStoreInfoCopyWith(_UserStoreInfo value, $Res Function(_UserStoreInfo) _then) = __$UserStoreInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, UserRole role, StoreColor color, String memo
+ String id, String name, UserRole role, StoreColor color, String memo, bool isPending
 });
 
 
@@ -266,14 +272,15 @@ class __$UserStoreInfoCopyWithImpl<$Res>
 
 /// Create a copy of UserStoreInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? role = null,Object? color = null,Object? memo = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,}) {
   return _then(_UserStoreInfo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as UserRole,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isPending: null == isPending ? _self.isPending : isPending // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

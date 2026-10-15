@@ -12,14 +12,12 @@ import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
 
 import '../../helpers/fake_entities.dart';
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
+import '../../helpers/mocks.dart';
 
 Store storeWithWaiting(List<StoreMemberInfo> waiting) =>
     fakeStore.copyWith(waitingMemberInfos: waiting);

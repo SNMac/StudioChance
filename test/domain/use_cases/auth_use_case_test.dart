@@ -1,23 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
-import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
-import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
 import '../../helpers/either_expectations.dart';
-
-class MockAuthRepository extends Mock implements AuthRepository {}
-
-class MockUserRepository extends Mock implements UserRepository {}
-
-class MockStoreUseCase extends Mock implements StoreUseCase {}
-
-class FakeAuthInfo extends Fake implements AuthInfo {}
+import '../../helpers/mocks.dart';
 
 void main() {
   late AuthUseCaseImpl useCase;
@@ -231,6 +220,34 @@ void main() {
       expectRight(result);
       verify(() => mockStoreUseCase.softDeleteStore('store-123')).called(1);
       verify(() => mockAuthRepo.delete()).called(1);
+    });
+
+    // 승인 전에는 멤버가 아니라 Rules가 점포 수정을 거부해 계정 삭제가 실패한다
+    test('승인 대기 중인 점포는 관리자 역할이어도 삭제하지 않는다', () async {
+      final applicant = fakeUser.copyWith(
+        storeInfos: [
+          ...fakeUser.storeInfos,
+          fakeUser.storeInfos.first.copyWith(
+            id: 'store-pending',
+            isPending: true,
+          ),
+        ],
+      );
+      when(
+        () => mockUserRepo.getCurrentUser(),
+      ).thenAnswer((_) async => right(applicant));
+      when(
+        () => mockUserRepo.softDeleteUser(applicant.id),
+      ).thenAnswer((_) async => right(null));
+      when(
+        () => mockStoreUseCase.softDeleteStore('store-123'),
+      ).thenAnswer((_) async => right(null));
+      when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
+
+      final result = await useCase.delete();
+
+      expectRight(result);
+      verifyNever(() => mockStoreUseCase.softDeleteStore('store-pending'));
     });
 
     test('현재 유저가 null이면 AuthUserNotFoundException을 반환한다', () async {

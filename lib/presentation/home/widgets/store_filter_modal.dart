@@ -69,13 +69,17 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
 
   void _snapToNearest() {
     const mid = (_kModalInitialSize + _kModalMaxSize) / 2;
-    _animateTo(_sheetController.value >= mid ? _kModalMaxSize : _kModalInitialSize);
+    _animateTo(
+      _sheetController.value >= mid ? _kModalMaxSize : _kModalInitialSize,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final storeInfos = ref.watch(
-      currentUserProvider.select((u) => u.asData?.value?.storeInfos ?? []),
+      currentUserProvider.select(
+        (u) => u.asData?.value?.memberStoreInfos ?? [],
+      ),
     );
     final selectedIds = ref.watch(homeStoreFilterControllerProvider);
     final notifier = ref.read(homeStoreFilterControllerProvider.notifier);
@@ -106,8 +110,10 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
               },
               onPointerMove: (event) {
                 final delta = -event.delta.dy / widget.maxAvailableHeight;
-                _sheetController.value = (_sheetController.value + delta)
-                    .clamp(_kModalInitialSize, _kModalMaxSize);
+                _sheetController.value = (_sheetController.value + delta).clamp(
+                  _kModalInitialSize,
+                  _kModalMaxSize,
+                );
               },
               onPointerUp: (event) {
                 final totalDy = event.position.dy - _grabberDragStartY;
@@ -171,7 +177,9 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                                   height: 8,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Color(info.color.foregroundColorValue),
+                                    color: Color(
+                                      info.color.foregroundColorValue,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -179,7 +187,9 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                                 Expanded(
                                   child: Text(
                                     info.name,
-                                    style: Theme.of(context).textTheme.bodyLarge,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),

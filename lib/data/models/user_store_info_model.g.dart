@@ -12,6 +12,7 @@ _UserStoreInfoModel _$UserStoreInfoModelFromJson(Map<String, dynamic> json) =>
       role: $enumDecode(_$UserRoleEnumMap, json['role']),
       color: $enumDecode(_$StoreColorEnumMap, json['color']),
       memo: json['memo'] as String,
+      isPending: json['isPending'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$UserStoreInfoModelToJson(_UserStoreInfoModel instance) =>
@@ -20,6 +21,7 @@ Map<String, dynamic> _$UserStoreInfoModelToJson(_UserStoreInfoModel instance) =>
       'role': _$UserRoleEnumMap[instance.role]!,
       'color': _$StoreColorEnumMap[instance.color]!,
       'memo': instance.memo,
+      'isPending': instance.isPending,
     };
 
 const _$UserRoleEnumMap = {

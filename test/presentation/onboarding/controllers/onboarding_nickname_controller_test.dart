@@ -3,13 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
-import 'package:studio_chance/domain/use_cases/user_use_case.dart';
 import 'package:studio_chance/domain/use_cases/user_use_case_provider.dart';
 import 'package:studio_chance/presentation/onboarding/controllers/onboarding_nickname_controller.dart';
 
 import '../../../helpers/fake_entities.dart';
-
-class MockUserUseCase extends Mock implements UserUseCase {}
+import '../../../helpers/mocks.dart';
 
 void main() {
   late MockUserUseCase mockUserUseCase;

@@ -19,7 +19,7 @@ class HomeStoreFilterController extends _$HomeStoreFilterController {
     final user = ref.watch(currentUserProvider).asData?.value;
     if (user == null) return {};
 
-    final allIds = user.storeInfos.map((info) => info.id).toSet();
+    final allIds = user.memberStoreInfos.map((info) => info.id).toSet();
     final prefs = ref.watch(sharedPreferencesProvider).asData?.value;
 
     // prefs 로드 전이거나 저장값 없으면 전체 선택
@@ -48,7 +48,7 @@ class HomeStoreFilterController extends _$HomeStoreFilterController {
   void toggleAll() {
     final user = ref.read(currentUserProvider).asData?.value;
     if (user == null) return;
-    final allIds = user.storeInfos.map((info) => info.id).toSet();
+    final allIds = user.memberStoreInfos.map((info) => info.id).toSet();
     final isAllSelected =
         state.length == allIds.length && state.containsAll(allIds);
     state = isAllSelected ? {} : Set<String>.of(allIds);
@@ -72,7 +72,7 @@ class HomeStoreFilterController extends _$HomeStoreFilterController {
     final user = ref.read(currentUserProvider).asData?.value;
     if (user == null) return;
 
-    final allIds = user.storeInfos.map((info) => info.id).toSet();
+    final allIds = user.memberStoreInfos.map((info) => info.id).toSet();
     final deselectedIds = allIds.difference(state).toList();
     await prefs.setStringList(_kDeselectedStoreIdsKey, deselectedIds);
   }

@@ -1,7 +1,5 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
@@ -15,12 +13,11 @@ import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 
 import '../../helpers/firestore_emulator_helper.dart';
 import '../../helpers/either_expectations.dart';
+import '../../helpers/mocks.dart';
 
 // lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
 // 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
 // 파라미터를 채우는 용도로만 쓰인다.
-class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
-
 Store _testStoreEntity(String uid, User adminUser) => Store(
   id: '',
   name: '통합 테스트 점포',
@@ -475,6 +472,53 @@ void main() {
       final store = expectRight(fetched)!;
       final memberIds = store.memberInfos.map((m) => m.user.id).toList();
       expect(memberIds.contains(memberUid), isTrue);
+    });
+
+    // 신청자는 아직 멤버가 아니라 Rules가 그 점포의 예약 읽기를 거부한다.
+    // 사용자 문서만 보고도 승인 전인지 알 수 있어야 홈이 구독하지 않는다.
+    test('가입 신청한 점포는 승인 전까지 승인 대기로 읽힌다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final memberUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      await _seedUserDoc(fakeFirestore, memberUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final created = await repository.createStore(
+        store: _testStoreEntity(ownerUid, adminUser),
+        color: StoreColor.blue,
+        memo: '',
+      );
+      final storeId = expectRight(created).id;
+
+      Future<bool?> isPendingFor(String uid) async {
+        final user = (await userDataSource.getUser(uid))!.toEntity();
+        return user.storeInfoOf(storeId)?.isPending;
+      }
+
+      expect(await isPendingFor(ownerUid), isFalse, reason: '생성자는 바로 멤버다');
+
+      await repository.requestJoinStore(
+        storeId: storeId,
+        uid: memberUid,
+        role: UserRole.staff,
+        color: StoreColor.red,
+        storeAlias: '통합 테스트 점포',
+        memo: '',
+      );
+      expect(await isPendingFor(memberUid), isTrue);
+
+      await repository.approveMember(
+        storeId: storeId,
+        uid: memberUid,
+        role: UserRole.staff,
+      );
+      expect(await isPendingFor(memberUid), isFalse);
     });
   });
 
