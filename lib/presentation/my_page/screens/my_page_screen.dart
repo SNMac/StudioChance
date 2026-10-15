@@ -314,6 +314,12 @@ class MyPageNicknameScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).asData?.value;
 
+    // 구독하지 않으면 autoDispose 컨트롤러가 저장 도중 dispose되어,
+    // 저장은 끝나도 state 갱신에서 예외가 나 화면이 닫히지 않는다.
+    ref.listen(onboardingNicknameControllerProvider, (_, next) {
+      next.whenOrNull(error: (error, _) => _showErrorDialog(context, error));
+    });
+
     return NicknameFormScreen(
       initialNickname: user?.nickname,
       title: '닉네임 변경',
