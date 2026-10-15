@@ -234,7 +234,8 @@ class _StoreRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAdmin = info.role == UserRole.admin;
+    // 승인 전에는 멤버가 아니라 점포를 읽을 수 없으므로 관리자 기능을 열지 않는다
+    final isAdmin = info.role == UserRole.admin && !info.isPending;
 
     // 관리자인 점포만 대기 인원을 조회한다 (불필요한 Firestore 읽기 방지)
     final waitingCount = isAdmin
@@ -251,7 +252,7 @@ class _StoreRow extends ConsumerWidget {
       title: info.name,
       // 대기 인원을 content에 문자열로 붙이면 긴 점포명과 한 줄을 다투다
       // '관리자 · 신...'처럼 잘린다. 길이가 고정된 배지로 분리한다.
-      content: info.role.displayName,
+      content: info.isPending ? '승인 대기' : info.role.displayName,
       trailing: isAdmin
           ? Row(
               mainAxisSize: MainAxisSize.min,

@@ -58,7 +58,8 @@ abstract interface class StoreDataSource {
   );
 
   /// 가입 승인 (waitingMemberById → memberById 이동)
-  /// - 승인된 역할을 users/{uid}.storeById.{storeId}.role에도 동기화한다.
+  /// - 승인된 역할을 users/{uid}.storeById.{storeId}.role에도 동기화하고,
+  ///   승인 대기 표시(isPending)를 지운다.
   Future<void> approveMember(
     String storeId,
     String uid,
@@ -331,6 +332,8 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
 
       batch.update(_firestore.collection('users').doc(uid), {
         'storeById.$storeId.role': roleJson,
+        // 이제 멤버이므로 승인 대기 표시를 지운다 (없으면 승인된 점포로 읽힌다)
+        'storeById.$storeId.isPending': FieldValue.delete(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 

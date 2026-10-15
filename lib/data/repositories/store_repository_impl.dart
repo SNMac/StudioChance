@@ -233,6 +233,7 @@ class StoreRepositoryImpl implements StoreRepository {
         color: color,
         role: role,
         memo: memo,
+        isPending: true,
       );
 
       await _storeDataSource.requestJoinWithBatch(

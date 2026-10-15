@@ -163,6 +163,48 @@ void main() {
     expect(result.map((r) => r.id), containsAll(['res-001', 'res-002']));
   });
 
+  // 신청자는 아직 멤버가 아니라 Rules가 예약 읽기를 거부한다(PERMISSION_DENIED).
+  test('승인 대기 중인 점포의 예약은 구독하지 않는다', () async {
+    when(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-123',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    ).thenAnswer((_) => Stream.value([fakeReservation]));
+
+    final userWithPendingStore = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first,
+        UserStoreInfo(
+          id: 'store-pending',
+          name: '신청한점포',
+          role: UserRole.staff,
+          color: StoreColor.blue,
+          memo: '',
+          isPending: true,
+        ),
+      ],
+    );
+
+    final container = createContainer(
+      useCase: mockUseCase,
+      user: userWithPendingStore,
+    );
+    addTearDown(container.dispose);
+
+    final result = await readFuture(container);
+
+    expect(result.map((r) => r.id), [fakeReservation.id]);
+    verifyNever(
+      () => mockUseCase.watchReservationsByDateRange(
+        storeId: 'store-pending',
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+      ),
+    );
+  });
+
   test('한 점포 조회 실패 시 성공한 점포 결과만 포함한다', () async {
     when(
       () => mockUseCase.watchReservationsByDateRange(

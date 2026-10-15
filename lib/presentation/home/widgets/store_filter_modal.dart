@@ -77,7 +77,9 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
   @override
   Widget build(BuildContext context) {
     final storeInfos = ref.watch(
-      currentUserProvider.select((u) => u.asData?.value?.storeInfos ?? []),
+      currentUserProvider.select(
+        (u) => u.asData?.value?.memberStoreInfos ?? [],
+      ),
     );
     final selectedIds = ref.watch(homeStoreFilterControllerProvider);
     final notifier = ref.read(homeStoreFilterControllerProvider.notifier);
@@ -185,9 +187,9 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                                 Expanded(
                                   child: Text(
                                     info.name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),

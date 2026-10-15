@@ -94,6 +94,24 @@ void main() {
     expect(find.text('오류'), findsOneWidget);
   });
 
+  testWidgets('승인 대기 중인 점포는 역할 대신 승인 대기로 표시한다', (tester) async {
+    final mockStoreUseCase = MockStoreUseCase();
+    final applicant = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first.copyWith(
+          role: UserRole.staff,
+          isPending: true,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(wrap(mockStoreUseCase, user: applicant));
+    await tester.pumpAndSettle();
+
+    expect(find.text('승인 대기'), findsOneWidget);
+    expect(find.text(UserRole.staff.displayName), findsNothing);
+  });
+
   group('점포 수정 진입', () {
     testWidgets('관리자 점포의 수정 버튼을 누르면 새로 조회한 점포로 수정 화면을 연다', (tester) async {
       final mockStoreUseCase = MockStoreUseCase();
