@@ -5,6 +5,8 @@ const int maxMemoCharCount = 500;
 const int maxConfirmationNotesCharCount = 3000;
 
 /// 점포 초대 코드 유효 시간(분 단위)
+/// - Cloud Functions의 `INVITE_CODE_AVAILABLE_MIN`과 동일해야 한다 (계약 테스트
+///   `functions/src/contract/shared_constants.test.ts`가 검사한다)
 const int storeInviteCodeAvailableMin = 15;
 
 /// 사용자 soft delete 유지 기간(일 단위)

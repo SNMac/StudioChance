@@ -1,12 +1,16 @@
 import type { TokenMessage } from 'firebase-admin/messaging';
 
-/** 푸시 payload의 `data.type` 값. Flutter의 `joinRequestNotificationType`과 동일해야 한다. */
+/**
+ * 푸시 payload의 `data.type` 값. Flutter의 `joinRequestNotificationType`과 동일해야 한다
+ * (계약 테스트 `contract/shared_constants.test.ts`가 검사한다).
+ */
 export const JOIN_REQUEST_TYPE = 'joinRequest';
 
 /**
  * Android 알림 채널 ID.
  * AndroidManifest의 `default_notification_channel_id`,
- * Flutter의 `notificationChannelId`와 반드시 동일해야 한다.
+ * Flutter의 `notificationChannelId`와 반드시 동일해야 한다
+ * (계약 테스트 `contract/shared_constants.test.ts`가 검사한다).
  */
 export const ANDROID_CHANNEL_ID = 'sc_default';
 
