@@ -73,7 +73,7 @@ abstract class PriceSetting with _$PriceSetting {
   ///
   /// [isHoliday]는 날짜별 공휴일 여부를 판단하는 콜백이다. 다일(allDay) 예약은
   /// 날짜마다 다른 결과를 받을 수 있어야 하므로 단일 `bool`이 아닌 함수로 받는다.
-  /// 생략 시 모든 날짜를 공휴일이 아닌 것으로 처리한다.
+  /// 생략 시 모든 날짜를 공휴일이 아닌 것으로 처리한다 (D8).
   int calculatePrice({
     required DateTime start,
     required DateTime end,

@@ -101,6 +101,11 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
 
   /// FCM 토큰 전용 문서. users/{uid} 본문은 다른 사용자도 읽을 수 있으므로
   /// 토큰은 본인만 접근 가능한 이 경로에 둔다 (firestore.rules 참고).
+  ///
+  /// 토큰을 추가·교체·제거하는 경로(`recordLogin`, `addFcmToken`, `replaceFcmToken`,
+  /// `removeFcmToken`)는 반드시 `set(..., merge: true)`를 쓴다 — `update`는 문서가 없으면
+  /// 실패하는데 첫 로그인 기기에는 이 문서가 없다. 문서를 처음 만드는 `createUser`와
+  /// 전체를 비우는 `softDeleteUser`는 `SetOptions` 없이 쓰는 것이 맞다.
   DocumentReference<Map<String, dynamic>> _fcmDocRef(String uid) {
     return _userDocRef(uid).collection('private').doc('fcm');
   }

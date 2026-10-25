@@ -96,6 +96,7 @@ abstract interface class ReservationUseCase {
   });
 }
 
+/// 가격 계산에 점포의 현재 요금표가 필요해 [StoreRepository]도 주입받는다 (D3)
 class ReservationUseCaseImpl implements ReservationUseCase {
   final ReservationRepository _reservationRepository;
   final UserRepository _userRepository;

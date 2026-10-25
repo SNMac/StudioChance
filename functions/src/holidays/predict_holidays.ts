@@ -13,6 +13,11 @@ import { HolidayDays } from './holiday_days.js';
  * 임시공휴일, 궐위·보궐 선거, 법령 개정은 예측할 수 없다. 공식 데이터가 들어오면
  * 그 연도를 통째로 교체한다.
  *
+ * 법령이 바뀌면 이 파일을 고친다: 공휴일 목록·대체공휴일 대상(규정 제3조),
+ * 선거 임기 기준일 상수 `ELECTIONS`(궐위·조기 선거 시).
+ * 「공휴일에 관한 법률」과 「관공서의 공휴일에 관한 규정」은 선거일·임시공휴일의
+ * **호 번호가 다르다** — 주석에 번호를 적을 때 두 법령을 섞지 않는다.
+ *
  * @returns 음력 변환 범위(2050년)를 넘는 연도는 null
  */
 export function predictHolidays(year: number): HolidayDays | null {

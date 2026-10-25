@@ -54,7 +54,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM 기반의 Flutter 공간�
 - **에러 처리**: UseCase는 `fpdart`의 `Either<Exception, T>`를 반환합니다.
   `isLeft()`/`getLeft()` 명령형 스타일 대신 `fold()`를 사용합니다.
 - **보안 경계는 Firestore Security Rules**입니다. UseCase 레벨 권한 검증이 없다는 지적은
-  의도된 설계이므로 불필요합니다 (`CLAUDE.md` D2 참고).
+  의도된 설계이므로 불필요합니다 (`docs/adr/legacy-decisions.md` D2 참고).
 
 ### 테스트 정책
 
