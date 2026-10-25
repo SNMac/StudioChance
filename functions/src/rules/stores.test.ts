@@ -8,6 +8,7 @@ import {
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -194,5 +195,198 @@ test('비로그인 사용자는 점포를 만들지 못한다', async () => {
       name: '새 점포',
       memberById: { creator1: { role: 'ADMIN' } },
     }),
+  );
+});
+
+// ─── 관리자 1명 불변식 (ADR-0004) ─────────────────────────────────────
+
+async function seedWaiting(uid: string, role: string): Promise<void> {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'stores/s1'), {
+      [`waitingMemberById.${uid}`]: { role },
+    });
+  });
+}
+
+test('ADMIN은 대기 멤버를 STAFF로 승인할 수 있다', async () => {
+  await seedWaiting('pending1', 'STAFF');
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.pending1': deleteField(),
+      'memberById.pending1': { role: 'STAFF' },
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('ADMIN으로 승인하면 관리자가 2명이 되어 거부된다', async () => {
+  await seedWaiting('pending1', 'STAFF');
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.pending1': deleteField(),
+      'memberById.pending1': { role: 'ADMIN' },
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('다른 멤버를 ADMIN으로 올리면 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.staff1.role': 'ADMIN' }),
+  );
+});
+
+test('관리자가 자신을 강등하면 관리자가 없어져 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.admin1.role': 'STAFF' }),
+  );
+});
+
+test('관리자가 자신을 추방하면 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.admin1': deleteField() }),
+  );
+});
+
+test('관리자는 다른 멤버를 추방할 수 있다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.staff1': deleteField() }),
+  );
+});
+
+test('관리자는 스태프 역할을 뷰어로 바꿀 수 있다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.staff1.role': 'VIEWER' }),
+  );
+});
+
+test('관리자 위임: 자신을 STAFF로, 대상을 ADMIN으로 한 번에 바꾸면 성공한다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'memberById.admin1.role': 'STAFF',
+      'memberById.staff1.role': 'ADMIN',
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('위임 후 이전 관리자는 더 이상 점포를 수정하지 못한다', async () => {
+  const adminDb = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(adminDb, 'stores/s1'), {
+      'memberById.admin1.role': 'VIEWER',
+      'memberById.staff1.role': 'ADMIN',
+    }),
+  );
+  await assertFails(updateDoc(doc(adminDb, 'stores/s1'), { name: '새 이름' }));
+
+  const newAdminDb = env.authenticatedContext('staff1').firestore();
+  await assertSucceeds(updateDoc(doc(newAdminDb, 'stores/s1'), { name: '새 이름' }));
+});
+
+test('관리자 수 판정은 멤버 값이 {role} 하나라는 전제에 기댄다 (ADR-0004 전제 고정)', async () => {
+  // 값에 필드가 늘면 {'role': 'ADMIN'}과 일치하지 않아 관리자 0명으로 세진다.
+  // 이 테스트가 깨지면 Rules의 관리자 수 식을 함께 고쳐야 한다
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'stores/s1'), {
+      'memberById.admin1': { role: 'ADMIN', joinedAt: new Date() },
+    });
+  });
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), { name: '새 이름' }));
+});
+
+// ─── 가입 신청·신청 취소 ──────────────────────────────────────────────
+
+test('ADMIN 역할로 가입 신청하면 거부된다', async () => {
+  const db = env.authenticatedContext('applicant1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.applicant1': { role: 'ADMIN' },
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('이미 멤버인 사람은 가입 신청을 추가하지 못한다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.staff1': { role: 'VIEWER' },
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('대기 멤버는 자기 가입 신청을 취소할 수 있다', async () => {
+  await seedWaiting('pending1', 'STAFF');
+  const db = env.authenticatedContext('pending1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.pending1': deleteField(),
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('남의 가입 신청은 취소하지 못한다', async () => {
+  await seedWaiting('pending1', 'STAFF');
+  const db = env.authenticatedContext('pending2').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.pending1': deleteField(),
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+// ─── 점포 나가기 ──────────────────────────────────────────────────────
+
+test('스태프는 점포를 나갈 수 있다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'memberById.staff1': deleteField(),
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('뷰어는 점포를 나갈 수 있다', async () => {
+  const db = env.authenticatedContext('viewer1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.viewer1': deleteField() }),
+  );
+});
+
+test('멤버는 다른 멤버를 내보내지 못한다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.viewer1': deleteField() }),
+  );
+});
+
+test('나가면서 다른 필드를 바꾸면 거부된다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      'memberById.staff1': deleteField(),
+      name: '탈취',
+    }),
+  );
+});
+
+test('멤버는 나가기 규칙으로 자기 역할을 바꾸지 못한다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.staff1.role': 'ADMIN' }),
   );
 });
