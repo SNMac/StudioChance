@@ -29,6 +29,27 @@ String? joinRequestStoreIdOf(PushMessage message) {
   return storeId;
 }
 
+/// 멤버 구성 변화 알림 type — 받은 사람의 점포 목록·역할이 바뀐다
+const _membershipChangeNotificationTypes = {
+  adminDelegatedNotificationType,
+  memberLeftNotificationType,
+  memberRemovedNotificationType,
+  joinApprovedNotificationType,
+  joinRejectedNotificationType,
+  storeDeletedNotificationType,
+};
+
+/// 푸시 메시지가 멤버 구성 변화(관리자 위임·점포 나가기·추방·가입 승인·거절·점포 삭제)면
+/// 해당 점포 ID를, 아니면 null을 반환한다.
+String? membershipChangeStoreIdOf(PushMessage message) {
+  if (!_membershipChangeNotificationTypes.contains(message.type)) return null;
+
+  final storeId = message.data['storeId'];
+  if (storeId == null || storeId.isEmpty) return null;
+
+  return storeId;
+}
+
 /// 알림 권한 요청, FCM 토큰 등록, 수신 메시지 표시·딥링크를 담당한다.
 ///
 /// `MyApp`에서 watch하여 앱 생명주기 동안 살아 있게 한다.
@@ -124,6 +145,7 @@ class NotificationController extends _$NotificationController {
       if (joinRequestStoreId != null) {
         ref.invalidate(storeDetailProvider(joinRequestStoreId));
       }
+      _refreshMembership(message);
 
       // iOS는 위에서 켠 설정으로 시스템이 직접 배너를 표시하므로,
       // 로컬 알림까지 띄우면 배너가 두 번 보인다.
@@ -156,9 +178,20 @@ class NotificationController extends _$NotificationController {
     }
   }
 
+  /// 멤버 구성 변화 알림이면 내 점포 목록·역할과 해당 점포 정보를 다시 읽는다.
+  /// 다른 사람의 쓰기로 바뀐 것이라 이 기기의 캐시는 스스로 갱신되지 않는다
+  void _refreshMembership(PushMessage message) {
+    final storeId = membershipChangeStoreIdOf(message);
+    if (storeId == null) return;
+
+    ref.invalidate(currentUserProvider);
+    ref.invalidate(storeDetailProvider(storeId));
+  }
+
   void _handleMessage(PushMessage message) {
     final storeId = joinRequestStoreIdOf(message);
-    if (storeId == null) return;
+    final isMembershipChange = membershipChangeStoreIdOf(message) != null;
+    if (storeId == null && !isMembershipChange) return;
 
     final status = ref.read(appAuthControllerProvider).value;
     if (status != AppStatus.authenticated) {
@@ -167,8 +200,14 @@ class NotificationController extends _$NotificationController {
       return;
     }
 
+    _refreshMembership(message);
+
     final router = ref.read(goRouterProvider);
     router.go(SCRoute.myPage.path);
+
+    // 멤버 구성 변화는 마이페이지까지만 이동한다.
+    // TODO: #48 멤버 관리 화면이 생기면 위임·나가기 알림은 해당 점포의 멤버 관리 화면으로 연다
+    if (storeId == null) return;
 
     // go()는 선언적 이동이라 GoRouter가 다음 프레임에 Navigator의 페이지 목록을
     // 실제로 갱신한다. 프레임 1회면 충분하다 — navigatorKey.currentContext는
