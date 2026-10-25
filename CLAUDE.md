@@ -147,7 +147,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 
 - `lookupInviteCode` (`functions/src/invite/`): 초대 코드로 **가입 전 표시 정보만** 조회한다 (D11).
   리전 `asia-northeast3`, `enforceAppCheck: true`, 인증 필수. 응답에 넣으면 안 되는 필드, 실패를 판별 값으로 돌려주는 이유,
-  브루트포스 카운터 규칙은 그 파일과 `store_data_source.dart`의 주석에 있다
+  브루트포스 카운터 규칙은 `lookup_invite_code.ts`와 `store_data_source.dart`의 주석에 있다
   - 클라이언트: `cloud_functions` 패키지, `FirebaseFunctions.instanceFor(region: 'asia-northeast3')`.
   - **dev 실기기에서 초대 코드 조회가 전부 "권한이 없습니다"로 실패하면** App Check 디버그 토큰 미등록을 의심한다 → `docs/operations.md`
 
@@ -176,6 +176,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 
 ## 마이페이지 / 하단 탭바
 
+- 예약 통계(`stats`) 탭은 화면이 없어 탭해도 아무 동작도 하지 않는다 (`_onTabTapped`의 TODO).
 - `/my-page` 하위는 온보딩과 동일한 `_roleSubRoutes()`를 재사용한다 — 점포 추가 플로우를 중복 구현하지 않는다.
 - 승인 대기 멤버 관리는 `showPendingMemberModal(context, storeId)` 모달이며, 마이페이지의 ADMIN 점포 행과 FCM 알림 딥링크 두 곳에서 같은 모달을 연다.
 - 점포 수정은 최상위 `/store-edit` 라우트(`pushStoreEdit`)다. 마이페이지 ADMIN 행의 연필 버튼과 예약 계산 내역 시트의 '요금 설정' 버튼이 `StoreEditLauncher` mixin으로 연다. 시트에서 열 때는 예약 모달을 닫지 않고 그 위에 쌓는다.

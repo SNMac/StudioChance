@@ -74,4 +74,4 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 UX �
 - 버전 필드 + Rules 검증 대신 필드 비교를 고른 이유: 클라이언트가 이 앱 하나뿐이라 서버 강제의 가치가 작고, 스키마·Rules·배포 순서가 늘지 않는다
 - 비교는 Repository가 한다(`StoreRepositoryImpl._comparableEditableJson`). 폼의 점포는 legacy fallback(`legacy_default` 공간)을 거친 엔티티이므로 저장 직전 문서도 같은 fallback·변환을 거쳐야 한다. DataSource는 `isUnchanged` 콜백만 실행한다
 - 수정 화면에 넘기는 점포는 진입 직전에 새로 조회한다(`StoreEditController.loadStoreForEdit`) — 캐시된 `storeDetailProvider` 값이면 저장할 때마다 충돌한다
-- 점포명 캐시(`users/{uid}.storeById.{storeId}.name`)는 같은 트랜잭션에서 사용자 문서를 먼저 읽어 **그 점포 항목이 이미 있는 사용자에게만** 쓴다. 점포 문서에는 대기 멤버로 남았는데 사용자 문서에는 항목이 없는 어긋난 데이터에 점 경로 update를 하면 role 없는 `{name}` 항목이 생겨, 그 사용자를 읽는 점포 조회(멤버 hydrate)가 전부 파싱에 실패한다
+- 점포명 캐시(`users/{uid}.storeById.{storeId}.name`)는 같은 트랜잭션에서 사용자 문서를 먼저 읽어 **그 점포 항목이 이미 있는 사용자에게만** 쓴다. 점포 문서에는 승인 대기자로 남았는데 사용자 문서에는 항목이 없는 어긋난 데이터에 점 경로 update를 하면 role 없는 `{name}` 항목이 생겨, 그 사용자를 읽는 점포 조회(멤버 hydrate)가 전부 파싱에 실패한다

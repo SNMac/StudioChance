@@ -31,7 +31,7 @@ abstract interface class NotificationUseCase {
 
 /// 현재는 모든 메서드가 Repository로 단순 위임한다.
 /// Presentation이 Repository를 직접 호출하지 않도록 계층을 유지하기 위함이며,
-/// 알림 정책(예: 방해 금지 시간)이 생기면 이 계층에 추가한다. (CLAUDE.md D10)
+/// 알림 정책(예: 방해 금지 시간)이 생기면 이 계층에 추가한다. (D10)
 class NotificationUseCaseImpl implements NotificationUseCase {
   final NotificationRepository _notificationRepository;
 

@@ -38,7 +38,7 @@ Rules 테스트용 에뮬레이터 설정은 별도로 추적하는 `firebase.em
 ## Cloud Functions 배포
 
 - `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
-- Rules는 `firebase deploy --only firestore:rules -P dev` / `-P prod`. 순서는 Functions → Rules → 앱이다 (CLAUDE.md)
+- Rules는 `firebase deploy --only firestore:rules -P dev` / `-P prod`
 - **배포 전 Secret 설정**(dev·prod 각각, 최초 1회): `firebase functions:secrets:set DATA_GO_KR_SERVICE_KEY -P dev`
 - **`syncHolidays` 첫 배포 직후 1회 수동 실행**: 스케줄 첫 실행이 다음 날 새벽이므로 Cloud Scheduler 콘솔에서 `syncHolidays` 작업을 "강제 실행"한다
 
