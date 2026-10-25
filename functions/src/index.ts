@@ -2,10 +2,18 @@ import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { logger } from 'firebase-functions/v2';
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import {
+  onDocumentUpdated,
+  onDocumentUpdatedWithAuthContext,
+} from 'firebase-functions/v2/firestore';
 
 import { adminUidsOf, buildJoinRequestMessages } from './notifications/join_request_payload.js';
 import { invalidTokensFrom } from './notifications/invalid_tokens.js';
+import {
+  buildMembershipMessages,
+  classifyMembershipChanges,
+  type StoreSnapshot,
+} from './notifications/membership_change.js';
 import { collectNewWaitingUids } from './notifications/waiting_member_diff.js';
 
 initializeApp();
@@ -114,6 +122,93 @@ export const notifyAdminsOnJoinRequest = onDocumentUpdated(
       for (const token of expiredTokens) {
         ownerUidByToken.delete(token);
       }
+      logger.info('폐기된 FCM 토큰 정리', { storeId, count: expiredTokens.length });
+    }
+  },
+);
+
+/**
+ * 점포 멤버 구성이 바뀌면(관리자 위임·점포 나가기·추방·가입 승인·거절·점포 삭제)
+ * 당사자에게 푸시 알림을 보낸다. 분류 규칙은 `classifyMembershipChanges` 참고.
+ *
+ * 쓴 사람(`authId`)으로 나가기와 추방, 신청 취소와 거절을 구분하므로 auth context
+ * 트리거를 쓴다. 새 가입 신청은 `notifyAdminsOnJoinRequest`가 담당한다.
+ */
+export const notifyOnMembershipChange = onDocumentUpdatedWithAuthContext(
+  {
+    document: 'stores/{storeId}',
+    region: 'asia-northeast3',
+  },
+  async (event) => {
+    const before = event.data?.before.data() as StoreSnapshot | undefined;
+    const after = event.data?.after.data() as StoreSnapshot | undefined;
+    if (!before || !after) return;
+
+    const changes = classifyMembershipChanges(before, after, event.authId);
+    if (changes.length === 0) return;
+
+    const storeId = event.params.storeId;
+    const storeName = (event.data?.after.get('name') as string | undefined) ?? '점포';
+    const db = getFirestore();
+
+    for (const change of changes) {
+      // 토큰 → 소유자 uid. 폐기 토큰 정리 시 어느 문서를 갱신할지 알기 위해 필요하다.
+      // 서브문서 id가 모두 'fcm'이라 getAll에 넘긴 순서와 같은 인덱스로 짝짓는다
+      const ownerUidByToken = new Map<string, string>();
+      const fcmDocs = await db.getAll(
+        ...change.recipientUids.map((uid) => db.doc(`users/${uid}/private/fcm`)),
+      );
+      fcmDocs.forEach((doc, index) => {
+        const tokens = (doc.get('tokens') as string[] | undefined) ?? [];
+        for (const token of tokens) {
+          ownerUidByToken.set(token, change.recipientUids[index]);
+        }
+      });
+      const tokens = [...ownerUidByToken.keys()];
+      if (tokens.length === 0) {
+        logger.info('수신자 FCM 토큰이 없어 알림을 건너뜁니다', {
+          storeId,
+          type: change.type,
+          recipientUids: change.recipientUids,
+        });
+        continue;
+      }
+
+      let subjectName = '';
+      if (change.subjectUid) {
+        const subjectDoc = await db.doc(`users/${change.subjectUid}`).get();
+        subjectName =
+          (subjectDoc.get('nickname') as string | undefined) ??
+          (subjectDoc.get('name') as string | undefined) ??
+          '알 수 없는 사용자';
+      }
+
+      const response = await getMessaging().sendEach(
+        buildMembershipMessages({ tokens, event: change, storeId, storeName, subjectName }),
+      );
+
+      logger.info('멤버 구성 변화 알림 발송 완료', {
+        storeId,
+        type: change.type,
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+        ...(response.failureCount > 0 && {
+          failureCodes: response.responses
+            .filter((result) => !result.success)
+            .map((result) => result.error?.code ?? 'unknown'),
+        }),
+      });
+
+      const expiredTokens = invalidTokensFrom(response, tokens);
+      if (expiredTokens.length === 0) continue;
+
+      await Promise.all(
+        expiredTokens.map((token) =>
+          db.doc(`users/${ownerUidByToken.get(token)}/private/fcm`).update({
+            tokens: FieldValue.arrayRemove(token),
+          }),
+        ),
+      );
       logger.info('폐기된 FCM 토큰 정리', { storeId, count: expiredTokens.length });
     }
   },
