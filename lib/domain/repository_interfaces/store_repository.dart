@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/store.dart';
+import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
@@ -17,6 +18,9 @@ abstract interface class StoreRepository {
   /// 점포 조회
   /// - ID로 조회. 없으면 null 반환
   Future<Either<Exception, Store?>> getStore(String storeId);
+
+  /// 점포 멤버 구성 조회 (멤버의 사용자 문서는 읽지 않는다). 없거나 삭제됐으면 null
+  Future<Either<Exception, StoreMembership?>> getMembership(String storeId);
 
   /// 점포 정보 수정
   /// - [original]: 수정 폼을 연 시점의 점포. 그 뒤 다른 관리자가 설정을 먼저 저장했으면

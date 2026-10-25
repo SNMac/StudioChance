@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
@@ -205,19 +205,11 @@ void main() {
   // =========================================================================
 
   group('delete', () {
-    StoreMemberInfo memberOf(String uid, UserRole role) => StoreMemberInfo(
-      user: fakeUser.copyWith(id: uid),
-      role: role,
-    );
-
     setUp(() {
       // 기본값: 관리자 점포가 혼자 쓰는 점포라 탈퇴가 막히지 않는다
-      when(() => mockStoreUseCase.getStore(any())).thenAnswer(
-        (_) async => right(
-          fakeStore.copyWith(
-            memberInfos: [memberOf(fakeUser.id, UserRole.admin)],
-          ),
-        ),
+      when(() => mockStoreUseCase.getMembership(any())).thenAnswer(
+        (_) async =>
+            right(StoreMembership(roleByUid: {fakeUser.id: UserRole.admin})),
       );
     });
 
@@ -231,13 +223,10 @@ void main() {
       when(
         () => mockUserRepo.getCurrentUser(),
       ).thenAnswer((_) async => right(user));
-      when(() => mockStoreUseCase.getStore('store-123')).thenAnswer(
+      when(() => mockStoreUseCase.getMembership('store-123')).thenAnswer(
         (_) async => right(
-          fakeStore.copyWith(
-            memberInfos: [
-              memberOf(user.id, UserRole.admin),
-              memberOf('staff-1', UserRole.staff),
-            ],
+          StoreMembership(
+            roleByUid: {user.id: UserRole.admin, 'staff-1': UserRole.staff},
           ),
         ),
       );
@@ -254,18 +243,10 @@ void main() {
       verifyNever(() => mockAuthRepo.delete());
     });
 
-    test('승인 대기자만 있는 관리자 점포는 혼자 쓰는 점포로 보고 탈퇴와 함께 삭제한다', () async {
+    test('멤버가 나뿐인 관리자 점포는 탈퇴와 함께 삭제한다', () async {
       when(
         () => mockUserRepo.getCurrentUser(),
       ).thenAnswer((_) async => right(fakeUser));
-      when(() => mockStoreUseCase.getStore('store-123')).thenAnswer(
-        (_) async => right(
-          fakeStore.copyWith(
-            memberInfos: [memberOf(fakeUser.id, UserRole.admin)],
-            waitingMemberInfos: [memberOf('pending-1', UserRole.staff)],
-          ),
-        ),
-      );
       when(
         () => mockUserRepo.softDeleteUser(fakeUser.id),
       ).thenAnswer((_) async => right(null));
@@ -285,7 +266,7 @@ void main() {
         () => mockUserRepo.getCurrentUser(),
       ).thenAnswer((_) async => right(fakeUser));
       when(
-        () => mockStoreUseCase.getStore('store-123'),
+        () => mockStoreUseCase.getMembership('store-123'),
       ).thenAnswer((_) async => left(Exception('조회 실패')));
 
       final result = await useCase.delete();

@@ -236,7 +236,7 @@ class StoreAdminRoleChangeException extends StoreException {
 /// 다른 멤버가 있는 점포의 관리자가 회원 탈퇴나 점포 나가기를 하려 할 때 발생하는 예외
 ///
 /// 관리자가 없는 점포가 남지 않도록, 관리자 위임이나 점포 삭제를 먼저 해야 한다.
-/// [storeNames]는 막힌 점포의 표시 이름이다 (화면이 위임·삭제로 안내할 때 쓴다).
+/// [stores]는 막힌 점포의 id와 표시 이름이다 (화면이 위임·삭제로 안내할 때 쓴다).
 class StoreAdminHandoverRequiredException extends StoreException {
   final List<({String id, String name})> stores;
 

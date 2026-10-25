@@ -6,6 +6,7 @@ import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/use_cases/use_case_helpers.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
@@ -22,6 +23,10 @@ abstract interface class StoreUseCase {
 
   /// 점포 조회
   Future<Either<Exception, Store?>> getStore(String storeId);
+
+  /// 점포 멤버 구성 조회 — 관리자 판정·멤버 수처럼 멤버가 한 명도 빠지면 안 되는 판단용.
+  /// 없거나 삭제됐으면 null
+  Future<Either<Exception, StoreMembership?>> getMembership(String storeId);
 
   /// 수정할 점포 조회 — 삭제됐거나 없으면 `StoreNotFoundException`으로 실패한다.
   /// 점포 수정 화면 진입과 충돌 후 다시 불러오기가 함께 쓴다 (D13)
@@ -180,6 +185,11 @@ class StoreUseCaseImpl implements StoreUseCase {
   }
 
   @override
+  Future<Either<Exception, StoreMembership?>> getMembership(String storeId) {
+    return _storeRepository.getMembership(storeId);
+  }
+
+  @override
   Future<Either<Exception, Store>> getStoreForEdit(String storeId) async {
     final result = await _storeRepository.getStore(storeId);
     return result.flatMap<Store>(
@@ -204,24 +214,21 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    if (role == UserRole.admin) {
-      return Future.value(
-        left(StoreAdminRoleChangeException(message: 'ADMIN 역할로 가입 신청할 수 없습니다')),
-      );
-    }
-
-    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
-      return TaskEither(
-        () => _storeRepository.requestJoinStore(
-          storeId: storeId,
-          uid: currentUser.id,
-          role: role,
-          color: color,
-          storeAlias: storeAlias,
-          memo: memo,
-        ),
-      );
-    }).run();
+    return _rejectAdminRole(role, 'ADMIN 역할로 가입 신청할 수 없습니다')
+        .flatMap((_) => getCurrentUserOrThrow(_userRepository))
+        .flatMap((currentUser) {
+          return TaskEither(
+            () => _storeRepository.requestJoinStore(
+              storeId: storeId,
+              uid: currentUser.id,
+              role: role,
+              color: color,
+              storeAlias: storeAlias,
+              memo: memo,
+            ),
+          );
+        })
+        .run();
   }
 
   @override
@@ -230,23 +237,17 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String targetUid,
     required UserRole role,
   }) {
-    if (role == UserRole.admin) {
-      return Future.value(
-        left(
-          StoreAdminRoleChangeException(
-            message: 'ADMIN 역할로 승인할 수 없습니다: $targetUid',
+    return _rejectAdminRole(role, 'ADMIN 역할로 승인할 수 없습니다: $targetUid')
+        .flatMap(
+          (_) => TaskEither(
+            () => _storeRepository.approveMember(
+              storeId: storeId,
+              uid: targetUid,
+              role: role,
+            ),
           ),
-        ),
-      );
-    }
-
-    return TaskEither(
-      () => _storeRepository.approveMember(
-        storeId: storeId,
-        uid: targetUid,
-        role: role,
-      ),
-    ).run();
+        )
+        .run();
   }
 
   @override
@@ -270,15 +271,8 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String targetUid,
     required UserRole newRole,
   }) {
-    if (newRole == UserRole.admin) {
-      return Future.value(
-        left(
-          StoreAdminRoleChangeException(message: '관리자로 올릴 수 없습니다: $targetUid'),
-        ),
-      );
-    }
-
-    return _ensureNotAdmin(storeId: storeId, uid: targetUid)
+    return _rejectAdminRole(newRole, '관리자로 올릴 수 없습니다: $targetUid')
+        .flatMap((_) => _ensureNotAdmin(storeId: storeId, uid: targetUid))
         .flatMap(
           (_) => TaskEither(
             () => _storeRepository.updateMemberRole(
@@ -340,15 +334,7 @@ class StoreUseCaseImpl implements StoreUseCase {
         );
       }
 
-      // 반드시 본인이 직접 쓴다. Rules의 나가기 규칙은 본인 항목 삭제만 허용하고,
-      // 알림 함수(notifyOnMembershipChange)는 쓴 사람과 지워진 멤버가 같은지로
-      // 나가기와 추방을 구분한다 — 다른 경로(Function 등)가 대신 쓰면 추방으로 알린다
-      return TaskEither(
-        () => _storeRepository.removeMember(
-          storeId: storeId,
-          uid: currentUser.id,
-        ),
-      );
+      return _removeSelf(storeId: storeId, uid: currentUser.id);
     }).run();
   }
 
@@ -361,15 +347,15 @@ class StoreUseCaseImpl implements StoreUseCase {
         );
       }
 
-      // 반드시 본인이 직접 쓴다. 알림 함수(notifyOnMembershipChange)는 쓴 사람과
-      // 지워진 신청자가 같은지로 신청 취소(알림 없음)와 거절을 구분한다
-      return TaskEither(
-        () => _storeRepository.removeMember(
-          storeId: storeId,
-          uid: currentUser.id,
-        ),
-      );
+      return _removeSelf(storeId: storeId, uid: currentUser.id);
     }).run();
+  }
+
+  /// [role]이 관리자이면 실패한다. 관리자는 위임으로만 생긴다 (ADR-0004)
+  TaskEither<Exception, void> _rejectAdminRole(UserRole role, String message) {
+    return role == UserRole.admin
+        ? TaskEither.left(StoreAdminRoleChangeException(message: message))
+        : TaskEither.right(null);
   }
 
   /// [uid]가 점포의 관리자이면 실패한다. 관리자는 위임으로만 바뀐다 (ADR-0004)
@@ -377,15 +363,12 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String storeId,
     required String uid,
   }) {
-    return TaskEither(() => _storeRepository.getStore(storeId)).flatMap((
-      store,
+    return TaskEither(() => _storeRepository.getMembership(storeId)).flatMap((
+      membership,
     ) {
-      final isAdmin =
-          store?.memberInfos.any(
-            (member) => member.user.id == uid && member.role == UserRole.admin,
-          ) ??
-          false;
-      if (!isAdmin) return TaskEither.right(null);
+      if (membership?.roleOf(uid) != UserRole.admin) {
+        return TaskEither.right(null);
+      }
 
       return TaskEither.left(
         StoreAdminRoleChangeException(
@@ -393,6 +376,20 @@ class StoreUseCaseImpl implements StoreUseCase {
         ),
       );
     });
+  }
+
+  /// 본인을 점포에서 지운다 (점포 나가기·신청 취소).
+  ///
+  /// 반드시 본인 계정으로 직접 쓴다. Rules는 본인 항목 삭제만 허용하고, 알림 함수
+  /// (notifyOnMembershipChange)는 쓴 사람과 지워진 uid가 같은지로 나가기·신청 취소를
+  /// 추방·거절과 구분한다 — 다른 경로(Function 등)가 대신 쓰면 추방·거절로 알린다
+  TaskEither<Exception, void> _removeSelf({
+    required String storeId,
+    required String uid,
+  }) {
+    return TaskEither(
+      () => _storeRepository.removeMember(storeId: storeId, uid: uid),
+    );
   }
 
   @override

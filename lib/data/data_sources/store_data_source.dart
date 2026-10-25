@@ -139,11 +139,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
     _ => StoreUnknownException(message: message, code: code),
   };
 
-  /// JSON 역할 값 'ADMIN' — UserRole.name은 Dart 식별자('admin')라 모델 직렬화를 거친다
-  static final _adminRoleJson =
-      const StoreMemberInfoModel(role: UserRole.admin).toJson()['role']
-          as String;
-
   DocumentReference<Map<String, dynamic>> _storeDocRef(String storeId) {
     return _firestore.collection('stores').doc(storeId);
   }
@@ -328,7 +323,7 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         // 두 역할을 한 번에 바꿔야 Rules의 관리자 1명 검증을 통과한다 (ADR-0004)
         transaction.update(storeRef, {
           'memberById.$fromUid.role': previousRole,
-          'memberById.$toUid.role': _adminRoleJson,
+          'memberById.$toUid.role': UserRole.admin.jsonValue,
           'updatedAt': FieldValue.serverTimestamp(),
         });
         if (hasStoreEntry(fromUserSnapshot)) {
@@ -339,7 +334,7 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         }
         if (hasStoreEntry(toUserSnapshot)) {
           transaction.update(toUserRef, {
-            'storeById.$storeId.role': _adminRoleJson,
+            'storeById.$storeId.role': UserRole.admin.jsonValue,
             'updatedAt': FieldValue.serverTimestamp(),
           });
         }

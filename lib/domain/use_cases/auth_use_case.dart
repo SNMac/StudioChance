@@ -127,9 +127,12 @@ class AuthUseCaseImpl implements AuthUseCase {
   TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
     return TaskEither.traverseList(
       _adminStoreInfosOf(currentUser),
-      (info) => TaskEither(() => _storeUseCase.getStore(info.id)).map(
-        (store) =>
-            (info: info, hasOtherMembers: (store?.memberInfos.length ?? 0) > 1),
+      (info) => TaskEither(() => _storeUseCase.getMembership(info.id)).map(
+        (membership) => (
+          info: info,
+          hasOtherMembers:
+              membership?.hasMembersOtherThan(currentUser.id) ?? false,
+        ),
       ),
     ).flatMap((results) {
       final blocked = results

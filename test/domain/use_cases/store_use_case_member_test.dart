@@ -4,7 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/either_expectations.dart';
@@ -17,16 +17,8 @@ void main() {
   late MockStoreRepository mockStoreRepo;
   late MockUserRepository mockUserRepo;
 
-  StoreMemberInfo memberOf(String uid, UserRole role) => StoreMemberInfo(
-    user: fakeUser.copyWith(id: uid),
-    role: role,
-  );
-
-  final storeWithMembers = fakeStore.copyWith(
-    memberInfos: [
-      memberOf('admin-1', UserRole.admin),
-      memberOf('staff-1', UserRole.staff),
-    ],
+  const membership = StoreMembership(
+    roleByUid: {'admin-1': UserRole.admin, 'staff-1': UserRole.staff},
   );
 
   setUpAll(() {
@@ -42,8 +34,8 @@ void main() {
       userRepository: mockUserRepo,
     );
     when(
-      () => mockStoreRepo.getStore(any()),
-    ).thenAnswer((_) async => right(storeWithMembers));
+      () => mockStoreRepo.getMembership(any()),
+    ).thenAnswer((_) async => right(membership));
     when(
       () => mockStoreRepo.removeMember(
         storeId: any(named: 'storeId'),
