@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/firestore_data_source_base.dart';
@@ -46,7 +47,19 @@ abstract interface class StoreDataSource {
   /// 멤버 역할 수정
   Future<void> updateMemberRole(String storeId, String uid, String role);
 
-  /// 멤버 삭제 (추방/탈퇴)
+  /// 관리자 위임 — [fromUid]를 [previousRole]로, [toUid]를 관리자로 한 트랜잭션에서 바꾼다
+  /// - [previousRole]: JSON 역할 값 (`STAFF`/`VIEWER`)
+  /// - [fromUid]가 관리자가 아니면 `StorePermissionDeniedException`,
+  ///   [toUid]가 스태프·뷰어가 아니면 `StoreDelegationTargetInvalidException`
+  Future<void> delegateAdmin(
+    String storeId, {
+    required String fromUid,
+    required String toUid,
+    required String previousRole,
+  });
+
+  /// 멤버 삭제 — 추방·거절(관리자가 씀)과 나가기·신청 취소(본인이 씀)가 함께 쓴다.
+  /// 지우는 항목이 없는 쪽 맵은 바뀌지 않으므로 Rules의 본인 규칙도 통과한다
   Future<void> removeMember(String storeId, String uid);
 
   /// 가입 신청 (대기열 추가 + 사용자 점포 정보 저장)
@@ -263,6 +276,75 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
+  Future<void> delegateAdmin(
+    String storeId, {
+    required String fromUid,
+    required String toUid,
+    required String previousRole,
+  }) async {
+    try {
+      final storeRef = _storeDocRef(storeId);
+      final fromUserRef = _firestore.collection('users').doc(fromUid);
+      final toUserRef = _firestore.collection('users').doc(toUid);
+
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(storeRef);
+        final json = snapshot.data();
+        if (!snapshot.exists || json == null || json['deletedAt'] != null) {
+          throw StoreNotFoundException(message: '위임할 점포가 없습니다: $storeId');
+        }
+        json['id'] = snapshot.id;
+        final current = StoreModel.fromJson(json);
+
+        if (current.memberById[fromUid]?.role != UserRole.admin) {
+          throw StorePermissionDeniedException(
+            message: '관리자가 아니라 위임할 수 없습니다: $fromUid',
+          );
+        }
+        final targetRole = current.memberById[toUid]?.role;
+        if (targetRole != UserRole.staff && targetRole != UserRole.viewer) {
+          throw StoreDelegationTargetInvalidException(
+            message: '위임 대상이 스태프·뷰어가 아닙니다: $toUid ($targetRole)',
+          );
+        }
+
+        // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 역할 캐시 대상부터 읽는다.
+        // 사용자 문서에 그 점포 항목이 없으면 건너뛴다 — 점 경로 update가 role만 있는
+        // 항목을 만들면 그 사용자를 읽는 점포 조회가 파싱에 실패한다 (D13 참고)
+        final fromUserSnapshot = await transaction.get(fromUserRef);
+        final toUserSnapshot = await transaction.get(toUserRef);
+        bool hasStoreEntry(
+          DocumentSnapshot<Map<String, dynamic>> userSnapshot,
+        ) {
+          final storeById = userSnapshot.data()?['storeById'];
+          return storeById is Map && storeById.containsKey(storeId);
+        }
+
+        // 두 역할을 한 번에 바꿔야 Rules의 관리자 1명 검증을 통과한다 (ADR-0004)
+        transaction.update(storeRef, {
+          'memberById.$fromUid.role': previousRole,
+          'memberById.$toUid.role': UserRole.admin.jsonValue,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        if (hasStoreEntry(fromUserSnapshot)) {
+          transaction.update(fromUserRef, {
+            'storeById.$storeId.role': previousRole,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        if (hasStoreEntry(toUserSnapshot)) {
+          transaction.update(toUserRef, {
+            'storeById.$storeId.role': UserRole.admin.jsonValue,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      });
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
   Future<void> removeMember(String storeId, String uid) async {
     try {
       final batch = _firestore.batch();
@@ -355,6 +437,8 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         'deletedAt': FieldValue.serverTimestamp(),
         'expiresAt': Timestamp.fromDate(hardDeleteDate),
         'updatedAt': FieldValue.serverTimestamp(),
+        // memberById·waitingMemberById는 지우지 않는다. 점포 삭제 알림 함수
+        // (notifyOnMembershipChange)가 이 문서에서 알림 받을 멤버·승인 대기자를 읽는다.
         // deletedAt을 쓰는 경로는 반드시 inviteInfo도 함께 null로 만들어야 한다.
         // lookupInviteCode Callable(functions/src/invite/lookup_invite_code.ts)이
         // 이 불변식에 기대어 초대 코드로만 조회한다.

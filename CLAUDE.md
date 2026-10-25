@@ -73,9 +73,9 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 ## 아키텍처 설계 결정
 
 ### 권한 검증 위치 (D2)
-Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현재 미구현.
+Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 UX 향상(더 나은 에러 메시지) 목적으로 필요 시 추가한다.
 - `approveMember`, `updateMemberRole` 등 관리자 전용 작업: Firestore Rules에서 검증
-- UseCase 레벨 검증은 UX 향상(더 나은 에러 메시지) 목적으로 필요 시 추가 가능
+- 점포 관리자 1명 불변식은 Rules가 멤버 값의 모양으로 센다 (`docs/adr/0004-single-admin-counted-in-rules.md`). UseCase도 관리자 역할을 주거나 빼앗는 요청을 거부한다
 - 보안 경계는 Firestore Rules, 도메인 규칙 명시는 UseCase
 
 ### ReservationUseCase → StoreRepository 의존성 (D3)
@@ -231,6 +231,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   문서를 처음 만드는 `createUser`와 전체를 비우는 `softDeleteUser`는 `SetOptions` 없이 쓰는 것이 맞다.
 - **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
   - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
+  - `notifyOnMembershipChange`: 멤버 구성 변화(관리자 위임·나가기·추방·승인·거절·점포 삭제)를 당사자에게 발송. 분류 규칙은 `functions/src/notifications/membership_change.ts`
   - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
   - 배포: `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
   - 테스트: `cd functions && npm test` (Node 내장 `node:test`)
@@ -265,11 +266,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 현�
   - iOS에서 위 옵션을 끄면 알림이 **아예 보이지 않는다.** `UNUserNotificationCenterDelegate`가 `presentationOptions=0`을 반환하는데, 이 delegate는 수신 푸시뿐 아니라 앱이 `flutter_local_notifications`로 만든 알림까지 함께 억제한다 (배너 없이 알림 센터에만 쌓임)
     - 시뮬레이터 로그로 확인 가능: 꺼진 상태 `Received response 0` / `shouldPresentAlert: 0`, 켜진 상태 `Received response 7` / `shouldPresentAlert: YES`
     - 검증 방법: `xcrun simctl push <device> <bundleId> payload.apns` (APNs·FCM을 우회하므로 전달 경로가 아닌 **표시·탭 처리만** 검증됨)
-- **값이 반드시 일치해야 하는 상수**
-  - 채널 ID `sc_default`: `AndroidManifest.xml`의 `default_notification_channel_id`, Functions의 `ANDROID_CHANNEL_ID`, `lib/constants/notification_constants.dart`의 `notificationChannelId`
-  - `data.type` `joinRequest`: Functions의 `JOIN_REQUEST_TYPE`, `joinRequestNotificationType`
-  - 초대 코드 유효 시간 15분: `lib/constants/data_constants.dart`의 `storeInviteCodeAvailableMin`,
-    `functions/src/invite/invite_code.ts`의 `INVITE_CODE_AVAILABLE_MIN`
+- **Functions와 앱이 공유하는 값**(알림 `data.type`, 채널 ID, 초대 코드 유효 시간 등)은 계약 테스트 `functions/src/contract/shared_constants.test.ts`가 검사한다. 새 공유 값을 만들면 이 테스트에 추가한다
 - **알려진 제약**: FCM Admin SDK가 registration token을 deprecated 처리하고 FID를 권장한다. 현행은 token 기반이며 FID 마이그레이션은 별도 이슈.
 
 ## Callable Cloud Function

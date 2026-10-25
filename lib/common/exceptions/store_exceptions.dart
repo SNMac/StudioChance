@@ -32,6 +32,11 @@ sealed class StoreException extends AppException {
     // 6. 유효성 검사 / 알 수 없는 에러
     StoreInviteCodeExpiredException() => '만료된 초대 코드입니다',
     StoreValidationException() || StoreUnknownException() => '에러가 발생했습니다',
+
+    // 8. 관리자 1명 규칙
+    StoreAdminRoleChangeException() => '관리자 역할은 위임으로만 바꿀 수 있습니다',
+    StoreAdminHandoverRequiredException() => '관리자 위임 또는 점포 삭제가 필요합니다',
+    StoreDelegationTargetInvalidException() => '위임할 수 없는 멤버입니다',
   };
 
   @override
@@ -70,6 +75,15 @@ sealed class StoreException extends AppException {
       '초대 코드의 유효 시간이 지났습니다.\n점포 관리자에게 새 코드를 요청해 주세요.',
     StoreValidationException() ||
     StoreUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+
+    // 8. 관리자 1명 규칙
+    StoreAdminRoleChangeException() =>
+      '점포마다 관리자는 한 명입니다.\n관리자를 바꾸려면 관리자 위임을 이용해 주세요.',
+    StoreAdminHandoverRequiredException(:final storeNames) =>
+      '${storeNames.map((name) => "'$name'").join(', ')} 점포의 관리자입니다.\n'
+          '다른 멤버에게 관리자를 위임하거나 점포를 삭제해 주세요.',
+    StoreDelegationTargetInvalidException() =>
+      '점포의 스태프나 뷰어에게만 관리자를 위임할 수 있습니다.\n멤버 목록을 새로 고친 뒤 다시 시도해 주세요.',
   };
 
   @override
@@ -87,6 +101,9 @@ sealed class StoreException extends AppException {
     StoreInviteCodeExpiredException() ||
     StoreNameDuplicateException() ||
     SpaceNameDuplicateException() ||
+    StoreAdminRoleChangeException() ||
+    StoreAdminHandoverRequiredException() ||
+    StoreDelegationTargetInvalidException() ||
     StoreUnknownException() => false,
   };
 }
@@ -204,5 +221,38 @@ class StoreNameDuplicateException extends StoreException {
 /// 같은 점포 내에서 공간명이 중복될 때 발생하는 예외
 class SpaceNameDuplicateException extends StoreException {
   SpaceNameDuplicateException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 관리자 위임이 아닌 경로로 관리자 역할을 주거나 빼앗으려 할 때 발생하는 예외
+///
+/// ADMIN 역할로 가입 신청·승인, 다른 멤버를 관리자로 올리기, 관리자 강등·추방이 해당한다.
+/// 점포마다 관리자는 정확히 한 명이며 Rules도 같은 규칙을 강제한다 (ADR-0004).
+class StoreAdminRoleChangeException extends StoreException {
+  StoreAdminRoleChangeException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 다른 멤버가 있는 점포의 관리자가 회원 탈퇴나 점포 나가기를 하려 할 때 발생하는 예외
+///
+/// 관리자가 없는 점포가 남지 않도록, 관리자 위임이나 점포 삭제를 먼저 해야 한다.
+/// [stores]는 막힌 점포의 id와 표시 이름이다 (화면이 위임·삭제로 안내할 때 쓴다).
+class StoreAdminHandoverRequiredException extends StoreException {
+  final List<({String id, String name})> stores;
+
+  StoreAdminHandoverRequiredException({
+    required this.stores,
+    required String message,
+    String? code,
+  }) : super(message, code: code);
+
+  List<String> get storeNames => stores.map((store) => store.name).toList();
+}
+
+/// 관리자 위임 대상이 점포의 스태프·뷰어가 아닐 때 발생하는 예외
+///
+/// 승인 대기자, 이미 나간 멤버, 자기 자신에게는 위임할 수 없다.
+class StoreDelegationTargetInvalidException extends StoreException {
+  StoreDelegationTargetInvalidException({required String message, String? code})
     : super(message, code: code);
 }

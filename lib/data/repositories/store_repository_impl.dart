@@ -19,6 +19,7 @@ import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/invite_info.dart';
 import 'package:studio_chance/domain/entities/invite_store_preview.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
@@ -104,6 +105,27 @@ class StoreRepositoryImpl implements StoreRepository {
       );
     } catch (e) {
       _logger.e('getStore 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
+  Future<Either<Exception, StoreMembership?>> getMembership(
+    String storeId,
+  ) async {
+    try {
+      final storeModel = await _storeDataSource.getStore(storeId);
+      if (storeModel == null) return right(null);
+
+      return right(
+        StoreMembership(
+          roleByUid: storeModel.memberById.map(
+            (uid, info) => MapEntry(uid, info.role),
+          ),
+        ),
+      );
+    } catch (e) {
+      _logger.e('getMembership 실패');
       return left(toException(e));
     }
   }
@@ -274,6 +296,29 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
+  Future<Either<Exception, void>> delegateAdmin({
+    required String storeId,
+    required String fromUid,
+    required String toUid,
+    required UserRole previousAdminRole,
+  }) async {
+    try {
+      await _storeDataSource.delegateAdmin(
+        storeId,
+        fromUid: fromUid,
+        toUid: toUid,
+        previousRole: previousAdminRole.jsonValue,
+      );
+
+      _logger.i('관리자 위임 완료\nstoreId: $storeId, from: $fromUid, to: $toUid');
+      return right(null);
+    } catch (e) {
+      _logger.e('관리자 위임 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
   Future<Either<Exception, void>> removeMember({
     required String storeId,
     required String uid,
@@ -296,10 +341,7 @@ class StoreRepositoryImpl implements StoreRepository {
     required UserRole newRole,
   }) async {
     try {
-      // newRole.name은 Dart 식별자('admin')를 반환하므로 toJson()으로 JSON 값('ADMIN') 직렬화
-      final roleJson =
-          StoreMemberInfoModel(role: newRole).toJson()['role'] as String;
-      await _storeDataSource.updateMemberRole(storeId, uid, roleJson);
+      await _storeDataSource.updateMemberRole(storeId, uid, newRole.jsonValue);
 
       _logger.i(
         '멤버 권한 변경 완료\nstoreId: $storeId, uid: $uid, role: ${newRole.name}',

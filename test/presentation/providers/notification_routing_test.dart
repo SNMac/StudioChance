@@ -35,4 +35,36 @@ void main() {
       expect(joinRequestStoreIdOf(message), isNull);
     });
   });
+
+  group('membershipChangeStoreIdOf', () {
+    for (final type in [
+      'adminDelegated',
+      'memberLeft',
+      'memberRemoved',
+      'joinApproved',
+      'joinRejected',
+      'storeDeleted',
+    ]) {
+      test('$type 메시지면 storeId를 반환한다', () {
+        final message = PushMessage(type: type, data: {'storeId': 'store1'});
+
+        expect(membershipChangeStoreIdOf(message), 'store1');
+      });
+    }
+
+    test('가입 신청 메시지는 멤버 구성 변화가 아니다', () {
+      const message = PushMessage(
+        type: 'joinRequest',
+        data: {'storeId': 'store1'},
+      );
+
+      expect(membershipChangeStoreIdOf(message), isNull);
+    });
+
+    test('storeId가 없으면 null을 반환한다', () {
+      const message = PushMessage(type: 'memberRemoved', data: {});
+
+      expect(membershipChangeStoreIdOf(message), isNull);
+    });
+  });
 }

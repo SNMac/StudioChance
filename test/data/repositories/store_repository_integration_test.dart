@@ -581,4 +581,170 @@ void main() {
       expect(updatedMember?.role, UserRole.admin);
     });
   });
+
+  // =========================================================================
+  // getMembership (관리자 판정·멤버 수용, ADR-0004)
+  // =========================================================================
+
+  group('getMembership', () {
+    test('사용자 문서를 읽지 못해 memberInfos에서 빠진 멤버도 멤버 구성에는 포함된다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final brokenUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final storeId = expectRight(
+        await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ).id;
+      // 멤버로 등록됐지만 사용자 문서가 없어 hydrate에서 빠지는 멤버
+      await fakeFirestore.collection('stores').doc(storeId).update({
+        'memberById.$brokenUid': <String, dynamic>{'role': 'STAFF'},
+      });
+
+      final store = expectRight(await repository.getStore(storeId))!;
+      final membership = expectRight(await repository.getMembership(storeId))!;
+
+      expect(store.memberInfos.map((m) => m.user.id), [ownerUid]);
+      expect(membership.roleByUid, {
+        ownerUid: UserRole.admin,
+        brokenUid: UserRole.staff,
+      });
+      expect(membership.hasMembersOtherThan(ownerUid), isTrue);
+    });
+
+    test('삭제된 점포는 null이다', () async {
+      final ownerUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final storeId = expectRight(
+        await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ).id;
+      expectRight(await repository.softDeleteStore(storeId));
+
+      expect(expectRight(await repository.getMembership(storeId)), isNull);
+    });
+  });
+
+  // =========================================================================
+  // delegateAdmin
+  // =========================================================================
+
+  group('delegateAdmin', () {
+    late String ownerUid;
+    late String memberUid;
+    late String storeId;
+
+    setUp(() async {
+      ownerUid = FirestoreEmulatorHelper.generateId();
+      memberUid = FirestoreEmulatorHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      await _seedUserDoc(fakeFirestore, memberUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      storeId = expectRight(
+        await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ).id;
+      await repository.requestJoinStore(
+        storeId: storeId,
+        uid: memberUid,
+        role: UserRole.staff,
+        color: StoreColor.red,
+        storeAlias: '통합 테스트 점포',
+        memo: '',
+      );
+      await repository.approveMember(
+        storeId: storeId,
+        uid: memberUid,
+        role: UserRole.staff,
+      );
+    });
+
+    test('점포와 두 사용자 문서의 역할이 한 번에 바뀐다', () async {
+      expectRight(
+        await repository.delegateAdmin(
+          storeId: storeId,
+          fromUid: ownerUid,
+          toUid: memberUid,
+          previousAdminRole: UserRole.viewer,
+        ),
+      );
+
+      final membership = expectRight(await repository.getMembership(storeId))!;
+      expect(membership.roleByUid, {
+        ownerUid: UserRole.viewer,
+        memberUid: UserRole.admin,
+      });
+
+      Future<Object?> cachedRole(String uid) async {
+        final doc = await fakeFirestore.collection('users').doc(uid).get();
+        return (doc.data()?['storeById'] as Map)[storeId]['role'];
+      }
+
+      expect(await cachedRole(ownerUid), 'VIEWER');
+      expect(await cachedRole(memberUid), 'ADMIN');
+    });
+
+    test(
+      '대상이 점포 멤버가 아니면 StoreDelegationTargetInvalidException으로 실패하고 쓰지 않는다',
+      () async {
+        final result = await repository.delegateAdmin(
+          storeId: storeId,
+          fromUid: ownerUid,
+          toUid: 'outsider',
+          previousAdminRole: UserRole.staff,
+        );
+
+        expect(
+          expectLeft(result),
+          isA<StoreDelegationTargetInvalidException>(),
+        );
+        final membership = expectRight(
+          await repository.getMembership(storeId),
+        )!;
+        expect(membership.roleOf(ownerUid), UserRole.admin);
+      },
+    );
+
+    test('위임하는 사람이 관리자가 아니면 StorePermissionDeniedException으로 실패한다', () async {
+      final result = await repository.delegateAdmin(
+        storeId: storeId,
+        fromUid: memberUid,
+        toUid: ownerUid,
+        previousAdminRole: UserRole.staff,
+      );
+
+      expect(expectLeft(result), isA<StorePermissionDeniedException>());
+    });
+  });
 }

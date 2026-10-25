@@ -25,3 +25,12 @@ abstract class StoreMemberInfoModel with _$StoreMemberInfoModel {
     return StoreMemberInfo(user: user, role: role);
   }
 }
+
+/// Firestore에 쓰는 역할 값('ADMIN' 등)
+///
+/// `UserRole.name`은 Dart 식별자('admin')라 `@JsonValue`를 거치는 모델 직렬화로 얻는다.
+/// 점 경로 update처럼 모델 전체가 아니라 역할 값만 쓸 때 사용한다
+extension UserRoleJsonValue on UserRole {
+  String get jsonValue =>
+      StoreMemberInfoModel(role: this).toJson()['role'] as String;
+}

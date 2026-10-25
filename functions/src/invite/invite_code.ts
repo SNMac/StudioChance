@@ -1,4 +1,7 @@
-/** 클라이언트의 lib/constants/data_constants.dart storeInviteCodeAvailableMin과 일치해야 한다 */
+/**
+ * 클라이언트의 lib/constants/data_constants.dart storeInviteCodeAvailableMin과 일치해야 한다
+ * (계약 테스트 contract/shared_constants.test.ts가 검사한다)
+ */
 export const INVITE_CODE_AVAILABLE_MIN = 15;
 
 /**
