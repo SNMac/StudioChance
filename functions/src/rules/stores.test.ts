@@ -390,3 +390,29 @@ test('멤버는 나가기 규칙으로 자기 역할을 바꾸지 못한다', as
     updateDoc(doc(db, 'stores/s1'), { 'memberById.staff1.role': 'ADMIN' }),
   );
 });
+
+// 앱의 나가기·신청 취소는 removeMember의 쓰기 모양을 그대로 쓴다
+// (memberById·waitingMemberById의 본인 키를 함께 삭제). 없는 키 삭제는 맵을 바꾸지
+// 않으므로 각 본인 규칙을 통과해야 한다 — store_data_source.dart의 removeMember 참고
+test('removeMember 쓰기 모양으로 스태프가 나갈 수 있다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'memberById.staff1': deleteField(),
+      'waitingMemberById.staff1': deleteField(),
+      updatedAt: new Date(),
+    }),
+  );
+});
+
+test('removeMember 쓰기 모양으로 대기 멤버가 신청을 취소할 수 있다', async () => {
+  await seedWaiting('pending1', 'STAFF');
+  const db = env.authenticatedContext('pending1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'memberById.pending1': deleteField(),
+      'waitingMemberById.pending1': deleteField(),
+      updatedAt: new Date(),
+    }),
+  );
+});

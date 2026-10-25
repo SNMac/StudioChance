@@ -33,6 +33,7 @@ abstract interface class StoreUseCase {
   );
 
   /// 점포 참여 요청 (대기열 등록)
+  /// - ADMIN 역할로는 신청할 수 없다 (`StoreAdminRoleChangeException`)
   Future<Either<Exception, void>> joinStore({
     required String storeId,
     required String storeAlias,
@@ -42,6 +43,7 @@ abstract interface class StoreUseCase {
   });
 
   /// 멤버 가입 승인 (관리자용)
+  /// - ADMIN 역할로는 승인할 수 없다 (`StoreAdminRoleChangeException`)
   Future<Either<Exception, void>> approveMember({
     required String storeId,
     required String targetUid,
@@ -49,17 +51,36 @@ abstract interface class StoreUseCase {
   });
 
   /// 멤버 제거 (관리자용) — 승인 대기자 거절 및 기존 멤버 추방에 사용
+  /// - 관리자는 추방할 수 없다 (`StoreAdminRoleChangeException`)
   Future<Either<Exception, void>> removeMember({
     required String storeId,
     required String targetUid,
   });
 
   /// 멤버 권한 수정 (관리자용)
+  /// - 관리자로 올리거나 관리자를 강등할 수 없다 (`StoreAdminRoleChangeException`).
+  ///   관리자는 [delegateAdmin]으로만 바뀐다
   Future<Either<Exception, void>> updateMemberRole({
     required String storeId,
     required String targetUid,
     required UserRole newRole,
   });
+
+  /// 관리자 위임 (관리자용) — 나를 [previousAdminRole]로 바꾸고 [targetUid]를 관리자로 올린다
+  /// - [targetUid]는 점포의 스태프·뷰어여야 한다 (`StoreDelegationTargetInvalidException`)
+  /// - [previousAdminRole]은 스태프나 뷰어만 가능하다
+  Future<Either<Exception, void>> delegateAdmin({
+    required String storeId,
+    required String targetUid,
+    required UserRole previousAdminRole,
+  });
+
+  /// 점포 나가기
+  /// - 관리자는 나갈 수 없다 (`StoreAdminHandoverRequiredException`)
+  Future<Either<Exception, void>> leaveStore(String storeId);
+
+  /// 승인 대기 중인 가입 신청 취소
+  Future<Either<Exception, void>> cancelJoinRequest(String storeId);
 
   /// 점포 정보 수정
   /// - [original]: 수정 폼을 연 시점의 점포. 그 뒤 다른 관리자가 설정을 먼저 저장했으면
@@ -183,6 +204,12 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
+    if (role == UserRole.admin) {
+      return Future.value(
+        left(StoreAdminRoleChangeException(message: 'ADMIN 역할로 가입 신청할 수 없습니다')),
+      );
+    }
+
     return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       return TaskEither(
         () => _storeRepository.requestJoinStore(
@@ -203,7 +230,16 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String targetUid,
     required UserRole role,
   }) {
-    // 실제로는 여기서 '현재 유저가 관리자 권한이 있는지' 체크하는 로직이 들어갈 수 있습니다.
+    if (role == UserRole.admin) {
+      return Future.value(
+        left(
+          StoreAdminRoleChangeException(
+            message: 'ADMIN 역할로 승인할 수 없습니다: $targetUid',
+          ),
+        ),
+      );
+    }
+
     return TaskEither(
       () => _storeRepository.approveMember(
         storeId: storeId,
@@ -218,9 +254,14 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String storeId,
     required String targetUid,
   }) {
-    return TaskEither(
-      () => _storeRepository.removeMember(storeId: storeId, uid: targetUid),
-    ).run();
+    return _ensureNotAdmin(storeId: storeId, uid: targetUid)
+        .flatMap(
+          (_) => TaskEither(
+            () =>
+                _storeRepository.removeMember(storeId: storeId, uid: targetUid),
+          ),
+        )
+        .run();
   }
 
   @override
@@ -229,13 +270,129 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String targetUid,
     required UserRole newRole,
   }) {
-    return TaskEither(
-      () => _storeRepository.updateMemberRole(
-        storeId: storeId,
-        uid: targetUid,
-        newRole: newRole,
-      ),
-    ).run();
+    if (newRole == UserRole.admin) {
+      return Future.value(
+        left(
+          StoreAdminRoleChangeException(message: '관리자로 올릴 수 없습니다: $targetUid'),
+        ),
+      );
+    }
+
+    return _ensureNotAdmin(storeId: storeId, uid: targetUid)
+        .flatMap(
+          (_) => TaskEither(
+            () => _storeRepository.updateMemberRole(
+              storeId: storeId,
+              uid: targetUid,
+              newRole: newRole,
+            ),
+          ),
+        )
+        .run();
+  }
+
+  @override
+  Future<Either<Exception, void>> delegateAdmin({
+    required String storeId,
+    required String targetUid,
+    required UserRole previousAdminRole,
+  }) {
+    if (previousAdminRole != UserRole.staff &&
+        previousAdminRole != UserRole.viewer) {
+      return Future.value(
+        left(
+          StoreValidationException(
+            message: '이전 관리자는 스태프나 뷰어가 되어야 합니다: ${previousAdminRole.name}',
+          ),
+        ),
+      );
+    }
+
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      if (currentUser.id == targetUid) {
+        return TaskEither<Exception, void>.left(
+          StoreDelegationTargetInvalidException(message: '자기 자신에게 위임할 수 없습니다'),
+        );
+      }
+
+      // 대상이 아직 스태프·뷰어인지는 Repository가 트랜잭션 안에서 다시 확인한다
+      return TaskEither(
+        () => _storeRepository.delegateAdmin(
+          storeId: storeId,
+          fromUid: currentUser.id,
+          toUid: targetUid,
+          previousAdminRole: previousAdminRole,
+        ),
+      );
+    }).run();
+  }
+
+  @override
+  Future<Either<Exception, void>> leaveStore(String storeId) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      if (currentUser.roleIn(storeId) == UserRole.admin) {
+        final name = currentUser.storeInfoOf(storeId)?.name ?? '';
+        return TaskEither<Exception, void>.left(
+          StoreAdminHandoverRequiredException(
+            stores: [(id: storeId, name: name)],
+            message: '관리자는 점포를 나갈 수 없습니다: $storeId',
+          ),
+        );
+      }
+
+      // 반드시 본인이 직접 쓴다. Rules의 나가기 규칙은 본인 항목 삭제만 허용하고,
+      // 알림 함수(notifyOnMembershipChange)는 쓴 사람과 지워진 멤버가 같은지로
+      // 나가기와 추방을 구분한다 — 다른 경로(Function 등)가 대신 쓰면 추방으로 알린다
+      return TaskEither(
+        () => _storeRepository.removeMember(
+          storeId: storeId,
+          uid: currentUser.id,
+        ),
+      );
+    }).run();
+  }
+
+  @override
+  Future<Either<Exception, void>> cancelJoinRequest(String storeId) {
+    return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
+      if (currentUser.storeInfoOf(storeId)?.isPending != true) {
+        return TaskEither<Exception, void>.left(
+          StoreValidationException(message: '승인 대기 중인 가입 신청이 없습니다: $storeId'),
+        );
+      }
+
+      // 반드시 본인이 직접 쓴다. 알림 함수(notifyOnMembershipChange)는 쓴 사람과
+      // 지워진 신청자가 같은지로 신청 취소(알림 없음)와 거절을 구분한다
+      return TaskEither(
+        () => _storeRepository.removeMember(
+          storeId: storeId,
+          uid: currentUser.id,
+        ),
+      );
+    }).run();
+  }
+
+  /// [uid]가 점포의 관리자이면 실패한다. 관리자는 위임으로만 바뀐다 (ADR-0004)
+  TaskEither<Exception, void> _ensureNotAdmin({
+    required String storeId,
+    required String uid,
+  }) {
+    return TaskEither(() => _storeRepository.getStore(storeId)).flatMap((
+      store,
+    ) {
+      final isAdmin =
+          store?.memberInfos.any(
+            (member) => member.user.id == uid && member.role == UserRole.admin,
+          ) ??
+          false;
+      if (!isAdmin) return TaskEither.right(null);
+
+      return TaskEither.left(
+        StoreAdminRoleChangeException(
+          message: '관리자의 역할은 위임으로만 바꿀 수 있습니다: $uid',
+        ),
+      );
+    });
   }
 
   @override

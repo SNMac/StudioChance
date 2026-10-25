@@ -73,4 +73,14 @@ abstract interface class StoreRepository {
     required String uid,
     required UserRole newRole,
   });
+
+  /// 관리자 위임 — [fromUid]를 [previousAdminRole]로, [toUid]를 관리자로 한 번에 바꾼다
+  /// - 트랜잭션에서 [fromUid]가 아직 관리자인지(`StorePermissionDeniedException`),
+  ///   [toUid]가 아직 스태프·뷰어인지(`StoreDelegationTargetInvalidException`) 확인한다
+  Future<Either<Exception, void>> delegateAdmin({
+    required String storeId,
+    required String fromUid,
+    required String toUid,
+    required UserRole previousAdminRole,
+  });
 }

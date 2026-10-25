@@ -274,6 +274,32 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
+  Future<Either<Exception, void>> delegateAdmin({
+    required String storeId,
+    required String fromUid,
+    required String toUid,
+    required UserRole previousAdminRole,
+  }) async {
+    try {
+      final previousRoleJson =
+          StoreMemberInfoModel(role: previousAdminRole).toJson()['role']
+              as String;
+      await _storeDataSource.delegateAdmin(
+        storeId,
+        fromUid: fromUid,
+        toUid: toUid,
+        previousRole: previousRoleJson,
+      );
+
+      _logger.i('관리자 위임 완료\nstoreId: $storeId, from: $fromUid, to: $toUid');
+      return right(null);
+    } catch (e) {
+      _logger.e('관리자 위임 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
   Future<Either<Exception, void>> removeMember({
     required String storeId,
     required String uid,
