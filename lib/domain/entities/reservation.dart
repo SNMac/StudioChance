@@ -55,7 +55,7 @@ extension ReservationPriceSnapshot on Reservation {
   /// 요금표는 다른 공간의 것이므로 현재 요금표를 써야 한다. 점포는 표시 정보(이름·색상)가
   /// 아닌 id로 비교한다.
   ///
-  /// 예약 수정 UseCase와 상세 모달이 이 규칙을 공유해야 화면 가격과 저장 가격이 일치한다.
+  /// 예약 수정 UseCase와 상세 모달이 이 규칙을 공유해야 화면 가격과 저장 가격이 일치한다 (D12).
   bool keepsPriceSettingFor(Reservation edited) {
     return priceSetting != null &&
         storeSummary.id == edited.storeSummary.id &&

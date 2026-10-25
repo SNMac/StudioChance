@@ -9,7 +9,8 @@ import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/weekday.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
 
-/// 생성/수정 컨트롤러가 공통으로 구현해야 할 인터페이스
+/// 생성/수정 컨트롤러가 공통으로 구현해야 할 인터페이스.
+/// 공통 로직은 `StoreFormMixin`으로 재사용한다 (D7)
 abstract interface class StoreFormControllerable {
   void setName(String name);
   void setAddress(String address);

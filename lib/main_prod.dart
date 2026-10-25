@@ -33,6 +33,8 @@ Future<void> _setPreferredOrientations() {
   return SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 }
 
+/// 앱 설치 후 첫 실행이면 남아 있는 인증 데이터를 지운다 (D9).
+/// iOS Keychain은 앱을 지워도 인증 토큰이 남아, 재설치 후 로그인 없이 들어가게 된다
 Future<void> _checkFirstLaunchAndClearData() async {
   final Logger logger = Logger();
   final prefs = await SharedPreferences.getInstance();

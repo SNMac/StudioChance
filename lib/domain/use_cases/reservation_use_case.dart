@@ -99,6 +99,7 @@ abstract interface class ReservationUseCase {
 class ReservationUseCaseImpl implements ReservationUseCase {
   final ReservationRepository _reservationRepository;
   final UserRepository _userRepository;
+  // 가격 계산에 점포의 현재 요금표가 필요해 직접 주입받는다 (D3)
   final StoreRepository _storeRepository;
   final HolidayRepository _holidayRepository;
   final Logger _logger = Logger();

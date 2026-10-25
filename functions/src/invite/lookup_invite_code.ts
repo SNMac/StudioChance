@@ -26,7 +26,7 @@ type LookupResult =
   | { ok: false; reason: FailureReason };
 
 /**
- * 초대 코드로 가입 전 화면이 표시할 최소 정보만 조회한다.
+ * 초대 코드로 가입 전 화면이 표시할 최소 정보만 조회한다 (D11).
  *
  * stores read를 멤버 전용으로 조인 뒤(firestore.rules), 아직 멤버가 아닌
  * 사용자가 넘어야 하는 유일한 경계가 이 함수다. 계좌 정보·memberById·
@@ -48,6 +48,8 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
 
     // 브루트포스 제한: 실패한 시도만 센다. 정상 사용자는 오타 몇 번이면 끝나므로
     // 한도에 닿지 않는다. 카운터는 Rules를 정의하지 않아 클라이언트가 볼 수 없다.
+    // 조회에 성공해도 카운터를 지우지 않는다 — 지우면 자기 점포 코드를 한 번 조회해
+    // 카운터를 리셋하는 식으로 한도를 우회할 수 있다.
     const attemptRef = db.doc(`inviteLookupAttempts/${uid}`);
     const attemptSnap = await attemptRef.get();
     const stored = attemptSnap.data();
