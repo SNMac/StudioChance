@@ -75,7 +75,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 ### 권한 검증 위치 (D2)
 Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 UX 향상(더 나은 에러 메시지) 목적으로 필요 시 추가한다.
 - `approveMember`, `updateMemberRole` 등 관리자 전용 작업: Firestore Rules에서 검증
-- 점포 관리자 1명 불변식은 Rules가 멤버 값의 모양으로 센다 (ADR-0004). UseCase도 관리자 역할을 주거나 빼앗는 요청을 거부한다
+- 점포 관리자 1명 불변식은 Rules가 멤버 값의 모양으로 센다 (`docs/adr/0004-single-admin-counted-in-rules.md`). UseCase도 관리자 역할을 주거나 빼앗는 요청을 거부한다
 - 보안 경계는 Firestore Rules, 도메인 규칙 명시는 UseCase
 
 ### ReservationUseCase → StoreRepository 의존성 (D3)
