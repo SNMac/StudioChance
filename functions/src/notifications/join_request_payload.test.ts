@@ -1,15 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { ANDROID_CHANNEL_ID } from './token_message.js';
+import type { MemberInfo } from './member_role.js';
 import {
-  ANDROID_CHANNEL_ID,
   JOIN_REQUEST_TYPE,
   adminUidsOf,
   buildJoinRequestMessages,
 } from './join_request_payload.js';
 
 test('ADMIN 역할 uid만 추출한다', () => {
-  const memberById = {
+  const memberById: Record<string, MemberInfo> = {
     admin1: { role: 'ADMIN' },
     staff1: { role: 'STAFF' },
     viewer1: { role: 'VIEWER' },

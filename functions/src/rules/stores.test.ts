@@ -70,7 +70,7 @@ test('비멤버는 초대 코드로 stores를 쿼리하지 못한다 (#13 회귀
   );
 });
 
-test('대기 멤버(승인 전)는 점포 문서를 읽지 못한다', async () => {
+test('승인 대기자는 점포 문서를 읽지 못한다', async () => {
   await env.withSecurityRulesDisabled(async (ctx) => {
     await setDoc(
       doc(ctx.firestore(), 'stores/s1'),
@@ -208,7 +208,7 @@ async function seedWaiting(uid: string, role: string): Promise<void> {
   });
 }
 
-test('ADMIN은 대기 멤버를 STAFF로 승인할 수 있다', async () => {
+test('ADMIN은 승인 대기자를 STAFF로 승인할 수 있다', async () => {
   await seedWaiting('pending1', 'STAFF');
   const db = env.authenticatedContext('admin1').firestore();
   await assertSucceeds(
@@ -326,7 +326,7 @@ test('이미 멤버인 사람은 가입 신청을 추가하지 못한다', async
   );
 });
 
-test('대기 멤버는 자기 가입 신청을 취소할 수 있다', async () => {
+test('승인 대기자는 자기 가입 신청을 취소할 수 있다', async () => {
   await seedWaiting('pending1', 'STAFF');
   const db = env.authenticatedContext('pending1').firestore();
   await assertSucceeds(
@@ -405,7 +405,7 @@ test('removeMember 쓰기 모양으로 스태프가 나갈 수 있다', async ()
   );
 });
 
-test('removeMember 쓰기 모양으로 대기 멤버가 신청을 취소할 수 있다', async () => {
+test('removeMember 쓰기 모양으로 승인 대기자가 신청을 취소할 수 있다', async () => {
   await seedWaiting('pending1', 'STAFF');
   const db = env.authenticatedContext('pending1').firestore();
   await assertSucceeds(

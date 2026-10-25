@@ -1,6 +1,8 @@
 import type { TokenMessage } from 'firebase-admin/messaging';
 
-import { ANDROID_CHANNEL_ID, adminUidsOf } from './join_request_payload.js';
+import { adminUidsOf } from './join_request_payload.js';
+import { ROLE_DISPLAY_NAMES, isAdmin, type MemberInfo, type Role } from './member_role.js';
+import { buildTokenMessage } from './token_message.js';
 
 /**
  * 멤버 구성 변화 알림의 `data.type` 값.
@@ -32,10 +34,8 @@ export type MembershipEvent = {
   type: MembershipEventType;
   recipientUids: string[];
   subjectUid?: string;
-  role?: string;
+  role?: Role;
 };
-
-type MemberInfo = { role?: string };
 
 /** 트리거가 넘겨주는 점포 문서 중 분류에 필요한 필드 */
 export type StoreSnapshot = {
@@ -88,11 +88,11 @@ export function classifyMembershipChanges(
   const events: MembershipEvent[] = [];
 
   const previousAdminUid = adminUidsOf(beforeMembers).find(
-    (uid) => afterMembers[uid]?.role !== 'ADMIN',
+    (uid) => !isAdmin(afterMembers[uid]),
   );
   for (const [uid, info] of Object.entries(afterMembers)) {
     const wasMember = uid in beforeMembers;
-    if (wasMember && info?.role === 'ADMIN' && beforeMembers[uid]?.role !== 'ADMIN') {
+    if (wasMember && isAdmin(info) && !isAdmin(beforeMembers[uid])) {
       events.push({
         type: ADMIN_DELEGATED_TYPE,
         recipientUids: [uid],
@@ -130,20 +130,6 @@ export function classifyMembershipChanges(
   return events.filter((event) => event.recipientUids.length > 0);
 }
 
-/** Dart `UserRole.displayName`과 같은 표시 이름 */
-function roleDisplayName(role: string | undefined): string {
-  switch (role) {
-    case 'ADMIN':
-      return '관리자';
-    case 'STAFF':
-      return '스태프';
-    case 'VIEWER':
-      return '뷰어';
-    default:
-      return '멤버';
-  }
-}
-
 /** 알림 제목·본문을 만든다. [subjectName]은 `subjectUid`의 표시 이름이다. */
 export function buildMembershipNotification(
   event: MembershipEvent,
@@ -169,7 +155,7 @@ export function buildMembershipNotification(
     case JOIN_APPROVED_TYPE:
       return {
         title: `'${storeName}' 가입이 승인되었습니다`,
-        body: `${roleDisplayName(event.role)}로 점포에 참여합니다.`,
+        body: `${event.role ? ROLE_DISPLAY_NAMES[event.role] : '멤버'}로 점포에 참여합니다.`,
       };
     case JOIN_REJECTED_TYPE:
       return {
@@ -184,11 +170,7 @@ export function buildMembershipNotification(
   }
 }
 
-/**
- * 수신자 기기 토큰마다 알림 메시지를 만든다. 탭하면 앱이 마이페이지로 이동한다.
- *
- * NOTE: registration token(`token`) 사용 이유는 `buildJoinRequestMessages` 참고.
- */
+/** 수신자 기기 토큰마다 알림 메시지를 만든다. 탭하면 앱이 마이페이지로 이동한다. */
 export function buildMembershipMessages(params: {
   tokens: string[];
   event: MembershipEvent;
@@ -202,26 +184,10 @@ export function buildMembershipMessages(params: {
     params.subjectName,
   );
 
-  return params.tokens.map((token) => ({
-    token,
-    notification,
-    data: {
+  return params.tokens.map((token) =>
+    buildTokenMessage(token, notification, {
       type: params.event.type,
       storeId: params.storeId,
-    },
-    android: {
-      priority: 'high',
-      notification: {
-        channelId: ANDROID_CHANNEL_ID,
-      },
-    },
-    apns: {
-      payload: {
-        aps: {
-          sound: 'default',
-          badge: 1,
-        },
-      },
-    },
-  }));
+    }),
+  );
 }

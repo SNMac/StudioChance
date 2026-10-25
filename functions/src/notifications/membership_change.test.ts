@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ANDROID_CHANNEL_ID } from './join_request_payload.js';
+import { ANDROID_CHANNEL_ID } from './token_message.js';
 import {
   ADMIN_DELEGATED_TYPE,
   JOIN_APPROVED_TYPE,

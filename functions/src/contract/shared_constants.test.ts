@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { INVITE_CODE_AVAILABLE_MIN } from '../invite/invite_code.js';
-import { ANDROID_CHANNEL_ID, JOIN_REQUEST_TYPE } from '../notifications/join_request_payload.js';
+import { JOIN_REQUEST_TYPE } from '../notifications/join_request_payload.js';
+import { ROLE_DISPLAY_NAMES } from '../notifications/member_role.js';
 import {
   ADMIN_DELEGATED_TYPE,
   JOIN_APPROVED_TYPE,
@@ -13,6 +14,7 @@ import {
   MEMBER_REMOVED_TYPE,
   STORE_DELETED_TYPE,
 } from '../notifications/membership_change.js';
+import { ANDROID_CHANNEL_ID } from '../notifications/token_message.js';
 
 /**
  * Functions와 앱이 공유하는 값의 계약 테스트.
@@ -80,4 +82,24 @@ test('초대 코드 유효 시간이 Functions와 앱에서 같다', () => {
   );
 
   assert.equal(Number(dartMinutes), INVITE_CODE_AVAILABLE_MIN);
+});
+
+test('멤버 역할 값과 표시 이름이 Functions와 앱에서 같다', () => {
+  const userRole = read('lib/common/enums/user_role.dart');
+  const jsonValueByEnumName = new Map(
+    [...userRole.matchAll(/@JsonValue\('(\w+)'\)\s+(\w+)/g)].map((match) => [match[2], match[1]]),
+  );
+  const displayNameBlock = capture(
+    userRole,
+    /get displayName => switch \(this\) \{([\s\S]*?)\};/,
+    'UserRole.displayName',
+  );
+  const dartDisplayNames = Object.fromEntries(
+    [...displayNameBlock.matchAll(/UserRole\.(\w+) => '([^']+)'/g)]
+      .map(([, enumName, displayName]) => [jsonValueByEnumName.get(enumName), displayName])
+      // 'NONE'은 점포 멤버 역할로 저장되지 않으므로 Functions가 다루지 않는다
+      .filter(([jsonValue]) => jsonValue !== 'NONE'),
+  );
+
+  assert.deepEqual(dartDisplayNames, ROLE_DISPLAY_NAMES);
 });
