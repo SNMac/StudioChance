@@ -23,7 +23,7 @@ void main() async {
     providerApple: AppleDebugProvider(),
   );
 
-  // 모델 변경을 확인하기 쉽도록 prod(1시간)보다 짧게 둔다
+  // 모델 변경을 확인하기 쉽도록 prod(24시간)보다 짧게 둔다
   await initializeRemoteConfig(
     minimumFetchInterval: const Duration(minutes: 5),
   );

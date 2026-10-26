@@ -113,7 +113,8 @@ deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependa
 
 - **모델 목록과 지원 종료일**: Firebase AI Logic의 [지원 모델](https://firebase.google.com/docs/ai-logic/models),
   모델별 종료일은 Agent Platform(구 Vertex AI) 모델 문서. 앱은 `FirebaseAI.agentPlatform()`(location `global`)을 쓰므로 그쪽 종료일이 기준이다
-- **반영 시간**: 앱이 시작할 때 가져와 바로 적용한다. 단 직전에 가져온 지 최소 간격(dev 5분 / prod 1시간)이 지나지 않았으면 캐시를 쓴다
+- **반영 시간**: 앱이 시작할 때 가져와 바로 적용한다. 단 직전에 가져온 지 최소 간격(dev 5분 / prod 24시간)이 지나지 않았으면 캐시를 쓴다.
+  그래서 prod는 바꾼 뒤 모든 기기에 반영되기까지 최대 24시간이 걸린다 — 모델 지원 종료일보다 **하루 이상 앞서** 바꾼다
 - **잘못된 모델 ID를 넣으면 OCR이 전부 실패한다.** 기본값으로 되돌리는 폴백이 없다(설정 오류를 가리지 않기 위해). 로그에 `Gemini 호출 실패 - 모델: ...`이 찍힌다
 
 ### 바꾸는 순서

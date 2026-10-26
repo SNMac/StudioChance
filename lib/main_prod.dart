@@ -26,8 +26,9 @@ void main() async {
     providerApple: kDebugMode ? AppleDebugProvider() : AppleAppAttestProvider(),
   );
 
-  // 콘솔에서 바꾼 값이 최대 1시간 안에 반영된다
-  await initializeRemoteConfig(minimumFetchInterval: const Duration(hours: 1));
+  // 콘솔에서 바꾼 값이 최대 24시간 안에 반영된다. 바꿀 값은 OCR 모델 ID뿐이고
+  // 모델 교체는 수개월 단위라 Firebase 권장(12시간)보다 길게 둔다
+  await initializeRemoteConfig(minimumFetchInterval: const Duration(hours: 24));
 
   await _setPreferredOrientations();
   await _checkFirstLaunchAndClearData();
