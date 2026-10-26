@@ -28,10 +28,6 @@ updates:
       # 0.x라 0.5가 minor로 분류되지만 firebase_core 5를 요구한다
       - dependency-name: "firebase_app_check"
         update-types: ["version-update:semver-minor"]
-      # go_router 18은 material_ui 이전 없이는 화면 전환이 회귀하고 테스트로 잡히지 않는다.
-      # #72 해결 시 제거한다
-      - dependency-name: "go_router"
-        update-types: ["version-update:semver-major"]
     groups:
       # FlutterFire 패키지끼리 버전이 맞물려 따로 올리면 해석이 깨진다
       flutterfire:
