@@ -29,18 +29,16 @@ void main() {
       .loadStoreForEdit(fakeStore.id);
 
   test('수정할 점포 조회 결과를 그대로 돌려준다', () async {
-    when(
-      () => mockStoreUseCase.getStoreForEdit(fakeStore.id),
-    ).thenAnswer((_) async => right(fakeStore));
+    when(() => mockStoreUseCase.getStoreForEdit(fakeStore.id))
+        .thenAnswer((_) async => right(fakeStore));
 
     expect(expectRight(await load()), fakeStore);
   });
 
   test('조회에 실패하면 그 예외를 그대로 돌려준다', () async {
     final error = StoreNotFoundException(message: '삭제된 점포');
-    when(
-      () => mockStoreUseCase.getStoreForEdit(fakeStore.id),
-    ).thenAnswer((_) async => left(error));
+    when(() => mockStoreUseCase.getStoreForEdit(fakeStore.id))
+        .thenAnswer((_) async => left(error));
 
     expect(expectLeft(await load()), error);
   });

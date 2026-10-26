@@ -248,9 +248,7 @@ void main() {
           .doc(storeId)
           .collection('reservations')
           .doc('broken-doc')
-          .set({
-        'startTime': Timestamp.fromDate(DateTime(2026, 6, 15)),
-      });
+          .set({'startTime': Timestamp.fromDate(DateTime(2026, 6, 15))});
 
       final stream = dataSource.watchReservationsByDateRange(
         storeId,
@@ -272,9 +270,7 @@ void main() {
           .doc(storeId)
           .collection('reservations')
           .doc('broken-doc')
-          .set({
-        'startTime': Timestamp.fromDate(DateTime(2026, 6, 15)),
-      });
+          .set({'startTime': Timestamp.fromDate(DateTime(2026, 6, 15))});
 
       final stream = dataSource.watchReservationsByDateRange(
         storeId,
@@ -306,11 +302,10 @@ void main() {
       final reservation = _testReservation(storeId: storeId);
       final created = await dataSource.createReservation(reservation);
 
-      await dataSource.updateReservation(
-        storeId,
-        created.id,
-        {'customerName': '김영희', 'headCount': 5},
-      );
+      await dataSource.updateReservation(storeId, created.id, {
+        'customerName': '김영희',
+        'headCount': 5,
+      });
 
       final updated = await dataSource.getReservation(storeId, created.id);
       expect(updated?.customerName, '김영희');
@@ -340,8 +335,10 @@ void main() {
       final created = await dataSource.createReservation(
         _testReservation(storeId: storeId),
       );
-      final originalCreatedAt =
-          (await docRef(storeId, created.id).get()).data()!['createdAt'];
+      final originalCreatedAt = (await docRef(
+        storeId,
+        created.id,
+      ).get()).data()!['createdAt'];
 
       await dataSource.moveReservation(
         storeId,
@@ -363,16 +360,18 @@ void main() {
       expect(moved['createdAt'], originalCreatedAt);
     });
 
-    test('원래 점포에 문서가 없으면 ReservationNotFoundException을 던지고 아무것도 만들지 않는다',
-        () async {
-      final missing = _testReservation(storeId: toStoreId);
+    test(
+      '원래 점포에 문서가 없으면 ReservationNotFoundException을 던지고 아무것도 만들지 않는다',
+      () async {
+        final missing = _testReservation(storeId: toStoreId);
 
-      await expectLater(
-        dataSource.moveReservation(storeId, missing),
-        throwsA(isA<ReservationNotFoundException>()),
-      );
-      expect((await docRef(toStoreId, missing.id).get()).exists, false);
-    });
+        await expectLater(
+          dataSource.moveReservation(storeId, missing),
+          throwsA(isA<ReservationNotFoundException>()),
+        );
+        expect((await docRef(toStoreId, missing.id).get()).exists, false);
+      },
+    );
   });
 
   // =========================================================================

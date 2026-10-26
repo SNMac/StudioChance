@@ -17,9 +17,8 @@ void main() {
 
   setUp(() {
     mockUserUseCase = MockUserUseCase();
-    when(
-      () => mockUserUseCase.getCurrentUser(),
-    ).thenAnswer((_) async => right(fakeUser));
+    when(() => mockUserUseCase.getCurrentUser())
+        .thenAnswer((_) async => right(fakeUser));
   });
 
   Widget wrap() {

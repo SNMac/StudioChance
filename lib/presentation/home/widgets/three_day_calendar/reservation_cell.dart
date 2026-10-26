@@ -138,9 +138,8 @@ class ReservationCell extends StatelessWidget {
     Color lblColor,
     double topLineRightInset,
   ) {
-    final style = Theme.of(
-      context,
-    ).textTheme.labelSmall?.copyWith(color: lblColor);
+    final style = Theme.of(context).textTheme.labelSmall
+        ?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -179,9 +178,8 @@ class ReservationCell extends StatelessWidget {
   }
 
   Widget _buildContentRow(BuildContext context, Color lblColor) {
-    final style = Theme.of(
-      context,
-    ).textTheme.labelSmall?.copyWith(color: lblColor);
+    final style = Theme.of(context).textTheme.labelSmall
+        ?.copyWith(color: lblColor);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

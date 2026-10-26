@@ -442,18 +442,17 @@ void main() {
           },
         });
       }
-      await fakeFirestore
-          .collection('stores')
-          .doc(storeId)
-          .set(<String, dynamic>{
-            'name': '테스트 점포',
-            'address': '서울',
-            'addressDetail': '',
-            'addressGuide': '',
-            'memberById': <String, dynamic>{},
-            'waitingMemberById': <String, dynamic>{},
-            'spaceOptions': <dynamic>[],
-          });
+      await fakeFirestore.collection('stores').doc(storeId).set(
+        <String, dynamic>{
+          'name': '테스트 점포',
+          'address': '서울',
+          'addressDetail': '',
+          'addressGuide': '',
+          'memberById': <String, dynamic>{},
+          'waitingMemberById': <String, dynamic>{},
+          'spaceOptions': <dynamic>[],
+        },
+      );
 
       await dataSource.softDeleteStore(storeId, [memberUid, waitingUid]);
 

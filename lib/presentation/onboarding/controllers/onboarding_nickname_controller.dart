@@ -42,10 +42,7 @@ class OnboardingNicknameController extends _$OnboardingNicknameController {
         nickname: nickname,
       );
 
-      updateResult.fold(
-        (error) => throw error,
-        (_) {},
-      );
+      updateResult.fold((error) => throw error, (_) {});
     });
   }
 }

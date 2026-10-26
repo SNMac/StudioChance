@@ -94,9 +94,8 @@ void main() {
     );
 
     test('최신 점포로 폼을 다시 채우고, 이후 저장은 최신 점포를 original로 쓴다', () async {
-      when(
-        () => mockStoreUseCase.getStoreForEdit(opened.id),
-      ).thenAnswer((_) async => right(latest));
+      when(() => mockStoreUseCase.getStoreForEdit(opened.id))
+          .thenAnswer((_) async => right(latest));
       stubUpdate(right(null));
       final notifier = notifierFor(opened);
       notifier.setName('내가 바꾼 점포명');

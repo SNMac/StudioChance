@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -54,7 +55,8 @@ class GeminiDataSourceImpl implements GeminiDataSource {
         .map((p) => p.jsonValue)
         .join(' | ');
 
-    final baseRules = '''다음 규칙에 따라 이미지를 분석하고 JSON 포맷으로 생성하세요. 값을 명확하게 찾지 못한 필드는 반드시 null을 반환하세요. 추측하거나 임의의 값을 채우지 마세요.
+    final baseRules =
+        '''다음 규칙에 따라 이미지를 분석하고 JSON 포맷으로 생성하세요. 값을 명확하게 찾지 못한 필드는 반드시 null을 반환하세요. 추측하거나 임의의 값을 채우지 마세요.
 
 [사전 검증]
 isReservationImage: 이 이미지가 공간 예약 확인 화면 또는 관리자 예약 승인 대기 화면 스크린샷이면 true, 그 외(일반 사진, 음식 메뉴, 관계없는 앱 화면 등)이면 false.
@@ -78,18 +80,22 @@ isReservationImage: 이 이미지가 공간 예약 확인 화면 또는 관리�
 
     final String rules89;
     if (storeSpaceMap != null && storeSpaceMap.isNotEmpty) {
-      final storeList = storeSpaceMap.keys.map((name) => '   - $name').join('\n');
+      final storeList = storeSpaceMap.keys
+          .map((name) => '   - $name')
+          .join('\n');
       final spaceList = storeSpaceMap.entries
           .map((e) => '   - ${e.key}: ${e.value.join(', ')}')
           .join('\n');
-      rules89 = '''8. storeName: 다음 점포 목록에서 이미지에 표시된 업체명과 가장 유사한 항목을 하나 선택하세요. 반드시 아래 목록의 문자열 그대로 반환하거나, 해당하는 항목이 없거나 불분명하면 null을 반환하세요. 예약 플랫폼명(네이버, 스페이스클라우드 등)은 선택하지 마세요.
+      rules89 =
+          '''8. storeName: 다음 점포 목록에서 이미지에 표시된 업체명과 가장 유사한 항목을 하나 선택하세요. 반드시 아래 목록의 문자열 그대로 반환하거나, 해당하는 항목이 없거나 불분명하면 null을 반환하세요. 예약 플랫폼명(네이버, 스페이스클라우드 등)은 선택하지 마세요.
    [점포 목록]
 $storeList
 9. spaceName: 다음 공간 목록에서 이미지에 표시된 공간명과 가장 유사한 항목을 하나 선택하세요. 반드시 아래 목록의 문자열 그대로 반환하거나, 해당하는 항목이 없거나 불분명하면 null을 반환하세요.
    [점포별 공간 목록]
 $spaceList''';
     } else {
-      rules89 = '8. storeName: 이 공간을 운영하는 업체(점포) 이름. 예약 확인 화면에 표시되는 공간 운영 업체명. 예약 플랫폼(네이버, 스페이스클라우드 등) 이름은 여기에 포함하지 마십시오. 없으면 null.\n'
+      rules89 =
+          '8. storeName: 이 공간을 운영하는 업체(점포) 이름. 예약 확인 화면에 표시되는 공간 운영 업체명. 예약 플랫폼(네이버, 스페이스클라우드 등) 이름은 여기에 포함하지 마십시오. 없으면 null.\n'
           '9. spaceName: 예약된 특정 공간 이름 (예: A룸, 스튜디오1, B홀). 공간 구분이 없거나 명시되지 않으면 null.';
     }
 

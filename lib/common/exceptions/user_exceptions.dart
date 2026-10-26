@@ -25,8 +25,7 @@ sealed class UserException extends AppException {
     UserDataParsingException() => '데이터 형식이 일치하지 않습니다',
 
     // 6. 유효성 검사 / 알 수 없는 에러
-    UserValidationException() ||
-    UserUnknownException() => '에러가 발생했습니다',
+    UserValidationException() || UserUnknownException() => '에러가 발생했습니다',
   };
 
   @override

@@ -19,7 +19,9 @@ void main() async {
 
   // prod 플레이버: 릴리즈는 프로덕션 Provider, 디버그는 디버그 토큰 사용
   await FirebaseAppCheck.instance.activate(
-    providerAndroid: kDebugMode ? AndroidDebugProvider() : AndroidPlayIntegrityProvider(),
+    providerAndroid: kDebugMode
+        ? AndroidDebugProvider()
+        : AndroidPlayIntegrityProvider(),
     providerApple: kDebugMode ? AppleDebugProvider() : AppleAppAttestProvider(),
   );
 

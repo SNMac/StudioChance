@@ -95,9 +95,8 @@ class MyApp extends ConsumerWidget {
         // Navigator를 바깥 Scaffold로 감싼다
         builder: (context, child) {
           return MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.noScaling),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.noScaling),
             child: ToastHost(child: child!),
           );
         },

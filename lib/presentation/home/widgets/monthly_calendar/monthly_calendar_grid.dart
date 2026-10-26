@@ -54,81 +54,111 @@ class MonthlyCalendarGrid extends ConsumerWidget {
       children: List.generate(6, (row) {
         return Expanded(
           child: Row(
-          children: List.generate(7, (col) {
-            final cellIndex = row * 7 + col;
+            children: List.generate(7, (col) {
+              final cellIndex = row * 7 + col;
 
-            // 날짜 및 현재 달 여부 결정
-            final bool isCurrentMonth;
-            final int day;
-            final int cellYear;
-            final int cellMonth;
+              // 날짜 및 현재 달 여부 결정
+              final bool isCurrentMonth;
+              final int day;
+              final int cellYear;
+              final int cellMonth;
 
-            if (cellIndex < startWeekday) {
-              // 이전 달 날짜
-              isCurrentMonth = false;
-              day = prevMonthDays - startWeekday + cellIndex + 1;
-              cellYear = prevYear;
-              cellMonth = prevMonth;
-            } else if (cellIndex < startWeekday + totalDays) {
-              // 현재 달 날짜
-              isCurrentMonth = true;
-              day = cellIndex - startWeekday + 1;
-              cellYear = year;
-              cellMonth = month;
-            } else {
-              // 다음 달 날짜
-              isCurrentMonth = false;
-              day = cellIndex - startWeekday - totalDays + 1;
-              final nextMonth = month == 12 ? 1 : month + 1;
-              final nextYear = month == 12 ? year + 1 : year;
-              cellYear = nextYear;
-              cellMonth = nextMonth;
-            }
+              if (cellIndex < startWeekday) {
+                // 이전 달 날짜
+                isCurrentMonth = false;
+                day = prevMonthDays - startWeekday + cellIndex + 1;
+                cellYear = prevYear;
+                cellMonth = prevMonth;
+              } else if (cellIndex < startWeekday + totalDays) {
+                // 현재 달 날짜
+                isCurrentMonth = true;
+                day = cellIndex - startWeekday + 1;
+                cellYear = year;
+                cellMonth = month;
+              } else {
+                // 다음 달 날짜
+                isCurrentMonth = false;
+                day = cellIndex - startWeekday - totalDays + 1;
+                final nextMonth = month == 12 ? 1 : month + 1;
+                final nextYear = month == 12 ? year + 1 : year;
+                cellYear = nextYear;
+                cellMonth = nextMonth;
+              }
 
-            final cellDate = DateTime(cellYear, cellMonth, day);
+              final cellDate = DateTime(cellYear, cellMonth, day);
 
-            // 오늘 날짜 판별 (today는 루프 밖에서 한 번만 계산)
-            final bool isToday = cellDate.year == today.year &&
-                cellDate.month == today.month &&
-                cellDate.day == today.day;
+              // 오늘 날짜 판별 (today는 루프 밖에서 한 번만 계산)
+              final bool isToday =
+                  cellDate.year == today.year &&
+                  cellDate.month == today.month &&
+                  cellDate.day == today.day;
 
-            // 기본 텍스트 색상 (요일 기준)
-            final Color baseColor;
-            if (col == 0) {
-              baseColor = context.systemRed;
-            } else if (col == 6) {
-              baseColor = context.systemBlue;
-            } else {
-              baseColor = context.label;
-            }
+              // 기본 텍스트 색상 (요일 기준)
+              final Color baseColor;
+              if (col == 0) {
+                baseColor = context.systemRed;
+              } else if (col == 6) {
+                baseColor = context.systemBlue;
+              } else {
+                baseColor = context.label;
+              }
 
-            // 이전/다음 달 날짜는 opacity 0.3 적용
-            final Color textColor =
-                isCurrentMonth
-                    ? baseColor
-                    : baseColor.withValues(alpha: 0.3);
+              // 이전/다음 달 날짜는 opacity 0.3 적용
+              final Color textColor = isCurrentMonth
+                  ? baseColor
+                  : baseColor.withValues(alpha: 0.3);
 
-            // 선택 상태 결정
-            final bool isSelected1 = cellDate == selectedDay1;
-            final bool isSelected2 = cellDate == selectedDay2;
-            final bool isSelected3 = cellDate == selectedDay3;
+              // 선택 상태 결정
+              final bool isSelected1 = cellDate == selectedDay1;
+              final bool isSelected2 = cellDate == selectedDay2;
+              final bool isSelected3 = cellDate == selectedDay3;
 
-            BoxDecoration? decoration;
-            Color finalTextColor = textColor;
-            Widget? innerCircle;
+              BoxDecoration? decoration;
+              Color finalTextColor = textColor;
+              Widget? innerCircle;
 
-            if (isSelected1) {
-              if (isToday) {
-                // 오늘 & 선택: label 사각형 + systemBackground 원 + label 숫자
+              if (isSelected1) {
+                if (isToday) {
+                  // 오늘 & 선택: label 사각형 + systemBackground 원 + label 숫자
+                  decoration = BoxDecoration(
+                    color: context.label,
+                    borderRadius: BorderRadius.circular(8),
+                  );
+                  innerCircle = Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: context.systemBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$day',
+                      style: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(fontSize: 16, color: context.label),
+                    ),
+                  );
+                  finalTextColor = Colors.transparent; // innerCircle이 텍스트를 그림
+                } else {
+                  // 일반 날짜 선택: label 사각형 + systemBackground 숫자
+                  decoration = BoxDecoration(
+                    color: context.label,
+                    borderRadius: BorderRadius.circular(8),
+                  );
+                  finalTextColor = context.systemBackground;
+                }
+              } else if (isSelected2 || isSelected3) {
                 decoration = BoxDecoration(
-                  color: context.label,
+                  color: context.secondarySystemFill,
                   borderRadius: BorderRadius.circular(8),
                 );
+              } else if (isToday) {
+                // 오늘 & 미선택: label 원 + systemBackground 숫자
                 innerCircle = Container(
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: context.systemBackground,
+                    color: context.label,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -136,75 +166,40 @@ class MonthlyCalendarGrid extends ConsumerWidget {
                     '$day',
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       fontSize: 16,
-                      color: context.label,
+                      color: context.systemBackground,
                     ),
                   ),
                 );
                 finalTextColor = Colors.transparent; // innerCircle이 텍스트를 그림
-              } else {
-                // 일반 날짜 선택: label 사각형 + systemBackground 숫자
-                decoration = BoxDecoration(
-                  color: context.label,
-                  borderRadius: BorderRadius.circular(8),
-                );
-                finalTextColor = context.systemBackground;
               }
-            } else if (isSelected2 || isSelected3) {
-              decoration = BoxDecoration(
-                color: context.secondarySystemFill,
-                borderRadius: BorderRadius.circular(8),
-              );
-            } else if (isToday) {
-              // 오늘 & 미선택: label 원 + systemBackground 숫자
-              innerCircle = Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: context.label,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$day',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontSize: 16,
-                    color: context.systemBackground,
-                  ),
-                ),
-              );
-              finalTextColor = Colors.transparent; // innerCircle이 텍스트를 그림
-            }
 
-            return Expanded(
-              child: CupertinoButton(
-                minimumSize: Size.zero,
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  ref
-                      .read(homeCalendarControllerProvider.notifier)
-                      .selectDateFromMonthly(cellDate);
-                },
-                child: Center(
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: decoration,
-                    alignment: Alignment.center,
-                    child: innerCircle ??
-                        Text(
-                          '$day',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelLarge?.copyWith(
-                            fontSize: 16,
-                            color: finalTextColor,
+              return Expanded(
+                child: CupertinoButton(
+                  minimumSize: Size.zero,
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    ref
+                        .read(homeCalendarControllerProvider.notifier)
+                        .selectDateFromMonthly(cellDate);
+                  },
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: decoration,
+                      alignment: Alignment.center,
+                      child:
+                          innerCircle ??
+                          Text(
+                            '$day',
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(fontSize: 16, color: finalTextColor),
                           ),
-                        ),
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
           ),
         );
       }),

@@ -181,9 +181,9 @@ class _ReservationListModalState extends State<ReservationListModal>
                                 Expanded(
                                   child: Text(
                                     '${event.summary.customerName} · ${event.summary.headCount}인',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyLarge,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),

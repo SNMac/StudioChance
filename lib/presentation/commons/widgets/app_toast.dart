@@ -50,9 +50,8 @@ void showAppToast(BuildContext context, String message) {
   final appMediaQuery = MediaQuery.of(messenger.context);
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final capsuleColor = isDark ? toastBackgroundDarkColor : toastBackgroundColor;
-  final textStyle = Theme.of(
-    context,
-  ).textTheme.bodyMedium?.copyWith(color: toastTextColor);
+  final textStyle = Theme.of(context).textTheme.bodyMedium
+      ?.copyWith(color: toastTextColor);
 
   final maxTextWidth =
       appMediaQuery.size.width -

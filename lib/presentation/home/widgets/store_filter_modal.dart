@@ -187,9 +187,9 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                                 Expanded(
                                   child: Text(
                                     info.name,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyLarge,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),

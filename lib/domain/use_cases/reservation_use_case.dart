@@ -179,19 +179,18 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required DateTime start,
     required DateTime end,
   }) {
-    return Stream.fromFuture(
-      getCurrentUserOrThrow(_userRepository).run(),
-    ).asyncExpand(
-      (result) => result.fold(
-        (error) => Stream.error(error),
-        (user) => _reservationRepository.watchReservationsByDateRange(
-          storeId: storeId,
-          currentUid: user.id,
-          start: start,
-          end: end,
-        ),
-      ),
-    );
+    return Stream.fromFuture(getCurrentUserOrThrow(_userRepository).run())
+        .asyncExpand(
+          (result) => result.fold(
+            (error) => Stream.error(error),
+            (user) => _reservationRepository.watchReservationsByDateRange(
+              storeId: storeId,
+              currentUid: user.id,
+              start: start,
+              end: end,
+            ),
+          ),
+        );
   }
 
   @override

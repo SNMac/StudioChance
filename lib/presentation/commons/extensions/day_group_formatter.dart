@@ -7,9 +7,7 @@ extension DayGroupFormatter on DayGroup {
   String get formattedDays {
     final bool hasHoliday = days.contains(Weekday.holiday);
 
-    final logicDays = days
-        .where((d) => d != Weekday.holiday)
-        .toList()
+    final logicDays = days.where((d) => d != Weekday.holiday).toList()
       ..sort((a, b) => a.index.compareTo(b.index));
 
     if (logicDays.isEmpty) {

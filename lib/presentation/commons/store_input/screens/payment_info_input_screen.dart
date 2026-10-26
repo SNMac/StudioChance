@@ -22,10 +22,41 @@ import 'package:studio_chance/router/router_path.dart';
 /// 0(설정 안함), 5분 단위 5~55분, 1시간 단위 1~24시간
 const List<int> _deadlineOptions = [
   0,
-  5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55,
-  60, 120, 180, 240, 300, 360, 420, 480, 540, 600,
-  660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200,
-  1260, 1320, 1380, 1440,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50,
+  55,
+  60,
+  120,
+  180,
+  240,
+  300,
+  360,
+  420,
+  480,
+  540,
+  600,
+  660,
+  720,
+  780,
+  840,
+  900,
+  960,
+  1020,
+  1080,
+  1140,
+  1200,
+  1260,
+  1320,
+  1380,
+  1440,
 ];
 
 String _formatDuration(int minutes) {
@@ -89,8 +120,9 @@ class _PaymentInfoInputScreenState
       final index = _deadlineOptions.indexOf(initialMinutes);
       if (index != -1) {
         _deadlineScrollController.dispose();
-        _deadlineScrollController =
-            FixedExtentScrollController(initialItem: index);
+        _deadlineScrollController = FixedExtentScrollController(
+          initialItem: index,
+        );
       }
 
       _isInitialized = true;
@@ -123,8 +155,7 @@ class _PaymentInfoInputScreenState
 
     final StoreFormControllerable notifier;
     if (storeToEdit != null) {
-      notifier =
-          ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
+      notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
       notifier = ref.read(storeCreationControllerProvider.notifier);
     }
@@ -135,10 +166,7 @@ class _PaymentInfoInputScreenState
       appBar: CustomAppBar(
         title: '입금 정보',
         actions: [
-          AppBarActionButton(
-            label: '완료',
-            onPressed: () => _save(notifier),
-          ),
+          AppBarActionButton(label: '완료', onPressed: () => _save(notifier)),
         ],
       ),
       body: SafeAreaWithPadding(
@@ -146,85 +174,82 @@ class _PaymentInfoInputScreenState
           child: Column(
             spacing: 20,
             children: [
-            GroupedFormContainer(
-              footer: Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  start: 8,
-                  top: 6,
-                ),
-                child: Text(
-                  '예약 등록 시간 기준으로 설정해주세요',
-                  style: textTheme.labelMedium?.copyWith(
-                    color: context.secondaryLabel,
+              GroupedFormContainer(
+                footer: Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8, top: 6),
+                  child: Text(
+                    '예약 등록 시간 기준으로 설정해주세요',
+                    style: textTheme.labelMedium?.copyWith(
+                      color: context.secondaryLabel,
+                    ),
                   ),
                 ),
+                children: [
+                  TitleTextField(
+                    title: '은행',
+                    controller: _bankNameController,
+                    returnButtonType: TextInputAction.next,
+                  ),
+                  TitleTextField(
+                    title: '계좌번호',
+                    controller: _bankAccountNumberController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    returnButtonType: TextInputAction.next,
+                  ),
+                  TitleTextField(
+                    title: '예금주',
+                    controller: _bankAccountHolderController,
+                    returnButtonType: TextInputAction.done,
+                  ),
+                  _DeadlinePickerRow(
+                    selectedMinutes: _selectedMinutes,
+                    isOpen: _isDeadlinePickerOpen,
+                    scrollController: _deadlineScrollController,
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      setState(() {
+                        _isDeadlinePickerOpen = !_isDeadlinePickerOpen;
+                        if (_isDeadlinePickerOpen && _selectedMinutes == null) {
+                          _selectedMinutes = _deadlineOptions.first;
+                        }
+                      });
+                    },
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        _selectedMinutes = _deadlineOptions[index];
+                      });
+                    },
+                  ),
+                ],
               ),
-              children: [
-                TitleTextField(
-                  title: '은행',
-                  controller: _bankNameController,
-                  returnButtonType: TextInputAction.next,
-                ),
-                TitleTextField(
-                  title: '계좌번호',
-                  controller: _bankAccountNumberController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  returnButtonType: TextInputAction.next,
-                ),
-                TitleTextField(
-                  title: '예금주',
-                  controller: _bankAccountHolderController,
-                  returnButtonType: TextInputAction.done,
-                ),
-                _DeadlinePickerRow(
-                  selectedMinutes: _selectedMinutes,
-                  isOpen: _isDeadlinePickerOpen,
-                  scrollController: _deadlineScrollController,
-                  onPressed: () {
-                    FocusScope.of(context).unfocus();
-                    setState(() {
-                      _isDeadlinePickerOpen = !_isDeadlinePickerOpen;
-                      if (_isDeadlinePickerOpen && _selectedMinutes == null) {
-                        _selectedMinutes = _deadlineOptions.first;
-                      }
-                    });
-                  },
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedMinutes = _deadlineOptions[index];
-                    });
-                  },
-                ),
-              ],
-            ),
-            GroupedFormContainer(
-              children: [
-                TextActionButton(
-                  title: '입금 안내문',
-                  onPressed: () {
-                    // 현재 입력값을 폼 컨트롤러에 임시 반영 (pop 없이)
-                    notifier.setBankName(_bankNameController.text);
-                    notifier.setBankAccountNumber(
-                      _bankAccountNumberController.text,
-                    );
-                    notifier.setBankAccountHolder(
-                      _bankAccountHolderController.text,
-                    );
-                    final m = _selectedMinutes;
-                    notifier.setPaymentDeadlineMinutes(
-                      (m == null || m == 0) ? null : m,
-                    );
-                    // storeToEdit을 전달해 어느 폼 컨트롤러를 읽을지 결정
-                    SCRoute.paymentInstruction.pushChild(
-                      context,
-                      extra: storeToEdit,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+              GroupedFormContainer(
+                children: [
+                  TextActionButton(
+                    title: '입금 안내문',
+                    onPressed: () {
+                      // 현재 입력값을 폼 컨트롤러에 임시 반영 (pop 없이)
+                      notifier.setBankName(_bankNameController.text);
+                      notifier.setBankAccountNumber(
+                        _bankAccountNumberController.text,
+                      );
+                      notifier.setBankAccountHolder(
+                        _bankAccountHolderController.text,
+                      );
+                      final m = _selectedMinutes;
+                      notifier.setPaymentDeadlineMinutes(
+                        (m == null || m == 0) ? null : m,
+                      );
+                      // storeToEdit을 전달해 어느 폼 컨트롤러를 읽을지 결정
+                      SCRoute.paymentInstruction.pushChild(
+                        context,
+                        extra: storeToEdit,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

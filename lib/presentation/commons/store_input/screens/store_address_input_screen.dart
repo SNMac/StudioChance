@@ -144,7 +144,8 @@ class _StoreAddressInputScreenState
                     clipBehavior: Clip.antiAlias,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(modalTopCornerRadius)),
+                        top: Radius.circular(modalTopCornerRadius),
+                      ),
                     ),
                     builder: (context) => KpostalView(
                       appBar: commonAppBar,

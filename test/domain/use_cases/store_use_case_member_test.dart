@@ -33,9 +33,8 @@ void main() {
       storeRepository: mockStoreRepo,
       userRepository: mockUserRepo,
     );
-    when(
-      () => mockStoreRepo.getMembership(any()),
-    ).thenAnswer((_) async => right(membership));
+    when(() => mockStoreRepo.getMembership(any()))
+        .thenAnswer((_) async => right(membership));
     when(
       () => mockStoreRepo.removeMember(
         storeId: any(named: 'storeId'),
@@ -165,9 +164,8 @@ void main() {
 
   group('delegateAdmin', () {
     setUp(() {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       when(
         () => mockStoreRepo.delegateAdmin(
           storeId: any(named: 'storeId'),
@@ -230,9 +228,8 @@ void main() {
       final staffUser = fakeUser.copyWith(
         storeInfos: [fakeUser.storeInfos.first.copyWith(role: UserRole.staff)],
       );
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(staffUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(staffUser));
 
       final result = await useCase.leaveStore('store-123');
 
@@ -244,9 +241,8 @@ void main() {
     });
 
     test('관리자는 나갈 수 없고 위임·삭제 안내용 점포 정보를 담아 실패한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
 
       final result = await useCase.leaveStore('store-123');
 
@@ -269,9 +265,8 @@ void main() {
       final applicant = fakeUser.copyWith(
         storeInfos: [fakeUser.storeInfos.first.copyWith(isPending: true)],
       );
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(applicant));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(applicant));
 
       final result = await useCase.cancelJoinRequest('store-123');
 
@@ -283,9 +278,8 @@ void main() {
     });
 
     test('이미 멤버인 점포는 신청 취소할 수 없다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
 
       final result = await useCase.cancelJoinRequest('store-123');
 

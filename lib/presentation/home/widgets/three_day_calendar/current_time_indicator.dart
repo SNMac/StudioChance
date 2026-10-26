@@ -76,11 +76,8 @@ class _CurrentTimeCapsuleState extends State<CurrentTimeCapsule> {
         alignment: Alignment.center,
         child: Text(
           timeText,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 10,
-            height: 1.0,
-            color: context.white,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(fontSize: 10, height: 1.0, color: context.white),
         ),
       ),
     );

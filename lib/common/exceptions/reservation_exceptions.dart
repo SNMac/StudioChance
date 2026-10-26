@@ -43,8 +43,7 @@ sealed class ReservationException extends AppException {
       '잠시 후 다시 시도해 주세요.\n문제가 지속되면 개발자에게 문의해 주세요.',
 
     // 4. 처리 과정
-    ReservationTransactionException() =>
-      '일시적인 충돌이 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+    ReservationTransactionException() => '일시적인 충돌이 발생했습니다.\n잠시 후 다시 시도해 주세요.',
     ReservationCancelledException() => '작업이 중단되었습니다.',
 
     // 5. 파싱 에러
@@ -122,10 +121,8 @@ class ReservationUnknownException extends ReservationException {
 ///
 /// Firebase Code: `resource-exhausted`
 class ReservationResourceExhaustedException extends ReservationException {
-  ReservationResourceExhaustedException({
-    required String message,
-    String? code,
-  }) : super(message, code: code);
+  ReservationResourceExhaustedException({required String message, String? code})
+    : super(message, code: code);
 }
 
 /// 작업이 취소되었을 때 발생하는 예외

@@ -161,9 +161,8 @@ class AuthUseCaseImpl implements AuthUseCase {
   /// [_ensureNoSharedAdminStores]를 통과한 뒤라 모두 혼자 쓰는 점포다.
   /// 순회하며 삭제하고, 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
   TaskEither<Exception, void> _softDeleteAdminStores(User currentUser) {
-    final adminStoreIds = _adminStoreInfosOf(
-      currentUser,
-    ).map((info) => info.id);
+    final adminStoreIds = _adminStoreInfosOf(currentUser)
+        .map((info) => info.id);
 
     return adminStoreIds.fold(
       TaskEither<Exception, void>.right(null),

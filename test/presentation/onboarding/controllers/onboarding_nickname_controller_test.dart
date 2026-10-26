@@ -16,9 +16,7 @@ void main() {
   setUp(() {
     mockUserUseCase = MockUserUseCase();
     container = ProviderContainer(
-      overrides: [
-        userUseCaseProvider.overrideWith((ref) => mockUserUseCase),
-      ],
+      overrides: [userUseCaseProvider.overrideWith((ref) => mockUserUseCase)],
     );
   });
 
@@ -59,19 +57,22 @@ void main() {
       );
     });
 
-    test('currentUser가 null이면 UserNotFoundException으로 AsyncError가 된다', () async {
-      when(() => mockUserUseCase.getCurrentUser())
-          .thenAnswer((_) async => right(null));
-      final notifier = container.read(
-        onboardingNicknameControllerProvider.notifier,
-      );
+    test(
+      'currentUser가 null이면 UserNotFoundException으로 AsyncError가 된다',
+      () async {
+        when(() => mockUserUseCase.getCurrentUser())
+            .thenAnswer((_) async => right(null));
+        final notifier = container.read(
+          onboardingNicknameControllerProvider.notifier,
+        );
 
-      await notifier.saveNicknameToRemote('닉네임');
+        await notifier.saveNicknameToRemote('닉네임');
 
-      final state = container.read(onboardingNicknameControllerProvider);
-      expect(state, isA<AsyncError>());
-      expect(state.error, isA<UserNotFoundException>());
-    });
+        final state = container.read(onboardingNicknameControllerProvider);
+        expect(state, isA<AsyncError>());
+        expect(state.error, isA<UserNotFoundException>());
+      },
+    );
 
     test('updateUser 실패 시 원본 예외로 AsyncError가 된다', () async {
       final exception = UserNotFoundException(message: '업데이트 실패');
@@ -112,10 +113,7 @@ void main() {
       final state = container.read(onboardingNicknameControllerProvider);
       expect(state, const AsyncData<void>(null));
       verify(
-        () => mockUserUseCase.updateUser(
-          uid: fakeUser.id,
-          nickname: '새닉네임',
-        ),
+        () => mockUserUseCase.updateUser(uid: fakeUser.id, nickname: '새닉네임'),
       ).called(1);
     });
   });

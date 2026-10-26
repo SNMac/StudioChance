@@ -135,16 +135,14 @@ void main() {
     mockUserRepo = MockUserRepository();
     mockStoreRepo = MockStoreRepository();
     // 기본값: store 없음 → 가격 계산 스킵, 기존 값 유지
-    when(
-      () => mockStoreRepo.getStore(any()),
-    ).thenAnswer((_) async => right(null));
+    when(() => mockStoreRepo.getStore(any()))
+        .thenAnswer((_) async => right(null));
     mockHolidayRepo = MockHolidayRepository();
     // 기본값: 공휴일이 하나도 없는 공휴일 달력
-    when(
-      () => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')),
-    ).thenAnswer(
-      (_) async => right(const HolidayCalendar(daysByYear: {2026: {}})),
-    );
+    when(() => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')))
+        .thenAnswer(
+          (_) async => right(const HolidayCalendar(daysByYear: {2026: {}})),
+        );
     useCase = ReservationUseCaseImpl(
       reservationRepository: mockReservationRepo,
       userRepository: mockUserRepo,
@@ -161,9 +159,8 @@ void main() {
     test(
       'writer.user만 현재 로그인 유저로 교체하고 writer.role은 유지하여 Repository를 호출한다',
       () async {
-        when(
-          () => mockUserRepo.getCurrentUser(),
-        ).thenAnswer((_) async => right(fakeUser));
+        when(() => mockUserRepo.getCurrentUser())
+            .thenAnswer((_) async => right(fakeUser));
 
         Reservation? capturedReservation;
         when(
@@ -187,9 +184,8 @@ void main() {
     );
 
     test('유저 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => left(Exception('유저 없음')));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => left(Exception('유저 없음')));
 
       final result = await useCase.createReservation(
         reservation: fakeReservation,
@@ -204,9 +200,8 @@ void main() {
     });
 
     test('현재 유저가 null이면 left를 반환한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(null));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(null));
 
       final result = await useCase.createReservation(
         reservation: fakeReservation,
@@ -216,9 +211,8 @@ void main() {
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -233,9 +227,8 @@ void main() {
     });
 
     test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => left(Exception('Store 조회 실패')));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => left(Exception('Store 조회 실패')));
 
       final result = await useCase.createReservation(
         reservation: fakeReservation,
@@ -260,9 +253,8 @@ void main() {
     final end = DateTime(2026, 5, 31);
 
     test('currentUid를 자동으로 획득하여 Repository를 호출한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.getReservationsByDateRange(
           storeId: any(named: 'storeId'),
@@ -290,9 +282,8 @@ void main() {
     });
 
     test('유저 조회 실패 시 left를 반환한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => left(Exception('유저 없음')));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => left(Exception('유저 없음')));
 
       final result = await useCase.getReservationsByDateRange(
         storeId: 'store-123',
@@ -304,9 +295,8 @@ void main() {
     });
 
     test('Repository 실패 시 left를 전파한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.getReservationsByDateRange(
           storeId: any(named: 'storeId'),
@@ -332,9 +322,8 @@ void main() {
 
   group('updateReservation', () {
     setUp(() {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       // 기본값: 저장된 예약 없음 → 요금표 스냅샷이 없어 현재 요금 경로
       when(
         () => mockReservationRepo.getReservation(
@@ -364,9 +353,8 @@ void main() {
     });
 
     test('Store 조회 실패 시 left를 반환하고 Repository를 호출하지 않는다', () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => left(Exception('Store 조회 실패')));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => left(Exception('Store 조회 실패')));
 
       final result = await useCase.updateReservation(
         reservation: fakeReservation,
@@ -414,9 +402,8 @@ void main() {
     setUp(() {
       capturedCreate = null;
       capturedUpdate = null;
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -456,9 +443,8 @@ void main() {
     test(
       'createReservation: 점포 요금 설정으로 calculatedPrice/totalPrice를 계산해 저장한다',
       () async {
-        when(
-          () => mockStoreRepo.getStore(any()),
-        ).thenAnswer((_) async => right(_pricedStore));
+        when(() => mockStoreRepo.getStore(any()))
+            .thenAnswer((_) async => right(_pricedStore));
 
         final result = await useCase.createReservation(
           reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
@@ -476,9 +462,8 @@ void main() {
     );
 
     test('createReservation: spaceOptionId에 해당하는 공간의 요금 설정을 사용한다', () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(_pricedStore));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => right(_pricedStore));
 
       await useCase.createReservation(
         reservation: fakeReservation.copyWith(spaceOptionId: 'space-b'),
@@ -490,9 +475,8 @@ void main() {
     });
 
     test('createReservation: 점포에 공간(요금 설정)이 없으면 기존 가격을 유지한다', () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
 
       await useCase.createReservation(
         // 화면이 보낸 요금표는 저장하지 않는다
@@ -507,9 +491,8 @@ void main() {
     });
 
     test('updateReservation: 저장된 요금표가 없으면 현재 요금으로 계산하고 요금표를 저장한다', () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(_pricedStore));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => right(_pricedStore));
 
       final result = await useCase.updateReservation(
         reservation: fakeReservation.copyWith(spaceOptionId: 'space-a'),
@@ -523,9 +506,8 @@ void main() {
     });
 
     test('updateReservation: 점포에 공간(요금 설정)이 없으면 기존 가격을 유지한다', () async {
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => right(fakeStore.copyWith(spaceOptions: [])));
 
       await useCase.updateReservation(reservation: fakeReservation);
 
@@ -542,9 +524,8 @@ void main() {
 
       setUp(() {
         stubStoredReservation(stored);
-        when(
-          () => mockStoreRepo.getStore(any()),
-        ).thenAnswer((_) async => right(_pricedStore));
+        when(() => mockStoreRepo.getStore(any()))
+            .thenAnswer((_) async => right(_pricedStore));
       });
 
       test('updateReservation: 점포 요금이 바뀌어도 저장된 요금표로 재계산한다', () async {
@@ -628,15 +609,12 @@ void main() {
 
     setUp(() {
       captured = null;
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(_holidayPricedStore));
-      when(
-        () => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')),
-      ).thenAnswer((_) async => right(mayFirstHoliday));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => right(_holidayPricedStore));
+      when(() => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')))
+          .thenAnswer((_) async => right(mayFirstHoliday));
       when(
         () => mockReservationRepo.createReservation(
           reservation: any(named: 'reservation'),
@@ -673,9 +651,8 @@ void main() {
     });
 
     test('createReservation: 공휴일 달력을 읽지 못하면 평일로 계산한다', () async {
-      when(
-        () => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')),
-      ).thenAnswer((_) async => left(Exception('네트워크 오류')));
+      when(() => mockHolidayRepo.getHolidayCalendar(years: any(named: 'years')))
+          .thenAnswer((_) async => left(Exception('네트워크 오류')));
 
       final result = await useCase.createReservation(reservation: reservation);
 
@@ -745,10 +722,8 @@ void main() {
       priceSetting: _weekdayHourlySetting(30000),
     );
     // 원래 점포는 ADMIN, 옮길 점포는 STAFF인 사용자
-    final mover = fakeUserWithStores([
-      fakeStoreSummary.id,
-      storeB.id,
-    ]).copyWith(id: 'user-mover');
+    final mover = fakeUserWithStores([fakeStoreSummary.id, storeB.id])
+        .copyWith(id: 'user-mover');
     final moverInStoreB = mover.copyWith(
       storeInfos: [
         mover.storeInfos.first,
@@ -760,9 +735,8 @@ void main() {
 
     setUp(() {
       capturedMove = null;
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(moverInStoreB));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(moverInStoreB));
       when(
         () => mockReservationRepo.getReservation(
           storeId: fakeStoreSummary.id,
@@ -770,9 +744,8 @@ void main() {
           currentUid: moverInStoreB.id,
         ),
       ).thenAnswer((_) async => right(stored));
-      when(
-        () => mockStoreRepo.getStore(any()),
-      ).thenAnswer((_) async => right(_pricedStore));
+      when(() => mockStoreRepo.getStore(any()))
+          .thenAnswer((_) async => right(_pricedStore));
       when(
         () => mockReservationRepo.moveReservation(
           reservation: any(named: 'reservation'),
@@ -950,9 +923,8 @@ void main() {
     final end = DateTime(2026, 5, 31);
 
     test('유저 조회 실패 시 스트림이 에러를 방출한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => left(Exception('유저 없음')));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => left(Exception('유저 없음')));
 
       final stream = useCase.watchReservationsByDateRange(
         storeId: 'store-123',
@@ -964,9 +936,8 @@ void main() {
     });
 
     test('유저가 null이면 스트림이 AuthUserNotFoundException을 방출한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(null));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(null));
 
       final stream = useCase.watchReservationsByDateRange(
         storeId: 'store-123',
@@ -978,9 +949,8 @@ void main() {
     });
 
     test('유저 조회 성공 시 Repository 스트림을 그대로 전달한다', () async {
-      when(
-        () => mockUserRepo.getCurrentUser(),
-      ).thenAnswer((_) async => right(fakeUser));
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
       when(
         () => mockReservationRepo.watchReservationsByDateRange(
           storeId: any(named: 'storeId'),

@@ -106,8 +106,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
 
       final writerById = {
         for (var i = 0; i < writerIds.length; i++)
-          if (writerModels[i] != null)
-            writerIds[i]: writerModels[i]!,
+          if (writerModels[i] != null) writerIds[i]: writerModels[i]!,
       };
 
       final reservations = models.map((model) {
@@ -120,7 +119,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
 
         return model.toEntity(
           storeSummary,
-          _buildWriter(writerUserModel: writerUserModel, writerRole: model.writerRole),
+          _buildWriter(
+            writerUserModel: writerUserModel,
+            writerRole: model.writerRole,
+          ),
         );
       }).toList();
 
@@ -250,14 +252,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
     required ReservationStatus status,
   }) async {
     try {
-      await _reservationDataSource.updateReservation(
-        storeId,
-        reservationId,
-        {'status': status.jsonValue},
-      );
-      _logger.i(
-        '예약 상태 변경 완료\nid: $reservationId, status: ${status.jsonValue}',
-      );
+      await _reservationDataSource.updateReservation(storeId, reservationId, {
+        'status': status.jsonValue,
+      });
+      _logger.i('예약 상태 변경 완료\nid: $reservationId, status: ${status.jsonValue}');
       return right(null);
     } catch (e) {
       _logger.e('예약 상태 변경 실패');
@@ -305,7 +303,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
 
     return model.toEntity(
       _buildStoreSummary(storeId: storeId, currentUserModel: currentUserModel),
-      _buildWriter(writerUserModel: writerUserModel, writerRole: model.writerRole),
+      _buildWriter(
+        writerUserModel: writerUserModel,
+        writerRole: model.writerRole,
+      ),
     );
   }
 

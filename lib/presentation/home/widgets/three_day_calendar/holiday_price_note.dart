@@ -54,9 +54,8 @@ class HolidayPriceNoteText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       note,
-      style: Theme.of(
-        context,
-      ).textTheme.labelMedium?.copyWith(color: context.secondaryLabel),
+      style: Theme.of(context).textTheme.labelMedium
+          ?.copyWith(color: context.secondaryLabel),
     );
   }
 }

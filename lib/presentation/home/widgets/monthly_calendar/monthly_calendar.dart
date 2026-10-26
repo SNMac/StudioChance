@@ -59,8 +59,8 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
             curve: Curves.easeInOut,
           )
           .then((_) {
-        if (mounted) _isAnimating = false;
-      });
+            if (mounted) _isAnimating = false;
+          });
     } else {
       _pageController.jumpToPage(targetPage);
     }
@@ -68,7 +68,8 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
 
   /// 페이지 인덱스를 해당 월의 DateTime으로 변환
   DateTime _monthForPage(int page) {
-    final totalMonths = _referenceMonth.year * 12 +
+    final totalMonths =
+        _referenceMonth.year * 12 +
         (_referenceMonth.month - 1) +
         (page - _initialPage);
     final year = totalMonths ~/ 12;
@@ -83,13 +84,13 @@ class _MonthlyCalendarState extends ConsumerState<MonthlyCalendar> {
     );
 
     // 외부(selectDate, goToToday 등)에서 displayedMonth가 변경될 때 PageView 동기화
-    ref.listen(
-      homeCalendarControllerProvider.select((s) => s.displayedMonth),
-      (prev, next) {
-        if (prev == next) return;
-        _syncPageToMonth(next);
-      },
-    );
+    ref.listen(homeCalendarControllerProvider.select((s) => s.displayedMonth), (
+      prev,
+      next,
+    ) {
+      if (prev == next) return;
+      _syncPageToMonth(next);
+    });
 
     // 월간 캘린더가 열릴 때 현재 displayedMonth로 페이지 동기화
     // (숨겨진 상태에서 jumpToPage가 실패할 경우를 대비)

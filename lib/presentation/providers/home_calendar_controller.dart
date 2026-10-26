@@ -84,7 +84,9 @@ class HomeCalendarController extends _$HomeCalendarController {
 
     // SharedPreferences에서 hourHeight 불러오기 (아직 로드 안 됐을 경우 기본값 사용)
     final prefs = ref.watch(sharedPreferencesProvider).asData?.value;
-    final hourHeight = prefs != null ? loadHourHeight(prefs) : defaultHourHeight;
+    final hourHeight = prefs != null
+        ? loadHourHeight(prefs)
+        : defaultHourHeight;
 
     return HomeCalendarState(
       selectedStartDate: DateTime(now.year, now.month, now.day),
@@ -132,7 +134,9 @@ class HomeCalendarController extends _$HomeCalendarController {
 
   /// 월간 캘린더 PageView에서 월 이동 시 displayedMonth 업데이트
   void setDisplayedMonth(DateTime month) {
-    state = state.copyWith(displayedMonth: DateTime(month.year, month.month, 1));
+    state = state.copyWith(
+      displayedMonth: DateTime(month.year, month.month, 1),
+    );
   }
 
   /// 날짜를 days만큼 이동, displayedMonth는 이동 후 날짜 기준으로 업데이트

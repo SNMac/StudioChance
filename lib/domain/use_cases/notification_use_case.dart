@@ -35,9 +35,7 @@ abstract interface class NotificationUseCase {
 class NotificationUseCaseImpl implements NotificationUseCase {
   final NotificationRepository _notificationRepository;
 
-  NotificationUseCaseImpl({
-    required this._notificationRepository,
-  });
+  NotificationUseCaseImpl({required this._notificationRepository});
 
   @override
   Future<Either<Exception, bool>> requestPermission() =>
