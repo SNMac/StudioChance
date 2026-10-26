@@ -65,3 +65,42 @@ iOS에서 포그라운드 알림이 보이지 않으면 `setForegroundNotificati
 - 시뮬레이터 로그로 확인: 꺼진 상태 `Received response 0` / `shouldPresentAlert: 0`, 켜진 상태 `Received response 7` / `shouldPresentAlert: YES`
 - 시뮬레이터에 푸시 보내기: `xcrun simctl push <device> <bundleId> payload.apns`
   (APNs·FCM을 우회하므로 전달 경로가 아닌 **표시·탭 처리만** 검증된다)
+
+## 의존성 점검
+
+deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependabot이 PR을 열고, Dependabot이 다루지 않는 것은 분기마다 손으로 본다.
+
+### Dependabot (`.github/dependabot.yml`)
+
+- **버전 업데이트**: 분기 1회. patch는 PR을 만들지 않고, 서로 맞물리는 패키지(FlutterFire, 코드 생성 스택, Firebase 서버·테스트 SDK)는 한 PR로 묶인다
+- **보안 업데이트**: 주기와 무관하게 취약점 경보가 뜨면 바로 PR이 열린다. 저장소 Settings의 Dependabot alerts·security updates로 켜 둔다
+- Dependabot PR은 이슈 없이 열리므로 커밋·PR 제목 컨벤션의 예외다
+
+### Dependabot PR 처리
+
+- `deprecated_member_use`가 warning이라 업그레이드가 새 deprecation을 끌고 오면 CI가 실패한다. 그 PR 브랜치에서 고쳐서 머지한다
+- **pub — CI는 iOS를 빌드하지 않는다.** 네이티브 플러그인(FlutterFire, google_sign_in 등)이 바뀐 PR은 iOS SPM 해석이 깨져도 초록 불이다.
+  `flutter build ios --simulator --flavor dev --target lib/main_dev.dart`로 확인한다
+- **pub — 코드 생성 스택(`codegen` 그룹)**: Dependabot은 생성 파일을 다시 만들지 않는다.
+  PR 브랜치에서 `dart run build_runner build --delete-conflicting-outputs`를 돌려 생성 파일 변경을 커밋한다
+- **npm**: `cd functions && npm test` 후 `firebase deploy --only functions -P dev`로 배포 로그에 경고가 없는지 본다. prod는 머지 후 배포한다
+
+### 분기마다 손으로 볼 것
+
+정식 출시 직전에도 한 번 본다.
+
+- **Dependabot이 올리지 않는 버전**
+  - Flutter SDK: CI의 `flutter-version`, `pubspec.yaml`의 `environment.sdk`
+  - Node 런타임: `functions/package.json`의 `engines.node`, CI의 `node-version`, `@types/node`(메이저를 런타임에 맞춘다).
+    Cloud Functions 런타임 지원 일정은 `firebase-tools`의 `lib/deploy/functions/runtimes/supported/types.js`에 있다
+- **`dependabot.yml`에서 임시로 막아 둔 항목**: 주석에 적힌 이슈가 해결됐으면 ignore를 지운다
+- **현황 실측**
+
+  ```bash
+  dart analyze                 # deprecated_member_use는 warning으로 나온다
+  dart fix --dry-run
+  flutter pub outdated
+  cd functions
+  npm outdated
+  npm audit --omit=dev         # 운영 의존성. dev 도구(firebase-tools 등)의 경보는 상류 수정을 기다리는 경우가 많다
+  ```
