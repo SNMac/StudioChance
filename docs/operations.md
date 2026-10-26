@@ -94,6 +94,7 @@ deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependa
   - Node 런타임: `functions/package.json`의 `engines.node`, CI의 `node-version`, `@types/node`(메이저를 런타임에 맞춘다).
     Cloud Functions 런타임 지원 일정은 `firebase-tools`의 `lib/deploy/functions/runtimes/supported/types.js`에 있다
 - **`dependabot.yml`에서 임시로 막아 둔 항목**: 주석에 적힌 이슈가 해결됐으면 ignore를 지운다
+- **OCR 모델의 지원 종료일**: 아래 "OCR 모델 변경"의 확인처에서 본다. 종료일이 다가오면 모델을 바꾼다
 - **현황 실측**
 
   ```bash
@@ -104,3 +105,24 @@ deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependa
   npm outdated
   npm audit --omit=dev         # 운영 의존성. dev 도구(firebase-tools 등)의 경보는 상류 수정을 기다리는 경우가 많다
   ```
+
+## OCR 모델 변경
+
+예약 스크린샷 OCR이 쓰는 Gemini 모델은 Remote Config의 `ocr_model_name`으로 정한다. 앱 업데이트 없이 바꿀 수 있다.
+콘솔 값이 비어 있거나 아직 가져오지 못했으면 앱 기본값(`lib/data/data_sources/remote_config.dart`의 `defaultOcrModelName`)을 쓴다.
+
+- **모델 목록과 지원 종료일**: Firebase AI Logic의 [지원 모델](https://firebase.google.com/docs/ai-logic/models),
+  모델별 종료일은 Agent Platform(구 Vertex AI) 모델 문서. 앱은 `FirebaseAI.agentPlatform()`(location `global`)을 쓰므로 그쪽 종료일이 기준이다
+- **반영 시간**: 앱이 시작할 때 가져와 바로 적용한다. 단 직전에 가져온 지 최소 간격(dev 5분 / prod 1시간)이 지나지 않았으면 캐시를 쓴다
+- **잘못된 모델 ID를 넣으면 OCR이 전부 실패한다.** 기본값으로 되돌리는 폴백이 없다(설정 오류를 가리지 않기 위해). 로그에 `Gemini 호출 실패 - 모델: ...`이 찍힌다
+
+### 바꾸는 순서
+
+1. **dev**(`studio-chance`) 콘솔 Remote Config에서 `ocr_model_name`을 바꿔 게시한다
+2. dev 앱을 다시 실행하고 로그의 `Remote Config 적용 - ocr_model_name: ...`으로 새 값을 확인한다 (예전 값이면 5분 뒤 다시 실행)
+3. `개발 자료/OCR 예제`의 4장을 돌려 이전 모델과 비교한다
+   - 예약자명·연락처·입퇴실 시각·인원·플랫폼이 맞는지
+   - memo에 입실·퇴실 안내문이 들어가지 않는지 (프롬프트 규칙 7. 모델에 따라 지키지 않는 경우가 있었다)
+   - 응답 시간
+4. 문제가 없으면 **prod**(`studio-chance-prod`)에 같은 값을 게시한다
+5. 앱 기본값(`defaultOcrModelName`)도 다음 앱 업데이트 때 같은 값으로 맞춘다. 새로 설치한 앱의 첫 OCR은 기본값을 쓰기 때문이다
