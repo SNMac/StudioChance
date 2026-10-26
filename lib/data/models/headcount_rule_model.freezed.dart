@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'headcount_rule_model.dart';
@@ -9,6 +9,7 @@ part of 'headcount_rule_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $HeadcountRuleModelCopyWith<HeadcountRuleModel> get copyWith => _$HeadcountRuleM
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeadcountRuleModel&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.headcountExtraPrice, headcountExtraPrice) || other.headcountExtraPrice == headcountExtraPrice)&&(identical(other.isHeadcountHourly, isHeadcountHourly) || other.isHeadcountHourly == isHeadcountHourly)&&(identical(other.isHeadcountPerPerson, isHeadcountPerPerson) || other.isHeadcountPerPerson == isHeadcountPerPerson));
+  final _this = this as HeadcountRuleModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeadcountRuleModel&&(identical(other.headcountBase, _this.headcountBase) || other.headcountBase == _this.headcountBase)&&(identical(other.headcountExtraPrice, _this.headcountExtraPrice) || other.headcountExtraPrice == _this.headcountExtraPrice)&&(identical(other.isHeadcountHourly, _this.isHeadcountHourly) || other.isHeadcountHourly == _this.isHeadcountHourly)&&(identical(other.isHeadcountPerPerson, _this.isHeadcountPerPerson) || other.isHeadcountPerPerson == _this.isHeadcountPerPerson));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,headcountBase,headcountExtraPrice,isHeadcountHourly,isHeadcountPerPerson);
+int get hashCode {
+  final _this = this as HeadcountRuleModel;
+  return Object.hash(runtimeType,_this.headcountBase,_this.headcountExtraPrice,_this.isHeadcountHourly,_this.isHeadcountPerPerson);
+}
 
 @override
 String toString() {
-  return 'HeadcountRuleModel(headcountBase: $headcountBase, headcountExtraPrice: $headcountExtraPrice, isHeadcountHourly: $isHeadcountHourly, isHeadcountPerPerson: $isHeadcountPerPerson)';
+  final _this = this as HeadcountRuleModel;
+  return 'HeadcountRuleModel(headcountBase: ${_this.headcountBase}, headcountExtraPrice: ${_this.headcountExtraPrice}, isHeadcountHourly: ${_this.isHeadcountHourly}, isHeadcountPerPerson: ${_this.isHeadcountPerPerson})';
 }
 
 
@@ -66,7 +72,7 @@ class _$HeadcountRuleModelCopyWithImpl<$Res>
 /// Create a copy of HeadcountRuleModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? headcountBase = null,Object? headcountExtraPrice = null,Object? isHeadcountHourly = null,Object? isHeadcountPerPerson = null,}) {
-  return _then(_self.copyWith(
+  return _then(HeadcountRuleModel(
 headcountBase: null == headcountBase ? _self.headcountBase : headcountBase // ignore: cast_nullable_to_non_nullable
 as int,headcountExtraPrice: null == headcountExtraPrice ? _self.headcountExtraPrice : headcountExtraPrice // ignore: cast_nullable_to_non_nullable
 as int,isHeadcountHourly: null == isHeadcountHourly ? _self.isHeadcountHourly : isHeadcountHourly // ignore: cast_nullable_to_non_nullable
@@ -233,16 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeadcountRuleModel&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.headcountExtraPrice, headcountExtraPrice) || other.headcountExtraPrice == headcountExtraPrice)&&(identical(other.isHeadcountHourly, isHeadcountHourly) || other.isHeadcountHourly == isHeadcountHourly)&&(identical(other.isHeadcountPerPerson, isHeadcountPerPerson) || other.isHeadcountPerPerson == isHeadcountPerPerson));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeadcountRuleModel&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.headcountExtraPrice, headcountExtraPrice) || other.headcountExtraPrice == headcountExtraPrice)&&(identical(other.isHeadcountHourly, isHeadcountHourly) || other.isHeadcountHourly == isHeadcountHourly)&&(identical(other.isHeadcountPerPerson, isHeadcountPerPerson) || other.isHeadcountPerPerson == isHeadcountPerPerson));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,headcountBase,headcountExtraPrice,isHeadcountHourly,isHeadcountPerPerson);
+int get hashCode {
+    return Object.hash(runtimeType,headcountBase,headcountExtraPrice,isHeadcountHourly,isHeadcountPerPerson);
+}
 
 @override
 String toString() {
-  return 'HeadcountRuleModel(headcountBase: $headcountBase, headcountExtraPrice: $headcountExtraPrice, isHeadcountHourly: $isHeadcountHourly, isHeadcountPerPerson: $isHeadcountPerPerson)';
+    return 'HeadcountRuleModel(headcountBase: $headcountBase, headcountExtraPrice: $headcountExtraPrice, isHeadcountHourly: $isHeadcountHourly, isHeadcountPerPerson: $isHeadcountPerPerson)';
 }
 
 

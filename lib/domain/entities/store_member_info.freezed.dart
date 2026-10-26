@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'store_member_info.dart';
@@ -9,6 +9,7 @@ part of 'store_member_info.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $StoreMemberInfoCopyWith<StoreMemberInfo> get copyWith => _$StoreMemberInfoCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreMemberInfo&&(identical(other.user, user) || other.user == user)&&(identical(other.role, role) || other.role == role));
+  final _this = this as StoreMemberInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreMemberInfo&&(identical(other.user, _this.user) || other.user == _this.user)&&(identical(other.role, _this.role) || other.role == _this.role));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,user,role);
+int get hashCode {
+  final _this = this as StoreMemberInfo;
+  return Object.hash(runtimeType,_this.user,_this.role);
+}
 
 @override
 String toString() {
-  return 'StoreMemberInfo(user: $user, role: $role)';
+  final _this = this as StoreMemberInfo;
+  return 'StoreMemberInfo(user: ${_this.user}, role: ${_this.role})';
 }
 
 
@@ -63,7 +69,7 @@ class _$StoreMemberInfoCopyWithImpl<$Res>
 /// Create a copy of StoreMemberInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? role = null,}) {
-  return _then(_self.copyWith(
+  return _then(StoreMemberInfo(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as User,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as UserRole,
@@ -232,16 +238,18 @@ _$StoreMemberInfoCopyWith<_StoreMemberInfo> get copyWith => __$StoreMemberInfoCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreMemberInfo&&(identical(other.user, user) || other.user == user)&&(identical(other.role, role) || other.role == role));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreMemberInfo&&(identical(other.user, user) || other.user == user)&&(identical(other.role, role) || other.role == role));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,user,role);
+int get hashCode {
+    return Object.hash(runtimeType,user,role);
+}
 
 @override
 String toString() {
-  return 'StoreMemberInfo(user: $user, role: $role)';
+    return 'StoreMemberInfo(user: $user, role: $role)';
 }
 
 

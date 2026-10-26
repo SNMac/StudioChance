@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'holiday_calendar_controller.dart';
@@ -9,6 +9,7 @@ part of 'holiday_calendar_controller.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -26,16 +27,21 @@ $HolidayCalendarStateCopyWith<HolidayCalendarState> get copyWith => _$HolidayCal
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HolidayCalendarState&&(identical(other.calendar, calendar) || other.calendar == calendar)&&const DeepCollectionEquality().equals(other.settledYears, settledYears));
+  final _this = this as HolidayCalendarState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HolidayCalendarState&&(identical(other.calendar, _this.calendar) || other.calendar == _this.calendar)&&const DeepCollectionEquality().equals(other.settledYears, _this.settledYears));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,calendar,const DeepCollectionEquality().hash(settledYears));
+int get hashCode {
+  final _this = this as HolidayCalendarState;
+  return Object.hash(runtimeType,_this.calendar,const DeepCollectionEquality().hash(_this.settledYears));
+}
 
 @override
 String toString() {
-  return 'HolidayCalendarState(calendar: $calendar, settledYears: $settledYears)';
+  final _this = this as HolidayCalendarState;
+  return 'HolidayCalendarState(calendar: ${_this.calendar}, settledYears: ${_this.settledYears})';
 }
 
 
@@ -64,7 +70,7 @@ class _$HolidayCalendarStateCopyWithImpl<$Res>
 /// Create a copy of HolidayCalendarState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? calendar = null,Object? settledYears = null,}) {
-  return _then(_self.copyWith(
+  return _then(HolidayCalendarState(
 calendar: null == calendar ? _self.calendar : calendar // ignore: cast_nullable_to_non_nullable
 as HolidayCalendar,settledYears: null == settledYears ? _self.settledYears : settledYears // ignore: cast_nullable_to_non_nullable
 as Set<int>,
@@ -217,7 +223,7 @@ return $default(_that.calendar,_that.settledYears);case _:
 
 
 class _HolidayCalendarState extends HolidayCalendarState {
-  const _HolidayCalendarState({this.calendar = const HolidayCalendar(), final  Set<int> settledYears = const {}}): _settledYears = settledYears,super._();
+  const _HolidayCalendarState({this.calendar = const HolidayCalendar(),  Set<int> settledYears = const {}}): _settledYears = settledYears,super._();
   
 
 @override@JsonKey() final  HolidayCalendar calendar;
@@ -241,16 +247,18 @@ _$HolidayCalendarStateCopyWith<_HolidayCalendarState> get copyWith => __$Holiday
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HolidayCalendarState&&(identical(other.calendar, calendar) || other.calendar == calendar)&&const DeepCollectionEquality().equals(other._settledYears, _settledYears));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HolidayCalendarState&&(identical(other.calendar, calendar) || other.calendar == calendar)&&const DeepCollectionEquality().equals(other.settledYears, _settledYears));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,calendar,const DeepCollectionEquality().hash(_settledYears));
+int get hashCode {
+    return Object.hash(runtimeType,calendar,const DeepCollectionEquality().hash(_settledYears));
+}
 
 @override
 String toString() {
-  return 'HolidayCalendarState(calendar: $calendar, settledYears: $settledYears)';
+    return 'HolidayCalendarState(calendar: $calendar, settledYears: $settledYears)';
 }
 
 

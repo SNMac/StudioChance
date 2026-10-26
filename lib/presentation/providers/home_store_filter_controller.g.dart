@@ -57,7 +57,7 @@ final class HomeStoreFilterControllerProvider
 }
 
 String _$homeStoreFilterControllerHash() =>
-    r'19e0b3298c86eda0c77b358d0bea2f126073595f';
+    r'06c22a6d45840d22ee560a0004f8789036992177';
 
 /// 홈 캘린더에서 표시할 점포 ID 집합.
 ///
@@ -69,7 +69,7 @@ abstract class _$HomeStoreFilterController extends $Notifier<Set<String>> {
   Set<String> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<Set<String>, Set<String>>;
     final element =
         ref.element
@@ -79,6 +79,6 @@ abstract class _$HomeStoreFilterController extends $Notifier<Set<String>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

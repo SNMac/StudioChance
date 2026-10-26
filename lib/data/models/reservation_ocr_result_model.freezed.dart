@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'reservation_ocr_result_model.dart';
@@ -9,6 +9,7 @@ part of 'reservation_ocr_result_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $ReservationOcrResultModelCopyWith<ReservationOcrResultModel> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.spaceName, spaceName) || other.spaceName == spaceName));
+  final _this = this as ReservationOcrResultModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationOcrResultModel&&(identical(other.platform, _this.platform) || other.platform == _this.platform)&&(identical(other.customerName, _this.customerName) || other.customerName == _this.customerName)&&(identical(other.customerPhone, _this.customerPhone) || other.customerPhone == _this.customerPhone)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.isAllDay, _this.isAllDay) || other.isAllDay == _this.isAllDay)&&(identical(other.headCount, _this.headCount) || other.headCount == _this.headCount)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.storeName, _this.storeName) || other.storeName == _this.storeName)&&(identical(other.spaceName, _this.spaceName) || other.spaceName == _this.spaceName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo,storeName,spaceName);
+int get hashCode {
+  final _this = this as ReservationOcrResultModel;
+  return Object.hash(runtimeType,_this.platform,_this.customerName,_this.customerPhone,_this.startTime,_this.endTime,_this.isAllDay,_this.headCount,_this.memo,_this.storeName,_this.spaceName);
+}
 
 @override
 String toString() {
-  return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo, storeName: $storeName, spaceName: $spaceName)';
+  final _this = this as ReservationOcrResultModel;
+  return 'ReservationOcrResultModel(platform: ${_this.platform}, customerName: ${_this.customerName}, customerPhone: ${_this.customerPhone}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, isAllDay: ${_this.isAllDay}, headCount: ${_this.headCount}, memo: ${_this.memo}, storeName: ${_this.storeName}, spaceName: ${_this.spaceName})';
 }
 
 
@@ -66,7 +72,7 @@ class _$ReservationOcrResultModelCopyWithImpl<$Res>
 /// Create a copy of ReservationOcrResultModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? platform = freezed,Object? customerName = freezed,Object? customerPhone = freezed,Object? startTime = freezed,Object? endTime = freezed,Object? isAllDay = freezed,Object? headCount = freezed,Object? memo = freezed,Object? storeName = freezed,Object? spaceName = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ReservationOcrResultModel(
 platform: freezed == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as ReservationPlatform?,customerName: freezed == customerName ? _self.customerName : customerName // ignore: cast_nullable_to_non_nullable
 as String?,customerPhone: freezed == customerPhone ? _self.customerPhone : customerPhone // ignore: cast_nullable_to_non_nullable
@@ -245,16 +251,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.spaceName, spaceName) || other.spaceName == spaceName));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationOcrResultModel&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.spaceName, spaceName) || other.spaceName == spaceName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo,storeName,spaceName);
+int get hashCode {
+    return Object.hash(runtimeType,platform,customerName,customerPhone,startTime,endTime,isAllDay,headCount,memo,storeName,spaceName);
+}
 
 @override
 String toString() {
-  return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo, storeName: $storeName, spaceName: $spaceName)';
+    return 'ReservationOcrResultModel(platform: $platform, customerName: $customerName, customerPhone: $customerPhone, startTime: $startTime, endTime: $endTime, isAllDay: $isAllDay, headCount: $headCount, memo: $memo, storeName: $storeName, spaceName: $spaceName)';
 }
 
 

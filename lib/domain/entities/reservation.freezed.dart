@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'reservation.dart';
@@ -9,6 +9,7 @@ part of 'reservation.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -35,16 +36,21 @@ $ReservationCopyWith<Reservation> get copyWith => _$ReservationCopyWithImpl<Rese
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&const DeepCollectionEquality().equals(other.holidayDates, holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  final _this = this as Reservation;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Reservation&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.storeSummary, _this.storeSummary) || other.storeSummary == _this.storeSummary)&&(identical(other.writer, _this.writer) || other.writer == _this.writer)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.customerName, _this.customerName) || other.customerName == _this.customerName)&&(identical(other.headCount, _this.headCount) || other.headCount == _this.headCount)&&(identical(other.customerPhone, _this.customerPhone) || other.customerPhone == _this.customerPhone)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.isAllDay, _this.isAllDay) || other.isAllDay == _this.isAllDay)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.platform, _this.platform) || other.platform == _this.platform)&&(identical(other.paymentMethod, _this.paymentMethod) || other.paymentMethod == _this.paymentMethod)&&(identical(other.calculatedPrice, _this.calculatedPrice) || other.calculatedPrice == _this.calculatedPrice)&&(identical(other.priceAdjustment, _this.priceAdjustment) || other.priceAdjustment == _this.priceAdjustment)&&(identical(other.totalPrice, _this.totalPrice) || other.totalPrice == _this.totalPrice)&&(identical(other.spaceOptionId, _this.spaceOptionId) || other.spaceOptionId == _this.spaceOptionId)&&(identical(other.priceSetting, _this.priceSetting) || other.priceSetting == _this.priceSetting)&&const DeepCollectionEquality().equals(other.holidayDates, _this.holidayDates)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,const DeepCollectionEquality().hash(holidayDates),createdAt]);
+int get hashCode {
+  final _this = this as Reservation;
+  return Object.hashAll([runtimeType,_this.id,_this.storeSummary,_this.writer,_this.status,_this.customerName,_this.headCount,_this.customerPhone,_this.memo,_this.isAllDay,_this.startTime,_this.endTime,_this.platform,_this.paymentMethod,_this.calculatedPrice,_this.priceAdjustment,_this.totalPrice,_this.spaceOptionId,_this.priceSetting,const DeepCollectionEquality().hash(_this.holidayDates),_this.createdAt]);
+}
 
 @override
 String toString() {
-  return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, holidayDates: $holidayDates, createdAt: $createdAt)';
+  final _this = this as Reservation;
+  return 'Reservation(id: ${_this.id}, storeSummary: ${_this.storeSummary}, writer: ${_this.writer}, status: ${_this.status}, customerName: ${_this.customerName}, headCount: ${_this.headCount}, customerPhone: ${_this.customerPhone}, memo: ${_this.memo}, isAllDay: ${_this.isAllDay}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, platform: ${_this.platform}, paymentMethod: ${_this.paymentMethod}, calculatedPrice: ${_this.calculatedPrice}, priceAdjustment: ${_this.priceAdjustment}, totalPrice: ${_this.totalPrice}, spaceOptionId: ${_this.spaceOptionId}, priceSetting: ${_this.priceSetting}, holidayDates: ${_this.holidayDates}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -73,7 +79,7 @@ class _$ReservationCopyWithImpl<$Res>
 /// Create a copy of Reservation
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeSummary = null,Object? writer = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? memo = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? platform = null,Object? paymentMethod = null,Object? calculatedPrice = null,Object? priceAdjustment = null,Object? totalPrice = null,Object? spaceOptionId = freezed,Object? priceSetting = freezed,Object? holidayDates = freezed,Object? createdAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Reservation(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeSummary: null == storeSummary ? _self.storeSummary : storeSummary // ignore: cast_nullable_to_non_nullable
 as StoreSummary,writer: null == writer ? _self.writer : writer // ignore: cast_nullable_to_non_nullable
@@ -265,7 +271,7 @@ return $default(_that.id,_that.storeSummary,_that.writer,_that.status,_that.cust
 
 
 class _Reservation implements Reservation {
-  const _Reservation({required this.id, required this.storeSummary, required this.writer, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.memo, required this.isAllDay, required this.startTime, required this.endTime, required this.platform, required this.paymentMethod, required this.calculatedPrice, required this.priceAdjustment, required this.totalPrice, this.spaceOptionId, this.priceSetting, final  List<String>? holidayDates, this.createdAt}): _holidayDates = holidayDates;
+  const _Reservation({required this.id, required this.storeSummary, required this.writer, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.memo, required this.isAllDay, required this.startTime, required this.endTime, required this.platform, required this.paymentMethod, required this.calculatedPrice, required this.priceAdjustment, required this.totalPrice, this.spaceOptionId, this.priceSetting,  List<String>? holidayDates, this.createdAt}): _holidayDates = holidayDates;
   
 
 @override final  String id;
@@ -322,16 +328,18 @@ _$ReservationCopyWith<_Reservation> get copyWith => __$ReservationCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&const DeepCollectionEquality().equals(other._holidayDates, _holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Reservation&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.writer, writer) || other.writer == writer)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSetting, priceSetting) || other.priceSetting == priceSetting)&&const DeepCollectionEquality().equals(other.holidayDates, _holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,const DeepCollectionEquality().hash(_holidayDates),createdAt]);
+int get hashCode {
+    return Object.hashAll([runtimeType,id,storeSummary,writer,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,spaceOptionId,priceSetting,const DeepCollectionEquality().hash(_holidayDates),createdAt]);
+}
 
 @override
 String toString() {
-  return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, holidayDates: $holidayDates, createdAt: $createdAt)';
+    return 'Reservation(id: $id, storeSummary: $storeSummary, writer: $writer, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, spaceOptionId: $spaceOptionId, priceSetting: $priceSetting, holidayDates: $holidayDates, createdAt: $createdAt)';
 }
 
 

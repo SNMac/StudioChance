@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'store_customer.dart';
@@ -9,6 +9,7 @@ part of 'store_customer.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $StoreCustomerCopyWith<StoreCustomer> get copyWith => _$StoreCustomerCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreCustomer&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.totalSpent, totalSpent) || other.totalSpent == totalSpent)&&(identical(other.visitCount, visitCount) || other.visitCount == visitCount)&&(identical(other.lastReservationDate, lastReservationDate) || other.lastReservationDate == lastReservationDate));
+  final _this = this as StoreCustomer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreCustomer&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.storeSummary, _this.storeSummary) || other.storeSummary == _this.storeSummary)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.totalSpent, _this.totalSpent) || other.totalSpent == _this.totalSpent)&&(identical(other.visitCount, _this.visitCount) || other.visitCount == _this.visitCount)&&(identical(other.lastReservationDate, _this.lastReservationDate) || other.lastReservationDate == _this.lastReservationDate));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,storeSummary,name,phone,totalSpent,visitCount,lastReservationDate);
+int get hashCode {
+  final _this = this as StoreCustomer;
+  return Object.hash(runtimeType,_this.id,_this.storeSummary,_this.name,_this.phone,_this.totalSpent,_this.visitCount,_this.lastReservationDate);
+}
 
 @override
 String toString() {
-  return 'StoreCustomer(id: $id, storeSummary: $storeSummary, name: $name, phone: $phone, totalSpent: $totalSpent, visitCount: $visitCount, lastReservationDate: $lastReservationDate)';
+  final _this = this as StoreCustomer;
+  return 'StoreCustomer(id: ${_this.id}, storeSummary: ${_this.storeSummary}, name: ${_this.name}, phone: ${_this.phone}, totalSpent: ${_this.totalSpent}, visitCount: ${_this.visitCount}, lastReservationDate: ${_this.lastReservationDate})';
 }
 
 
@@ -63,7 +69,7 @@ class _$StoreCustomerCopyWithImpl<$Res>
 /// Create a copy of StoreCustomer
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeSummary = null,Object? name = null,Object? phone = null,Object? totalSpent = null,Object? visitCount = null,Object? lastReservationDate = null,}) {
-  return _then(_self.copyWith(
+  return _then(StoreCustomer(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeSummary: null == storeSummary ? _self.storeSummary : storeSummary // ignore: cast_nullable_to_non_nullable
 as StoreSummary,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -242,16 +248,18 @@ _$StoreCustomerCopyWith<_StoreCustomer> get copyWith => __$StoreCustomerCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreCustomer&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.totalSpent, totalSpent) || other.totalSpent == totalSpent)&&(identical(other.visitCount, visitCount) || other.visitCount == visitCount)&&(identical(other.lastReservationDate, lastReservationDate) || other.lastReservationDate == lastReservationDate));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreCustomer&&(identical(other.id, id) || other.id == id)&&(identical(other.storeSummary, storeSummary) || other.storeSummary == storeSummary)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.totalSpent, totalSpent) || other.totalSpent == totalSpent)&&(identical(other.visitCount, visitCount) || other.visitCount == visitCount)&&(identical(other.lastReservationDate, lastReservationDate) || other.lastReservationDate == lastReservationDate));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,storeSummary,name,phone,totalSpent,visitCount,lastReservationDate);
+int get hashCode {
+    return Object.hash(runtimeType,id,storeSummary,name,phone,totalSpent,visitCount,lastReservationDate);
+}
 
 @override
 String toString() {
-  return 'StoreCustomer(id: $id, storeSummary: $storeSummary, name: $name, phone: $phone, totalSpent: $totalSpent, visitCount: $visitCount, lastReservationDate: $lastReservationDate)';
+    return 'StoreCustomer(id: $id, storeSummary: $storeSummary, name: $name, phone: $phone, totalSpent: $totalSpent, visitCount: $visitCount, lastReservationDate: $lastReservationDate)';
 }
 
 

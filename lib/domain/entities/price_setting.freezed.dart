@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'price_setting.dart';
@@ -9,6 +9,7 @@ part of 'price_setting.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PriceSettingCopyWith<PriceSetting> get copyWith => _$PriceSettingCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceSetting&&const DeepCollectionEquality().equals(other.dayGroups, dayGroups));
+  final _this = this as PriceSetting;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceSetting&&const DeepCollectionEquality().equals(other.dayGroups, _this.dayGroups));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(dayGroups));
+int get hashCode {
+  final _this = this as PriceSetting;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.dayGroups));
+}
 
 @override
 String toString() {
-  return 'PriceSetting(dayGroups: $dayGroups)';
+  final _this = this as PriceSetting;
+  return 'PriceSetting(dayGroups: ${_this.dayGroups})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PriceSettingCopyWithImpl<$Res>
 /// Create a copy of PriceSetting
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? dayGroups = null,}) {
-  return _then(_self.copyWith(
+  return _then(PriceSetting(
 dayGroups: null == dayGroups ? _self.dayGroups : dayGroups // ignore: cast_nullable_to_non_nullable
 as List<DayGroup>,
   ));
@@ -206,7 +212,7 @@ return $default(_that.dayGroups);case _:
 
 
 class _PriceSetting extends PriceSetting {
-  const _PriceSetting({required final  List<DayGroup> dayGroups}): _dayGroups = dayGroups,super._();
+  const _PriceSetting({required  List<DayGroup> dayGroups}): _dayGroups = dayGroups,super._();
   
 
  final  List<DayGroup> _dayGroups;
@@ -227,16 +233,18 @@ _$PriceSettingCopyWith<_PriceSetting> get copyWith => __$PriceSettingCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceSetting&&const DeepCollectionEquality().equals(other._dayGroups, _dayGroups));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceSetting&&const DeepCollectionEquality().equals(other.dayGroups, _dayGroups));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_dayGroups));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_dayGroups));
+}
 
 @override
 String toString() {
-  return 'PriceSetting(dayGroups: $dayGroups)';
+    return 'PriceSetting(dayGroups: $dayGroups)';
 }
 
 

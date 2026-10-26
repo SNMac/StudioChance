@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'invite_info.dart';
@@ -9,6 +9,7 @@ part of 'invite_info.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -27,16 +28,21 @@ $InviteInfoCopyWith<InviteInfo> get copyWith => _$InviteInfoCopyWithImpl<InviteI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  final _this = this as InviteInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteInfo&&(identical(other.inviteCode, _this.inviteCode) || other.inviteCode == _this.inviteCode)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
+int get hashCode {
+  final _this = this as InviteInfo;
+  return Object.hash(runtimeType,_this.inviteCode,_this.createdAt);
+}
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
+  final _this = this as InviteInfo;
+  return 'InviteInfo(inviteCode: ${_this.inviteCode}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -65,7 +71,7 @@ class _$InviteInfoCopyWithImpl<$Res>
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,Object? createdAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(InviteInfo(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
@@ -227,16 +233,18 @@ _$InviteInfoCopyWith<_InviteInfo> get copyWith => __$InviteInfoCopyWithImpl<_Inv
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteInfo&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode,createdAt);
+int get hashCode {
+    return Object.hash(runtimeType,inviteCode,createdAt);
+}
 
 @override
 String toString() {
-  return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
+    return 'InviteInfo(inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 

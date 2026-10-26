@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'space_option_model.dart';
@@ -9,6 +9,7 @@ part of 'space_option_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $SpaceOptionModelCopyWith<SpaceOptionModel> get copyWith => _$SpaceOptionModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SpaceOptionModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings));
+  final _this = this as SpaceOptionModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SpaceOptionModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.priceSettings, _this.priceSettings) || other.priceSettings == _this.priceSettings));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,priceSettings);
+int get hashCode {
+  final _this = this as SpaceOptionModel;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.priceSettings);
+}
 
 @override
 String toString() {
-  return 'SpaceOptionModel(id: $id, name: $name, priceSettings: $priceSettings)';
+  final _this = this as SpaceOptionModel;
+  return 'SpaceOptionModel(id: ${_this.id}, name: ${_this.name}, priceSettings: ${_this.priceSettings})';
 }
 
 
@@ -66,7 +72,7 @@ class _$SpaceOptionModelCopyWithImpl<$Res>
 /// Create a copy of SpaceOptionModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? priceSettings = null,}) {
-  return _then(_self.copyWith(
+  return _then(SpaceOptionModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,priceSettings: null == priceSettings ? _self.priceSettings : priceSettings // ignore: cast_nullable_to_non_nullable
@@ -240,16 +246,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SpaceOptionModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SpaceOptionModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,priceSettings);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,priceSettings);
+}
 
 @override
 String toString() {
-  return 'SpaceOptionModel(id: $id, name: $name, priceSettings: $priceSettings)';
+    return 'SpaceOptionModel(id: $id, name: $name, priceSettings: $priceSettings)';
 }
 
 

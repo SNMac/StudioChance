@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'day_group.dart';
@@ -9,6 +9,7 @@ part of 'day_group.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $DayGroupCopyWith<DayGroup> get copyWith => _$DayGroupCopyWithImpl<DayGroup>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroup&&const DeepCollectionEquality().equals(other.days, days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other.timeSlots, timeSlots));
+  final _this = this as DayGroup;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroup&&const DeepCollectionEquality().equals(other.days, _this.days)&&(identical(other.headcountRule, _this.headcountRule) || other.headcountRule == _this.headcountRule)&&const DeepCollectionEquality().equals(other.timeSlots, _this.timeSlots));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days),headcountRule,const DeepCollectionEquality().hash(timeSlots));
+int get hashCode {
+  final _this = this as DayGroup;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.days),_this.headcountRule,const DeepCollectionEquality().hash(_this.timeSlots));
+}
 
 @override
 String toString() {
-  return 'DayGroup(days: $days, headcountRule: $headcountRule, timeSlots: $timeSlots)';
+  final _this = this as DayGroup;
+  return 'DayGroup(days: ${_this.days}, headcountRule: ${_this.headcountRule}, timeSlots: ${_this.timeSlots})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DayGroupCopyWithImpl<$Res>
 /// Create a copy of DayGroup
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? days = null,Object? headcountRule = null,Object? timeSlots = null,}) {
-  return _then(_self.copyWith(
+  return _then(DayGroup(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
 as List<Weekday>,headcountRule: null == headcountRule ? _self.headcountRule : headcountRule // ignore: cast_nullable_to_non_nullable
 as HeadcountRule,timeSlots: null == timeSlots ? _self.timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
@@ -217,7 +223,7 @@ return $default(_that.days,_that.headcountRule,_that.timeSlots);case _:
 
 
 class _DayGroup implements DayGroup {
-  const _DayGroup({required final  List<Weekday> days, required this.headcountRule, required final  List<TimeSlot> timeSlots}): _days = days,_timeSlots = timeSlots;
+  const _DayGroup({required  List<Weekday> days, required this.headcountRule, required  List<TimeSlot> timeSlots}): _days = days,_timeSlots = timeSlots;
   
 
  final  List<Weekday> _days;
@@ -246,16 +252,18 @@ _$DayGroupCopyWith<_DayGroup> get copyWith => __$DayGroupCopyWithImpl<_DayGroup>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroup&&const DeepCollectionEquality().equals(other._days, _days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other._timeSlots, _timeSlots));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroup&&const DeepCollectionEquality().equals(other.days, _days)&&(identical(other.headcountRule, headcountRule) || other.headcountRule == headcountRule)&&const DeepCollectionEquality().equals(other.timeSlots, _timeSlots));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRule,const DeepCollectionEquality().hash(_timeSlots));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRule,const DeepCollectionEquality().hash(_timeSlots));
+}
 
 @override
 String toString() {
-  return 'DayGroup(days: $days, headcountRule: $headcountRule, timeSlots: $timeSlots)';
+    return 'DayGroup(days: $days, headcountRule: $headcountRule, timeSlots: $timeSlots)';
 }
 
 

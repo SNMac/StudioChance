@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'store_form_state.dart';
@@ -9,6 +9,7 @@ part of 'store_form_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $StoreFormStateCopyWith<StoreFormState> get copyWith => _$StoreFormStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.spaceOptions, spaceOptions)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes)&&(identical(other.status, status) || other.status == status));
+  final _this = this as StoreFormState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreFormState&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.addressDetail, _this.addressDetail) || other.addressDetail == _this.addressDetail)&&(identical(other.addressGuide, _this.addressGuide) || other.addressGuide == _this.addressGuide)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.color, _this.color) || other.color == _this.color)&&const DeepCollectionEquality().equals(other.spaceOptions, _this.spaceOptions)&&(identical(other.bankName, _this.bankName) || other.bankName == _this.bankName)&&(identical(other.bankAccountNumber, _this.bankAccountNumber) || other.bankAccountNumber == _this.bankAccountNumber)&&(identical(other.bankAccountHolder, _this.bankAccountHolder) || other.bankAccountHolder == _this.bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, _this.paymentDeadlineMinutes) || other.paymentDeadlineMinutes == _this.paymentDeadlineMinutes)&&(identical(other.infoNotes, _this.infoNotes) || other.infoNotes == _this.infoNotes)&&(identical(other.cautionNotes, _this.cautionNotes) || other.cautionNotes == _this.cautionNotes)&&(identical(other.status, _this.status) || other.status == _this.status));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,address,addressDetail,addressGuide,memo,color,const DeepCollectionEquality().hash(spaceOptions),bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes,status);
+int get hashCode {
+  final _this = this as StoreFormState;
+  return Object.hash(runtimeType,_this.name,_this.address,_this.addressDetail,_this.addressGuide,_this.memo,_this.color,const DeepCollectionEquality().hash(_this.spaceOptions),_this.bankName,_this.bankAccountNumber,_this.bankAccountHolder,_this.paymentDeadlineMinutes,_this.infoNotes,_this.cautionNotes,_this.status);
+}
 
 @override
 String toString() {
-  return 'StoreFormState(name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memo: $memo, color: $color, spaceOptions: $spaceOptions, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes, status: $status)';
+  final _this = this as StoreFormState;
+  return 'StoreFormState(name: ${_this.name}, address: ${_this.address}, addressDetail: ${_this.addressDetail}, addressGuide: ${_this.addressGuide}, memo: ${_this.memo}, color: ${_this.color}, spaceOptions: ${_this.spaceOptions}, bankName: ${_this.bankName}, bankAccountNumber: ${_this.bankAccountNumber}, bankAccountHolder: ${_this.bankAccountHolder}, paymentDeadlineMinutes: ${_this.paymentDeadlineMinutes}, infoNotes: ${_this.infoNotes}, cautionNotes: ${_this.cautionNotes}, status: ${_this.status})';
 }
 
 
@@ -63,7 +69,7 @@ class _$StoreFormStateCopyWithImpl<$Res>
 /// Create a copy of StoreFormState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memo = null,Object? color = null,Object? spaceOptions = null,Object? bankName = null,Object? bankAccountNumber = null,Object? bankAccountHolder = null,Object? paymentDeadlineMinutes = freezed,Object? infoNotes = null,Object? cautionNotes = null,Object? status = null,}) {
-  return _then(_self.copyWith(
+  return _then(StoreFormState(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
 as String,addressDetail: null == addressDetail ? _self.addressDetail : addressDetail // ignore: cast_nullable_to_non_nullable
@@ -219,7 +225,7 @@ return $default(_that.name,_that.address,_that.addressDetail,_that.addressGuide,
 
 
 class _StoreFormState extends StoreFormState {
-  const _StoreFormState({this.name = '', this.address = '', this.addressDetail = '', this.addressGuide = '', this.memo = '', this.color = StoreColor.red, final  List<SpaceOption> spaceOptions = const [], this.bankName = '', this.bankAccountNumber = '', this.bankAccountHolder = '', this.paymentDeadlineMinutes, this.infoNotes = '', this.cautionNotes = '', this.status = const AsyncData(null)}): _spaceOptions = spaceOptions,super._();
+  const _StoreFormState({this.name = '', this.address = '', this.addressDetail = '', this.addressGuide = '', this.memo = '', this.color = StoreColor.red,  List<SpaceOption> spaceOptions = const [], this.bankName = '', this.bankAccountNumber = '', this.bankAccountHolder = '', this.paymentDeadlineMinutes, this.infoNotes = '', this.cautionNotes = '', this.status = const AsyncData(null)}): _spaceOptions = spaceOptions,super._();
   
 
 @override@JsonKey() final  String name;
@@ -253,16 +259,18 @@ _$StoreFormStateCopyWith<_StoreFormState> get copyWith => __$StoreFormStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other._spaceOptions, _spaceOptions)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes)&&(identical(other.status, status) || other.status == status));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreFormState&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.spaceOptions, _spaceOptions)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes)&&(identical(other.status, status) || other.status == status));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,address,addressDetail,addressGuide,memo,color,const DeepCollectionEquality().hash(_spaceOptions),bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes,status);
+int get hashCode {
+    return Object.hash(runtimeType,name,address,addressDetail,addressGuide,memo,color,const DeepCollectionEquality().hash(_spaceOptions),bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes,status);
+}
 
 @override
 String toString() {
-  return 'StoreFormState(name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memo: $memo, color: $color, spaceOptions: $spaceOptions, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes, status: $status)';
+    return 'StoreFormState(name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memo: $memo, color: $color, spaceOptions: $spaceOptions, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes, status: $status)';
 }
 
 

@@ -45,7 +45,7 @@ abstract class _$ReservationOcrController
   FutureOr<ReservationOcrResult?> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<AsyncValue<ReservationOcrResult?>, ReservationOcrResult?>;
@@ -60,6 +60,6 @@ abstract class _$ReservationOcrController
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

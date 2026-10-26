@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'store.dart';
@@ -9,6 +9,7 @@ part of 'store.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $StoreCopyWith<Store> get copyWith => _$StoreCopyWithImpl<Store>(this as Store, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, spaceOptions)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes));
+  final _this = this as Store;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.addressDetail, _this.addressDetail) || other.addressDetail == _this.addressDetail)&&(identical(other.addressGuide, _this.addressGuide) || other.addressGuide == _this.addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, _this.memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, _this.waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, _this.spaceOptions)&&(identical(other.inviteInfo, _this.inviteInfo) || other.inviteInfo == _this.inviteInfo)&&(identical(other.bankName, _this.bankName) || other.bankName == _this.bankName)&&(identical(other.bankAccountNumber, _this.bankAccountNumber) || other.bankAccountNumber == _this.bankAccountNumber)&&(identical(other.bankAccountHolder, _this.bankAccountHolder) || other.bankAccountHolder == _this.bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, _this.paymentDeadlineMinutes) || other.paymentDeadlineMinutes == _this.paymentDeadlineMinutes)&&(identical(other.infoNotes, _this.infoNotes) || other.infoNotes == _this.infoNotes)&&(identical(other.cautionNotes, _this.cautionNotes) || other.cautionNotes == _this.cautionNotes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(memberInfos),const DeepCollectionEquality().hash(waitingMemberInfos),const DeepCollectionEquality().hash(spaceOptions),inviteInfo,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes);
+int get hashCode {
+  final _this = this as Store;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.address,_this.addressDetail,_this.addressGuide,const DeepCollectionEquality().hash(_this.memberInfos),const DeepCollectionEquality().hash(_this.waitingMemberInfos),const DeepCollectionEquality().hash(_this.spaceOptions),_this.inviteInfo,_this.bankName,_this.bankAccountNumber,_this.bankAccountHolder,_this.paymentDeadlineMinutes,_this.infoNotes,_this.cautionNotes);
+}
 
 @override
 String toString() {
-  return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, spaceOptions: $spaceOptions, inviteInfo: $inviteInfo, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes)';
+  final _this = this as Store;
+  return 'Store(id: ${_this.id}, name: ${_this.name}, address: ${_this.address}, addressDetail: ${_this.addressDetail}, addressGuide: ${_this.addressGuide}, memberInfos: ${_this.memberInfos}, waitingMemberInfos: ${_this.waitingMemberInfos}, spaceOptions: ${_this.spaceOptions}, inviteInfo: ${_this.inviteInfo}, bankName: ${_this.bankName}, bankAccountNumber: ${_this.bankAccountNumber}, bankAccountHolder: ${_this.bankAccountHolder}, paymentDeadlineMinutes: ${_this.paymentDeadlineMinutes}, infoNotes: ${_this.infoNotes}, cautionNotes: ${_this.cautionNotes})';
 }
 
 
@@ -63,7 +69,7 @@ class _$StoreCopyWithImpl<$Res>
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? spaceOptions = null,Object? inviteInfo = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? infoNotes = freezed,Object? cautionNotes = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Store(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
@@ -232,7 +238,7 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 
 
 class _Store extends Store {
-  const _Store({required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required final  List<StoreMemberInfo> memberInfos, required final  List<StoreMemberInfo> waitingMemberInfos, required final  List<SpaceOption> spaceOptions, required this.inviteInfo, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.infoNotes, this.cautionNotes}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos,_spaceOptions = spaceOptions,super._();
+  const _Store({required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required  List<StoreMemberInfo> memberInfos, required  List<StoreMemberInfo> waitingMemberInfos, required  List<SpaceOption> spaceOptions, required this.inviteInfo, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.infoNotes, this.cautionNotes}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos,_spaceOptions = spaceOptions,super._();
   
 
 @override final  String id;
@@ -279,16 +285,18 @@ _$StoreCopyWith<_Store> get copyWith => __$StoreCopyWithImpl<_Store>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other._memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other._waitingMemberInfos, _waitingMemberInfos)&&const DeepCollectionEquality().equals(other._spaceOptions, _spaceOptions)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, _waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, _spaceOptions)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),const DeepCollectionEquality().hash(_spaceOptions),inviteInfo,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),const DeepCollectionEquality().hash(_spaceOptions),inviteInfo,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes);
+}
 
 @override
 String toString() {
-  return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, spaceOptions: $spaceOptions, inviteInfo: $inviteInfo, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes)';
+    return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, spaceOptions: $spaceOptions, inviteInfo: $inviteInfo, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes)';
 }
 
 

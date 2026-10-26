@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'time_slot.dart';
@@ -9,6 +9,7 @@ part of 'time_slot.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $TimeSlotCopyWith<TimeSlot> get copyWith => _$TimeSlotCopyWithImpl<TimeSlot>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlot&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
+  final _this = this as TimeSlot;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimeSlot&&(identical(other.isAllDay, _this.isAllDay) || other.isAllDay == _this.isAllDay)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.price, _this.price) || other.price == _this.price)&&(identical(other.isHourly, _this.isHourly) || other.isHourly == _this.isHourly)&&(identical(other.isPerPerson, _this.isPerPerson) || other.isPerPerson == _this.isPerPerson));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
+int get hashCode {
+  final _this = this as TimeSlot;
+  return Object.hash(runtimeType,_this.isAllDay,_this.startTime,_this.endTime,_this.price,_this.isHourly,_this.isPerPerson);
+}
 
 @override
 String toString() {
-  return 'TimeSlot(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
+  final _this = this as TimeSlot;
+  return 'TimeSlot(isAllDay: ${_this.isAllDay}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, price: ${_this.price}, isHourly: ${_this.isHourly}, isPerPerson: ${_this.isPerPerson})';
 }
 
 
@@ -63,7 +69,7 @@ class _$TimeSlotCopyWithImpl<$Res>
 /// Create a copy of TimeSlot
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? price = null,Object? isHourly = null,Object? isPerPerson = null,}) {
-  return _then(_self.copyWith(
+  return _then(TimeSlot(
 isAllDay: null == isAllDay ? _self.isAllDay : isAllDay // ignore: cast_nullable_to_non_nullable
 as bool,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as int,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ _$TimeSlotCopyWith<_TimeSlot> get copyWith => __$TimeSlotCopyWithImpl<_TimeSlot>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlot&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimeSlot&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.price, price) || other.price == price)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
+int get hashCode {
+    return Object.hash(runtimeType,isAllDay,startTime,endTime,price,isHourly,isPerPerson);
+}
 
 @override
 String toString() {
-  return 'TimeSlot(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
+    return 'TimeSlot(isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, price: $price, isHourly: $isHourly, isPerPerson: $isPerPerson)';
 }
 
 
