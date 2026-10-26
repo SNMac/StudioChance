@@ -181,6 +181,42 @@ void main() {
   });
 
   // =========================================================================
+  // getUserIncludingDeleted
+  // =========================================================================
+
+  group('getUserIncludingDeleted', () {
+    test('일반 사용자는 그대로 반환한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      final result = await dataSource.getUserIncludingDeleted(user.id);
+
+      expect(result?.email, user.email);
+      expect(result?.isDeleted, false);
+    });
+
+    test('삭제된 계정은 닉네임만 담아 반환한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+      await dataSource.markAccountDeleted(user.id, nickname: '닉네임');
+
+      final result = await dataSource.getUserIncludingDeleted(user.id);
+
+      expect(result?.id, user.id);
+      expect(result?.nickname, '닉네임');
+      expect(result?.isDeleted, true);
+    });
+
+    test('문서가 없으면 null을 반환한다', () async {
+      final result = await dataSource.getUserIncludingDeleted(
+        'nonexistent-uid',
+      );
+
+      expect(result, isNull);
+    });
+  });
+
+  // =========================================================================
   // recordLogin
   // =========================================================================
 

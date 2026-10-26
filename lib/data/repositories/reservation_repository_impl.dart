@@ -2,7 +2,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:studio_chance/common/exceptions/reservation_exceptions.dart';
 import 'package:studio_chance/common/utils/exception_utils.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
@@ -98,29 +97,13 @@ class ReservationRepositoryImpl implements ReservationRepository {
         currentUserModel: currentUserModel,
       );
 
-      // 고유 작성자 ID 목록 수집 후 병렬 조회
-      final writerIds = models.map((m) => m.writerId).toSet().toList();
-      final writerModels = await Future.wait(
-        writerIds.map((uid) => _userDataSource.getUser(uid)),
-      );
-
-      final writerById = {
-        for (var i = 0; i < writerIds.length; i++)
-          if (writerModels[i] != null) writerIds[i]: writerModels[i]!,
-      };
+      final writerById = await _getWritersById(models);
 
       final reservations = models.map((model) {
-        final writerUserModel = writerById[model.writerId];
-        if (writerUserModel == null) {
-          throw ReservationNotFoundException(
-            message: '작성자 정보를 찾을 수 없습니다. writerId: ${model.writerId}',
-          );
-        }
-
         return model.toEntity(
           storeSummary,
           _buildWriter(
-            writerUserModel: writerUserModel,
+            writerUserModel: writerById[model.writerId]!,
             writerRole: model.writerRole,
           ),
         );
@@ -154,35 +137,17 @@ class ReservationRepositoryImpl implements ReservationRepository {
             currentUserModel: cachedCurrentUserModel,
           );
 
-          final writerIds = models.map((m) => m.writerId).toSet().toList();
-          final writerModels = await Future.wait(
-            writerIds.map((uid) => _userDataSource.getUser(uid)),
-          );
-          final writerById = {
-            for (var i = 0; i < writerIds.length; i++)
-              if (writerModels[i] != null) writerIds[i]: writerModels[i]!,
-          };
+          final writerById = await _getWritersById(models);
 
-          return models
-              .map((model) {
-                final writerModel = writerById[model.writerId];
-                if (writerModel == null) {
-                  _logger.w(
-                    '작성자 정보를 찾을 수 없어 예약을 건너뜁니다.'
-                    '\nreservationId: ${model.id}, writerId: ${model.writerId}',
-                  );
-                  return null;
-                }
-                return model.toEntity(
-                  storeSummary,
-                  _buildWriter(
-                    writerUserModel: writerModel,
-                    writerRole: model.writerRole,
-                  ),
-                );
-              })
-              .whereType<Reservation>()
-              .toList();
+          return models.map((model) {
+            return model.toEntity(
+              storeSummary,
+              _buildWriter(
+                writerUserModel: writerById[model.writerId]!,
+                writerRole: model.writerRole,
+              ),
+            );
+          }).toList();
         });
   }
 
@@ -293,13 +258,9 @@ class ReservationRepositoryImpl implements ReservationRepository {
     required String currentUid,
   }) async {
     final currentUserModelFuture = _userDataSource.getUser(currentUid);
-    final writerUserModelFuture = _userDataSource.getUser(model.writerId);
+    final writerUserModelFuture = _getWriter(model.writerId);
     final currentUserModel = await currentUserModelFuture;
     final writerUserModel = await writerUserModelFuture;
-
-    if (writerUserModel == null) {
-      throw ReservationNotFoundException(message: '작성자 정보를 찾을 수 없습니다.');
-    }
 
     return model.toEntity(
       _buildStoreSummary(storeId: storeId, currentUserModel: currentUserModel),
@@ -322,6 +283,24 @@ class ReservationRepositoryImpl implements ReservationRepository {
       name: userStoreInfo?.name ?? '',
       color: userStoreInfo?.color ?? StoreColor.red,
     );
+  }
+
+  /// 예약 작성자. 계정을 삭제한 작성자도 예약은 남으므로 삭제된 계정으로 채운다 (ADR-0005)
+  /// - 문서 자체가 없어도 실패하거나 예약을 건너뛰지 않는다
+  Future<UserModel> _getWriter(String uid) async {
+    return await _userDataSource.getUserIncludingDeleted(uid) ??
+        UserModel.deleted(id: uid);
+  }
+
+  /// [models]의 고유 작성자를 병렬로 조회한다. 모든 writerId가 키로 들어 있다
+  Future<Map<String, UserModel>> _getWritersById(
+    List<ReservationModel> models,
+  ) async {
+    final writerIds = models.map((m) => m.writerId).toSet().toList();
+    final writers = await Future.wait(writerIds.map(_getWriter));
+    return {
+      for (var i = 0; i < writerIds.length; i++) writerIds[i]: writers[i],
+    };
   }
 
   /// StoreMemberInfo(writer) 구성

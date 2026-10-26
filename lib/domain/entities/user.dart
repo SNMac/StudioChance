@@ -20,6 +20,9 @@ abstract class User with _$User {
     required String? nickname,
     required List<String> authProviders,
     required List<UserStoreInfo> storeInfos,
+
+    /// 삭제된 계정. 닉네임만 남아 있으며 화면에서는 "닉네임 (삭제된 계정)"으로 구분한다
+    @Default(false) bool isDeleted,
   }) = _User;
 
   bool get isNewUser => nickname == null;

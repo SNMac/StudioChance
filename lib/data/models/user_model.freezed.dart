@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
-@JsonKey(includeToJson: false) String get id; String get email; String get name; String? get nickname; List<String> get authProviders; Map<String, UserStoreInfoModel> get storeById;
+@JsonKey(includeToJson: false) String get id; String get email; String get name; String? get nickname; List<String> get authProviders; Map<String, UserStoreInfoModel> get storeById;/// 문서의 `deletedAt`에서 정해지므로 JSON으로 읽고 쓰지 않는다 ([UserModel.deleted])
+@JsonKey(includeFromJson: false, includeToJson: false) bool get isDeleted;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +31,20 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 @override
 bool operator ==(Object other) {
   final _this = this as UserModel;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.nickname, _this.nickname) || other.nickname == _this.nickname)&&const DeepCollectionEquality().equals(other.authProviders, _this.authProviders)&&const DeepCollectionEquality().equals(other.storeById, _this.storeById));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.nickname, _this.nickname) || other.nickname == _this.nickname)&&const DeepCollectionEquality().equals(other.authProviders, _this.authProviders)&&const DeepCollectionEquality().equals(other.storeById, _this.storeById)&&(identical(other.isDeleted, _this.isDeleted) || other.isDeleted == _this.isDeleted));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as UserModel;
-  return Object.hash(runtimeType,_this.id,_this.email,_this.name,_this.nickname,const DeepCollectionEquality().hash(_this.authProviders),const DeepCollectionEquality().hash(_this.storeById));
+  return Object.hash(runtimeType,_this.id,_this.email,_this.name,_this.nickname,const DeepCollectionEquality().hash(_this.authProviders),const DeepCollectionEquality().hash(_this.storeById),_this.isDeleted);
 }
 
 @override
 String toString() {
   final _this = this as UserModel;
-  return 'UserModel(id: ${_this.id}, email: ${_this.email}, name: ${_this.name}, nickname: ${_this.nickname}, authProviders: ${_this.authProviders}, storeById: ${_this.storeById})';
+  return 'UserModel(id: ${_this.id}, email: ${_this.email}, name: ${_this.name}, nickname: ${_this.nickname}, authProviders: ${_this.authProviders}, storeById: ${_this.storeById}, isDeleted: ${_this.isDeleted})';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, Map<String, UserStoreInfoModel> storeById
+@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, Map<String, UserStoreInfoModel> storeById,@JsonKey(includeFromJson: false, includeToJson: false) bool isDeleted
 });
 
 
@@ -71,7 +72,7 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,Object? isDeleted = null,}) {
   return _then(UserModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -79,7 +80,8 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,storeById: null == storeById ? _self.storeById : storeById // ignore: cast_nullable_to_non_nullable
-as Map<String, UserStoreInfoModel>,
+as Map<String, UserStoreInfoModel>,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -164,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById, @JsonKey(includeFromJson: false, includeToJson: false)  bool isDeleted)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById,_that.isDeleted);case _:
   return orElse();
 
 }
@@ -185,10 +187,10 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById, @JsonKey(includeFromJson: false, includeToJson: false)  bool isDeleted)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById,_that.isDeleted);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +207,10 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id,  String email,  String name,  String? nickname,  List<String> authProviders,  Map<String, UserStoreInfoModel> storeById, @JsonKey(includeFromJson: false, includeToJson: false)  bool isDeleted)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById);case _:
+return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProviders,_that.storeById,_that.isDeleted);case _:
   return null;
 
 }
@@ -220,7 +222,7 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 @JsonSerializable()
 
 class _UserModel extends UserModel {
-  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname,  List<String> authProviders = const [],  Map<String, UserStoreInfoModel> storeById = const {}}): _authProviders = authProviders,_storeById = storeById,super._();
+  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname,  List<String> authProviders = const [],  Map<String, UserStoreInfoModel> storeById = const {}, @JsonKey(includeFromJson: false, includeToJson: false) this.isDeleted = false}): _authProviders = authProviders,_storeById = storeById,super._();
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -241,6 +243,8 @@ class _UserModel extends UserModel {
   return EqualUnmodifiableMapView(_storeById);
 }
 
+/// 문서의 `deletedAt`에서 정해지므로 JSON으로 읽고 쓰지 않는다 ([UserModel.deleted])
+@override@JsonKey(includeFromJson: false, includeToJson: false) final  bool isDeleted;
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
@@ -255,18 +259,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, _authProviders)&&const DeepCollectionEquality().equals(other.storeById, _storeById));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, _authProviders)&&const DeepCollectionEquality().equals(other.storeById, _storeById)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeById));
+    return Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeById),isDeleted);
 }
 
 @override
 String toString() {
-    return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById)';
+    return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById, isDeleted: $isDeleted)';
 }
 
 
@@ -277,7 +281,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, Map<String, UserStoreInfoModel> storeById
+@JsonKey(includeToJson: false) String id, String email, String name, String? nickname, List<String> authProviders, Map<String, UserStoreInfoModel> storeById,@JsonKey(includeFromJson: false, includeToJson: false) bool isDeleted
 });
 
 
@@ -294,7 +298,7 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,Object? isDeleted = null,}) {
   return _then(_UserModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -302,7 +306,8 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,storeById: null == storeById ? _self._storeById : storeById // ignore: cast_nullable_to_non_nullable
-as Map<String, UserStoreInfoModel>,
+as Map<String, UserStoreInfoModel>,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

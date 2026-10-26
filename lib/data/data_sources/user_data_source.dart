@@ -12,6 +12,10 @@ abstract interface class UserDataSource {
   /// - 삭제된 계정(`deletedAt` 존재)은 null. 같은 uid로 다시 로그인하면 새 사용자로 시작한다 (ADR-0005)
   Future<UserModel?> getUser(String uid);
 
+  /// 삭제된 계정까지 포함한 사용자 조회 (예약 작성자처럼 다른 사람 이름 표시용)
+  /// - 삭제된 계정은 닉네임만 담긴 [UserModel.deleted]로 반환한다
+  Future<UserModel?> getUserIncludingDeleted(String uid);
+
   /// 사용자 생성
   Future<void> createUser(UserModel userModel, {String? fcmToken});
 
@@ -117,6 +121,27 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
         return UserModel.fromJson(data);
       }
       return null;
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<UserModel?> getUserIncludingDeleted(String uid) async {
+    try {
+      final docSnapshot = await _userDocRef(uid).get();
+      final data = docSnapshot.data();
+      if (!docSnapshot.exists || data == null) return null;
+
+      if (data['deletedAt'] != null) {
+        return UserModel.deleted(
+          id: docSnapshot.id,
+          nickname: data['nickname'] as String?,
+        );
+      }
+
+      data['id'] = docSnapshot.id;
+      return UserModel.fromJson(data);
     } catch (e) {
       throw handleFirestoreError(e);
     }

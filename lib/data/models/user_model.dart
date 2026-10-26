@@ -17,10 +17,26 @@ abstract class UserModel with _$UserModel {
     String? nickname,
     @Default([]) List<String> authProviders,
     @Default({}) Map<String, UserStoreInfoModel> storeById,
+
+    /// 문서의 `deletedAt`에서 정해지므로 JSON으로 읽고 쓰지 않는다 ([UserModel.deleted])
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    @Default(false)
+    bool isDeleted,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);
+
+  /// 삭제된 계정. 문서에는 닉네임만 남는다 (ADR-0005)
+  /// - 문서 자체가 없을 때도 쓴다 (닉네임 null)
+  factory UserModel.deleted({required String id, String? nickname}) =>
+      UserModel(
+        id: id,
+        email: '',
+        name: '',
+        nickname: nickname,
+        isDeleted: true,
+      );
 
   factory UserModel.fromEntity(User entity) {
     return UserModel(
@@ -33,6 +49,7 @@ abstract class UserModel with _$UserModel {
         for (var info in entity.storeInfos)
           info.id: UserStoreInfoModel.fromEntity(info),
       },
+      isDeleted: entity.isDeleted,
     );
   }
 
@@ -46,6 +63,7 @@ abstract class UserModel with _$UserModel {
       storeInfos: storeById.entries
           .map((entry) => entry.value.toEntity(storeId: entry.key))
           .toList(),
+      isDeleted: isDeleted,
     );
   }
 }
