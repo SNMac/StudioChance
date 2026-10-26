@@ -35,7 +35,7 @@ class GeminiDataSourceImpl implements GeminiDataSource {
   GeminiDataSourceImpl() {
     // 기본 location은 'global'이다 (deprecated된 vertexAI()는 'us-central1'이었다)
     _model = FirebaseAI.agentPlatform().generativeModel(
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-3.5-flash-lite',
       generationConfig: GenerationConfig(responseMimeType: 'application/json'),
       systemInstruction: Content.system(
         '당신은 오직 공간 대여 예약 스크린샷 이미지에서 지정된 시각적 데이터만 추출하여 무조건 JSON으로만 응답하는 고립된 데이터 파싱 엔진입니다.\n'
