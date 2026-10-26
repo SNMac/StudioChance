@@ -19,7 +19,6 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeAuthInfo());
-    registerFallbackValue(fakeUser);
   });
 
   setUp(() {
@@ -209,7 +208,12 @@ void main() {
       verifyNever(() => mockStoreUseCase.leaveStore(any()));
       verifyNever(() => mockStoreUseCase.cancelJoinRequest(any()));
       verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
-      verifyNever(() => mockUserRepo.markAccountDeleted(any()));
+      verifyNever(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      );
       verifyNever(() => mockAuthRepo.delete());
     }
 
@@ -227,8 +231,12 @@ void main() {
           .thenAnswer((_) async => right(null));
       when(() => mockStoreUseCase.softDeleteStore(any()))
           .thenAnswer((_) async => right(null));
-      when(() => mockUserRepo.markAccountDeleted(any()))
-          .thenAnswer((_) async => right(null));
+      when(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      ).thenAnswer((_) async => right(null));
       when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
     });
 
@@ -296,7 +304,7 @@ void main() {
         () => mockStoreUseCase.leaveStore('store-staff'),
         () => mockStoreUseCase.cancelJoinRequest('store-pending'),
         () => mockStoreUseCase.softDeleteStore('store-123'),
-        () => mockUserRepo.markAccountDeleted(memberUser),
+        () => mockUserRepo.markAccountDeleted('user-123', nickname: '닉네임'),
         () => mockAuthRepo.delete(),
       ]);
     });
@@ -344,7 +352,12 @@ void main() {
       final result = await useCase.delete();
 
       expectLeft(result);
-      verifyNever(() => mockUserRepo.markAccountDeleted(any()));
+      verifyNever(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      );
       verifyNever(() => mockAuthRepo.delete());
     });
 
@@ -357,20 +370,54 @@ void main() {
       final result = await useCase.delete();
 
       expectLeft(result);
-      verifyNever(() => mockUserRepo.markAccountDeleted(any()));
+      verifyNever(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      );
       verifyNever(() => mockAuthRepo.delete());
     });
 
     test('사용자 문서 정리가 실패하면 Auth 계정을 지우지 않는다', () async {
       when(() => mockUserRepo.getCurrentUser())
           .thenAnswer((_) async => right(fakeUser));
-      when(() => mockUserRepo.markAccountDeleted(any()))
-          .thenAnswer((_) async => left(Exception('문서 정리 실패')));
+      when(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      ).thenAnswer((_) async => left(Exception('문서 정리 실패')));
 
       final result = await useCase.delete();
 
       expectLeft(result);
       verifyNever(() => mockAuthRepo.delete());
+    });
+
+    test('닉네임이 없으면 소셜 계정 이름을 남긴다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser.copyWith(nickname: null)));
+
+      await useCase.delete();
+
+      verify(
+        () => mockUserRepo.markAccountDeleted('user-123', nickname: '테스트 유저'),
+      ).called(1);
+    });
+
+    test('남기는 소셜 계정 이름은 닉네임 최대 길이까지만이다', () async {
+      when(() => mockUserRepo.getCurrentUser()).thenAnswer(
+        (_) async =>
+            right(fakeUser.copyWith(nickname: null, name: ' 가나다라마바사아자차카타 ')),
+      );
+
+      await useCase.delete();
+
+      verify(
+        () =>
+            mockUserRepo.markAccountDeleted('user-123', nickname: '가나다라마바사아자차'),
+      ).called(1);
     });
 
     test('현재 유저가 null이면 AuthUserNotFoundException을 반환한다', () async {

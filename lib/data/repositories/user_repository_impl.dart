@@ -172,14 +172,14 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<Either<Exception, void>> markAccountDeleted(User user) async {
+  Future<Either<Exception, void>> markAccountDeleted(
+    String uid, {
+    required String nickname,
+  }) async {
     try {
-      await _userDataSource.markAccountDeleted(
-        user.id,
-        nickname: user.nickname ?? user.name,
-      );
+      await _userDataSource.markAccountDeleted(uid, nickname: nickname);
 
-      _logger.i('사용자 문서 정리 완료 (계정 삭제)\nuid: ${user.id}');
+      _logger.i('사용자 문서 정리 완료 (계정 삭제)\nuid: $uid');
       return right(null);
     } catch (e) {
       _logger.e('사용자 문서 정리 실패 (계정 삭제)');

@@ -34,7 +34,9 @@ abstract interface class UserRepository {
   /// 현재 기기의 FCM 토큰을 찾아 DB에서 제거 (로그아웃용)
   Future<void> removeCurrentDeviceFcmToken(String uid);
 
-  /// 계정 삭제: 사용자 문서에 닉네임만 남기고 나머지 정보와 FCM 토큰을 지운다 (ADR-0005)
-  /// - 닉네임이 없으면 이름을 남긴다
-  Future<Either<Exception, void>> markAccountDeleted(User user);
+  /// 계정 삭제: 사용자 문서에 [nickname]만 남기고 나머지 정보와 FCM 토큰을 지운다 (ADR-0005)
+  Future<Either<Exception, void>> markAccountDeleted(
+    String uid, {
+    required String nickname,
+  });
 }

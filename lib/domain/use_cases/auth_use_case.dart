@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/entities/auth_info.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
@@ -34,7 +35,12 @@ abstract interface class AuthUseCase {
   /// - 멤버인 점포는 모두 나가고, 승인 대기 중인 신청은 모두 취소한다
   /// - 혼자 쓰는 관리자 점포는 Soft Delete한다
   /// - 사용자 문서에는 닉네임만 남기고, 마지막으로 Auth 계정을 지운다
-  /// - 중간에 실패해 Auth 계정이 남으면 다음 로그인에서 새 사용자로 시작한다
+  /// - 중간에 실패하면 실패한 단계에 따라 남는 상태가 다르다 (되돌리지 않는다)
+  ///   - 재인증·Apple revoke 전: 아무것도 바뀌지 않는다
+  ///   - 점포 정리 중: 사용자 문서가 그대로라 다음 로그인에서 기존 사용자로 돌아온다.
+  ///     일부 점포만 정리되었을 수 있고, Apple 토큰은 이미 revoke되었다
+  ///     (다음 Apple 로그인에서 동의 화면이 다시 뜰 뿐 같은 계정으로 들어온다)
+  ///   - 사용자 문서를 덮어쓴 뒤: 다음 로그인에서 새 사용자로 시작한다
   Future<Either<Exception, void>> delete();
 
   /// 재인증
@@ -113,11 +119,22 @@ class AuthUseCaseImpl implements AuthUseCase {
       // 사용자 문서는 점포 정리가 끝난 뒤에 덮어쓴다 — 덮어쓴 뒤로는 다음 로그인이 새 사용자가 된다
       return _ensureNoSharedAdminStores(currentUser)
           .flatMap((_) => TaskEither(() => _authRepository.prepareDeletion()))
-          .flatMap((_) => _leaveAllStores(currentUser))
-          .flatMap((_) => _softDeleteAdminStores(currentUser))
+          .flatMap(
+            (_) => _cleanUpStores(
+              currentUser,
+              only: {_StoreCleanup.cancelJoinRequest, _StoreCleanup.leave},
+            ),
+          )
+          .flatMap(
+            (_) =>
+                _cleanUpStores(currentUser, only: {_StoreCleanup.softDelete}),
+          )
           .flatMap(
             (_) => TaskEither(
-              () => _userRepository.markAccountDeleted(currentUser),
+              () => _userRepository.markAccountDeleted(
+                currentUser.id,
+                nickname: _nicknameKeptAfterDeletion(currentUser),
+              ),
             ),
           )
           .flatMap((_) => TaskEither(() => _authRepository.delete()))
@@ -131,8 +148,12 @@ class AuthUseCaseImpl implements AuthUseCase {
   /// 계정 삭제의 어떤 쓰기보다 먼저 실행해야 막혔을 때 아무것도 바뀌지 않는다.
   /// 승인 대기자는 멤버가 아니므로 세지 않는다 (점포 삭제가 신청 기록까지 정리한다)
   TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
+    final adminStoreInfos = currentUser.storeInfos.where(
+      (info) => _StoreCleanup.of(info) == _StoreCleanup.softDelete,
+    );
+
     return TaskEither.traverseList(
-      _adminStoreInfosOf(currentUser),
+      adminStoreInfos.toList(),
       (info) => TaskEither(() => _storeUseCase.getMembership(info.id)).map(
         (membership) => (
           info: info,
@@ -158,47 +179,66 @@ class AuthUseCaseImpl implements AuthUseCase {
     });
   }
 
-  /// 승인 대기 점포는 아직 관리자가 아니라 삭제 권한이 없으므로 제외한다
-  List<UserStoreInfo> _adminStoreInfosOf(User currentUser) => currentUser
-      .memberStoreInfos
-      .where((info) => info.role == UserRole.admin)
-      .toList();
-
-  /// 관리자가 아닌 점포에서 모두 빠진다: 멤버이면 점포 나가기, 승인 대기 중이면 신청 취소
+  /// 점포 중 [only]에 해당하는 정리만 차례로 한다 (정리 방법은 [_StoreCleanup.of])
   ///
-  /// 멤버십을 남겨 두면 보이지 않는 멤버가 관리자의 계정 삭제를 막는다 (ADR-0005).
   /// 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
-  TaskEither<Exception, void> _leaveAllStores(User currentUser) {
+  TaskEither<Exception, void> _cleanUpStores(
+    User currentUser, {
+    required Set<_StoreCleanup> only,
+  }) {
     return currentUser.storeInfos.fold(
       TaskEither<Exception, void>.right(null),
-      (acc, info) => acc.flatMap((_) {
-        if (info.isPending) {
-          return TaskEither(() => _storeUseCase.cancelJoinRequest(info.id));
-        }
-        if (info.role == UserRole.admin) return TaskEither.right(null);
-        return TaskEither(() => _storeUseCase.leaveStore(info.id));
-      }),
+      (acc, info) {
+        final cleanup = _StoreCleanup.of(info);
+        if (!only.contains(cleanup)) return acc;
+
+        return acc.flatMap(
+          (_) => TaskEither(
+            () => switch (cleanup) {
+              _StoreCleanup.cancelJoinRequest =>
+                _storeUseCase.cancelJoinRequest(info.id),
+              _StoreCleanup.leave => _storeUseCase.leaveStore(info.id),
+              _StoreCleanup.softDelete => _storeUseCase.softDeleteStore(
+                info.id,
+              ),
+            },
+          ),
+        );
+      },
     );
   }
 
-  /// 사용자가 관리자(admin)로 속한 모든 점포를 Soft Delete 처리한다.
-  ///
-  /// [_ensureNoSharedAdminStores]를 통과한 뒤라 모두 혼자 쓰는 점포다.
-  /// 순회하며 삭제하고, 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
-  TaskEither<Exception, void> _softDeleteAdminStores(User currentUser) {
-    final adminStoreIds = _adminStoreInfosOf(currentUser)
-        .map((info) => info.id);
-
-    return adminStoreIds.fold(
-      TaskEither<Exception, void>.right(null),
-      (acc, storeId) => acc.flatMap(
-        (_) => TaskEither(() => _storeUseCase.softDeleteStore(storeId)),
-      ),
+  /// 계정 삭제 후 사용자 문서에 남길 닉네임 (ADR-0005)
+  /// - 닉네임이 없으면 소셜 계정 이름을 닉네임 최대 길이까지만 남긴다
+  String _nicknameKeptAfterDeletion(User user) {
+    final nickname = user.nickname;
+    if (nickname != null) return nickname;
+    // 코드 유닛이 아니라 코드 포인트로 잘라야 이모지 같은 글자가 반으로 깨지지 않는다
+    return String.fromCharCodes(
+      user.name.trim().runes.take(maxNicknameCharCount),
     );
   }
 
   @override
   Future<Either<Exception, void>> reauthenticate() {
     return _authRepository.reauthenticate();
+  }
+}
+
+/// 계정 삭제 때 점포마다 하는 정리
+enum _StoreCleanup {
+  /// 승인 대기 중. 관리자 역할로 신청했어도 아직 멤버가 아니라 점포를 삭제할 권한이 없다
+  cancelJoinRequest,
+
+  /// 관리자가 아닌 멤버. 멤버십을 남겨 두면 보이지 않는 멤버가 관리자의 계정 삭제를 막는다
+  leave,
+
+  /// 관리자. [AuthUseCaseImpl._ensureNoSharedAdminStores]를 통과했다면 모두 혼자 쓰는 점포다
+  softDelete;
+
+  static _StoreCleanup of(UserStoreInfo info) {
+    if (info.isPending) return cancelJoinRequest;
+    if (info.role == UserRole.admin) return softDelete;
+    return leave;
   }
 }
