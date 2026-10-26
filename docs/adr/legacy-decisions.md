@@ -46,7 +46,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 UX �
 ## 앱 최초 실행 인증 데이터 삭제 (D9)
 `SharedPreferences` `hasLaunchedBefore` 플래그로 앱 최초 설치 실행을 감지하여 기존 인증 데이터 삭제.
 - iOS Keychain은 앱 삭제 후에도 인증 토큰이 잔존 → 재설치 후 로그인 없이 진입하는 문제 방지
-- `main_dev.dart`, `main_prod.dart`의 `_checkFirstLaunchAndClearData()`에 구현
+- `bootstrap.dart`의 `_checkFirstLaunchAndClearData()`에 구현 (dev·prod 공통 시작 순서)
 
 ## 단순 위임 UseCase 허용 (D10)
 `UserUseCaseImpl`처럼 모든 메서드가 Repository에 단일 라인으로 위임하는 UseCase도 의도적으로 허용.
