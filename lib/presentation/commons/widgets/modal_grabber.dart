@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:studio_chance/presentation/colors.dart';
 
 /// 모달 하단 시트 상단에 표시되는 Grabber pill 컴포넌트.

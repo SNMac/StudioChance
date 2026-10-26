@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';

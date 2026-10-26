@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 extension ContextColors on BuildContext {
   Color get black => CupertinoDynamicColor.resolve(CupertinoColors.black, this);

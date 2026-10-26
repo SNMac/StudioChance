@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {

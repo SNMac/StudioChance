@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:studio_chance/domain/entities/holiday_calendar.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 
 Future<bool> showImagePreviewPage(BuildContext context, Uint8List bytes) async {
