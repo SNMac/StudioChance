@@ -97,5 +97,21 @@ void main() {
       expectRight(result);
       expect(recordedReasons, hasLength(1));
     });
+
+    test('Crashlytics 기록이 실패해도 계정 삭제를 계속한다', () async {
+      repository = AuthRepositoryImpl(
+        authDataSource: mockAuthDs,
+        recordNonFatalError: (error, stackTrace, reason) async =>
+            throw Exception('Crashlytics 오류'),
+      );
+      when(() => mockAuthDs.reauthenticate())
+          .thenAnswer((_) async => appleToken);
+      when(() => mockAuthDs.revokeAppleToken(any()))
+          .thenThrow(AuthUnknownException(message: 'invalid_client'));
+
+      final result = await repository.prepareDeletion();
+
+      expectRight(result);
+    });
   });
 }

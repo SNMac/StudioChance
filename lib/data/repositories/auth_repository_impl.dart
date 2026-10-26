@@ -91,8 +91,26 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       _logger.e('Apple revoke 실패 — 기록하고 계정 삭제를 계속한다');
-      await _recordNonFatalError(e, stackTrace, 'Apple revoke 실패 (계정 삭제는 계속)');
+      await _tryRecordNonFatalError(
+        e,
+        stackTrace,
+        'Apple revoke 실패 (계정 삭제는 계속)',
+      );
       return right(null);
+    }
+  }
+
+  /// 기록이 실패해도 예외를 밖으로 내보내지 않는다. 기록은 부가 작업이라
+  /// 이 실패가 Either 결과를 깨면 안 된다
+  Future<void> _tryRecordNonFatalError(
+    Object error,
+    StackTrace stackTrace,
+    String reason,
+  ) async {
+    try {
+      await _recordNonFatalError(error, stackTrace, reason);
+    } catch (recordError) {
+      _logger.w('Crashlytics 기록 실패', error: recordError);
     }
   }
 
