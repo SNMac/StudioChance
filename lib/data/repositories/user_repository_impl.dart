@@ -24,12 +24,10 @@ class UserRepositoryImpl implements UserRepository {
   final NotificationDataSource _notificationDataSource;
 
   UserRepositoryImpl({
-    required AuthDataSource authDataSource,
-    required UserDataSource userDataSource,
-    required NotificationDataSource notificationDataSource,
-  }) : _authDataSource = authDataSource,
-       _userDataSource = userDataSource,
-       _notificationDataSource = notificationDataSource;
+    required this._authDataSource,
+    required this._userDataSource,
+    required this._notificationDataSource,
+  });
 
   @override
   Future<Either<Exception, User>> fetchOrCreateUser(AuthInfo authInfo) async {

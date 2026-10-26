@@ -14,8 +14,7 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
   final Logger _logger = Logger();
   final GeminiDataSource _geminiDataSource;
 
-  ReservationOcrRepositoryImpl({required GeminiDataSource geminiDataSource})
-      : _geminiDataSource = geminiDataSource;
+  ReservationOcrRepositoryImpl({required this._geminiDataSource});
 
   @override
   Future<Either<Exception, ReservationOcrResult>> analyzeReservationImage(

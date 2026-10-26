@@ -112,10 +112,9 @@ class StoreUseCaseImpl implements StoreUseCase {
   final UserRepository _userRepository;
 
   const StoreUseCaseImpl({
-    required StoreRepository storeRepository,
-    required UserRepository userRepository,
-  }) : _storeRepository = storeRepository,
-       _userRepository = userRepository;
+    required this._storeRepository,
+    required this._userRepository,
+  });
 
   /// 현재 유저가 보유한 다른 점포와 이름이 중복되는지 검증한다.
   /// [store.id]가 [currentUser.storeInfos] 항목과 일치하면 자기 자신이므로 제외한다.

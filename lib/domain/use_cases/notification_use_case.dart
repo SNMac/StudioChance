@@ -36,8 +36,8 @@ class NotificationUseCaseImpl implements NotificationUseCase {
   final NotificationRepository _notificationRepository;
 
   NotificationUseCaseImpl({
-    required NotificationRepository notificationRepository,
-  }) : _notificationRepository = notificationRepository;
+    required this._notificationRepository,
+  });
 
   @override
   Future<Either<Exception, bool>> requestPermission() =>

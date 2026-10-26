@@ -14,8 +14,7 @@ abstract interface class ReservationOcrUseCase {
 class ReservationOcrUseCaseImpl implements ReservationOcrUseCase {
   final ReservationOcrRepository _repository;
 
-  const ReservationOcrUseCaseImpl({required ReservationOcrRepository repository})
-      : _repository = repository;
+  const ReservationOcrUseCaseImpl({required this._repository});
 
   @override
   Future<Either<Exception, ReservationOcrResult>> execute(

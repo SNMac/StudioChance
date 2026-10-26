@@ -23,12 +23,10 @@ class NotificationRepositoryImpl implements NotificationRepository {
   final UserDataSource _userDataSource;
 
   NotificationRepositoryImpl({
-    required NotificationDataSource notificationDataSource,
-    required LocalNotificationDataSource localNotificationDataSource,
-    required UserDataSource userDataSource,
-  }) : _notificationDataSource = notificationDataSource,
-       _localNotificationDataSource = localNotificationDataSource,
-       _userDataSource = userDataSource;
+    required this._notificationDataSource,
+    required this._localNotificationDataSource,
+    required this._userDataSource,
+  });
 
   @override
   Future<Either<Exception, bool>> requestPermission() async {

@@ -25,10 +25,9 @@ class ReservationRepositoryImpl implements ReservationRepository {
   final UserDataSource _userDataSource;
 
   ReservationRepositoryImpl({
-    required ReservationDataSource reservationDataSource,
-    required UserDataSource userDataSource,
-  }) : _reservationDataSource = reservationDataSource,
-       _userDataSource = userDataSource;
+    required this._reservationDataSource,
+    required this._userDataSource,
+  });
 
   @override
   Future<Either<Exception, Reservation>> createReservation({

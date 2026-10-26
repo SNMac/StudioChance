@@ -43,12 +43,10 @@ class AuthUseCaseImpl implements AuthUseCase {
   final StoreUseCase _storeUseCase;
 
   const AuthUseCaseImpl({
-    required AuthRepository authRepository,
-    required UserRepository userRepository,
-    required StoreUseCase storeUseCase,
-  }) : _authRepository = authRepository,
-       _userRepository = userRepository,
-       _storeUseCase = storeUseCase;
+    required this._authRepository,
+    required this._userRepository,
+    required this._storeUseCase,
+  });
 
   @override
   Stream<AuthInfo?> authStateChanges() {

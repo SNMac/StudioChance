@@ -33,10 +33,9 @@ class StoreRepositoryImpl implements StoreRepository {
   final UserDataSource _userDataSource;
 
   StoreRepositoryImpl({
-    required StoreDataSource storeDataSource,
-    required UserDataSource userDataSource,
-  }) : _storeDataSource = storeDataSource,
-       _userDataSource = userDataSource;
+    required this._storeDataSource,
+    required this._userDataSource,
+  });
 
   @override
   Future<Either<Exception, Store>> createStore({

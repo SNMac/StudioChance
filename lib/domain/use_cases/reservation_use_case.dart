@@ -105,14 +105,11 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   final Logger _logger = Logger();
 
   ReservationUseCaseImpl({
-    required ReservationRepository reservationRepository,
-    required UserRepository userRepository,
-    required StoreRepository storeRepository,
-    required HolidayRepository holidayRepository,
-  }) : _reservationRepository = reservationRepository,
-       _userRepository = userRepository,
-       _storeRepository = storeRepository,
-       _holidayRepository = holidayRepository;
+    required this._reservationRepository,
+    required this._userRepository,
+    required this._storeRepository,
+    required this._holidayRepository,
+  });
 
   @override
   Future<Either<Exception, Reservation>> createReservation({
