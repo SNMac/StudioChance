@@ -7,6 +7,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:studio_chance/data/data_sources/remote_config.dart';
 import 'package:studio_chance/domain/use_cases/auth_use_case_provider.dart';
 import 'package:studio_chance/my_app.dart';
 
@@ -24,6 +25,9 @@ void main() async {
         : AndroidPlayIntegrityProvider(),
     providerApple: kDebugMode ? AppleDebugProvider() : AppleAppAttestProvider(),
   );
+
+  // 콘솔에서 바꾼 값이 최대 1시간 안에 반영된다
+  await initializeRemoteConfig(minimumFetchInterval: const Duration(hours: 1));
 
   await _setPreferredOrientations();
   await _checkFirstLaunchAndClearData();
