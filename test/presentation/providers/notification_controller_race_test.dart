@@ -51,8 +51,10 @@ void main() {
     final userB = fakeUser.copyWith(id: 'uidB');
 
     // 1. userA로 첫 build() 시작 — requestPermission()에서 블로킹된다.
+    // 실제 앱처럼 MyApp이 watch하는 상황을 만든다. 리스너 없이 read만 하면
+    // riverpod 3.4에서 provider가 일시정지돼 아래 invalidate 후 재빌드가 일어나지 않는다.
     testUser = userA;
-    container.read(notificationControllerProvider);
+    container.listen(notificationControllerProvider, (_, _) {});
 
     // requestPermission()이 호출될 때까지 이벤트 루프를 펌핑한다.
     await pumpEventQueue();
