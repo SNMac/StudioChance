@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
+
 import '../../helpers/either_expectations.dart';
 import '../../helpers/mocks.dart';
 
@@ -25,12 +26,11 @@ void main() {
   group('updateStoreInfo', () {
     test('color는 대문자 JSON 값(예: GREEN)으로 저장된다', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockUserDs.updateStoreInfo(any(), any(), any())).thenAnswer((
-        invocation,
-      ) async {
-        capturedData =
-            invocation.positionalArguments[2] as Map<String, dynamic>;
-      });
+      when(() => mockUserDs.updateStoreInfo(any(), any(), any()))
+          .thenAnswer((invocation) async {
+            capturedData =
+                invocation.positionalArguments[2] as Map<String, dynamic>;
+          });
 
       final result = await repository.updateStoreInfo(
         uid: 'user-123',
@@ -54,9 +54,8 @@ void main() {
     });
 
     test('DataSource 실패 시 left를 반환한다', () async {
-      when(
-        () => mockUserDs.softDeleteUser(any()),
-      ).thenThrow(Exception('탈퇴 실패'));
+      when(() => mockUserDs.softDeleteUser(any()))
+          .thenThrow(Exception('탈퇴 실패'));
 
       final result = await repository.softDeleteUser('user-123');
 

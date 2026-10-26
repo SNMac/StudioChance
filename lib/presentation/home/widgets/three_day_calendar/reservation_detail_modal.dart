@@ -51,12 +51,11 @@ import 'package:studio_chance/presentation/providers/reservation_ocr_controller.
 ///
 /// [fromStoreId]는 저장 전 예약이 있던 점포다. [updated]의 점포와 다르면 예약을 옮긴다.
 /// [applyCurrentPrice]가 true면 사용자가 '현재 요금 적용'을 눌렀다는 뜻이다.
-typedef ReservationSavedCallback =
-    Future<void> Function(
-      Reservation updated, {
-      required String fromStoreId,
-      required bool applyCurrentPrice,
-    });
+typedef ReservationSavedCallback = Future<void> Function(
+  Reservation updated, {
+  required String fromStoreId,
+  required bool applyCurrentPrice,
+});
 
 /// 예약 확인 모달 (읽기 전용 ↔ 편집 모드 인라인 전환).
 ///

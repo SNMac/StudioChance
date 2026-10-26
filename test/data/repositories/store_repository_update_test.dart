@@ -30,9 +30,8 @@ void main() {
           isUnchanged: any(named: 'isUnchanged'),
         ),
       ).thenAnswer((_) async {});
-      when(
-        () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockUserDataSource.updateStoreInfo(any(), any(), any()))
+          .thenAnswer((_) async {});
 
       final result = await repository.updateStore(
         original: fakeStore,
@@ -107,9 +106,8 @@ void main() {
           isUnchanged: any(named: 'isUnchanged'),
         ),
       ).thenAnswer((_) async {});
-      when(
-        () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
-      ).thenThrow(Exception('유저 정보 업데이트 오류'));
+      when(() => mockUserDataSource.updateStoreInfo(any(), any(), any()))
+          .thenThrow(Exception('유저 정보 업데이트 오류'));
 
       final result = await repository.updateStore(
         original: fakeStore,

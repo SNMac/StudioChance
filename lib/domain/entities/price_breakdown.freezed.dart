@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'price_breakdown.dart';
@@ -9,6 +9,7 @@ part of 'price_breakdown.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PriceBreakdownCopyWith<PriceBreakdown> get copyWith => _$PriceBreakdownCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceBreakdown&&const DeepCollectionEquality().equals(other.days, days));
+  final _this = this as PriceBreakdown;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceBreakdown&&const DeepCollectionEquality().equals(other.days, _this.days));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days));
+int get hashCode {
+  final _this = this as PriceBreakdown;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.days));
+}
 
 @override
 String toString() {
-  return 'PriceBreakdown(days: $days)';
+  final _this = this as PriceBreakdown;
+  return 'PriceBreakdown(days: ${_this.days})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PriceBreakdownCopyWithImpl<$Res>
 /// Create a copy of PriceBreakdown
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? days = null,}) {
-  return _then(_self.copyWith(
+  return _then(PriceBreakdown(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
 as List<PricedDay>,
   ));
@@ -206,7 +212,7 @@ return $default(_that.days);case _:
 
 
 class _PriceBreakdown extends PriceBreakdown {
-  const _PriceBreakdown({required final  List<PricedDay> days}): _days = days,super._();
+  const _PriceBreakdown({required  List<PricedDay> days}): _days = days,super._();
   
 
  final  List<PricedDay> _days;
@@ -227,16 +233,18 @@ _$PriceBreakdownCopyWith<_PriceBreakdown> get copyWith => __$PriceBreakdownCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceBreakdown&&const DeepCollectionEquality().equals(other._days, _days));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PriceBreakdown&&const DeepCollectionEquality().equals(other.days, _days));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_days));
+}
 
 @override
 String toString() {
-  return 'PriceBreakdown(days: $days)';
+    return 'PriceBreakdown(days: $days)';
 }
 
 
@@ -290,16 +298,21 @@ $PricedDayCopyWith<PricedDay> get copyWith => _$PricedDayCopyWithImpl<PricedDay>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PricedDay&&(identical(other.date, date) || other.date == date)&&(identical(other.holidayRateApplied, holidayRateApplied) || other.holidayRateApplied == holidayRateApplied)&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as PricedDay;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PricedDay&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.holidayRateApplied, _this.holidayRateApplied) || other.holidayRateApplied == _this.holidayRateApplied)&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,date,holidayRateApplied,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as PricedDay;
+  return Object.hash(runtimeType,_this.date,_this.holidayRateApplied,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'PricedDay(date: $date, holidayRateApplied: $holidayRateApplied, items: $items)';
+  final _this = this as PricedDay;
+  return 'PricedDay(date: ${_this.date}, holidayRateApplied: ${_this.holidayRateApplied}, items: ${_this.items})';
 }
 
 
@@ -328,7 +341,7 @@ class _$PricedDayCopyWithImpl<$Res>
 /// Create a copy of PricedDay
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? holidayRateApplied = null,Object? items = null,}) {
-  return _then(_self.copyWith(
+  return _then(PricedDay(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,holidayRateApplied: null == holidayRateApplied ? _self.holidayRateApplied : holidayRateApplied // ignore: cast_nullable_to_non_nullable
 as bool,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
@@ -473,7 +486,7 @@ return $default(_that.date,_that.holidayRateApplied,_that.items);case _:
 
 
 class _PricedDay extends PricedDay {
-  const _PricedDay({required this.date, required this.holidayRateApplied, required final  List<PriceItem> items}): _items = items,super._();
+  const _PricedDay({required this.date, required this.holidayRateApplied, required  List<PriceItem> items}): _items = items,super._();
   
 
 @override final  DateTime date;
@@ -498,16 +511,18 @@ _$PricedDayCopyWith<_PricedDay> get copyWith => __$PricedDayCopyWithImpl<_Priced
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PricedDay&&(identical(other.date, date) || other.date == date)&&(identical(other.holidayRateApplied, holidayRateApplied) || other.holidayRateApplied == holidayRateApplied)&&const DeepCollectionEquality().equals(other._items, _items));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PricedDay&&(identical(other.date, date) || other.date == date)&&(identical(other.holidayRateApplied, holidayRateApplied) || other.holidayRateApplied == holidayRateApplied)&&const DeepCollectionEquality().equals(other.items, _items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,date,holidayRateApplied,const DeepCollectionEquality().hash(_items));
+int get hashCode {
+    return Object.hash(runtimeType,date,holidayRateApplied,const DeepCollectionEquality().hash(_items));
+}
 
 @override
 String toString() {
-  return 'PricedDay(date: $date, holidayRateApplied: $holidayRateApplied, items: $items)';
+    return 'PricedDay(date: $date, holidayRateApplied: $holidayRateApplied, items: $items)';
 }
 
 
@@ -556,7 +571,7 @@ mixin _$PriceItem {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceItem);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PriceItem);
 }
 
 
@@ -565,7 +580,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PriceItem()';
+    return 'PriceItem()';
 }
 
 
@@ -737,16 +752,18 @@ $SlotChargeCopyWith<SlotCharge> get copyWith => _$SlotChargeCopyWithImpl<SlotCha
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SlotCharge&&(identical(other.startMinute, startMinute) || other.startMinute == startMinute)&&(identical(other.endMinute, endMinute) || other.endMinute == endMinute)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.perPersonCount, perPersonCount) || other.perPersonCount == perPersonCount)&&(identical(other.amount, amount) || other.amount == amount));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SlotCharge&&(identical(other.startMinute, startMinute) || other.startMinute == startMinute)&&(identical(other.endMinute, endMinute) || other.endMinute == endMinute)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.isHourly, isHourly) || other.isHourly == isHourly)&&(identical(other.perPersonCount, perPersonCount) || other.perPersonCount == perPersonCount)&&(identical(other.amount, amount) || other.amount == amount));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,startMinute,endMinute,unitPrice,isHourly,perPersonCount,amount);
+int get hashCode {
+    return Object.hash(runtimeType,startMinute,endMinute,unitPrice,isHourly,perPersonCount,amount);
+}
 
 @override
 String toString() {
-  return 'PriceItem.slot(startMinute: $startMinute, endMinute: $endMinute, unitPrice: $unitPrice, isHourly: $isHourly, perPersonCount: $perPersonCount, amount: $amount)';
+    return 'PriceItem.slot(startMinute: $startMinute, endMinute: $endMinute, unitPrice: $unitPrice, isHourly: $isHourly, perPersonCount: $perPersonCount, amount: $amount)';
 }
 
 
@@ -813,16 +830,18 @@ $HeadcountChargeCopyWith<HeadcountCharge> get copyWith => _$HeadcountChargeCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeadcountCharge&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.extraPeople, extraPeople) || other.extraPeople == extraPeople)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson)&&(identical(other.minutes, minutes) || other.minutes == minutes)&&(identical(other.amount, amount) || other.amount == amount));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is HeadcountCharge&&(identical(other.headcountBase, headcountBase) || other.headcountBase == headcountBase)&&(identical(other.extraPeople, extraPeople) || other.extraPeople == extraPeople)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.isPerPerson, isPerPerson) || other.isPerPerson == isPerPerson)&&(identical(other.minutes, minutes) || other.minutes == minutes)&&(identical(other.amount, amount) || other.amount == amount));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,headcountBase,extraPeople,unitPrice,isPerPerson,minutes,amount);
+int get hashCode {
+    return Object.hash(runtimeType,headcountBase,extraPeople,unitPrice,isPerPerson,minutes,amount);
+}
 
 @override
 String toString() {
-  return 'PriceItem.headcount(headcountBase: $headcountBase, extraPeople: $extraPeople, unitPrice: $unitPrice, isPerPerson: $isPerPerson, minutes: $minutes, amount: $amount)';
+    return 'PriceItem.headcount(headcountBase: $headcountBase, extraPeople: $extraPeople, unitPrice: $unitPrice, isPerPerson: $isPerPerson, minutes: $minutes, amount: $amount)';
 }
 
 
@@ -885,16 +904,18 @@ $UnpricedRangeCopyWith<UnpricedRange> get copyWith => _$UnpricedRangeCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UnpricedRange&&(identical(other.startMinute, startMinute) || other.startMinute == startMinute)&&(identical(other.endMinute, endMinute) || other.endMinute == endMinute));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UnpricedRange&&(identical(other.startMinute, startMinute) || other.startMinute == startMinute)&&(identical(other.endMinute, endMinute) || other.endMinute == endMinute));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,startMinute,endMinute);
+int get hashCode {
+    return Object.hash(runtimeType,startMinute,endMinute);
+}
 
 @override
 String toString() {
-  return 'PriceItem.unpriced(startMinute: $startMinute, endMinute: $endMinute)';
+    return 'PriceItem.unpriced(startMinute: $startMinute, endMinute: $endMinute)';
 }
 
 

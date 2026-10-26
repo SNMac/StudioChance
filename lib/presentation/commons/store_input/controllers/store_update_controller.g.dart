@@ -93,7 +93,7 @@ abstract class _$StoreUpdateController extends $Notifier<StoreFormState> {
   StoreFormState build(Store store);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<StoreFormState, StoreFormState>;
     final element =
         ref.element
@@ -103,6 +103,6 @@ abstract class _$StoreUpdateController extends $Notifier<StoreFormState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

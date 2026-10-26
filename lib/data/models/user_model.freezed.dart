@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_model.dart';
@@ -9,6 +9,7 @@ part of 'user_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, authProviders)&&const DeepCollectionEquality().equals(other.storeById, storeById));
+  final _this = this as UserModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.nickname, _this.nickname) || other.nickname == _this.nickname)&&const DeepCollectionEquality().equals(other.authProviders, _this.authProviders)&&const DeepCollectionEquality().equals(other.storeById, _this.storeById));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(authProviders),const DeepCollectionEquality().hash(storeById));
+int get hashCode {
+  final _this = this as UserModel;
+  return Object.hash(runtimeType,_this.id,_this.email,_this.name,_this.nickname,const DeepCollectionEquality().hash(_this.authProviders),const DeepCollectionEquality().hash(_this.storeById));
+}
 
 @override
 String toString() {
-  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById)';
+  final _this = this as UserModel;
+  return 'UserModel(id: ${_this.id}, email: ${_this.email}, name: ${_this.name}, nickname: ${_this.nickname}, authProviders: ${_this.authProviders}, storeById: ${_this.storeById})';
 }
 
 
@@ -66,7 +72,7 @@ class _$UserModelCopyWithImpl<$Res>
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? name = null,Object? nickname = freezed,Object? authProviders = null,Object? storeById = null,}) {
-  return _then(_self.copyWith(
+  return _then(UserModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -214,7 +220,7 @@ return $default(_that.id,_that.email,_that.name,_that.nickname,_that.authProvide
 @JsonSerializable()
 
 class _UserModel extends UserModel {
-  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname, final  List<String> authProviders = const [], final  Map<String, UserStoreInfoModel> storeById = const {}}): _authProviders = authProviders,_storeById = storeById,super._();
+  const _UserModel({@JsonKey(includeToJson: false) required this.id, required this.email, required this.name, this.nickname,  List<String> authProviders = const [],  Map<String, UserStoreInfoModel> storeById = const {}}): _authProviders = authProviders,_storeById = storeById,super._();
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -249,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other._authProviders, _authProviders)&&const DeepCollectionEquality().equals(other._storeById, _storeById));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, _authProviders)&&const DeepCollectionEquality().equals(other.storeById, _storeById));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeById));
+int get hashCode {
+    return Object.hash(runtimeType,id,email,name,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeById));
+}
 
 @override
 String toString() {
-  return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById)';
+    return 'UserModel(id: $id, email: $email, name: $name, nickname: $nickname, authProviders: $authProviders, storeById: $storeById)';
 }
 
 

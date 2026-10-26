@@ -47,7 +47,7 @@ abstract class _$SignInController extends $Notifier<AsyncValue<User?>> {
   AsyncValue<User?> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<User?>, AsyncValue<User?>>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$SignInController extends $Notifier<AsyncValue<User?>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

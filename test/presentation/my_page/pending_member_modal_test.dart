@@ -65,9 +65,8 @@ void main() {
       ProviderScope(
         overrides: [
           // 완료되지 않는 Future로 AsyncLoading 상태를 고정한다.
-          storeDetailProvider(
-            store.id,
-          ).overrideWith((ref) => Completer<Store?>().future),
+          storeDetailProvider(store.id)
+              .overrideWith((ref) => Completer<Store?>().future),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -479,9 +478,8 @@ void main() {
   });
 
   testWidgets('createdAt을 모르는 저장된 코드는 만료를 판단할 수 없어 숨긴다', (tester) async {
-    final store = storeWithWaiting(
-      [],
-    ).copyWith(inviteInfo: const InviteInfo(inviteCode: 'A7K2P9'));
+    final store = storeWithWaiting([])
+        .copyWith(inviteInfo: const InviteInfo(inviteCode: 'A7K2P9'));
 
     await pumpWithSavedInvite(tester, store);
 

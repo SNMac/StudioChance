@@ -11,8 +11,7 @@ part 'holiday_repository_impl.g.dart';
 class HolidayRepositoryImpl implements HolidayRepository {
   final HolidayDataSource _holidayDataSource;
 
-  HolidayRepositoryImpl({required HolidayDataSource holidayDataSource})
-    : _holidayDataSource = holidayDataSource;
+  HolidayRepositoryImpl({required this._holidayDataSource});
 
   @override
   Future<Either<Exception, HolidayCalendar>> getHolidayCalendar({

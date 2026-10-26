@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
+
 import '../../helpers/either_expectations.dart';
 import '../../helpers/mocks.dart';
 
@@ -30,9 +31,8 @@ void main() {
     );
 
     test('조회 결과를 엔티티로 감싸 반환한다', () async {
-      when(
-        () => mockStoreDs.lookupInviteCode('AB3D9F'),
-      ).thenAnswer((_) async => preview);
+      when(() => mockStoreDs.lookupInviteCode('AB3D9F'))
+          .thenAnswer((_) async => preview);
 
       final result = await repository.getStoreByInviteCode('AB3D9F');
 
@@ -40,9 +40,8 @@ void main() {
     });
 
     test('코드가 없으면 right(null)을 반환한다', () async {
-      when(
-        () => mockStoreDs.lookupInviteCode('NOTFND'),
-      ).thenAnswer((_) async => null);
+      when(() => mockStoreDs.lookupInviteCode('NOTFND'))
+          .thenAnswer((_) async => null);
 
       final result = await repository.getStoreByInviteCode('NOTFND');
 
@@ -50,9 +49,8 @@ void main() {
     });
 
     test('DataSource가 던진 예외는 left로 감싼다', () async {
-      when(
-        () => mockStoreDs.lookupInviteCode('EXPIRD'),
-      ).thenThrow(StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'));
+      when(() => mockStoreDs.lookupInviteCode('EXPIRD'))
+          .thenThrow(StoreInviteCodeExpiredException(message: '만료된 초대 코드입니다.'));
 
       final result = await repository.getStoreByInviteCode('EXPIRD');
 

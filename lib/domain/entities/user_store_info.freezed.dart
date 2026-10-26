@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_store_info.dart';
@@ -9,6 +9,7 @@ part of 'user_store_info.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -27,16 +28,21 @@ $UserStoreInfoCopyWith<UserStoreInfo> get copyWith => _$UserStoreInfoCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending));
+  final _this = this as UserStoreInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfo&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.isPending, _this.isPending) || other.isPending == _this.isPending));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,role,color,memo,isPending);
+int get hashCode {
+  final _this = this as UserStoreInfo;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.role,_this.color,_this.memo,_this.isPending);
+}
 
 @override
 String toString() {
-  return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending)';
+  final _this = this as UserStoreInfo;
+  return 'UserStoreInfo(id: ${_this.id}, name: ${_this.name}, role: ${_this.role}, color: ${_this.color}, memo: ${_this.memo}, isPending: ${_this.isPending})';
 }
 
 
@@ -65,7 +71,7 @@ class _$UserStoreInfoCopyWithImpl<$Res>
 /// Create a copy of UserStoreInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,}) {
-  return _then(_self.copyWith(
+  return _then(UserStoreInfo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
@@ -235,16 +241,18 @@ _$UserStoreInfoCopyWith<_UserStoreInfo> get copyWith => __$UserStoreInfoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,role,color,memo,isPending);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,role,color,memo,isPending);
+}
 
 @override
 String toString() {
-  return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending)';
+    return 'UserStoreInfo(id: $id, name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending)';
 }
 
 

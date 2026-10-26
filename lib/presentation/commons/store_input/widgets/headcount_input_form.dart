@@ -64,7 +64,9 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
   }
 
   void _onExtraFocusChanged() {
-    final raw = _extraPriceController.text.replaceAll(',', '').replaceAll('원', '');
+    final raw = _extraPriceController.text
+        .replaceAll(',', '')
+        .replaceAll('원', '');
     if (_extraPriceFocusNode.hasFocus) {
       _extraPriceController.value = TextEditingValue(
         text: raw,
@@ -85,7 +87,9 @@ class _HeadcountInputFormState extends State<HeadcountInputForm> {
   /// 상태 변경 시 부모 위젯에 데이터 전달
   void _notifyParent() {
     final baseText = _baseCountController.text;
-    final extraText = _extraPriceController.text.replaceAll(',', '').replaceAll('원', '');
+    final extraText = _extraPriceController.text
+        .replaceAll(',', '')
+        .replaceAll('원', '');
 
     final isValid = baseText.isNotEmpty && extraText.isNotEmpty;
 

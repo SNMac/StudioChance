@@ -61,9 +61,8 @@ void main() {
   group('verifyInviteCode', () {
     group('점포가 존재할 때', () {
       setUp(() {
-        when(
-          () => mockStoreUseCase.getStoreByInviteCode(any()),
-        ).thenAnswer((_) async => right(testPreview));
+        when(() => mockStoreUseCase.getStoreByInviteCode(any()))
+            .thenAnswer((_) async => right(testPreview));
       });
 
       test('status가 AsyncData(store)가 된다', () async {
@@ -91,9 +90,8 @@ void main() {
 
     group('점포가 없을 때', () {
       setUp(() {
-        when(
-          () => mockStoreUseCase.getStoreByInviteCode(any()),
-        ).thenAnswer((_) async => right(null));
+        when(() => mockStoreUseCase.getStoreByInviteCode(any()))
+            .thenAnswer((_) async => right(null));
       });
 
       test('status가 AsyncData(null)이 된다', () async {
@@ -113,9 +111,8 @@ void main() {
       final exception = StoreNetworkException(message: '네트워크 오류');
 
       setUp(() {
-        when(
-          () => mockStoreUseCase.getStoreByInviteCode(any()),
-        ).thenAnswer((_) async => left(exception));
+        when(() => mockStoreUseCase.getStoreByInviteCode(any()))
+            .thenAnswer((_) async => left(exception));
       });
 
       test('status가 AsyncError가 된다', () async {
@@ -180,9 +177,8 @@ void main() {
   group('submitJoinRequest', () {
     /// 초대 코드 조회에 성공해 점포 확인 화면에 도달한 상태를 만든다
     Future<InviteCodeVerificationController> arrangeVerified() async {
-      when(
-        () => mockStoreUseCase.getStoreByInviteCode(any()),
-      ).thenAnswer((_) async => right(testPreview));
+      when(() => mockStoreUseCase.getStoreByInviteCode(any()))
+          .thenAnswer((_) async => right(testPreview));
 
       final notifier = container.read(
         inviteCodeVerificationControllerProvider.notifier,

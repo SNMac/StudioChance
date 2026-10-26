@@ -94,7 +94,7 @@ abstract class _$NicknameFormController extends $Notifier<NicknameFormState> {
   NicknameFormState build(String? initialValue);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<NicknameFormState, NicknameFormState>;
     final element =
         ref.element
@@ -104,6 +104,6 @@ abstract class _$NicknameFormController extends $Notifier<NicknameFormState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

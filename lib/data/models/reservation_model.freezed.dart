@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'reservation_model.dart';
@@ -9,6 +9,7 @@ part of 'reservation_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $ReservationModelCopyWith<ReservationModel> get copyWith => _$ReservationModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationModel&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.writerId, writerId) || other.writerId == writerId)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.writerRole, writerRole) || other.writerRole == writerRole)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&const DeepCollectionEquality().equals(other.holidayDates, holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  final _this = this as ReservationModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReservationModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.storeId, _this.storeId) || other.storeId == _this.storeId)&&(identical(other.writerId, _this.writerId) || other.writerId == _this.writerId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.customerName, _this.customerName) || other.customerName == _this.customerName)&&(identical(other.headCount, _this.headCount) || other.headCount == _this.headCount)&&(identical(other.customerPhone, _this.customerPhone) || other.customerPhone == _this.customerPhone)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.isAllDay, _this.isAllDay) || other.isAllDay == _this.isAllDay)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.platform, _this.platform) || other.platform == _this.platform)&&(identical(other.paymentMethod, _this.paymentMethod) || other.paymentMethod == _this.paymentMethod)&&(identical(other.calculatedPrice, _this.calculatedPrice) || other.calculatedPrice == _this.calculatedPrice)&&(identical(other.priceAdjustment, _this.priceAdjustment) || other.priceAdjustment == _this.priceAdjustment)&&(identical(other.totalPrice, _this.totalPrice) || other.totalPrice == _this.totalPrice)&&(identical(other.writerRole, _this.writerRole) || other.writerRole == _this.writerRole)&&(identical(other.spaceOptionId, _this.spaceOptionId) || other.spaceOptionId == _this.spaceOptionId)&&(identical(other.priceSettings, _this.priceSettings) || other.priceSettings == _this.priceSettings)&&const DeepCollectionEquality().equals(other.holidayDates, _this.holidayDates)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,storeId,writerId,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,writerRole,spaceOptionId,priceSettings,const DeepCollectionEquality().hash(holidayDates),createdAt]);
+int get hashCode {
+  final _this = this as ReservationModel;
+  return Object.hashAll([runtimeType,_this.id,_this.storeId,_this.writerId,_this.status,_this.customerName,_this.headCount,_this.customerPhone,_this.memo,_this.isAllDay,_this.startTime,_this.endTime,_this.platform,_this.paymentMethod,_this.calculatedPrice,_this.priceAdjustment,_this.totalPrice,_this.writerRole,_this.spaceOptionId,_this.priceSettings,const DeepCollectionEquality().hash(_this.holidayDates),_this.createdAt]);
+}
 
 @override
 String toString() {
-  return 'ReservationModel(id: $id, storeId: $storeId, writerId: $writerId, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, writerRole: $writerRole, spaceOptionId: $spaceOptionId, priceSettings: $priceSettings, holidayDates: $holidayDates, createdAt: $createdAt)';
+  final _this = this as ReservationModel;
+  return 'ReservationModel(id: ${_this.id}, storeId: ${_this.storeId}, writerId: ${_this.writerId}, status: ${_this.status}, customerName: ${_this.customerName}, headCount: ${_this.headCount}, customerPhone: ${_this.customerPhone}, memo: ${_this.memo}, isAllDay: ${_this.isAllDay}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, platform: ${_this.platform}, paymentMethod: ${_this.paymentMethod}, calculatedPrice: ${_this.calculatedPrice}, priceAdjustment: ${_this.priceAdjustment}, totalPrice: ${_this.totalPrice}, writerRole: ${_this.writerRole}, spaceOptionId: ${_this.spaceOptionId}, priceSettings: ${_this.priceSettings}, holidayDates: ${_this.holidayDates}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -66,7 +72,7 @@ class _$ReservationModelCopyWithImpl<$Res>
 /// Create a copy of ReservationModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeId = null,Object? writerId = null,Object? status = null,Object? customerName = null,Object? headCount = null,Object? customerPhone = null,Object? memo = null,Object? isAllDay = null,Object? startTime = null,Object? endTime = null,Object? platform = null,Object? paymentMethod = null,Object? calculatedPrice = null,Object? priceAdjustment = null,Object? totalPrice = null,Object? writerRole = null,Object? spaceOptionId = freezed,Object? priceSettings = freezed,Object? holidayDates = freezed,Object? createdAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ReservationModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,writerId: null == writerId ? _self.writerId : writerId // ignore: cast_nullable_to_non_nullable
@@ -241,7 +247,7 @@ return $default(_that.id,_that.storeId,_that.writerId,_that.status,_that.custome
 @JsonSerializable()
 
 class _ReservationModel extends ReservationModel {
-  const _ReservationModel({@JsonKey(includeToJson: false) required this.id, required this.storeId, required this.writerId, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.memo, required this.isAllDay, @TimestampConverter() required this.startTime, @TimestampConverter() required this.endTime, required this.platform, required this.paymentMethod, required this.calculatedPrice, required this.priceAdjustment, required this.totalPrice, required this.writerRole, this.spaceOptionId, @JsonKey(includeIfNull: false) this.priceSettings, @JsonKey(includeIfNull: false) final  List<String>? holidayDates, @JsonKey(includeIfNull: false)@TimestampConverter() this.createdAt}): _holidayDates = holidayDates,super._();
+  const _ReservationModel({@JsonKey(includeToJson: false) required this.id, required this.storeId, required this.writerId, required this.status, required this.customerName, required this.headCount, required this.customerPhone, required this.memo, required this.isAllDay, @TimestampConverter() required this.startTime, @TimestampConverter() required this.endTime, required this.platform, required this.paymentMethod, required this.calculatedPrice, required this.priceAdjustment, required this.totalPrice, required this.writerRole, this.spaceOptionId, @JsonKey(includeIfNull: false) this.priceSettings, @JsonKey(includeIfNull: false)  List<String>? holidayDates, @JsonKey(includeIfNull: false)@TimestampConverter() this.createdAt}): _holidayDates = holidayDates,super._();
   factory _ReservationModel.fromJson(Map<String, dynamic> json) => _$ReservationModelFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -287,16 +293,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationModel&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.writerId, writerId) || other.writerId == writerId)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.writerRole, writerRole) || other.writerRole == writerRole)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&const DeepCollectionEquality().equals(other._holidayDates, _holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReservationModel&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.writerId, writerId) || other.writerId == writerId)&&(identical(other.status, status) || other.status == status)&&(identical(other.customerName, customerName) || other.customerName == customerName)&&(identical(other.headCount, headCount) || other.headCount == headCount)&&(identical(other.customerPhone, customerPhone) || other.customerPhone == customerPhone)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isAllDay, isAllDay) || other.isAllDay == isAllDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.calculatedPrice, calculatedPrice) || other.calculatedPrice == calculatedPrice)&&(identical(other.priceAdjustment, priceAdjustment) || other.priceAdjustment == priceAdjustment)&&(identical(other.totalPrice, totalPrice) || other.totalPrice == totalPrice)&&(identical(other.writerRole, writerRole) || other.writerRole == writerRole)&&(identical(other.spaceOptionId, spaceOptionId) || other.spaceOptionId == spaceOptionId)&&(identical(other.priceSettings, priceSettings) || other.priceSettings == priceSettings)&&const DeepCollectionEquality().equals(other.holidayDates, _holidayDates)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,storeId,writerId,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,writerRole,spaceOptionId,priceSettings,const DeepCollectionEquality().hash(_holidayDates),createdAt]);
+int get hashCode {
+    return Object.hashAll([runtimeType,id,storeId,writerId,status,customerName,headCount,customerPhone,memo,isAllDay,startTime,endTime,platform,paymentMethod,calculatedPrice,priceAdjustment,totalPrice,writerRole,spaceOptionId,priceSettings,const DeepCollectionEquality().hash(_holidayDates),createdAt]);
+}
 
 @override
 String toString() {
-  return 'ReservationModel(id: $id, storeId: $storeId, writerId: $writerId, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, writerRole: $writerRole, spaceOptionId: $spaceOptionId, priceSettings: $priceSettings, holidayDates: $holidayDates, createdAt: $createdAt)';
+    return 'ReservationModel(id: $id, storeId: $storeId, writerId: $writerId, status: $status, customerName: $customerName, headCount: $headCount, customerPhone: $customerPhone, memo: $memo, isAllDay: $isAllDay, startTime: $startTime, endTime: $endTime, platform: $platform, paymentMethod: $paymentMethod, calculatedPrice: $calculatedPrice, priceAdjustment: $priceAdjustment, totalPrice: $totalPrice, writerRole: $writerRole, spaceOptionId: $spaceOptionId, priceSettings: $priceSettings, holidayDates: $holidayDates, createdAt: $createdAt)';
 }
 
 

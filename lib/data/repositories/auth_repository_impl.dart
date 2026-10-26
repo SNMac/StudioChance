@@ -16,8 +16,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   final AuthDataSource _authDataSource;
 
-  AuthRepositoryImpl({required AuthDataSource authDataSource})
-    : _authDataSource = authDataSource;
+  AuthRepositoryImpl({required this._authDataSource});
 
   @override
   Stream<AuthInfo?> authStateChanges() {

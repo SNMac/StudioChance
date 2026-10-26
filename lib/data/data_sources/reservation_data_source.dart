@@ -85,14 +85,19 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
     'permission-denied' || 'unauthenticated' =>
       ReservationPermissionDeniedException(message: message, code: code),
     'not-found' => ReservationNotFoundException(message: message, code: code),
-    'resource-exhausted' =>
-      ReservationResourceExhaustedException(message: message, code: code),
-    'unavailable' || 'deadline-exceeded' =>
-      ReservationNetworkException(message: message, code: code),
-    'aborted' || 'failed-precondition' =>
-      ReservationTransactionException(message: message, code: code),
-    'cancelled' =>
-      ReservationCancelledException(message: message, code: code),
+    'resource-exhausted' => ReservationResourceExhaustedException(
+      message: message,
+      code: code,
+    ),
+    'unavailable' || 'deadline-exceeded' => ReservationNetworkException(
+      message: message,
+      code: code,
+    ),
+    'aborted' || 'failed-precondition' => ReservationTransactionException(
+      message: message,
+      code: code,
+    ),
+    'cancelled' => ReservationCancelledException(message: message, code: code),
     _ => ReservationUnknownException(message: message, code: code),
   };
 
@@ -128,7 +133,9 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
     String reservationId,
   ) async {
     try {
-      final docSnapshot = await _reservationsRef(storeId).doc(reservationId).get();
+      final docSnapshot = await _reservationsRef(storeId)
+          .doc(reservationId)
+          .get();
 
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
@@ -175,13 +182,18 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
         .where('startTime', isLessThan: Timestamp.fromDate(end))
         .orderBy('startTime')
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-              final data = doc.data();
-              data['id'] = doc.id;
-              return ReservationModel.fromJson(data);
-            }).toList())
+        .map(
+          (snapshot) => snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return ReservationModel.fromJson(data);
+          }).toList(),
+        )
         .handleError((Object e, StackTrace stackTrace) {
-          Error.throwWithStackTrace(handleFirestoreError(e, stackTrace), stackTrace);
+          Error.throwWithStackTrace(
+            handleFirestoreError(e, stackTrace),
+            stackTrace,
+          );
         });
   }
 
@@ -232,10 +244,7 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> deleteReservation(
-    String storeId,
-    String reservationId,
-  ) async {
+  Future<void> deleteReservation(String storeId, String reservationId) async {
     try {
       await _reservationsRef(storeId).doc(reservationId).delete();
     } catch (e) {
@@ -260,7 +269,6 @@ class ReservationFirestoreDataSource extends FirestoreDataSourceBase
       throw handleFirestoreError(e);
     }
   }
-
 }
 
 @Riverpod(keepAlive: true)

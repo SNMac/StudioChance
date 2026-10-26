@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'store_membership.dart';
@@ -9,6 +9,7 @@ part of 'store_membership.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $StoreMembershipCopyWith<StoreMembership> get copyWith => _$StoreMembershipCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreMembership&&const DeepCollectionEquality().equals(other.roleByUid, roleByUid));
+  final _this = this as StoreMembership;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreMembership&&const DeepCollectionEquality().equals(other.roleByUid, _this.roleByUid));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(roleByUid));
+int get hashCode {
+  final _this = this as StoreMembership;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.roleByUid));
+}
 
 @override
 String toString() {
-  return 'StoreMembership(roleByUid: $roleByUid)';
+  final _this = this as StoreMembership;
+  return 'StoreMembership(roleByUid: ${_this.roleByUid})';
 }
 
 
@@ -63,7 +69,7 @@ class _$StoreMembershipCopyWithImpl<$Res>
 /// Create a copy of StoreMembership
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? roleByUid = null,}) {
-  return _then(_self.copyWith(
+  return _then(StoreMembership(
 roleByUid: null == roleByUid ? _self.roleByUid : roleByUid // ignore: cast_nullable_to_non_nullable
 as Map<String, UserRole>,
   ));
@@ -206,7 +212,7 @@ return $default(_that.roleByUid);case _:
 
 
 class _StoreMembership extends StoreMembership {
-  const _StoreMembership({required final  Map<String, UserRole> roleByUid}): _roleByUid = roleByUid,super._();
+  const _StoreMembership({required  Map<String, UserRole> roleByUid}): _roleByUid = roleByUid,super._();
   
 
  final  Map<String, UserRole> _roleByUid;
@@ -227,16 +233,18 @@ _$StoreMembershipCopyWith<_StoreMembership> get copyWith => __$StoreMembershipCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreMembership&&const DeepCollectionEquality().equals(other._roleByUid, _roleByUid));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreMembership&&const DeepCollectionEquality().equals(other.roleByUid, _roleByUid));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_roleByUid));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_roleByUid));
+}
 
 @override
 String toString() {
-  return 'StoreMembership(roleByUid: $roleByUid)';
+    return 'StoreMembership(roleByUid: $roleByUid)';
 }
 
 

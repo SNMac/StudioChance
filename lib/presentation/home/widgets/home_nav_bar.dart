@@ -138,7 +138,6 @@ class HomeNavBar extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 /// iOS: CupertinoModalPopup, Android: showDatePicker
@@ -170,10 +169,7 @@ Future<void> _showDatePickerModal({
 
 /// iOS 날짜 선택 피커 시트
 class _DatePickerSheet extends StatefulWidget {
-  const _DatePickerSheet({
-    required this.initialDate,
-    required this.onConfirm,
-  });
+  const _DatePickerSheet({required this.initialDate, required this.onConfirm});
 
   final DateTime initialDate;
   final ValueChanged<DateTime> onConfirm;

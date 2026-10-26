@@ -34,7 +34,9 @@ abstract class Store with _$Store {
   PriceSetting? priceSettingForSpace(String? spaceOptionId) {
     if (spaceOptions.isEmpty) return null;
     if (spaceOptionId != null) {
-      final matched = spaceOptions.where((s) => s.id == spaceOptionId).firstOrNull;
+      final matched = spaceOptions
+          .where((s) => s.id == spaceOptionId)
+          .firstOrNull;
       if (matched != null) return matched.priceSetting;
     }
     return spaceOptions.first.priceSetting;

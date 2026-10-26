@@ -30,7 +30,8 @@ class PriceDaysInputScreen extends ConsumerWidget {
 
     if (storeToEdit != null) {
       spaceOptions = ref.watch(
-        storeUpdateControllerProvider(storeToEdit).select((s) => s.spaceOptions),
+        storeUpdateControllerProvider(storeToEdit)
+            .select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {
@@ -96,7 +97,11 @@ class PriceDaysInputScreen extends ConsumerWidget {
                   onPressed: isDisabled
                       ? null
                       : () {
-                          notifier.toggleDayGroupDay(spaceIndex, groupIndex, day);
+                          notifier.toggleDayGroupDay(
+                            spaceIndex,
+                            groupIndex,
+                            day,
+                          );
                         },
                 );
               }).toList(),

@@ -23,6 +23,8 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 
 ## 라이브러리 문서 조회
 - Deprecated API 사용은 지양 — 항상 최신 권장 API/패턴으로 구현할 것
+  - `deprecated_member_use`는 warning이라 `dart analyze`와 CI가 실패한다
+  - 의존성은 Dependabot(`.github/dependabot.yml`)이 분기마다 PR을 연다. PR 처리와 분기 수동 점검: `docs/operations.md`
 - Context7 MCP가 응답하지 않거나 사용량 초과 등으로 사용 불가한 상태여도 작업을 멈추지 말고, 기존 지식으로 진행할 것. 단, 기존 지식만으로 해결이 어려우면 공식 문서를 별도로 확인할 것
 
 ## 아키텍처
@@ -76,6 +78,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   - **UI 변경이 없는 작업이면 스크린샷 섹션을 통째로 생략한다** — 빈 표나 "해당 없음" 같은 문구를 남기지 않는다. 서버·Rules·리팩터링처럼 보여줄 화면이 없는 PR이 적지 않다
 - **PR·이슈 본문에 Claude Code 생성 표기를 넣지 않는다** — `🤖 Generated with [Claude Code]...` 꼬리말과 세션 링크 모두. 템플릿에 없는 섹션이고, 세션 링크는 저장소 바깥을 가리켜 리뷰어에게 쓸모가 없다
 - 이슈는 GitHub Issues에서 생성 (GitHub ↔ Linear 자동 연동)
+- Dependabot PR은 이슈 없이 열리므로 위 커밋·브랜치·PR 제목 컨벤션의 예외다
 
 ## 빌드 및 실행
 - `flutter run --flavor dev --target lib/main_dev.dart` - dev 플레이버 실행 (App Check 항상 Debug Provider)
@@ -131,7 +134,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 - **토큰 저장 위치**: `users/{uid}/private/fcm` 문서의 `tokens: string[]`.
   `users/{uid}` 본문은 멤버 이름 표시 때문에 인증 사용자 전체에 읽기가 열려 있어 토큰을 둘 수 없다.
   클라이언트는 `UserFirestoreDataSource._fcmDocRef`를 통해서만 접근한다 (쓰기 규칙은 그 주석 참고)
-- **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
+- **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 24, 리전 `asia-northeast3`)
   - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
   - `notifyOnMembershipChange`: 멤버 구성 변화(관리자 위임·나가기·추방·승인·거절·점포 삭제)를 당사자에게 발송. 분류 규칙은 `functions/src/notifications/membership_change.ts`
   - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다

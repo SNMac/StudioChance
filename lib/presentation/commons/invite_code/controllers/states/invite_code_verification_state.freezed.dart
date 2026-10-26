@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'invite_code_verification_state.dart';
@@ -9,15 +9,13 @@ part of 'invite_code_verification_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteCodeVerificationState {
 
- String get inviteCode; AsyncValue<InviteStorePreview?> get status; String get storeAlias; StoreColor get color; String get memo;// 초대 코드 조회(status)와 분리한다. status를 재사용하면 스택에 남아 있는
-// 초대 코드 입력 화면의 ref.listen이 제출 완료를 조회 성공으로 오인해
-// 점포 확인 화면을 한 번 더 push한다.
- AsyncValue<void> get submitStatus;
+ String get inviteCode; AsyncValue<InviteStorePreview?> get status; String get storeAlias; StoreColor get color; String get memo; AsyncValue<void> get submitStatus;
 /// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +26,21 @@ $InviteCodeVerificationStateCopyWith<InviteCodeVerificationState> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteCodeVerificationState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status)&&(identical(other.storeAlias, storeAlias) || other.storeAlias == storeAlias)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.submitStatus, submitStatus) || other.submitStatus == submitStatus));
+  final _this = this as InviteCodeVerificationState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteCodeVerificationState&&(identical(other.inviteCode, _this.inviteCode) || other.inviteCode == _this.inviteCode)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.storeAlias, _this.storeAlias) || other.storeAlias == _this.storeAlias)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.submitStatus, _this.submitStatus) || other.submitStatus == _this.submitStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode,status,storeAlias,color,memo,submitStatus);
+int get hashCode {
+  final _this = this as InviteCodeVerificationState;
+  return Object.hash(runtimeType,_this.inviteCode,_this.status,_this.storeAlias,_this.color,_this.memo,_this.submitStatus);
+}
 
 @override
 String toString() {
-  return 'InviteCodeVerificationState(inviteCode: $inviteCode, status: $status, storeAlias: $storeAlias, color: $color, memo: $memo, submitStatus: $submitStatus)';
+  final _this = this as InviteCodeVerificationState;
+  return 'InviteCodeVerificationState(inviteCode: ${_this.inviteCode}, status: ${_this.status}, storeAlias: ${_this.storeAlias}, color: ${_this.color}, memo: ${_this.memo}, submitStatus: ${_this.submitStatus})';
 }
 
 
@@ -66,7 +69,7 @@ class _$InviteCodeVerificationStateCopyWithImpl<$Res>
 /// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? inviteCode = null,Object? status = null,Object? storeAlias = null,Object? color = null,Object? memo = null,Object? submitStatus = null,}) {
-  return _then(_self.copyWith(
+  return _then(InviteCodeVerificationState(
 inviteCode: null == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<InviteStorePreview?>,storeAlias: null == storeAlias ? _self.storeAlias : storeAlias // ignore: cast_nullable_to_non_nullable
@@ -222,9 +225,6 @@ class _InviteCodeVerificationState extends InviteCodeVerificationState {
 @override@JsonKey() final  String storeAlias;
 @override@JsonKey() final  StoreColor color;
 @override@JsonKey() final  String memo;
-// 초대 코드 조회(status)와 분리한다. status를 재사용하면 스택에 남아 있는
-// 초대 코드 입력 화면의 ref.listen이 제출 완료를 조회 성공으로 오인해
-// 점포 확인 화면을 한 번 더 push한다.
 @override@JsonKey() final  AsyncValue<void> submitStatus;
 
 /// Create a copy of InviteCodeVerificationState
@@ -237,16 +237,18 @@ _$InviteCodeVerificationStateCopyWith<_InviteCodeVerificationState> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteCodeVerificationState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status)&&(identical(other.storeAlias, storeAlias) || other.storeAlias == storeAlias)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.submitStatus, submitStatus) || other.submitStatus == submitStatus));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteCodeVerificationState&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.status, status) || other.status == status)&&(identical(other.storeAlias, storeAlias) || other.storeAlias == storeAlias)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.submitStatus, submitStatus) || other.submitStatus == submitStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inviteCode,status,storeAlias,color,memo,submitStatus);
+int get hashCode {
+    return Object.hash(runtimeType,inviteCode,status,storeAlias,color,memo,submitStatus);
+}
 
 @override
 String toString() {
-  return 'InviteCodeVerificationState(inviteCode: $inviteCode, status: $status, storeAlias: $storeAlias, color: $color, memo: $memo, submitStatus: $submitStatus)';
+    return 'InviteCodeVerificationState(inviteCode: $inviteCode, status: $status, storeAlias: $storeAlias, color: $color, memo: $memo, submitStatus: $submitStatus)';
 }
 
 

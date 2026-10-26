@@ -170,9 +170,8 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(horizontalPadding, 0, 0, 8),
       child: Text(
         title,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: context.secondaryLabel),
+        style: Theme.of(context).textTheme.bodyMedium
+            ?.copyWith(color: context.secondaryLabel),
       ),
     );
   }

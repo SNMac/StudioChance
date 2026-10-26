@@ -20,10 +20,8 @@ class BodyTextLabel extends StatelessWidget {
           ),
           child: Text(
             content,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.normal,
-              color: context.label,
-            ),
+            style: Theme.of(context).textTheme.bodyLarge
+                ?.copyWith(fontWeight: FontWeight.normal, color: context.label),
           ),
         ),
       ),

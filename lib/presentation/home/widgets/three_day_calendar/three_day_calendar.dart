@@ -764,9 +764,8 @@ class _DayHeaderCell extends StatelessWidget {
         children: [
           Text(
             _weekdayLabel,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: _weekdayTextColor(context)),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: _weekdayTextColor(context)),
           ),
           const SizedBox(width: 4),
           _buildDayNumber(context),
@@ -801,17 +800,15 @@ class _DayHeaderCell extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           dayText,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: context.systemBackground),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: context.systemBackground),
         ),
       );
     }
     return Text(
       dayText,
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.copyWith(color: _dayNumberColor(context)),
+      style: Theme.of(context).textTheme.bodyMedium
+          ?.copyWith(color: _dayNumberColor(context)),
     );
   }
 }

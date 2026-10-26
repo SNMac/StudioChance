@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'push_message.dart';
@@ -9,6 +9,7 @@ part of 'push_message.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -26,16 +27,21 @@ $PushMessageCopyWith<PushMessage> get copyWith => _$PushMessageCopyWithImpl<Push
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PushMessage&&(identical(other.type, type) || other.type == type)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&const DeepCollectionEquality().equals(other.data, data));
+  final _this = this as PushMessage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PushMessage&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.body, _this.body) || other.body == _this.body)&&const DeepCollectionEquality().equals(other.data, _this.data));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,type,title,body,const DeepCollectionEquality().hash(data));
+int get hashCode {
+  final _this = this as PushMessage;
+  return Object.hash(runtimeType,_this.type,_this.title,_this.body,const DeepCollectionEquality().hash(_this.data));
+}
 
 @override
 String toString() {
-  return 'PushMessage(type: $type, title: $title, body: $body, data: $data)';
+  final _this = this as PushMessage;
+  return 'PushMessage(type: ${_this.type}, title: ${_this.title}, body: ${_this.body}, data: ${_this.data})';
 }
 
 
@@ -64,7 +70,7 @@ class _$PushMessageCopyWithImpl<$Res>
 /// Create a copy of PushMessage
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? title = freezed,Object? body = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(PushMessage(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,body: freezed == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
@@ -210,7 +216,7 @@ return $default(_that.type,_that.title,_that.body,_that.data);case _:
 
 
 class _PushMessage extends PushMessage {
-  const _PushMessage({required this.type, this.title, this.body, final  Map<String, String> data = const {}}): _data = data,super._();
+  const _PushMessage({required this.type, this.title, this.body,  Map<String, String> data = const {}}): _data = data,super._();
   
 
 /// 푸시 종류. `joinRequestNotificationType` 등과 비교한다.
@@ -235,16 +241,18 @@ _$PushMessageCopyWith<_PushMessage> get copyWith => __$PushMessageCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PushMessage&&(identical(other.type, type) || other.type == type)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&const DeepCollectionEquality().equals(other._data, _data));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PushMessage&&(identical(other.type, type) || other.type == type)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&const DeepCollectionEquality().equals(other.data, _data));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,type,title,body,const DeepCollectionEquality().hash(_data));
+int get hashCode {
+    return Object.hash(runtimeType,type,title,body,const DeepCollectionEquality().hash(_data));
+}
 
 @override
 String toString() {
-  return 'PushMessage(type: $type, title: $title, body: $body, data: $data)';
+    return 'PushMessage(type: $type, title: $title, body: $body, data: $data)';
 }
 
 

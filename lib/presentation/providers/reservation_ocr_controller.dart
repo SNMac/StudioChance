@@ -47,13 +47,10 @@ class ReservationOcrController extends _$ReservationOcrController {
           .execute(bytes, storeSpaceMap: storeSpaceMap);
       if (_generation != myGeneration || !ref.mounted) return;
       final stackTrace = StackTrace.current;
-      result.fold(
-        (e) {
-          _logger.e('OCR 실패', error: e);
-          state = AsyncError(e, stackTrace);
-        },
-        (ocrResult) => state = AsyncData(ocrResult),
-      );
+      result.fold((e) {
+        _logger.e('OCR 실패', error: e);
+        state = AsyncError(e, stackTrace);
+      }, (ocrResult) => state = AsyncData(ocrResult));
     } catch (e, st) {
       if (_generation != myGeneration || !ref.mounted) return;
       _logger.e('OCR 분석 실패', error: e, stackTrace: st);

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'holiday_year_model.dart';
@@ -9,6 +9,7 @@ part of 'holiday_year_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -29,16 +30,21 @@ $HolidayYearModelCopyWith<HolidayYearModel> get copyWith => _$HolidayYearModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HolidayYearModel&&const DeepCollectionEquality().equals(other.days, days));
+  final _this = this as HolidayYearModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HolidayYearModel&&const DeepCollectionEquality().equals(other.days, _this.days));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days));
+int get hashCode {
+  final _this = this as HolidayYearModel;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.days));
+}
 
 @override
 String toString() {
-  return 'HolidayYearModel(days: $days)';
+  final _this = this as HolidayYearModel;
+  return 'HolidayYearModel(days: ${_this.days})';
 }
 
 
@@ -67,7 +73,7 @@ class _$HolidayYearModelCopyWithImpl<$Res>
 /// Create a copy of HolidayYearModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? days = null,}) {
-  return _then(_self.copyWith(
+  return _then(HolidayYearModel(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
 as Map<String, List<String>>,
   ));
@@ -210,7 +216,7 @@ return $default(_that.days);case _:
 @JsonSerializable()
 
 class _HolidayYearModel implements HolidayYearModel {
-  const _HolidayYearModel({required final  Map<String, List<String>> days}): _days = days;
+  const _HolidayYearModel({required  Map<String, List<String>> days}): _days = days;
   factory _HolidayYearModel.fromJson(Map<String, dynamic> json) => _$HolidayYearModelFromJson(json);
 
 /// 날짜 키(`yyyy-MM-dd`) → 그날의 공휴일 이름들 (같은 날 공휴일이 겹칠 수 있다)
@@ -236,16 +242,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HolidayYearModel&&const DeepCollectionEquality().equals(other._days, _days));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HolidayYearModel&&const DeepCollectionEquality().equals(other.days, _days));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_days));
+}
 
 @override
 String toString() {
-  return 'HolidayYearModel(days: $days)';
+    return 'HolidayYearModel(days: $days)';
 }
 
 

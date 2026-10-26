@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logger/logger.dart';
@@ -14,8 +15,7 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
   final Logger _logger = Logger();
   final GeminiDataSource _geminiDataSource;
 
-  ReservationOcrRepositoryImpl({required GeminiDataSource geminiDataSource})
-      : _geminiDataSource = geminiDataSource;
+  ReservationOcrRepositoryImpl({required this._geminiDataSource});
 
   @override
   Future<Either<Exception, ReservationOcrResult>> analyzeReservationImage(
@@ -36,8 +36,7 @@ class ReservationOcrRepositoryImpl implements ReservationOcrRepository {
                 code == 'deadline-exceeded' ||
                 code == 'network-request-failed' =>
           OcrNetworkException(e.toString(), code: code),
-        FormatException() || TypeError() =>
-          OcrParsingException(e.toString()),
+        FormatException() || TypeError() => OcrParsingException(e.toString()),
         OcrException() => e,
         _ => OcrUnknownException(e.toString()),
       };

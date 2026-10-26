@@ -55,7 +55,7 @@ abstract class _$InviteCodeVerificationController
   InviteCodeVerificationState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<InviteCodeVerificationState, InviteCodeVerificationState>;
@@ -70,6 +70,6 @@ abstract class _$InviteCodeVerificationController
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

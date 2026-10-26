@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'invite_store_preview_model.dart';
@@ -9,6 +9,7 @@ part of 'invite_store_preview_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $InviteStorePreviewModelCopyWith<InviteStorePreviewModel> get copyWith => _$Invi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteStorePreviewModel&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.adminName, adminName) || other.adminName == adminName));
+  final _this = this as InviteStorePreviewModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteStorePreviewModel&&(identical(other.storeId, _this.storeId) || other.storeId == _this.storeId)&&(identical(other.storeName, _this.storeName) || other.storeName == _this.storeName)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.addressDetail, _this.addressDetail) || other.addressDetail == _this.addressDetail)&&(identical(other.adminName, _this.adminName) || other.adminName == _this.adminName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,storeId,storeName,address,addressDetail,adminName);
+int get hashCode {
+  final _this = this as InviteStorePreviewModel;
+  return Object.hash(runtimeType,_this.storeId,_this.storeName,_this.address,_this.addressDetail,_this.adminName);
+}
 
 @override
 String toString() {
-  return 'InviteStorePreviewModel(storeId: $storeId, storeName: $storeName, address: $address, addressDetail: $addressDetail, adminName: $adminName)';
+  final _this = this as InviteStorePreviewModel;
+  return 'InviteStorePreviewModel(storeId: ${_this.storeId}, storeName: ${_this.storeName}, address: ${_this.address}, addressDetail: ${_this.addressDetail}, adminName: ${_this.adminName})';
 }
 
 
@@ -66,7 +72,7 @@ class _$InviteStorePreviewModelCopyWithImpl<$Res>
 /// Create a copy of InviteStorePreviewModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? storeId = null,Object? storeName = null,Object? address = null,Object? addressDetail = null,Object? adminName = null,}) {
-  return _then(_self.copyWith(
+  return _then(InviteStorePreviewModel(
 storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,storeName: null == storeName ? _self.storeName : storeName // ignore: cast_nullable_to_non_nullable
 as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
@@ -235,16 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteStorePreviewModel&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.adminName, adminName) || other.adminName == adminName));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _InviteStorePreviewModel&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.adminName, adminName) || other.adminName == adminName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,storeId,storeName,address,addressDetail,adminName);
+int get hashCode {
+    return Object.hash(runtimeType,storeId,storeName,address,addressDetail,adminName);
+}
 
 @override
 String toString() {
-  return 'InviteStorePreviewModel(storeId: $storeId, storeName: $storeName, address: $address, addressDetail: $addressDetail, adminName: $adminName)';
+    return 'InviteStorePreviewModel(storeId: $storeId, storeName: $storeName, address: $address, addressDetail: $addressDetail, adminName: $adminName)';
 }
 
 

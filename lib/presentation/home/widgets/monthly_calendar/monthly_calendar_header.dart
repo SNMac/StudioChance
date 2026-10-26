@@ -25,9 +25,8 @@ class MonthlyCalendarHeader extends StatelessWidget {
           child: Center(
             child: Text(
               _weekdays[index],
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: color,
-              ),
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(color: color),
             ),
           ),
         );

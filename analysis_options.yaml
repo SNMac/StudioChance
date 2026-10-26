@@ -29,7 +29,8 @@ analyzer:
   # 뜨고, `dart analyze`가 warning에서 실패해 CI가 깨진다. 룰을 제공하는 패키지
   # (riverpod_lint 등)를 쓰고 있지 않아 실제로 검사하는 것도 없었다
   # (`dart run custom_lint` → No issues found). 필요해지면 riverpod_lint와 함께
-  # 새 플러그인 방식으로 다시 붙인다.
+  # 새 플러그인 방식으로 다시 붙인다. 패키지도 analyzer를 8.x에 묶어 riverpod·freezed
+  # 상향을 막고 있어 dev_dependencies에서 뺐다 (#52).
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
@@ -41,6 +42,10 @@ analyzer:
     - ios/**
   errors:
     invalid_annotation_target: ignore
+    # 기본값 info는 CI(`dart analyze`)를 통과해 패키지 업그레이드로 생긴 deprecation이
+    # 쌓인다. warning으로 올려 deprecation을 끌고 온 PR 안에서 고치게 한다 (#52).
+    # CI는 커밋된 pubspec.lock과 고정 Flutter 버전으로 돌아 무관한 PR은 깨지지 않는다.
+    deprecated_member_use: warning
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

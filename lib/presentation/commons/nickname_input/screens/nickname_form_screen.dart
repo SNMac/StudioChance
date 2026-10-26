@@ -118,10 +118,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                 header: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      '사용하실 닉네임을 입력해 주세요',
-                      style: textTheme.titleLarge,
-                    ),
+                    Text('사용하실 닉네임을 입력해 주세요', style: textTheme.titleLarge),
                     const SizedBox(height: 12),
                   ],
                 ),

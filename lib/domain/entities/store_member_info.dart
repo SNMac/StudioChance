@@ -7,8 +7,6 @@ part 'store_member_info.freezed.dart';
 
 @freezed
 abstract class StoreMemberInfo with _$StoreMemberInfo {
-  const factory StoreMemberInfo({
-    required User user,
-    required UserRole role,
-  }) = _StoreMemberInfo;
+  const factory StoreMemberInfo({required User user, required UserRole role}) =
+      _StoreMemberInfo;
 }

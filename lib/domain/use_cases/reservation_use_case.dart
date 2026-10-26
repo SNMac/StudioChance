@@ -105,14 +105,11 @@ class ReservationUseCaseImpl implements ReservationUseCase {
   final Logger _logger = Logger();
 
   ReservationUseCaseImpl({
-    required ReservationRepository reservationRepository,
-    required UserRepository userRepository,
-    required StoreRepository storeRepository,
-    required HolidayRepository holidayRepository,
-  }) : _reservationRepository = reservationRepository,
-       _userRepository = userRepository,
-       _storeRepository = storeRepository,
-       _holidayRepository = holidayRepository;
+    required this._reservationRepository,
+    required this._userRepository,
+    required this._storeRepository,
+    required this._holidayRepository,
+  });
 
   @override
   Future<Either<Exception, Reservation>> createReservation({
@@ -182,19 +179,18 @@ class ReservationUseCaseImpl implements ReservationUseCase {
     required DateTime start,
     required DateTime end,
   }) {
-    return Stream.fromFuture(
-      getCurrentUserOrThrow(_userRepository).run(),
-    ).asyncExpand(
-      (result) => result.fold(
-        (error) => Stream.error(error),
-        (user) => _reservationRepository.watchReservationsByDateRange(
-          storeId: storeId,
-          currentUid: user.id,
-          start: start,
-          end: end,
-        ),
-      ),
-    );
+    return Stream.fromFuture(getCurrentUserOrThrow(_userRepository).run())
+        .asyncExpand(
+          (result) => result.fold(
+            (error) => Stream.error(error),
+            (user) => _reservationRepository.watchReservationsByDateRange(
+              storeId: storeId,
+              currentUid: user.id,
+              start: start,
+              end: end,
+            ),
+          ),
+        );
   }
 
   @override

@@ -350,26 +350,23 @@ void main() {
       },
     );
 
-    test(
-      'isPerPerson=true, isHourly=true → (extraPrice × extraPeople × totalHours).round()',
-      () {
-        final setting = _makeWeekdaySetting(
-          price: 10000,
-          isHourly: true,
-          headcountBase: 2,
-          headcountExtraPrice: 1000,
-          isHeadcountPerPerson: true,
-          isHeadcountHourly: true,
-        );
-        // 4명, 2시간 → extraPeople=2, extraCharge=(1,000×2×2).round()=4,000
-        final result = setting.calculatePrice(
-          start: DateTime(2026, 5, 18, 10, 0),
-          end: DateTime(2026, 5, 18, 12, 0),
-          headCount: 4,
-        );
-        expect(result, 24000); // 20,000 + 4,000
-      },
-    );
+    test('isPerPerson=true, isHourly=true → (extraPrice × extraPeople × totalHours).round()', () {
+      final setting = _makeWeekdaySetting(
+        price: 10000,
+        isHourly: true,
+        headcountBase: 2,
+        headcountExtraPrice: 1000,
+        isHeadcountPerPerson: true,
+        isHeadcountHourly: true,
+      );
+      // 4명, 2시간 → extraPeople=2, extraCharge=(1,000×2×2).round()=4,000
+      final result = setting.calculatePrice(
+        start: DateTime(2026, 5, 18, 10, 0),
+        end: DateTime(2026, 5, 18, 12, 0),
+        headCount: 4,
+      );
+      expect(result, 24000); // 20,000 + 4,000
+    });
 
     test('headCount ≤ headcountBase → extraCharge = 0', () {
       final setting = _makeWeekdaySetting(

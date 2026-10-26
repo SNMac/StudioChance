@@ -14,8 +14,9 @@ ReservationPlatform? _parsePlatform(Object? raw) {
   if (raw == null) return null;
   final upper = raw.toString().toUpperCase();
   return ReservationPlatform.values
-      .where((p) => p.jsonValue == upper)
-      .firstOrNull ?? ReservationPlatform.other;
+          .where((p) => p.jsonValue == upper)
+          .firstOrNull ??
+      ReservationPlatform.other;
 }
 
 @freezed

@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 import OSLog
-import google_sign_in_ios
+import GoogleSignIn
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {

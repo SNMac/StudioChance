@@ -158,9 +158,8 @@ class _PriceTimeInputScreenState extends ConsumerState<PriceTimeInputScreen> {
 
     if (storeToEdit != null) {
       spaceOptions = ref.watch(
-        storeUpdateControllerProvider(
-          storeToEdit,
-        ).select((s) => s.spaceOptions),
+        storeUpdateControllerProvider(storeToEdit)
+            .select((s) => s.spaceOptions),
       );
       notifier = ref.read(storeUpdateControllerProvider(storeToEdit).notifier);
     } else {

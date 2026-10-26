@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'home_calendar_controller.dart';
@@ -9,6 +9,7 @@ part of 'home_calendar_controller.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -29,16 +30,21 @@ $HomeCalendarStateCopyWith<HomeCalendarState> get copyWith => _$HomeCalendarStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeCalendarState&&(identical(other.selectedStartDate, selectedStartDate) || other.selectedStartDate == selectedStartDate)&&(identical(other.isMonthlyCalendarVisible, isMonthlyCalendarVisible) || other.isMonthlyCalendarVisible == isMonthlyCalendarVisible)&&(identical(other.hourHeight, hourHeight) || other.hourHeight == hourHeight)&&(identical(other.displayedMonth, displayedMonth) || other.displayedMonth == displayedMonth));
+  final _this = this as HomeCalendarState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeCalendarState&&(identical(other.selectedStartDate, _this.selectedStartDate) || other.selectedStartDate == _this.selectedStartDate)&&(identical(other.isMonthlyCalendarVisible, _this.isMonthlyCalendarVisible) || other.isMonthlyCalendarVisible == _this.isMonthlyCalendarVisible)&&(identical(other.hourHeight, _this.hourHeight) || other.hourHeight == _this.hourHeight)&&(identical(other.displayedMonth, _this.displayedMonth) || other.displayedMonth == _this.displayedMonth));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,selectedStartDate,isMonthlyCalendarVisible,hourHeight,displayedMonth);
+int get hashCode {
+  final _this = this as HomeCalendarState;
+  return Object.hash(runtimeType,_this.selectedStartDate,_this.isMonthlyCalendarVisible,_this.hourHeight,_this.displayedMonth);
+}
 
 @override
 String toString() {
-  return 'HomeCalendarState(selectedStartDate: $selectedStartDate, isMonthlyCalendarVisible: $isMonthlyCalendarVisible, hourHeight: $hourHeight, displayedMonth: $displayedMonth)';
+  final _this = this as HomeCalendarState;
+  return 'HomeCalendarState(selectedStartDate: ${_this.selectedStartDate}, isMonthlyCalendarVisible: ${_this.isMonthlyCalendarVisible}, hourHeight: ${_this.hourHeight}, displayedMonth: ${_this.displayedMonth})';
 }
 
 
@@ -67,7 +73,7 @@ class _$HomeCalendarStateCopyWithImpl<$Res>
 /// Create a copy of HomeCalendarState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? selectedStartDate = null,Object? isMonthlyCalendarVisible = null,Object? hourHeight = null,Object? displayedMonth = null,}) {
-  return _then(_self.copyWith(
+  return _then(HomeCalendarState(
 selectedStartDate: null == selectedStartDate ? _self.selectedStartDate : selectedStartDate // ignore: cast_nullable_to_non_nullable
 as DateTime,isMonthlyCalendarVisible: null == isMonthlyCalendarVisible ? _self.isMonthlyCalendarVisible : isMonthlyCalendarVisible // ignore: cast_nullable_to_non_nullable
 as bool,hourHeight: null == hourHeight ? _self.hourHeight : hourHeight // ignore: cast_nullable_to_non_nullable
@@ -235,16 +241,18 @@ _$HomeCalendarStateCopyWith<_HomeCalendarState> get copyWith => __$HomeCalendarS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeCalendarState&&(identical(other.selectedStartDate, selectedStartDate) || other.selectedStartDate == selectedStartDate)&&(identical(other.isMonthlyCalendarVisible, isMonthlyCalendarVisible) || other.isMonthlyCalendarVisible == isMonthlyCalendarVisible)&&(identical(other.hourHeight, hourHeight) || other.hourHeight == hourHeight)&&(identical(other.displayedMonth, displayedMonth) || other.displayedMonth == displayedMonth));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeCalendarState&&(identical(other.selectedStartDate, selectedStartDate) || other.selectedStartDate == selectedStartDate)&&(identical(other.isMonthlyCalendarVisible, isMonthlyCalendarVisible) || other.isMonthlyCalendarVisible == isMonthlyCalendarVisible)&&(identical(other.hourHeight, hourHeight) || other.hourHeight == hourHeight)&&(identical(other.displayedMonth, displayedMonth) || other.displayedMonth == displayedMonth));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,selectedStartDate,isMonthlyCalendarVisible,hourHeight,displayedMonth);
+int get hashCode {
+    return Object.hash(runtimeType,selectedStartDate,isMonthlyCalendarVisible,hourHeight,displayedMonth);
+}
 
 @override
 String toString() {
-  return 'HomeCalendarState(selectedStartDate: $selectedStartDate, isMonthlyCalendarVisible: $isMonthlyCalendarVisible, hourHeight: $hourHeight, displayedMonth: $displayedMonth)';
+    return 'HomeCalendarState(selectedStartDate: $selectedStartDate, isMonthlyCalendarVisible: $isMonthlyCalendarVisible, hourHeight: $hourHeight, displayedMonth: $displayedMonth)';
 }
 
 

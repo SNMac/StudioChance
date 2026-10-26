@@ -112,10 +112,9 @@ class StoreUseCaseImpl implements StoreUseCase {
   final UserRepository _userRepository;
 
   const StoreUseCaseImpl({
-    required StoreRepository storeRepository,
-    required UserRepository userRepository,
-  }) : _storeRepository = storeRepository,
-       _userRepository = userRepository;
+    required this._storeRepository,
+    required this._userRepository,
+  });
 
   /// 현재 유저가 보유한 다른 점포와 이름이 중복되는지 검증한다.
   /// [store.id]가 [currentUser.storeInfos] 항목과 일치하면 자기 자신이므로 제외한다.
@@ -363,19 +362,18 @@ class StoreUseCaseImpl implements StoreUseCase {
     required String storeId,
     required String uid,
   }) {
-    return TaskEither(() => _storeRepository.getMembership(storeId)).flatMap((
-      membership,
-    ) {
-      if (membership?.roleOf(uid) != UserRole.admin) {
-        return TaskEither.right(null);
-      }
+    return TaskEither(() => _storeRepository.getMembership(storeId))
+        .flatMap((membership) {
+          if (membership?.roleOf(uid) != UserRole.admin) {
+            return TaskEither.right(null);
+          }
 
-      return TaskEither.left(
-        StoreAdminRoleChangeException(
-          message: '관리자의 역할은 위임으로만 바꿀 수 있습니다: $uid',
-        ),
-      );
-    });
+          return TaskEither.left(
+            StoreAdminRoleChangeException(
+              message: '관리자의 역할은 위임으로만 바꿀 수 있습니다: $uid',
+            ),
+          );
+        });
   }
 
   /// 본인을 점포에서 지운다 (점포 나가기·신청 취소).

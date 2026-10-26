@@ -15,12 +15,9 @@ sealed class OcrException extends AppException {
   @override
   String get content => switch (this) {
     OcrNetworkException() => '인터넷 연결 상태를 확인해주세요.',
-    OcrParsingException() =>
-      '스크린샷에서 예약 정보를 인식하지 못했습니다.\n수동으로 입력해 주세요.',
-    OcrNotReservationException() =>
-      '공간 예약 확인 화면 스크린샷을 선택해 주세요.',
-    OcrUnknownException() =>
-      '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+    OcrParsingException() => '스크린샷에서 예약 정보를 인식하지 못했습니다.\n수동으로 입력해 주세요.',
+    OcrNotReservationException() => '공간 예약 확인 화면 스크린샷을 선택해 주세요.',
+    OcrUnknownException() => '일시적인 에러가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
   };
 
   @override

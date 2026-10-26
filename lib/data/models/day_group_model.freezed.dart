@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'day_group_model.dart';
@@ -9,6 +9,7 @@ part of 'day_group_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $DayGroupModelCopyWith<DayGroupModel> get copyWith => _$DayGroupModelCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroupModel&&const DeepCollectionEquality().equals(other.days, days)&&(identical(other.headcountRuleModel, headcountRuleModel) || other.headcountRuleModel == headcountRuleModel)&&const DeepCollectionEquality().equals(other.timeSlots, timeSlots));
+  final _this = this as DayGroupModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DayGroupModel&&const DeepCollectionEquality().equals(other.days, _this.days)&&(identical(other.headcountRuleModel, _this.headcountRuleModel) || other.headcountRuleModel == _this.headcountRuleModel)&&const DeepCollectionEquality().equals(other.timeSlots, _this.timeSlots));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(days),headcountRuleModel,const DeepCollectionEquality().hash(timeSlots));
+int get hashCode {
+  final _this = this as DayGroupModel;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.days),_this.headcountRuleModel,const DeepCollectionEquality().hash(_this.timeSlots));
+}
 
 @override
 String toString() {
-  return 'DayGroupModel(days: $days, headcountRuleModel: $headcountRuleModel, timeSlots: $timeSlots)';
+  final _this = this as DayGroupModel;
+  return 'DayGroupModel(days: ${_this.days}, headcountRuleModel: ${_this.headcountRuleModel}, timeSlots: ${_this.timeSlots})';
 }
 
 
@@ -66,7 +72,7 @@ class _$DayGroupModelCopyWithImpl<$Res>
 /// Create a copy of DayGroupModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? days = null,Object? headcountRuleModel = null,Object? timeSlots = null,}) {
-  return _then(_self.copyWith(
+  return _then(DayGroupModel(
 days: null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
 as List<Weekday>,headcountRuleModel: null == headcountRuleModel ? _self.headcountRuleModel : headcountRuleModel // ignore: cast_nullable_to_non_nullable
 as HeadcountRuleModel,timeSlots: null == timeSlots ? _self.timeSlots : timeSlots // ignore: cast_nullable_to_non_nullable
@@ -220,7 +226,7 @@ return $default(_that.days,_that.headcountRuleModel,_that.timeSlots);case _:
 @JsonSerializable()
 
 class _DayGroupModel extends DayGroupModel {
-  const _DayGroupModel({final  List<Weekday> days = const [], required this.headcountRuleModel, final  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots,super._();
+  const _DayGroupModel({ List<Weekday> days = const [], required this.headcountRuleModel,  List<TimeSlotModel> timeSlots = const []}): _days = days,_timeSlots = timeSlots,super._();
   factory _DayGroupModel.fromJson(Map<String, dynamic> json) => _$DayGroupModelFromJson(json);
 
  final  List<Weekday> _days;
@@ -252,16 +258,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroupModel&&const DeepCollectionEquality().equals(other._days, _days)&&(identical(other.headcountRuleModel, headcountRuleModel) || other.headcountRuleModel == headcountRuleModel)&&const DeepCollectionEquality().equals(other._timeSlots, _timeSlots));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DayGroupModel&&const DeepCollectionEquality().equals(other.days, _days)&&(identical(other.headcountRuleModel, headcountRuleModel) || other.headcountRuleModel == headcountRuleModel)&&const DeepCollectionEquality().equals(other.timeSlots, _timeSlots));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRuleModel,const DeepCollectionEquality().hash(_timeSlots));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_days),headcountRuleModel,const DeepCollectionEquality().hash(_timeSlots));
+}
 
 @override
 String toString() {
-  return 'DayGroupModel(days: $days, headcountRuleModel: $headcountRuleModel, timeSlots: $timeSlots)';
+    return 'DayGroupModel(days: $days, headcountRuleModel: $headcountRuleModel, timeSlots: $timeSlots)';
 }
 
 

@@ -61,9 +61,8 @@ void main() {
         ),
       ],
     );
-    when(
-      () => mockStoreUseCase.getStore(any()),
-    ).thenAnswer((_) async => right(store));
+    when(() => mockStoreUseCase.getStore(any()))
+        .thenAnswer((_) async => right(store));
     when(
       () => mockStoreUseCase.approveMember(
         storeId: any(named: 'storeId'),
@@ -115,12 +114,10 @@ void main() {
       final mockStoreUseCase = MockStoreUseCase();
       // 마이페이지 캐시와 다른 최신 값 — 진입할 때 새로 조회했는지 구분한다
       final latest = fakeStore.copyWith(address: '최신 주소');
-      when(
-        () => mockStoreUseCase.getStore(any()),
-      ).thenAnswer((_) async => right(fakeStore));
-      when(
-        () => mockStoreUseCase.getStoreForEdit(any()),
-      ).thenAnswer((_) async => right(latest));
+      when(() => mockStoreUseCase.getStore(any()))
+          .thenAnswer((_) async => right(fakeStore));
+      when(() => mockStoreUseCase.getStoreForEdit(any()))
+          .thenAnswer((_) async => right(latest));
 
       await tester.pumpWidget(wrap(mockStoreUseCase));
       await tester.pumpAndSettle();
@@ -133,9 +130,8 @@ void main() {
 
     testWidgets('관리자가 아닌 점포에는 수정 버튼이 없다', (tester) async {
       final mockStoreUseCase = MockStoreUseCase();
-      when(
-        () => mockStoreUseCase.getStore(any()),
-      ).thenAnswer((_) async => right(fakeStore));
+      when(() => mockStoreUseCase.getStore(any()))
+          .thenAnswer((_) async => right(fakeStore));
       final staffUser = fakeUser.copyWith(
         storeInfos: [fakeUser.storeInfos.first.copyWith(role: UserRole.staff)],
       );
@@ -148,9 +144,8 @@ void main() {
 
     testWidgets('점포를 불러오지 못하면 오류를 알리고 마이페이지에 머문다', (tester) async {
       final mockStoreUseCase = MockStoreUseCase();
-      when(
-        () => mockStoreUseCase.getStore(any()),
-      ).thenAnswer((_) async => right(fakeStore));
+      when(() => mockStoreUseCase.getStore(any()))
+          .thenAnswer((_) async => right(fakeStore));
       when(() => mockStoreUseCase.getStoreForEdit(any())).thenAnswer(
         (_) async => left(StoreNotFoundException(message: '삭제된 점포')),
       );

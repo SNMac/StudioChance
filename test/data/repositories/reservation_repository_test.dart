@@ -32,9 +32,8 @@ void main() {
 
   group('createReservation', () {
     test('DataSource 반환 모델로 엔티티를 생성하여 right로 반환한다', () async {
-      when(
-        () => mockReservationDs.createReservation(any()),
-      ).thenAnswer((_) async => fakeReservationModel);
+      when(() => mockReservationDs.createReservation(any()))
+          .thenAnswer((_) async => fakeReservationModel);
 
       final result = await repository.createReservation(
         reservation: fakeReservation,
@@ -47,9 +46,8 @@ void main() {
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {
-      when(
-        () => mockReservationDs.createReservation(any()),
-      ).thenThrow(Exception('Firestore 오류'));
+      when(() => mockReservationDs.createReservation(any()))
+          .thenThrow(Exception('Firestore 오류'));
 
       final result = await repository.createReservation(
         reservation: fakeReservation,
@@ -88,9 +86,8 @@ void main() {
       when(
         () => mockReservationDs.getReservationsByDateRange(any(), any(), any()),
       ).thenAnswer((_) async => [fakeReservationModel]);
-      when(
-        () => mockUserDs.getUser('user-123'),
-      ).thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUser('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
 
       final result = await repository.getReservationsByDateRange(
         storeId: 'store-123',
@@ -132,9 +129,8 @@ void main() {
 
   group('updateReservation', () {
     test('올바른 storeId와 reservationId로 DataSource를 호출한다', () async {
-      when(
-        () => mockReservationDs.updateReservation(any(), any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockReservationDs.updateReservation(any(), any(), any()))
+          .thenAnswer((_) async {});
 
       final result = await repository.updateReservation(
         reservation: fakeReservation,
@@ -151,9 +147,8 @@ void main() {
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {
-      when(
-        () => mockReservationDs.updateReservation(any(), any(), any()),
-      ).thenThrow(Exception('업데이트 실패'));
+      when(() => mockReservationDs.updateReservation(any(), any(), any()))
+          .thenThrow(Exception('업데이트 실패'));
 
       final result = await repository.updateReservation(
         reservation: fakeReservation,
@@ -169,9 +164,8 @@ void main() {
 
   group('moveReservation', () {
     test('원래 점포 id와 이동할 점포·작성자가 담긴 모델로 DataSource를 호출한다', () async {
-      when(
-        () => mockReservationDs.moveReservation(any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockReservationDs.moveReservation(any(), any()))
+          .thenAnswer((_) async {});
 
       final result = await repository.moveReservation(
         reservation: fakeReservation,
@@ -194,9 +188,8 @@ void main() {
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {
-      when(
-        () => mockReservationDs.moveReservation(any(), any()),
-      ).thenThrow(Exception('이동 실패'));
+      when(() => mockReservationDs.moveReservation(any(), any()))
+          .thenThrow(Exception('이동 실패'));
 
       final result = await repository.moveReservation(
         reservation: fakeReservation,
@@ -213,9 +206,8 @@ void main() {
 
   group('deleteReservation', () {
     test('올바른 storeId와 reservationId로 DataSource를 호출한다', () async {
-      when(
-        () => mockReservationDs.deleteReservation(any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockReservationDs.deleteReservation(any(), any()))
+          .thenAnswer((_) async {});
 
       final result = await repository.deleteReservation(
         storeId: 'store-123',
@@ -223,15 +215,13 @@ void main() {
       );
 
       expectRight(result);
-      verify(
-        () => mockReservationDs.deleteReservation('store-123', 'res-001'),
-      ).called(1);
+      verify(() => mockReservationDs.deleteReservation('store-123', 'res-001'))
+          .called(1);
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {
-      when(
-        () => mockReservationDs.deleteReservation(any(), any()),
-      ).thenThrow(Exception('삭제 실패'));
+      when(() => mockReservationDs.deleteReservation(any(), any()))
+          .thenThrow(Exception('삭제 실패'));
 
       final result = await repository.deleteReservation(
         storeId: 'store-123',
@@ -249,12 +239,11 @@ void main() {
   group('updateReservationStatus', () {
     test('status를 대문자 JSON 값(jsonValue)으로 DataSource에 전달한다', () async {
       Map<String, dynamic>? capturedData;
-      when(
-        () => mockReservationDs.updateReservation(any(), any(), any()),
-      ).thenAnswer((invocation) async {
-        capturedData =
-            invocation.positionalArguments[2] as Map<String, dynamic>;
-      });
+      when(() => mockReservationDs.updateReservation(any(), any(), any()))
+          .thenAnswer((invocation) async {
+            capturedData =
+                invocation.positionalArguments[2] as Map<String, dynamic>;
+          });
 
       final result = await repository.updateReservationStatus(
         storeId: 'store-123',
@@ -267,9 +256,8 @@ void main() {
     });
 
     test('DataSource 실패 시 left(exception)를 반환한다', () async {
-      when(
-        () => mockReservationDs.updateReservation(any(), any(), any()),
-      ).thenThrow(Exception('상태 변경 실패'));
+      when(() => mockReservationDs.updateReservation(any(), any(), any()))
+          .thenThrow(Exception('상태 변경 실패'));
 
       final result = await repository.updateReservationStatus(
         storeId: 'store-123',
@@ -300,12 +288,10 @@ void main() {
           [testReservationModel],
         ]),
       );
-      when(
-        () => mockUserDs.getUser('user-123'),
-      ).thenAnswer((_) async => fakeUserModel);
-      when(
-        () => mockUserDs.getUser('different-writer-id'),
-      ).thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUser('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUser('different-writer-id'))
+          .thenAnswer((_) async => fakeUserModel);
 
       final results = await repository
           .watchReservationsByDateRange(
@@ -331,9 +317,8 @@ void main() {
       ).thenAnswer(
         (_) => Stream.value([fakeReservationModel, missingWriterModel]),
       );
-      when(
-        () => mockUserDs.getUser('user-123'),
-      ).thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUser('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
       when(() => mockUserDs.getUser('ghost-uid')).thenAnswer((_) async => null);
 
       final result = await repository

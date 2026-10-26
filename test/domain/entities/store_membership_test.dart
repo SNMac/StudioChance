@@ -15,9 +15,8 @@ void main() {
   test('hasMembersOtherThan은 주어진 사람 말고 멤버가 있는지 알려준다', () {
     expect(membership.hasMembersOtherThan('admin-1'), isTrue);
     expect(
-      const StoreMembership(
-        roleByUid: {'admin-1': UserRole.admin},
-      ).hasMembersOtherThan('admin-1'),
+      const StoreMembership(roleByUid: {'admin-1': UserRole.admin})
+          .hasMembersOtherThan('admin-1'),
       isFalse,
     );
   });

@@ -1,0 +1,86 @@
+# Dependabot 버전 업데이트 설정. 옵션 전체:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# PR 처리 방법은 docs/operations.md의 "의존성 점검"을 따른다.
+#
+# ignore는 버전 업데이트뿐 아니라 보안 업데이트에도 적용될 수 있다 (옵션 레퍼런스의 ignore 항목).
+# 아래 임시 ignore가 막는 범위에서 취약점 경보가 뜨면 Dependabot이 PR을 열지 않을 수 있으니 손으로 처리한다.
+
+version: 2
+updates:
+  # Flutter 앱 의존성
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "quarterly"
+    open-pull-requests-limit: 5
+    # patch 버전 업데이트는 PR을 만들지 않는다
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+      # FlutterFire 5 계열은 iOS SPM 해석이 실패한다. CI가 iOS를 빌드하지 않아
+      # 초록 불로 보이므로 막아 둔다. #71 해결 시 아래 세 항목을 제거한다
+      - dependency-name: "firebase_*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "cloud_*"
+        update-types: ["version-update:semver-major"]
+      # 0.x라 0.5가 minor로 분류되지만 firebase_core 5를 요구한다
+      - dependency-name: "firebase_app_check"
+        versions: [">=0.5.0"]
+      # go_router 18은 material_ui 이전 없이는 화면 전환이 회귀하고 테스트로 잡히지 않는다.
+      # #72 해결 시 제거한다
+      - dependency-name: "go_router"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # FlutterFire 패키지끼리 버전이 맞물려 따로 올리면 해석이 깨진다
+      flutterfire:
+        patterns:
+          - "firebase_*"
+          - "cloud_*"
+      # 생성기와 annotation이 같은 analyzer 버전을 요구한다
+      codegen:
+        patterns:
+          - "build_runner"
+          - "freezed*"
+          - "json_*"
+          - "riverpod*"
+          - "flutter_riverpod"
+
+  # Cloud Functions 의존성
+  - package-ecosystem: "npm"
+    directory: "/functions"
+    schedule:
+      interval: "quarterly"
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+      # 런타임(engines.node)에 없는 API가 타입체크를 통과하지 않도록 메이저를 런타임과 맞춘다.
+      # 런타임을 올릴 때 함께 손으로 올린다
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      firebase-server:
+        patterns:
+          - "firebase-admin"
+          - "firebase-functions"
+      # rules-unit-testing은 firebase 클라이언트 SDK를 peer로 요구한다
+      firebase-test:
+        patterns:
+          - "firebase"
+          - "@firebase/rules-unit-testing"
+          - "firebase-tools"
+
+  # CI 워크플로의 액션
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "quarterly"
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    groups:
+      actions:
+        patterns:
+          - "*"

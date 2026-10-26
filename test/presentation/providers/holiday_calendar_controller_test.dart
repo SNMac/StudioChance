@@ -60,9 +60,8 @@ void main() {
 
   test('불러오는 중인 연도는 알 수 없지만 확인 실패로 보지 않는다', () async {
     final pending = Completer<Either<Exception, HolidayCalendar>>();
-    when(
-      () => useCase.getHolidayCalendar(years: {2030}),
-    ).thenAnswer((_) => pending.future);
+    when(() => useCase.getHolidayCalendar(years: {2030}))
+        .thenAnswer((_) => pending.future);
     final container = buildContainer();
 
     unawaited(
@@ -78,9 +77,8 @@ void main() {
   });
 
   test('읽지 못한 연도는 확인 실패로 본다', () async {
-    when(
-      () => useCase.getHolidayCalendar(years: {2030}),
-    ).thenAnswer((_) async => left(Exception('네트워크 오류')));
+    when(() => useCase.getHolidayCalendar(years: {2030}))
+        .thenAnswer((_) async => left(Exception('네트워크 오류')));
     final container = buildContainer();
 
     await container
@@ -92,9 +90,8 @@ void main() {
   });
 
   test('공휴일 달력이 없는 연도(동기화 범위 밖)도 확인 실패로 본다', () async {
-    when(
-      () => useCase.getHolidayCalendar(years: {2099}),
-    ).thenAnswer((_) async => right(const HolidayCalendar()));
+    when(() => useCase.getHolidayCalendar(years: {2099}))
+        .thenAnswer((_) async => right(const HolidayCalendar()));
     final container = buildContainer();
 
     await container

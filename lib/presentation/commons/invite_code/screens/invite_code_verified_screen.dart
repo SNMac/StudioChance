@@ -70,9 +70,8 @@ class _InviteCodeVerifiedScreenState
   /// - 마이페이지 플로우: 마이페이지로 복귀
   /// - 온보딩 플로우: currentUser 무효화로 라우터 redirect가 홈으로 보낸다
   void _onSubmitSucceeded() {
-    final isFromMyPage = GoRouterState.of(
-      context,
-    ).uri.path.startsWith(SCRoute.myPage.fullPath);
+    final isFromMyPage = GoRouterState.of(context).uri.path
+        .startsWith(SCRoute.myPage.fullPath);
 
     showCustomAlertDialog(
       context: context,

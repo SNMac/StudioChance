@@ -35,8 +35,8 @@
 
 ## 🔨 개발 환경
 
-![Static Badge](https://img.shields.io/badge/Dart%203.10.4%20~-%230175C2?logo=dart&logoColor=white)
-![Static Badge](https://img.shields.io/badge/Flutter%203.44.1%20~-%2302569B?logo=flutter&logoColor=white)
+![Static Badge](https://img.shields.io/badge/Dart%203.13.0%20~-%230175C2?logo=dart&logoColor=white)
+![Static Badge](https://img.shields.io/badge/Flutter%203.47.0%20~-%2302569B?logo=flutter&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/iOS%2016.0%20~-%23000000?logo=ios&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/Android%207.0(API%2024)%20~-%233DDC84?logo=android&logoColor=white)
 
