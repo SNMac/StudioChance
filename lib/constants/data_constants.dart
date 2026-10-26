@@ -1,6 +1,10 @@
 /// 메모 최대 글자 수
 const int maxMemoCharCount = 500;
 
+/// 닉네임 최대 글자 수
+/// - 계정 삭제 때 닉네임 대신 남기는 소셜 계정 이름도 이 길이로 자른다
+const int maxNicknameCharCount = 10;
+
 /// 확정 안내문 안내/주의사항 최대 글자 수
 const int maxConfirmationNotesCharCount = 3000;
 
@@ -8,9 +12,6 @@ const int maxConfirmationNotesCharCount = 3000;
 /// - Cloud Functions의 `INVITE_CODE_AVAILABLE_MIN`과 동일해야 한다 (계약 테스트
 ///   `functions/src/contract/shared_constants.test.ts`가 검사한다)
 const int storeInviteCodeAvailableMin = 15;
-
-/// 사용자 soft delete 유지 기간(일 단위)
-const int userSoftDeleteDays = 7;
 
 /// 점포 soft delete 유지 기간(일 단위)
 const int storeSoftDeleteDays = 7;

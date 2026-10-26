@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
+import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/data/repositories/reservation_repository_impl.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 
@@ -88,6 +89,8 @@ void main() {
       ).thenAnswer((_) async => [fakeReservationModel]);
       when(() => mockUserDs.getUser('user-123'))
           .thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUserIncludingDeleted('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
 
       final result = await repository.getReservationsByDateRange(
         storeId: 'store-123',
@@ -105,6 +108,35 @@ void main() {
         fakeUserModel.storeById['store-123']!.color,
       );
       expect(reservations.first.writer.role, fakeReservationModel.writerRole);
+    });
+
+    // 계정을 삭제해도 예약은 점포에 남는다 (ADR-0005)
+    test('작성자가 삭제된 계정이어도 목록 조회가 실패하지 않는다', () async {
+      final deletedWriterModel = fakeReservationModel.copyWith(
+        id: 'res-deleted-writer',
+        writerId: 'deleted-uid',
+      );
+      when(
+        () => mockReservationDs.getReservationsByDateRange(any(), any(), any()),
+      ).thenAnswer((_) async => [fakeReservationModel, deletedWriterModel]);
+      when(() => mockUserDs.getUser('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUserIncludingDeleted('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUserIncludingDeleted('deleted-uid')).thenAnswer(
+        (_) async => UserModel.deleted(id: 'deleted-uid', nickname: '떠난 직원'),
+      );
+
+      final result = await repository.getReservationsByDateRange(
+        storeId: 'store-123',
+        currentUid: 'user-123',
+        start: start,
+        end: end,
+      );
+
+      final writer = expectRight(result).last.writer.user;
+      expect(writer.isDeleted, true);
+      expect(writer.nickname, '떠난 직원');
     });
 
     test('ReservationDataSource 실패 시 left(exception)를 반환한다', () async {
@@ -290,7 +322,7 @@ void main() {
       );
       when(() => mockUserDs.getUser('user-123'))
           .thenAnswer((_) async => fakeUserModel);
-      when(() => mockUserDs.getUser('different-writer-id'))
+      when(() => mockUserDs.getUserIncludingDeleted('different-writer-id'))
           .thenAnswer((_) async => fakeUserModel);
 
       final results = await repository
@@ -306,7 +338,8 @@ void main() {
       verify(() => mockUserDs.getUser('user-123')).called(1);
     });
 
-    test('작성자 정보를 찾을 수 없는 예약은 건너뛰고 나머지는 반환한다', () async {
+    // 건너뛰면 캘린더에서 예약이 사라진다
+    test('작성자 문서가 없는 예약도 건너뛰지 않고 삭제된 계정으로 채운다', () async {
       final missingWriterModel = fakeReservationModel.copyWith(
         id: 'res-missing-writer',
         writerId: 'ghost-uid',
@@ -319,7 +352,10 @@ void main() {
       );
       when(() => mockUserDs.getUser('user-123'))
           .thenAnswer((_) async => fakeUserModel);
-      when(() => mockUserDs.getUser('ghost-uid')).thenAnswer((_) async => null);
+      when(() => mockUserDs.getUserIncludingDeleted('user-123'))
+          .thenAnswer((_) async => fakeUserModel);
+      when(() => mockUserDs.getUserIncludingDeleted('ghost-uid'))
+          .thenAnswer((_) async => null);
 
       final result = await repository
           .watchReservationsByDateRange(
@@ -330,8 +366,8 @@ void main() {
           )
           .first;
 
-      expect(result.length, 1);
-      expect(result.first.id, 'res-001');
+      expect(result.map((r) => r.id), ['res-001', 'res-missing-writer']);
+      expect(result.last.writer.user.isDeleted, true);
     });
   });
 }

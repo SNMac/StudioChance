@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/common/exceptions/auth_exceptions.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
@@ -187,15 +188,59 @@ void main() {
   // =========================================================================
 
   group('delete', () {
+    // 스태프로 속한 점포 하나와 승인 대기 점포 하나를 더 가진 사용자
+    final memberUser = fakeUser.copyWith(
+      storeInfos: [
+        ...fakeUser.storeInfos,
+        fakeUser.storeInfos.first.copyWith(
+          id: 'store-staff',
+          role: UserRole.staff,
+        ),
+        fakeUser.storeInfos.first.copyWith(
+          id: 'store-pending',
+          role: UserRole.staff,
+          isPending: true,
+        ),
+      ],
+    );
+
+    void verifyNothingWritten() {
+      verifyNever(() => mockStoreUseCase.leaveStore(any()));
+      verifyNever(() => mockStoreUseCase.cancelJoinRequest(any()));
+      verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
+      verifyNever(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      );
+      verifyNever(() => mockAuthRepo.delete());
+    }
+
     setUp(() {
-      // 기본값: 관리자 점포가 혼자 쓰는 점포라 탈퇴가 막히지 않는다
+      // 기본값: 관리자 점포가 혼자 쓰는 점포라 계정 삭제가 막히지 않고, 모든 단계가 성공한다
       when(() => mockStoreUseCase.getMembership(any())).thenAnswer(
         (_) async =>
             right(StoreMembership(roleByUid: {fakeUser.id: UserRole.admin})),
       );
+      when(() => mockAuthRepo.prepareDeletion())
+          .thenAnswer((_) async => right(null));
+      when(() => mockStoreUseCase.leaveStore(any()))
+          .thenAnswer((_) async => right(null));
+      when(() => mockStoreUseCase.cancelJoinRequest(any()))
+          .thenAnswer((_) async => right(null));
+      when(() => mockStoreUseCase.softDeleteStore(any()))
+          .thenAnswer((_) async => right(null));
+      when(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      ).thenAnswer((_) async => right(null));
+      when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
     });
 
-    test('다른 멤버가 있는 관리자 점포가 있으면 아무것도 쓰지 않고 막힌 점포 목록과 함께 실패한다', () async {
+    test('다른 멤버가 있는 관리자 점포가 있으면 재인증도 하지 않고 막힌 점포 목록과 함께 실패한다', () async {
       final user = fakeUser.copyWith(
         storeInfos: [
           ...fakeUser.storeInfos,
@@ -219,24 +264,8 @@ void main() {
       expect((error as StoreAdminHandoverRequiredException).stores, [
         (id: 'store-123', name: '테스트 점포'),
       ]);
-      verifyNever(() => mockUserRepo.softDeleteUser(any()));
-      verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
-      verifyNever(() => mockAuthRepo.delete());
-    });
-
-    test('멤버가 나뿐인 관리자 점포는 탈퇴와 함께 삭제한다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
-      when(() => mockUserRepo.softDeleteUser(fakeUser.id))
-          .thenAnswer((_) async => right(null));
-      when(() => mockStoreUseCase.softDeleteStore('store-123'))
-          .thenAnswer((_) async => right(null));
-      when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
-
-      final result = await useCase.delete();
-
-      expectRight(result);
-      verify(() => mockStoreUseCase.softDeleteStore('store-123')).called(1);
+      verifyNever(() => mockAuthRepo.prepareDeletion());
+      verifyNothingWritten();
     });
 
     test('관리자 점포 조회가 실패하면 아무것도 쓰지 않고 실패한다', () async {
@@ -248,28 +277,52 @@ void main() {
       final result = await useCase.delete();
 
       expectLeft(result);
-      verifyNever(() => mockUserRepo.softDeleteUser(any()));
-      verifyNever(() => mockAuthRepo.delete());
+      verifyNothingWritten();
     });
 
-    test('유저 삭제 성공 + 관리자 점포 삭제 성공 시 AuthRepository.delete를 호출한다', () async {
+    test('재인증·Apple revoke가 중단되면 아무것도 쓰지 않고 실패한다', () async {
       when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
-      when(() => mockUserRepo.softDeleteUser(fakeUser.id))
-          .thenAnswer((_) async => right(null));
-      when(() => mockStoreUseCase.softDeleteStore('store-123'))
-          .thenAnswer((_) async => right(null));
-      when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
+          .thenAnswer((_) async => right(memberUser));
+      when(() => mockAuthRepo.prepareDeletion())
+          .thenAnswer((_) async => left(Exception('재인증 취소')));
+
+      final result = await useCase.delete();
+
+      expectLeft(result);
+      verifyNothingWritten();
+    });
+
+    test('점포 정리 → 사용자 문서 → Auth 순서로 지운다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(memberUser));
 
       final result = await useCase.delete();
 
       expectRight(result);
-      verify(() => mockStoreUseCase.softDeleteStore('store-123')).called(1);
-      verify(() => mockAuthRepo.delete()).called(1);
+      verifyInOrder([
+        () => mockAuthRepo.prepareDeletion(),
+        () => mockStoreUseCase.leaveStore('store-staff'),
+        () => mockStoreUseCase.cancelJoinRequest('store-pending'),
+        () => mockStoreUseCase.softDeleteStore('store-123'),
+        () => mockUserRepo.markAccountDeleted('user-123', nickname: '닉네임'),
+        () => mockAuthRepo.delete(),
+      ]);
+    });
+
+    test('관리자 점포는 나가지 않고, 멤버·승인 대기 점포는 삭제하지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(memberUser));
+
+      await useCase.delete();
+
+      verifyNever(() => mockStoreUseCase.leaveStore('store-123'));
+      verifyNever(() => mockStoreUseCase.leaveStore('store-pending'));
+      verifyNever(() => mockStoreUseCase.softDeleteStore('store-staff'));
+      verifyNever(() => mockStoreUseCase.softDeleteStore('store-pending'));
     });
 
     // 승인 전에는 멤버가 아니라 Rules가 점포 수정을 거부해 계정 삭제가 실패한다
-    test('승인 대기 중인 점포는 관리자 역할이어도 삭제하지 않는다', () async {
+    test('승인 대기 중인 점포는 관리자 역할로 신청했어도 삭제하지 않고 신청을 취소한다', () async {
       final applicant = fakeUser.copyWith(
         storeInfos: [
           ...fakeUser.storeInfos,
@@ -281,16 +334,90 @@ void main() {
       );
       when(() => mockUserRepo.getCurrentUser())
           .thenAnswer((_) async => right(applicant));
-      when(() => mockUserRepo.softDeleteUser(applicant.id))
-          .thenAnswer((_) async => right(null));
-      when(() => mockStoreUseCase.softDeleteStore('store-123'))
-          .thenAnswer((_) async => right(null));
-      when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
 
       final result = await useCase.delete();
 
       expectRight(result);
+      verify(() => mockStoreUseCase.cancelJoinRequest('store-pending'))
+          .called(1);
       verifyNever(() => mockStoreUseCase.softDeleteStore('store-pending'));
+    });
+
+    test('점포 나가기가 실패하면 사용자 문서와 Auth 계정을 지우지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(memberUser));
+      when(() => mockStoreUseCase.leaveStore('store-staff'))
+          .thenAnswer((_) async => left(Exception('나가기 실패')));
+
+      final result = await useCase.delete();
+
+      expectLeft(result);
+      verifyNever(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      );
+      verifyNever(() => mockAuthRepo.delete());
+    });
+
+    test('관리자 점포 삭제가 실패하면 사용자 문서와 Auth 계정을 지우지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(() => mockStoreUseCase.softDeleteStore('store-123'))
+          .thenAnswer((_) async => left(Exception('점포 삭제 실패')));
+
+      final result = await useCase.delete();
+
+      expectLeft(result);
+      verifyNever(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      );
+      verifyNever(() => mockAuthRepo.delete());
+    });
+
+    test('사용자 문서 정리가 실패하면 Auth 계정을 지우지 않는다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockUserRepo.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      ).thenAnswer((_) async => left(Exception('문서 정리 실패')));
+
+      final result = await useCase.delete();
+
+      expectLeft(result);
+      verifyNever(() => mockAuthRepo.delete());
+    });
+
+    test('닉네임이 없으면 소셜 계정 이름을 남긴다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser.copyWith(nickname: null)));
+
+      await useCase.delete();
+
+      verify(
+        () => mockUserRepo.markAccountDeleted('user-123', nickname: '테스트 유저'),
+      ).called(1);
+    });
+
+    test('남기는 소셜 계정 이름은 닉네임 최대 길이까지만이다', () async {
+      when(() => mockUserRepo.getCurrentUser()).thenAnswer(
+        (_) async =>
+            right(fakeUser.copyWith(nickname: null, name: ' 가나다라마바사아자차카타 ')),
+      );
+
+      await useCase.delete();
+
+      verify(
+        () =>
+            mockUserRepo.markAccountDeleted('user-123', nickname: '가나다라마바사아자차'),
+      ).called(1);
     });
 
     test('현재 유저가 null이면 AuthUserNotFoundException을 반환한다', () async {
@@ -299,10 +426,9 @@ void main() {
 
       final result = await useCase.delete();
 
-      expectLeft(result);
-      verifyNever(() => mockUserRepo.softDeleteUser(any()));
-      verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
-      verifyNever(() => mockAuthRepo.delete());
+      expect(expectLeft(result), isA<AuthUserNotFoundException>());
+      verifyNever(() => mockAuthRepo.prepareDeletion());
+      verifyNothingWritten();
     });
 
     test('getCurrentUser 실패 시 left를 전파한다', () async {
@@ -312,52 +438,6 @@ void main() {
       final result = await useCase.delete();
 
       expectLeft(result);
-    });
-
-    test(
-      'softDeleteUser 실패 시 left를 반환하고 점포 삭제/AuthRepository.delete를 호출하지 않는다',
-      () async {
-        when(() => mockUserRepo.getCurrentUser())
-            .thenAnswer((_) async => right(fakeUser));
-        when(() => mockUserRepo.softDeleteUser(fakeUser.id))
-            .thenAnswer((_) async => left(Exception('탈퇴 실패')));
-
-        final result = await useCase.delete();
-
-        expectLeft(result);
-        verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
-        verifyNever(() => mockAuthRepo.delete());
-      },
-    );
-
-    test('관리자 점포 삭제 실패 시 left를 반환하고 AuthRepository.delete를 호출하지 않는다', () async {
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(fakeUser));
-      when(() => mockUserRepo.softDeleteUser(fakeUser.id))
-          .thenAnswer((_) async => right(null));
-      when(() => mockStoreUseCase.softDeleteStore('store-123'))
-          .thenAnswer((_) async => left(Exception('점포 삭제 실패')));
-
-      final result = await useCase.delete();
-
-      expectLeft(result);
-      verifyNever(() => mockAuthRepo.delete());
-    });
-
-    test('관리자가 아닌 점포는 삭제하지 않는다', () async {
-      final staffUser = fakeUser.copyWith(
-        storeInfos: [fakeUser.storeInfos.first.copyWith(role: UserRole.staff)],
-      );
-      when(() => mockUserRepo.getCurrentUser())
-          .thenAnswer((_) async => right(staffUser));
-      when(() => mockUserRepo.softDeleteUser(staffUser.id))
-          .thenAnswer((_) async => right(null));
-      when(() => mockAuthRepo.delete()).thenAnswer((_) async => right(null));
-
-      final result = await useCase.delete();
-
-      expectRight(result);
-      verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
     });
   });
 }

@@ -43,21 +43,37 @@ void main() {
     });
   });
 
-  group('softDeleteUser', () {
-    test('성공 시 right(null)을 반환한다', () async {
-      when(() => mockUserDs.softDeleteUser(any())).thenAnswer((_) async {});
+  group('markAccountDeleted', () {
+    test('받은 닉네임을 남기도록 DataSource를 호출한다', () async {
+      when(
+        () => mockUserDs.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      ).thenAnswer((_) async {});
 
-      final result = await repository.softDeleteUser('user-123');
+      final result = await repository.markAccountDeleted(
+        'user-123',
+        nickname: '닉네임',
+      );
 
       expectRight(result);
-      verify(() => mockUserDs.softDeleteUser('user-123')).called(1);
+      verify(() => mockUserDs.markAccountDeleted('user-123', nickname: '닉네임'))
+          .called(1);
     });
 
     test('DataSource 실패 시 left를 반환한다', () async {
-      when(() => mockUserDs.softDeleteUser(any()))
-          .thenThrow(Exception('탈퇴 실패'));
+      when(
+        () => mockUserDs.markAccountDeleted(
+          any(),
+          nickname: any(named: 'nickname'),
+        ),
+      ).thenThrow(Exception('계정 삭제 실패'));
 
-      final result = await repository.softDeleteUser('user-123');
+      final result = await repository.markAccountDeleted(
+        'user-123',
+        nickname: '닉네임',
+      );
 
       expectLeft(result);
     });

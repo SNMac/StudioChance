@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/nickname_input/controllers/nickname_form_controller.dart';
@@ -132,7 +133,7 @@ class _NicknameFormScreenState extends ConsumerState<NicknameFormScreen> {
                     children: [
                       const SizedBox(height: 4),
                       Text(
-                        '10자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
+                        '$maxNicknameCharCount자 이내 한글·영문·숫자 사용가능\n띄어쓰기, 특수문자 사용 불가',
                         style: textTheme.labelLarge?.copyWith(
                           color: descriptionColor(),
                         ),

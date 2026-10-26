@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$User {
 
- String get id; String get name; String get email; String? get nickname; List<String> get authProviders; List<UserStoreInfo> get storeInfos;
+ String get id; String get name; String get email; String? get nickname; List<String> get authProviders; List<UserStoreInfo> get storeInfos;/// 삭제된 계정. 닉네임만 남아 있으며 화면에서는 "닉네임 (삭제된 계정)"으로 구분한다
+ bool get isDeleted;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +28,20 @@ $UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$ide
 @override
 bool operator ==(Object other) {
   final _this = this as User;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.nickname, _this.nickname) || other.nickname == _this.nickname)&&const DeepCollectionEquality().equals(other.authProviders, _this.authProviders)&&const DeepCollectionEquality().equals(other.storeInfos, _this.storeInfos));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.nickname, _this.nickname) || other.nickname == _this.nickname)&&const DeepCollectionEquality().equals(other.authProviders, _this.authProviders)&&const DeepCollectionEquality().equals(other.storeInfos, _this.storeInfos)&&(identical(other.isDeleted, _this.isDeleted) || other.isDeleted == _this.isDeleted));
 }
 
 
 @override
 int get hashCode {
   final _this = this as User;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.email,_this.nickname,const DeepCollectionEquality().hash(_this.authProviders),const DeepCollectionEquality().hash(_this.storeInfos));
+  return Object.hash(runtimeType,_this.id,_this.name,_this.email,_this.nickname,const DeepCollectionEquality().hash(_this.authProviders),const DeepCollectionEquality().hash(_this.storeInfos),_this.isDeleted);
 }
 
 @override
 String toString() {
   final _this = this as User;
-  return 'User(id: ${_this.id}, name: ${_this.name}, email: ${_this.email}, nickname: ${_this.nickname}, authProviders: ${_this.authProviders}, storeInfos: ${_this.storeInfos})';
+  return 'User(id: ${_this.id}, name: ${_this.name}, email: ${_this.email}, nickname: ${_this.nickname}, authProviders: ${_this.authProviders}, storeInfos: ${_this.storeInfos}, isDeleted: ${_this.isDeleted})';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $UserCopyWith<$Res>  {
   factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos
+ String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos, bool isDeleted
 });
 
 
@@ -68,7 +69,7 @@ class _$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,Object? isDeleted = null,}) {
   return _then(User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -76,7 +77,8 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self.authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,storeInfos: null == storeInfos ? _self.storeInfos : storeInfos // ignore: cast_nullable_to_non_nullable
-as List<UserStoreInfo>,
+as List<UserStoreInfo>,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -161,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos,  bool isDeleted)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos,_that.isDeleted);case _:
   return orElse();
 
 }
@@ -182,10 +184,10 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos,  bool isDeleted)  $default,) {final _that = this;
 switch (_that) {
 case _User():
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos,_that.isDeleted);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +204,10 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String? nickname,  List<String> authProviders,  List<UserStoreInfo> storeInfos,  bool isDeleted)?  $default,) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos);case _:
+return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProviders,_that.storeInfos,_that.isDeleted);case _:
   return null;
 
 }
@@ -217,7 +219,7 @@ return $default(_that.id,_that.name,_that.email,_that.nickname,_that.authProvide
 
 
 class _User extends User {
-  const _User({required this.id, required this.name, required this.email, required this.nickname, required  List<String> authProviders, required  List<UserStoreInfo> storeInfos}): _authProviders = authProviders,_storeInfos = storeInfos,super._();
+  const _User({required this.id, required this.name, required this.email, required this.nickname, required  List<String> authProviders, required  List<UserStoreInfo> storeInfos, this.isDeleted = false}): _authProviders = authProviders,_storeInfos = storeInfos,super._();
   
 
 @override final  String id;
@@ -238,6 +240,8 @@ class _User extends User {
   return EqualUnmodifiableListView(_storeInfos);
 }
 
+/// 삭제된 계정. 닉네임만 남아 있으며 화면에서는 "닉네임 (삭제된 계정)"으로 구분한다
+@override@JsonKey() final  bool isDeleted;
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
@@ -249,18 +253,18 @@ _$UserCopyWith<_User> get copyWith => __$UserCopyWithImpl<_User>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, _authProviders)&&const DeepCollectionEquality().equals(other.storeInfos, _storeInfos));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&const DeepCollectionEquality().equals(other.authProviders, _authProviders)&&const DeepCollectionEquality().equals(other.storeInfos, _storeInfos)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeInfos));
+    return Object.hash(runtimeType,id,name,email,nickname,const DeepCollectionEquality().hash(_authProviders),const DeepCollectionEquality().hash(_storeInfos),isDeleted);
 }
 
 @override
 String toString() {
-    return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, storeInfos: $storeInfos)';
+    return 'User(id: $id, name: $name, email: $email, nickname: $nickname, authProviders: $authProviders, storeInfos: $storeInfos, isDeleted: $isDeleted)';
 }
 
 
@@ -271,7 +275,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
   factory _$UserCopyWith(_User value, $Res Function(_User) _then) = __$UserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos
+ String id, String name, String email, String? nickname, List<String> authProviders, List<UserStoreInfo> storeInfos, bool isDeleted
 });
 
 
@@ -288,7 +292,7 @@ class __$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? nickname = freezed,Object? authProviders = null,Object? storeInfos = null,Object? isDeleted = null,}) {
   return _then(_User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -296,7 +300,8 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nickname: freezed == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String?,authProviders: null == authProviders ? _self._authProviders : authProviders // ignore: cast_nullable_to_non_nullable
 as List<String>,storeInfos: null == storeInfos ? _self._storeInfos : storeInfos // ignore: cast_nullable_to_non_nullable
-as List<UserStoreInfo>,
+as List<UserStoreInfo>,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

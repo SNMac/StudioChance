@@ -98,7 +98,7 @@ void main() {
       expect(result, isNull);
     });
 
-    test('deletedAt이 있는 사용자는 null을 반환한다 (soft delete)', () async {
+    test('deletedAt이 있는 사용자(삭제된 계정)는 null을 반환한다', () async {
       final user = _testUser();
       await fakeFirestore.collection('users').doc(user.id).set({
         'email': user.email,
@@ -131,118 +131,88 @@ void main() {
   });
 
   // =========================================================================
-  // softDeleteUser
+  // markAccountDeleted
   // =========================================================================
 
-  group('softDeleteUser', () {
-    test('softDelete 후 getUser가 null을 반환한다', () async {
+  group('markAccountDeleted', () {
+    test('문서를 닉네임과 deletedAt만 남도록 덮어쓴다', () async {
       final user = _testUser();
       await dataSource.createUser(user);
 
-      await dataSource.softDeleteUser(user.id);
-
-      final result = await dataSource.getUser(user.id);
-      expect(result, isNull);
-    });
-
-    test('softDelete 후 문서에 deletedAt 필드가 존재한다', () async {
-      final user = _testUser();
-      await dataSource.createUser(user);
-
-      await dataSource.softDeleteUser(user.id);
+      await dataSource.markAccountDeleted(user.id, nickname: '닉네임');
 
       final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      // FakeFirebaseFirestore에서 serverTimestamp는 현재 시각의 Timestamp로 저장됨
-      expect(doc.data()?.containsKey('deletedAt'), true);
-      expect(doc.data()?['deletedAt'], isNotNull);
+      expect(doc.data()?.keys.toSet(), {'nickname', 'deletedAt'});
+      expect(doc.data()?['nickname'], '닉네임');
     });
 
-    test('softDelete 후 private/fcm 서브문서의 tokens가 빈 배열로 초기화된다', () async {
+    test('private/fcm 서브문서를 지운다', () async {
       final user = _testUser();
       await dataSource.createUser(user, fcmToken: 'token-1');
 
-      await dataSource.softDeleteUser(user.id);
+      await dataSource.markAccountDeleted(user.id, nickname: '닉네임');
 
-      final fcmDoc = await fakeFirestore
-          .collection('users')
-          .doc(user.id)
-          .collection('private')
-          .doc('fcm')
-          .get();
-      final tokens = fcmDoc.data()?['tokens'] as List<dynamic>?;
-      expect(tokens, isEmpty);
+      expect(await _readFcmTokens(fakeFirestore, user.id), isNull);
+    });
+
+    test('계정 삭제 후 getUser는 null을 반환한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+
+      await dataSource.markAccountDeleted(user.id, nickname: '닉네임');
+
+      expect(await dataSource.getUser(user.id), isNull);
+    });
+
+    // Auth 삭제만 실패해 같은 uid로 다시 로그인한 경우 (ADR-0005)
+    test('같은 uid로 다시 만들면 새 사용자로 시작한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+      await dataSource.markAccountDeleted(user.id, nickname: '닉네임');
+
+      await dataSource.createUser(user.copyWith(nickname: null));
+
+      final result = await dataSource.getUser(user.id);
+      expect(result, isNotNull);
+      expect(result!.nickname, isNull);
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      expect(doc.data()?.containsKey('deletedAt'), false);
     });
   });
 
   // =========================================================================
-  // fetchUserWithRestoration
+  // getUserIncludingDeleted
   // =========================================================================
 
-  group('fetchUserWithRestoration', () {
-    test('정상 사용자를 그대로 반환한다', () async {
+  group('getUserIncludingDeleted', () {
+    test('일반 사용자는 그대로 반환한다', () async {
       final user = _testUser();
       await dataSource.createUser(user);
 
-      final result = await dataSource.fetchUserWithRestoration(user.id);
+      final result = await dataSource.getUserIncludingDeleted(user.id);
 
-      expect(result, isNotNull);
-      expect(result!.id, user.id);
-      expect(result.email, user.email);
+      expect(result?.email, user.email);
+      expect(result?.isDeleted, false);
     });
 
-    test('존재하지 않는 사용자는 null을 반환한다', () async {
-      final result = await dataSource.fetchUserWithRestoration(
+    test('삭제된 계정은 닉네임만 담아 반환한다', () async {
+      final user = _testUser();
+      await dataSource.createUser(user);
+      await dataSource.markAccountDeleted(user.id, nickname: '닉네임');
+
+      final result = await dataSource.getUserIncludingDeleted(user.id);
+
+      expect(result?.id, user.id);
+      expect(result?.nickname, '닉네임');
+      expect(result?.isDeleted, true);
+    });
+
+    test('문서가 없으면 null을 반환한다', () async {
+      final result = await dataSource.getUserIncludingDeleted(
         'nonexistent-uid',
       );
 
       expect(result, isNull);
-    });
-
-    test('복구된 사용자는 갱신된 문서를 재조회하여 반환한다 (deletedAt/expiresAt 없이)', () async {
-      final user = _testUser();
-      await fakeFirestore.collection('users').doc(user.id).set({
-        'email': user.email,
-        'name': user.name,
-        'nickname': user.nickname,
-        'authProviders': <String>[],
-        'storeById': <String, dynamic>{},
-        'deletedAt': Timestamp.now(),
-        'expiresAt': Timestamp.now(),
-      });
-
-      final result = await dataSource.fetchUserWithRestoration(user.id);
-
-      // 재조회 결과이므로 로컬에서 임의로 지운 필드가 아니라
-      // Firestore에 실제로 반영된 상태를 기반으로 파싱된 모델이어야 한다.
-      final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      expect(doc.data()?.containsKey('deletedAt'), false);
-      expect(doc.data()?.containsKey('expiresAt'), false);
-      expect(result, isNotNull);
-      expect(result!.id, user.id);
-    });
-  });
-
-  // =========================================================================
-  // restoreUser
-  // =========================================================================
-
-  group('restoreUser', () {
-    test('deletedAt과 expiresAt 필드를 삭제한다', () async {
-      final user = _testUser();
-      await fakeFirestore.collection('users').doc(user.id).set({
-        'email': user.email,
-        'name': user.name,
-        'authProviders': <String>[],
-        'storeById': <String, dynamic>{},
-        'deletedAt': Timestamp.now(),
-        'expiresAt': Timestamp.now(),
-      });
-
-      await dataSource.restoreUser(user.id);
-
-      final doc = await fakeFirestore.collection('users').doc(user.id).get();
-      expect(doc.data()?.containsKey('deletedAt'), false);
-      expect(doc.data()?.containsKey('expiresAt'), false);
     });
   });
 

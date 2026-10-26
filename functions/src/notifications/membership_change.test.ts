@@ -150,7 +150,7 @@ test('점포 삭제와 멤버 변화가 한 쓰기에 섞이면 삭제 알림 �
   ]);
 });
 
-test('혼자 쓰는 점포가 탈퇴와 함께 삭제되면 승인 대기자에게만 알린다', () => {
+test('혼자 쓰는 점포가 계정 삭제와 함께 삭제되면 승인 대기자에게만 알린다', () => {
   const before = withMembers({ admin1: { role: 'ADMIN' } });
   const after: StoreSnapshot = { ...before, deletedAt: new Date() };
 

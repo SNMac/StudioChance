@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
-import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/firestore_data_source_base.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 
@@ -10,11 +9,12 @@ part 'user_data_source.g.dart';
 
 abstract interface class UserDataSource {
   /// `uid`에 해당하는 사용자 조회
+  /// - 삭제된 계정(`deletedAt` 존재)은 null. 같은 uid로 다시 로그인하면 새 사용자로 시작한다 (ADR-0005)
   Future<UserModel?> getUser(String uid);
 
-  /// 사용자 조회 및 복구 통합 메서드
-  /// - 탈퇴 상태(`deletedAt` 존재)라면 `restoreUser`를 호출하여 복구 후 반환
-  Future<UserModel?> fetchUserWithRestoration(String uid);
+  /// 삭제된 계정까지 포함한 사용자 조회 (예약 작성자처럼 다른 사람 이름 표시용)
+  /// - 삭제된 계정은 닉네임만 담긴 [UserModel.deleted]로 반환한다
+  Future<UserModel?> getUserIncludingDeleted(String uid);
 
   /// 사용자 생성
   Future<void> createUser(UserModel userModel, {String? fcmToken});
@@ -45,13 +45,9 @@ abstract interface class UserDataSource {
   /// FCM 토큰 삭제
   Future<void> removeFcmToken(String uid, String token);
 
-  /// 사용자 soft delete (`deletedAt`)
-  /// - hard delete는 7일 뒤 (`expiresAt` = `deletedAt` + 7일)
-  Future<void> softDeleteUser(String uid);
-
-  /// 계정 복구 (탈퇴 취소)
-  /// - `deletedAt`, `expiresAt` 필드를 삭제하여 계정을 활성화 상태로 되돌립니다.
-  Future<void> restoreUser(String uid);
+  /// 계정 삭제: 사용자 문서를 `{nickname, deletedAt}`만 남도록 덮어쓰고 FCM 토큰 문서를 지운다
+  /// - 문서를 지우지 않는 이유: 남은 예약의 작성자와 멤버 변동 알림 문구가 닉네임을 읽는다 (ADR-0005)
+  Future<void> markAccountDeleted(String uid, {required String nickname});
 }
 
 class UserFirestoreDataSource extends FirestoreDataSourceBase
@@ -104,55 +100,34 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   ///
   /// 토큰을 추가·교체·제거하는 경로(`recordLogin`, `addFcmToken`, `replaceFcmToken`,
   /// `removeFcmToken`)는 반드시 `set(..., merge: true)`를 쓴다 — `update`는 문서가 없으면
-  /// 실패하는데 첫 로그인 기기에는 이 문서가 없다. 문서를 처음 만드는 `createUser`와
-  /// 전체를 비우는 `softDeleteUser`는 `SetOptions` 없이 쓰는 것이 맞다.
+  /// 실패하는데 첫 로그인 기기에는 이 문서가 없다. 문서를 처음 만드는 `createUser`는
+  /// `SetOptions` 없이 쓰는 것이 맞다.
   DocumentReference<Map<String, dynamic>> _fcmDocRef(String uid) {
     return _userDocRef(uid).collection('private').doc('fcm');
   }
 
   @override
   Future<UserModel?> getUser(String uid) async {
-    try {
-      final docSnapshot = await _userDocRef(uid).get();
-      if (docSnapshot.exists && docSnapshot.data() != null) {
-        final data = docSnapshot.data()!;
-        data['id'] = docSnapshot.id;
-
-        if (data['deletedAt'] != null) {
-          return null;
-        }
-
-        return UserModel.fromJson(data);
-      }
-      return null;
-    } catch (e) {
-      throw handleFirestoreError(e);
-    }
+    final user = await getUserIncludingDeleted(uid);
+    return user == null || user.isDeleted ? null : user;
   }
 
   @override
-  Future<UserModel?> fetchUserWithRestoration(String uid) async {
+  Future<UserModel?> getUserIncludingDeleted(String uid) async {
     try {
       final docSnapshot = await _userDocRef(uid).get();
+      final data = docSnapshot.data();
+      if (!docSnapshot.exists || data == null) return null;
 
-      if (!docSnapshot.exists || docSnapshot.data() == null) {
-        return null;
+      if (data['deletedAt'] != null) {
+        return UserModel.deleted(
+          id: docSnapshot.id,
+          nickname: data['nickname'] as String?,
+        );
       }
 
-      final data = docSnapshot.data()!;
-
-      if (data['deletedAt'] == null) {
-        data['id'] = docSnapshot.id;
-        return UserModel.fromJson(data);
-      }
-
-      logger.i('탈퇴 계정 감지: $uid');
-      await restoreUser(uid);
-
-      // restoreUser가 실패 없이 완료된 뒤에만 도달 — 로컬에서 필드를 지우는 대신
-      // Firestore에 실제로 반영된 최신 상태를 재조회하여 상태 불일치를 방지한다.
-      // await 없이 반환하면 이 Future의 에러가 아래 catch를 그냥 지나친다.
-      return await getUser(uid);
+      data['id'] = docSnapshot.id;
+      return UserModel.fromJson(data);
     } catch (e) {
       throw handleFirestoreError(e);
     }
@@ -283,36 +258,19 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> softDeleteUser(String uid) async {
+  Future<void> markAccountDeleted(
+    String uid, {
+    required String nickname,
+  }) async {
     try {
-      // expiresAt은 클라이언트 시각 기준으로 계산됩니다.
-      // deletedAt(서버 타임스탬프)과 미세한 차이가 있을 수 있으나,
-      // 7일 만료 기준에서 실질적인 문제가 없으므로 허용합니다.
-      final hardDeleteDate = DateTime.now().add(
-        const Duration(days: userSoftDeleteDays),
-      );
       final batch = _firestore.batch();
-      batch.update(_userDocRef(uid), {
+      // SetOptions 없이 덮어써서 이메일·이름·로그인 수단·storeById를 모두 지운다
+      batch.set(_userDocRef(uid), {
+        'nickname': nickname,
         'deletedAt': FieldValue.serverTimestamp(),
-        'expiresAt': Timestamp.fromDate(hardDeleteDate),
-        'updatedAt': FieldValue.serverTimestamp(),
       });
-      batch.set(_fcmDocRef(uid), {'tokens': <String>[]});
+      batch.delete(_fcmDocRef(uid));
       await batch.commit();
-    } catch (e) {
-      throw handleFirestoreError(e);
-    }
-  }
-
-  @override
-  Future<void> restoreUser(String uid) async {
-    try {
-      await _userDocRef(uid).update({
-        'deletedAt': FieldValue.delete(),
-        'expiresAt': FieldValue.delete(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      logger.i('계정 복구 완료: $uid');
     } catch (e) {
       throw handleFirestoreError(e);
     }
