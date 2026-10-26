@@ -74,7 +74,8 @@ deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependa
 
 - **버전 업데이트**: 분기 1회. patch는 PR을 만들지 않고, 서로 맞물리는 패키지(FlutterFire, 코드 생성 스택, Firebase 서버·테스트 SDK)는 한 PR로 묶인다
 - **보안 업데이트**: 주기와 무관하게 취약점 경보가 뜨면 바로 PR이 열린다. 저장소 Settings의 Dependabot alerts·security updates로 켜 둔다
-  - 단 `dependabot.yml`의 ignore는 보안 업데이트에도 적용될 수 있다. 임시로 막아 둔 범위(FlutterFire 5 계열, go_router 18 등)의 취약점은 PR이 열리지 않을 수 있으니, 경보를 보고 손으로 처리한다
+  - `dependabot.yml`의 ignore는 모두 `update-types`로 써서 보안 업데이트를 막지 않는다. 보안 업데이트에는 ignore의 `versions`만 적용되기 때문이다(GitHub 문서에는 명시가 없고 dependabot-core 구현 기준). ignore를 추가할 때도 `versions` 대신 `update-types`를 쓴다
+  - 임시로 막아 둔 메이저(FlutterFire 5 계열, go_router 18)로 올려야만 고쳐지는 취약점이면 보안 PR이 열려도 해석·빌드가 실패한다. 그때는 해당 이슈(#71, #72)를 먼저 처리한다
 - Dependabot PR은 이슈 없이 열리므로 커밋·PR 제목 컨벤션의 예외다
 
 ### Dependabot PR 처리

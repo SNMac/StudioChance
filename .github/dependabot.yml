@@ -3,8 +3,9 @@
 #
 # PR 처리 방법은 docs/operations.md의 "의존성 점검"을 따른다.
 #
-# ignore는 버전 업데이트뿐 아니라 보안 업데이트에도 적용될 수 있다 (옵션 레퍼런스의 ignore 항목).
-# 아래 임시 ignore가 막는 범위에서 취약점 경보가 뜨면 Dependabot이 PR을 열지 않을 수 있으니 손으로 처리한다.
+# ignore는 `update-types`로만 쓴다. 보안 업데이트에는 ignore의 `versions`만 적용되고 `update-types`는
+# 적용되지 않아, 이렇게 쓰면 ignore가 보안 업데이트를 막지 않는다. GitHub 문서에는 명시가 없고
+# dependabot-core 구현(common/lib/dependabot/config/ignore_condition.rb의 ignored_versions) 기준이다.
 
 version: 2
 updates:
@@ -26,7 +27,7 @@ updates:
         update-types: ["version-update:semver-major"]
       # 0.x라 0.5가 minor로 분류되지만 firebase_core 5를 요구한다
       - dependency-name: "firebase_app_check"
-        versions: [">=0.5.0"]
+        update-types: ["version-update:semver-minor"]
       # go_router 18은 material_ui 이전 없이는 화면 전환이 회귀하고 테스트로 잡히지 않는다.
       # #72 해결 시 제거한다
       - dependency-name: "go_router"
