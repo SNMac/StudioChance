@@ -9,9 +9,6 @@ const int maxConfirmationNotesCharCount = 3000;
 ///   `functions/src/contract/shared_constants.test.ts`가 검사한다)
 const int storeInviteCodeAvailableMin = 15;
 
-/// 사용자 soft delete 유지 기간(일 단위)
-const int userSoftDeleteDays = 7;
-
 /// 점포 soft delete 유지 기간(일 단위)
 const int storeSoftDeleteDays = 7;
 

@@ -172,14 +172,17 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<Either<Exception, void>> softDeleteUser(String uid) async {
+  Future<Either<Exception, void>> markAccountDeleted(User user) async {
     try {
-      await _userDataSource.softDeleteUser(uid);
+      await _userDataSource.markAccountDeleted(
+        user.id,
+        nickname: user.nickname ?? user.name,
+      );
 
-      _logger.i('사용자 Soft Delete 완료 (회원 탈퇴)\nuid: $uid');
+      _logger.i('사용자 문서 정리 완료 (계정 삭제)\nuid: ${user.id}');
       return right(null);
     } catch (e) {
-      _logger.e('사용자 Soft Delete 실패');
+      _logger.e('사용자 문서 정리 실패 (계정 삭제)');
       return left(toException(e));
     }
   }

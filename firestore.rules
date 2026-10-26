@@ -13,7 +13,7 @@ service cloud.firestore {
     // 읽기: 인증된 모든 사용자 허용
     //   → 점포 멤버 정보 조회 시 다른 멤버의 user 문서를 읽어야 하므로 완화
     // 쓰기: 자신의 문서만 허용
-    //   → 탈퇴(softDeleteUser), 닉네임 수정, 복구 등 본인 작업만 가능
+    //   → 계정 삭제(markAccountDeleted), 닉네임 수정 등 본인 작업만 가능
     //
     // TODO: 점포 공유 멤버만 서로의 문서를 읽도록 규칙 강화 검토
     match /users/{uid} {

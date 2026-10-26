@@ -27,10 +27,14 @@ abstract interface class AuthUseCase {
   /// 로그아웃
   Future<void> signOut();
 
-  /// 회원 탈퇴
+  /// 계정 삭제. 즉시 확정되며 되돌릴 수 없다 (ADR-0005)
   /// - 다른 멤버가 있는 점포의 관리자이면 아무것도 쓰지 않고
   ///   `StoreAdminHandoverRequiredException`(막힌 점포 목록 포함)으로 실패한다
-  /// - 혼자 쓰는 관리자 점포는 탈퇴와 함께 Soft Delete한다
+  /// - 재인증하고, Apple이 연동되어 있으면 Apple 토큰을 revoke한다
+  /// - 멤버인 점포는 모두 나가고, 승인 대기 중인 신청은 모두 취소한다
+  /// - 혼자 쓰는 관리자 점포는 Soft Delete한다
+  /// - 사용자 문서에는 닉네임만 남기고, 마지막으로 Auth 계정을 지운다
+  /// - 중간에 실패해 Auth 계정이 남으면 다음 로그인에서 새 사용자로 시작한다
   Future<Either<Exception, void>> delete();
 
   /// 재인증
@@ -105,13 +109,17 @@ class AuthUseCaseImpl implements AuthUseCase {
         );
       }
 
+      // 막힐 사람에게 재인증 창부터 띄우지 않도록 점포 확인을 먼저 한다 (둘 다 쓰기 없음)
+      // 사용자 문서는 점포 정리가 끝난 뒤에 덮어쓴다 — 덮어쓴 뒤로는 다음 로그인이 새 사용자가 된다
       return _ensureNoSharedAdminStores(currentUser)
+          .flatMap((_) => TaskEither(() => _authRepository.prepareDeletion()))
+          .flatMap((_) => _leaveAllStores(currentUser))
+          .flatMap((_) => _softDeleteAdminStores(currentUser))
           .flatMap(
             (_) => TaskEither(
-              () => _userRepository.softDeleteUser(currentUser.id),
+              () => _userRepository.markAccountDeleted(currentUser),
             ),
           )
-          .flatMap((_) => _softDeleteAdminStores(currentUser))
           .flatMap((_) => TaskEither(() => _authRepository.delete()))
           .run();
     });
@@ -120,7 +128,7 @@ class AuthUseCaseImpl implements AuthUseCase {
   /// 다른 멤버가 있는 관리자 점포가 하나라도 있으면 실패한다.
   ///
   /// 관리자가 없는 점포가 남지 않도록 관리자 위임이나 점포 삭제를 먼저 하게 한다.
-  /// 탈퇴의 어떤 쓰기보다 먼저 실행해야 막혔을 때 아무것도 바뀌지 않는다.
+  /// 계정 삭제의 어떤 쓰기보다 먼저 실행해야 막혔을 때 아무것도 바뀌지 않는다.
   /// 승인 대기자는 멤버가 아니므로 세지 않는다 (점포 삭제가 신청 기록까지 정리한다)
   TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
     return TaskEither.traverseList(
@@ -143,7 +151,7 @@ class AuthUseCaseImpl implements AuthUseCase {
         StoreAdminHandoverRequiredException(
           stores: blocked,
           message:
-              '다른 멤버가 있는 관리자 점포가 있어 탈퇴할 수 없습니다: '
+              '다른 멤버가 있는 관리자 점포가 있어 계정을 삭제할 수 없습니다: '
               '${blocked.map((store) => store.id).join(', ')}',
         ),
       );
@@ -155,6 +163,23 @@ class AuthUseCaseImpl implements AuthUseCase {
       .memberStoreInfos
       .where((info) => info.role == UserRole.admin)
       .toList();
+
+  /// 관리자가 아닌 점포에서 모두 빠진다: 멤버이면 점포 나가기, 승인 대기 중이면 신청 취소
+  ///
+  /// 멤버십을 남겨 두면 보이지 않는 멤버가 관리자의 계정 삭제를 막는다 (ADR-0005).
+  /// 하나라도 실패하면 그 시점에서 나머지를 진행하지 않고 에러를 반환한다.
+  TaskEither<Exception, void> _leaveAllStores(User currentUser) {
+    return currentUser.storeInfos.fold(
+      TaskEither<Exception, void>.right(null),
+      (acc, info) => acc.flatMap((_) {
+        if (info.isPending) {
+          return TaskEither(() => _storeUseCase.cancelJoinRequest(info.id));
+        }
+        if (info.role == UserRole.admin) return TaskEither.right(null);
+        return TaskEither(() => _storeUseCase.leaveStore(info.id));
+      }),
+    );
+  }
 
   /// 사용자가 관리자(admin)로 속한 모든 점포를 Soft Delete 처리한다.
   ///
