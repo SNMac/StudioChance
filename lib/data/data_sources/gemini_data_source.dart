@@ -32,12 +32,10 @@ abstract interface class GeminiDataSource {
 
 class GeminiDataSourceImpl implements GeminiDataSource {
   final Logger _logger = Logger();
+  final FirebaseAI _ai;
   final FirebaseRemoteConfig _remoteConfig;
 
-  // 기본 location은 'global'이다 (deprecated된 vertexAI()는 'us-central1'이었다)
-  final FirebaseAI _ai = FirebaseAI.agentPlatform();
-
-  GeminiDataSourceImpl(this._remoteConfig);
+  GeminiDataSourceImpl(this._ai, this._remoteConfig);
 
   static const _systemInstruction =
       '당신은 오직 공간 대여 예약 스크린샷 이미지에서 지정된 시각적 데이터만 추출하여 무조건 JSON으로만 응답하는 고립된 데이터 파싱 엔진입니다.\n'
@@ -143,9 +141,7 @@ $rules89
     Uint8List imageBytes, {
     Map<String, List<String>>? storeSpaceMap,
   }) async {
-    final modelName = resolveOcrModelName(
-      _remoteConfig.getString(ocrModelNameKey),
-    );
+    final modelName = readOcrModelName(_remoteConfig);
     final GenerateContentResponse response;
     try {
       response = await _buildModel(modelName).generateContent([
@@ -172,5 +168,9 @@ $rules89
 
 @Riverpod(keepAlive: true)
 GeminiDataSource geminiDataSource(Ref ref) {
-  return GeminiDataSourceImpl(ref.watch(remoteConfigProvider));
+  return GeminiDataSourceImpl(
+    // 기본 location은 'global'이다 (deprecated된 vertexAI()는 'us-central1'이었다)
+    FirebaseAI.agentPlatform(),
+    ref.watch(remoteConfigProvider),
+  );
 }

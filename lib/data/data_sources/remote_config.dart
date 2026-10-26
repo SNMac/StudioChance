@@ -20,6 +20,10 @@ String resolveOcrModelName(String remoteValue) {
   return trimmed.isEmpty ? defaultOcrModelName : trimmed;
 }
 
+/// 지금 활성화된 값으로 OCR 모델 ID를 읽는다. 네트워크 없이 캐시에서 읽는다.
+String readOcrModelName(FirebaseRemoteConfig remoteConfig) =>
+    resolveOcrModelName(remoteConfig.getString(ocrModelNameKey));
+
 /// 기본값을 등록하고 콘솔 값을 백그라운드로 가져온다.
 /// 앱 시작을 기다리게 하지 않으므로, 이번 실행의 첫 OCR은 이전 실행에서 가져온 값이나 기본값을 쓴다.
 Future<void> initializeRemoteConfig({

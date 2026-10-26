@@ -53,4 +53,4 @@ final class GeminiDataSourceProvider
   }
 }
 
-String _$geminiDataSourceHash() => r'b64da432a8f14722e6ec165a6f7122426388636c';
+String _$geminiDataSourceHash() => r'49b5781077b7f1913353027bbcee8480893fb071';
