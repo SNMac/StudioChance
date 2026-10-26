@@ -1,6 +1,5 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -101,11 +100,7 @@ class MyApp extends ConsumerWidget {
           );
         },
 
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: const [Locale('ko', 'KR')],
         title: 'StudioChance',
         themeMode: ThemeMode.system,
