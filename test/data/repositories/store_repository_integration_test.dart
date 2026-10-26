@@ -11,7 +11,7 @@ import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 
-import '../../helpers/firestore_emulator_helper.dart';
+import '../../helpers/fake_firestore_helper.dart';
 import '../../helpers/either_expectations.dart';
 import '../../helpers/mocks.dart';
 
@@ -46,7 +46,7 @@ void main() {
   late UserFirestoreDataSource userDataSource;
 
   setUp(() {
-    fakeFirestore = FirestoreEmulatorHelper.create();
+    fakeFirestore = FakeFirestoreHelper.create();
     storeDataSource = StoreFirestoreDataSource(
       fakeFirestore,
       MockFirebaseFunctions(),
@@ -64,7 +64,7 @@ void main() {
 
   group('createStore + getStore', () {
     test('getStore memberInfos가 users 컬렉션에서 hydrate된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final adminUser = User(
         id: uid,
@@ -94,8 +94,8 @@ void main() {
 
   group('멤버 사용자 문서가 깨진 점포 조회', () {
     test('한 멤버의 사용자 문서를 읽지 못해도 점포는 조회되고 그 멤버만 빠진다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final brokenUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final brokenUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       final adminUser = User(
         id: ownerUid,
@@ -141,10 +141,10 @@ void main() {
 
   group('legacy spaceOptions fallback', () {
     test('spaceOptions가 없는 점포를 조회하면 legacy_default 공간 하나로 채워진다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       // spaceOptions 필드 자체가 없던 구버전 문서를 직접 시뮬레이션
-      final storeId = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
       await fakeFirestore.collection('stores').doc(storeId).set(
         <String, dynamic>{
           'name': '레거시 점포',
@@ -174,8 +174,8 @@ void main() {
 
   group('updateStore', () {
     test('점포명 변경 시 다른 멤버(staff)의 storeById.name 캐시도 함께 갱신된다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final staffUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final staffUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       await _seedUserDoc(fakeFirestore, staffUid);
       final adminUser = User(
@@ -233,7 +233,7 @@ void main() {
       late Store opened;
 
       setUp(() async {
-        ownerUid = FirestoreEmulatorHelper.generateId();
+        ownerUid = FakeFirestoreHelper.generateId();
         await _seedUserDoc(fakeFirestore, ownerUid);
         final adminUser = User(
           id: ownerUid,
@@ -288,7 +288,7 @@ void main() {
       });
 
       test('폼을 연 뒤 가입 신청·승인만 있었으면 충돌로 보지 않는다', () async {
-        final staffUid = FirestoreEmulatorHelper.generateId();
+        final staffUid = FakeFirestoreHelper.generateId();
         await _seedUserDoc(fakeFirestore, staffUid);
         await repository.requestJoinStore(
           storeId: opened.id,
@@ -343,8 +343,8 @@ void main() {
 
   group('softDeleteStore', () {
     test('softDeleteStore 후 멤버(staff)의 storeById 캐시도 제거된다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final staffUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final staffUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       await _seedUserDoc(fakeFirestore, staffUid);
       final adminUser = User(
@@ -401,7 +401,7 @@ void main() {
 
   group('createInviteCode', () {
     test('유효 시간 내 재호출 시 동일한 코드를 재사용한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final adminUser = User(
         id: uid,
@@ -435,8 +435,8 @@ void main() {
 
   group('requestJoinStore + approveMember', () {
     test('approveMember 후 getStore memberInfos에 승인된 멤버가 포함된다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final memberUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final memberUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       await _seedUserDoc(fakeFirestore, memberUid);
       final adminUser = User(
@@ -477,8 +477,8 @@ void main() {
     // 신청자는 아직 멤버가 아니라 Rules가 그 점포의 예약 읽기를 거부한다.
     // 사용자 문서만 보고도 승인 전인지 알 수 있어야 홈이 구독하지 않는다.
     test('가입 신청한 점포는 승인 전까지 승인 대기로 읽힌다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final memberUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final memberUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       await _seedUserDoc(fakeFirestore, memberUid);
       final adminUser = User(
@@ -528,8 +528,8 @@ void main() {
 
   group('updateMemberRole', () {
     test('store와 user의 role이 올바른 JSON 값으로 업데이트된다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final memberUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final memberUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       await _seedUserDoc(fakeFirestore, memberUid);
       final adminUser = User(
@@ -588,8 +588,8 @@ void main() {
 
   group('getMembership', () {
     test('사용자 문서를 읽지 못해 memberInfos에서 빠진 멤버도 멤버 구성에는 포함된다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
-      final brokenUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final brokenUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       final adminUser = User(
         id: ownerUid,
@@ -623,7 +623,7 @@ void main() {
     });
 
     test('삭제된 점포는 null이다', () async {
-      final ownerUid = FirestoreEmulatorHelper.generateId();
+      final ownerUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       final adminUser = User(
         id: ownerUid,
@@ -656,8 +656,8 @@ void main() {
     late String storeId;
 
     setUp(() async {
-      ownerUid = FirestoreEmulatorHelper.generateId();
-      memberUid = FirestoreEmulatorHelper.generateId();
+      ownerUid = FakeFirestoreHelper.generateId();
+      memberUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
       await _seedUserDoc(fakeFirestore, memberUid);
       final adminUser = User(

@@ -9,7 +9,7 @@ import 'package:studio_chance/common/enums/reservation_platform.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
-import '../../helpers/firestore_emulator_helper.dart';
+import '../../helpers/fake_firestore_helper.dart';
 
 ReservationModel _testReservation({
   String? id,
@@ -20,7 +20,7 @@ ReservationModel _testReservation({
   String customerPhone = '010-1234-5678',
 }) {
   return ReservationModel(
-    id: id ?? FirestoreEmulatorHelper.generateId(),
+    id: id ?? FakeFirestoreHelper.generateId(),
     storeId: storeId,
     writerId: 'user-test',
     status: ReservationStatus.confirmed,
@@ -46,7 +46,7 @@ void main() {
   const storeId = 'test-store';
 
   setUp(() {
-    fakeFirestore = FirestoreEmulatorHelper.create();
+    fakeFirestore = FakeFirestoreHelper.create();
     dataSource = ReservationFirestoreDataSource(fakeFirestore);
   });
 

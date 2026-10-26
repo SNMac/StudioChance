@@ -30,7 +30,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 /// - `where(field, isNull: true)`: 필드가 아예 없는 문서도 매치시킨다. 실제 Firestore는
 ///   필터 대상 필드가 없는 문서를 결과에서 제외하므로, 이 필터에 의존하는 쿼리는
 ///   테스트를 통과해도 실제 환경에서 빈 결과를 낸다 (getStoreByInviteCode에서 실제로 발생).
-class FirestoreEmulatorHelper {
+class FakeFirestoreHelper {
   static final _random = Random();
 
   /// 격리된 FakeFirebaseFirestore 인스턴스를 생성합니다.

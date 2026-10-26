@@ -5,14 +5,14 @@ import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/user_model.dart';
 import 'package:studio_chance/data/models/user_store_info_model.dart';
 
-import '../../helpers/firestore_emulator_helper.dart';
+import '../../helpers/fake_firestore_helper.dart';
 
 // @Default([])와 @Default({})의 Freezed 기본값은 const []와 const {}로 생성됩니다.
 // 런타임 타입이 _List<dynamic>/_Map<dynamic, dynamic>이 되어 fake_cloud_firestore가
 // Map<String, dynamic>으로 캐스팅할 때 TypeError가 발생할 수 있습니다.
 // 명시적으로 빈 컬렉션을 전달하여 올바른 제네릭 타입을 사용합니다.
 UserModel _testUser({String? id}) => UserModel(
-  id: id ?? FirestoreEmulatorHelper.generateId(),
+  id: id ?? FakeFirestoreHelper.generateId(),
   email: 'test@example.com',
   name: '테스트 유저',
   nickname: '닉네임',
@@ -39,7 +39,7 @@ void main() {
   late UserFirestoreDataSource dataSource;
 
   setUp(() {
-    fakeFirestore = FirestoreEmulatorHelper.create();
+    fakeFirestore = FakeFirestoreHelper.create();
     dataSource = UserFirestoreDataSource(fakeFirestore);
   });
 
