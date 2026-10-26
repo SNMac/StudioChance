@@ -32,7 +32,8 @@ class GeminiDataSourceImpl implements GeminiDataSource {
   late final GenerativeModel _model;
 
   GeminiDataSourceImpl() {
-    _model = FirebaseAI.vertexAI().generativeModel(
+    // 기본 location은 'global'이다 (deprecated된 vertexAI()는 'us-central1'이었다)
+    _model = FirebaseAI.agentPlatform().generativeModel(
       model: 'gemini-2.5-flash-lite',
       generationConfig: GenerationConfig(responseMimeType: 'application/json'),
       systemInstruction: Content.system(
