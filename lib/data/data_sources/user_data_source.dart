@@ -108,22 +108,8 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
 
   @override
   Future<UserModel?> getUser(String uid) async {
-    try {
-      final docSnapshot = await _userDocRef(uid).get();
-      if (docSnapshot.exists && docSnapshot.data() != null) {
-        final data = docSnapshot.data()!;
-        data['id'] = docSnapshot.id;
-
-        if (data['deletedAt'] != null) {
-          return null;
-        }
-
-        return UserModel.fromJson(data);
-      }
-      return null;
-    } catch (e) {
-      throw handleFirestoreError(e);
-    }
+    final user = await getUserIncludingDeleted(uid);
+    return user == null || user.isDeleted ? null : user;
   }
 
   @override
