@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpostal/kpostal.dart';
@@ -120,18 +120,23 @@ class _StoreAddressInputScreenState
                 );
                 final commonOnLoading =
                     const CircularProgressIndicator.adaptive();
+                // kpostal은 아직 flutter/material을 써서 KpostalView의 Scaffold가
+                // material_ui의 테마·localizations를 찾지 못한다 → 이전 계열로 연결한다.
+                // kpostal이 material_ui로 이전하면 Bridge를 제거한다 (#79)
+                // ignore: deprecated_member_use
+                final kpostalView = MaterialUiCompatibilityBridge(
+                  child: KpostalView(
+                    appBar: commonAppBar,
+                    onLoading: commonOnLoading,
+                  ),
+                );
 
                 Kpostal? result;
                 if (Platform.isIOS) {
                   result = await showCupertinoSheet<Kpostal>(
                     enableDrag: false,
                     context: context,
-                    scrollableBuilder: (context, _) {
-                      return KpostalView(
-                        appBar: commonAppBar,
-                        onLoading: commonOnLoading,
-                      );
-                    },
+                    scrollableBuilder: (context, _) => kpostalView,
                   );
                 } else {
                   result = await showModalBottomSheet<Kpostal>(
@@ -147,10 +152,7 @@ class _StoreAddressInputScreenState
                         top: Radius.circular(modalTopCornerRadius),
                       ),
                     ),
-                    builder: (context) => KpostalView(
-                      appBar: commonAppBar,
-                      onLoading: commonOnLoading,
-                    ),
+                    builder: (context) => kpostalView,
                   );
                 }
 

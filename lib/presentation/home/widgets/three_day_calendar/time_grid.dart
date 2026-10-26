@@ -1,6 +1,6 @@
 import 'dart:math' show max;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';

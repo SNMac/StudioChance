@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // ── 모달 ─────────────────────────────────────────────────────────────────────
 const Color modalGrabberColor = Color(0xFFB5B5BB);

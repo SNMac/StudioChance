@@ -27,6 +27,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # flutter/material·cupertino의 위젯은 material_ui의 테마·localizations를 찾지 못한다.
+      # 컴파일은 되고 기본 테마로 그려질 뿐이라, IDE 자동 import로 다시 들어와도 테스트가 잡지 못한다 (#72)
+      - name: Check legacy design imports
+        run: |
+          if grep -rnE "package:flutter/(material|cupertino)\.dart" lib test; then
+            echo "::error::package:flutter/material.dart·cupertino.dart 대신 material_ui·cupertino_ui를 import한다"
+            exit 1
+          fi
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
