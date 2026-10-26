@@ -5,7 +5,7 @@
 ## Firebase 프로젝트 설정 파일
 
 `firebase.json`/`.firebaserc`는 gitignore 처리되어 저장소에 없다. 새로 clone한 환경에서 배포하려면 아래 내용을 직접 만든다.
-Rules 테스트용 에뮬레이터 설정은 별도로 추적하는 `firebase.emulator.json`을 쓰므로 이 파일들이 없어도 테스트는 돈다.
+에뮬레이터 테스트(Rules·Functions 쿼리)용 설정은 별도로 추적하는 `firebase.emulator.json`을 쓰므로 이 파일들이 없어도 테스트는 돈다.
 
 ```json
 // firebase.json (Functions·Rules 배포에 필요한 부분만)
@@ -39,6 +39,9 @@ Rules 테스트용 에뮬레이터 설정은 별도로 추적하는 `firebase.em
 
 - `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
 - Rules는 `firebase deploy --only firestore:rules -P dev` / `-P prod`
+- 복합 인덱스나 `collectionGroup` 쿼리용 인덱스가 필요해지면(지금은 없다) 저장소에 `firestore.indexes.json`을 만들고,
+  `firebase.json`의 `firestore`에 `"indexes": "firestore.indexes.json"`을 추가해 `firebase deploy --only firestore:indexes -P dev` / `-P prod`로 배포한다.
+  dev 콘솔이나 오류 링크로 만든 인덱스는 `firebase firestore:indexes -P dev`로 내보내 이 파일에 반영한다
 - **배포 전 Secret 설정**(dev·prod 각각, 최초 1회): `firebase functions:secrets:set DATA_GO_KR_SERVICE_KEY -P dev`
 - **`syncHolidays` 첫 배포 직후 1회 수동 실행**: 스케줄 첫 실행이 다음 날 새벽이므로 Cloud Scheduler 콘솔에서 `syncHolidays` 작업을 "강제 실행"한다
 

@@ -10,7 +10,7 @@ import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
-import '../../helpers/firestore_emulator_helper.dart';
+import '../../helpers/fake_firestore_helper.dart';
 import '../../helpers/mocks.dart';
 
 // lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
@@ -21,7 +21,7 @@ import '../../helpers/mocks.dart';
 // fake_cloud_firestore가 이를 Map<String, dynamic>으로 캐스팅하면 TypeError가 발생하므로,
 // 명시적으로 빈 컬렉션을 전달하여 _LinkedHashMap<String, T>/_GrowableList<T> 타입을 사용합니다.
 StoreModel _testStore() => StoreModel(
-  id: FirestoreEmulatorHelper.generateId(),
+  id: FakeFirestoreHelper.generateId(),
   name: '테스트 점포',
   address: '서울시 강남구 테헤란로 1',
   addressDetail: '101호',
@@ -129,7 +129,7 @@ void main() {
   late StoreFirestoreDataSource dataSource;
 
   setUp(() {
-    fakeFirestore = FirestoreEmulatorHelper.create();
+    fakeFirestore = FakeFirestoreHelper.create();
     dataSource = StoreFirestoreDataSource(
       fakeFirestore,
       MockFirebaseFunctions(),
@@ -142,7 +142,7 @@ void main() {
 
   group('createStore', () {
     test('점포 문서를 생성하고 Firestore 생성 ID가 반영된 모델을 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
 
       final result = await dataSource.createStore(
@@ -156,7 +156,7 @@ void main() {
     });
 
     test('생성 후 users 컬렉션에 storeById 정보가 저장된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
 
       final created = await dataSource.createStore(
@@ -171,7 +171,7 @@ void main() {
     });
 
     test('생성된 점포 문서를 Firestore에서 직접 조회할 수 있다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
 
       final created = await dataSource.createStore(
@@ -195,7 +195,7 @@ void main() {
 
   group('getStore', () {
     test('존재하는 점포를 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -217,7 +217,7 @@ void main() {
     });
 
     test('deletedAt이 있는 점포는 null을 반환한다 (soft delete)', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
       await fakeFirestore.collection('stores').doc(storeId).set({
         'name': '삭제된 점포',
         'address': '주소',
@@ -240,7 +240,7 @@ void main() {
     bool unchanged(StoreModel _) => true;
 
     test('지정 필드를 업데이트한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -260,13 +260,13 @@ void main() {
     });
 
     test('저장 직전 문서의 멤버·대기 멤버 storeById.name 캐시가 함께 갱신된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final staffUid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final staffUid = FakeFirestoreHelper.generateId();
       await _seedUserWithStore(fakeFirestore, staffUid, storeId);
       await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
 
       // 폼을 연 뒤 가입 신청이 들어와도 그 사용자의 캐시까지 갱신해야 한다
-      final waitingUid = FirestoreEmulatorHelper.generateId();
+      final waitingUid = FakeFirestoreHelper.generateId();
       await _seedUserWithStore(fakeFirestore, waitingUid, storeId);
       await fakeFirestore.collection('stores').doc(storeId).update({
         'waitingMemberById.$waitingUid': <String, dynamic>{'role': 'STAFF'},
@@ -287,8 +287,8 @@ void main() {
       // 점포에는 대기 멤버로 남아 있지만 사용자 문서에서는 항목이 지워진 어긋난 상태.
       // 점 경로 update는 role 없는 {name} 항목을 만들어, 그 사용자 문서를 읽는
       // 점포 조회(멤버 hydrate)를 전부 실패하게 만든다
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final waitingUid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final waitingUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, waitingUid);
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, waitingUid);
 
@@ -306,8 +306,8 @@ void main() {
     });
 
     test('data에 name이 없으면 멤버의 storeById.name을 건드리지 않는다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final staffUid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final staffUid = FakeFirestoreHelper.generateId();
       await _seedUserWithStore(fakeFirestore, staffUid, storeId);
       await _seedStoreWithMember(fakeFirestore, storeId, staffUid);
 
@@ -325,7 +325,7 @@ void main() {
     });
 
     test('isUnchanged에 저장 직전 문서를 넘기고, false면 충돌 예외를 던지고 쓰지 않는다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
       await _seedEmptyStore(fakeFirestore, storeId);
       await fakeFirestore.collection('stores').doc(storeId).update({
         'address': '다른 관리자가 바꾼 주소',
@@ -350,7 +350,7 @@ void main() {
     });
 
     test('삭제된 점포를 수정하면 StoreNotFoundException을 던진다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
       await _seedEmptyStore(fakeFirestore, storeId);
       await fakeFirestore.collection('stores').doc(storeId).update({
         'deletedAt': Timestamp.now(),
@@ -371,7 +371,7 @@ void main() {
 
   group('softDeleteStore', () {
     test('softDelete 후 getStore가 null을 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -386,7 +386,7 @@ void main() {
     });
 
     test('softDelete 후 문서에 deletedAt 필드가 존재한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -404,7 +404,7 @@ void main() {
     });
 
     test('softDelete 후 inviteInfo가 null이 된다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -424,9 +424,9 @@ void main() {
     });
 
     test('전달된 memberUids의 storeById.{storeId} 캐시가 모두 삭제된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final memberUid = FirestoreEmulatorHelper.generateId();
-      final waitingUid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final memberUid = FakeFirestoreHelper.generateId();
+      final waitingUid = FakeFirestoreHelper.generateId();
       for (final uid in [memberUid, waitingUid]) {
         await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
           'email': 'test@example.com',
@@ -470,7 +470,7 @@ void main() {
 
   group('createInviteCode / getInviteInfo', () {
     test('초대 코드를 생성하고 6자리 코드를 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -487,7 +487,7 @@ void main() {
     test('반환된 모델에 서버가 확정한 createdAt이 담긴다', () async {
       // serverTimestamp는 쓰기 시점에 값을 알 수 없어, 다시 읽지 않으면 null이
       // 그대로 반환된다. 그러면 발급 직후 남은 유효 시간을 계산할 수 없다.
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -501,7 +501,7 @@ void main() {
     });
 
     test('getInviteInfo는 저장된 초대 코드를 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -517,7 +517,7 @@ void main() {
     });
 
     test('초대 코드가 없으면 null을 반환한다', () async {
-      final uid = FirestoreEmulatorHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, uid);
       final created = await dataSource.createStore(
         _testStore(),
@@ -536,8 +536,8 @@ void main() {
 
   group('approveMember', () {
     test('승인 후 waitingMemberById에서 uid가 제거된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
       await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
         'email': 'test@example.com',
@@ -562,8 +562,8 @@ void main() {
     });
 
     test('승인 후 memberById에 정확한 역할로 멤버가 추가된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
       await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
         'email': 'test@example.com',
@@ -589,8 +589,8 @@ void main() {
     });
 
     test('승인 후 users 컬렉션의 storeById.{storeId}.role도 동기화된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithWaitingMember(fakeFirestore, storeId, uid);
       await fakeFirestore.collection('users').doc(uid).set(<String, dynamic>{
         'email': 'test@example.com',
@@ -621,8 +621,8 @@ void main() {
 
   group('updateMemberRole', () {
     test(r'store의 memberById.$uid.role이 변경된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithMember(fakeFirestore, storeId, uid);
       await _seedUserWithStore(fakeFirestore, uid, storeId);
 
@@ -634,8 +634,8 @@ void main() {
     });
 
     test(r'user의 storeById.$storeId.role이 변경된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithMember(fakeFirestore, storeId, uid);
       await _seedUserWithStore(fakeFirestore, uid, storeId);
 
@@ -653,8 +653,8 @@ void main() {
 
   group('removeMember', () {
     test('store의 memberById에서 uid가 제거된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithMember(fakeFirestore, storeId, uid);
       await _seedUserWithStore(fakeFirestore, uid, storeId);
 
@@ -666,8 +666,8 @@ void main() {
     });
 
     test('store의 waitingMemberById에서 uid가 제거된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithMember(fakeFirestore, storeId, uid);
       await _seedUserWithStore(fakeFirestore, uid, storeId);
 
@@ -679,8 +679,8 @@ void main() {
     });
 
     test('user의 storeById에서 storeId가 제거된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedStoreWithMember(fakeFirestore, storeId, uid);
       await _seedUserWithStore(fakeFirestore, uid, storeId);
 
@@ -698,8 +698,8 @@ void main() {
 
   group('requestJoinWithBatch', () {
     test('store의 waitingMemberById에 신청자 정보가 저장된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedEmptyStore(fakeFirestore, storeId);
       await _seedUserDoc(fakeFirestore, uid);
       final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
@@ -724,8 +724,8 @@ void main() {
     });
 
     test('user의 storeById에 점포 정보가 저장된다', () async {
-      final storeId = FirestoreEmulatorHelper.generateId();
-      final uid = FirestoreEmulatorHelper.generateId();
+      final storeId = FakeFirestoreHelper.generateId();
+      final uid = FakeFirestoreHelper.generateId();
       await _seedEmptyStore(fakeFirestore, storeId);
       await _seedUserDoc(fakeFirestore, uid);
       final memberInfo = StoreMemberInfoModel(role: UserRole.staff);
