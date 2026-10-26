@@ -156,11 +156,14 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   - 클라이언트: `cloud_functions` 패키지, `FirebaseFunctions.instanceFor(region: 'asia-northeast3')`.
   - **dev 실기기에서 초대 코드 조회가 전부 "권한이 없습니다"로 실패하면** App Check 디버그 토큰 미등록을 의심한다 → `docs/operations.md`
 
-## Firestore Rules 테스트
+## Firestore 에뮬레이터 테스트
 
-- `functions/src/rules/*.test.ts` + `@firebase/rules-unit-testing`.
-  실행: `cd functions && npm run test:rules` (에뮬레이터 필요) / `npm run test:unit` (불필요) / `npm test` (둘 다).
-- Rules를 고쳤으면 이 테스트를 반드시 돌린다. `fake_cloud_firestore`는 Rules를 적용하지 않는다.
+- Rules: `functions/src/rules/*.test.ts` + `@firebase/rules-unit-testing`.
+- Functions 쿼리: `functions/src/queries/*.test.ts` + Admin SDK. 실제 Firestore와 결과가 갈릴 수 있는 쿼리를 검증한다
+  - 대상 파일 옆이 아니라 `queries/`에 둔다. `test:unit`이 `invite/` 등의 테스트를 에뮬레이터 없이 통째로 돌리기 때문이다
+- 실행: `cd functions && npm run test:emulator` (에뮬레이터 필요) / `npm run test:unit` (불필요) / `npm test` (둘 다).
+- Rules를 고쳤으면 `npm run test:emulator`를 반드시 돌린다. `fake_cloud_firestore`는 Rules를 적용하지 않는다.
+- 앱 DataSource 테스트는 `fake_cloud_firestore`를 쓴다. 에뮬레이터로 옮기지 않은 이유와 다시 판단할 시점은 `test/helpers/fake_firestore_helper.dart` 주석
 
 ## 공휴일 달력
 

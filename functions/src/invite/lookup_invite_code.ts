@@ -2,6 +2,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v2';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 
+import { findStoreByInviteCode } from './find_store_by_invite_code.js';
 import {
   adminUidOf,
   displayNameOf,
@@ -79,16 +80,11 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
       return recordFailure('invalidCode');
     }
 
-    const snapshot = await db
-      .collection('stores')
-      .where('inviteInfo.inviteCode', '==', code)
-      .limit(1)
-      .get();
-    if (snapshot.empty) {
+    const storeDoc = await findStoreByInviteCode(db, code);
+    if (!storeDoc) {
       return recordFailure('notFound');
     }
 
-    const storeDoc = snapshot.docs[0];
     const store = storeDoc.data();
 
     const createdAt = store.inviteInfo?.createdAt as Timestamp | undefined;
