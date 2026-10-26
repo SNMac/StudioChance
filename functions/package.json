@@ -3,7 +3,7 @@
   "private": true,
   "main": "lib/index.js",
   "engines": {
-    "node": "22"
+    "node": "24"
   },
   "scripts": {
     "build": "rm -rf lib && tsc",
@@ -19,9 +19,9 @@
     "korean-lunar-calendar": "^0.4.0"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "^5.0.2",
-    "@types/node": "^22.15.0",
-    "firebase": "^12.19.0",
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@types/node": "^24.19.2",
+    "firebase": "^13.1.0",
     "firebase-tools": "^15.34.1",
     "typescript": "^7.0.2"
   }

@@ -131,7 +131,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 - **토큰 저장 위치**: `users/{uid}/private/fcm` 문서의 `tokens: string[]`.
   `users/{uid}` 본문은 멤버 이름 표시 때문에 인증 사용자 전체에 읽기가 열려 있어 토큰을 둘 수 없다.
   클라이언트는 `UserFirestoreDataSource._fcmDocRef`를 통해서만 접근한다 (쓰기 규칙은 그 주석 참고)
-- **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 22, 리전 `asia-northeast3`)
+- **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 24, 리전 `asia-northeast3`)
   - `notifyAdminsOnJoinRequest`: `stores/{storeId}` 문서의 `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
   - `notifyOnMembershipChange`: 멤버 구성 변화(관리자 위임·나가기·추방·승인·거절·점포 삭제)를 당사자에게 발송. 분류 규칙은 `functions/src/notifications/membership_change.ts`
   - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
