@@ -74,6 +74,7 @@ deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependa
 
 - **버전 업데이트**: 분기 1회. patch는 PR을 만들지 않고, 서로 맞물리는 패키지(FlutterFire, 코드 생성 스택, Firebase 서버·테스트 SDK)는 한 PR로 묶인다
 - **보안 업데이트**: 주기와 무관하게 취약점 경보가 뜨면 바로 PR이 열린다. 저장소 Settings의 Dependabot alerts·security updates로 켜 둔다
+  - 단 `dependabot.yml`의 ignore는 보안 업데이트에도 적용될 수 있다. 임시로 막아 둔 범위(FlutterFire 5 계열, go_router 18 등)의 취약점은 PR이 열리지 않을 수 있으니, 경보를 보고 손으로 처리한다
 - Dependabot PR은 이슈 없이 열리므로 커밋·PR 제목 컨벤션의 예외다
 
 ### Dependabot PR 처리
@@ -113,8 +114,10 @@ deprecation과 낡은 의존성은 아무도 보지 않으면 쌓인다. Dependa
 
 - **모델 목록과 지원 종료일**: Firebase AI Logic의 [지원 모델](https://firebase.google.com/docs/ai-logic/models),
   모델별 종료일은 Agent Platform(구 Vertex AI) 모델 문서. 앱은 `FirebaseAI.agentPlatform()`(location `global`)을 쓰므로 그쪽 종료일이 기준이다
-- **반영 시간**: 앱이 시작할 때 가져와 바로 적용한다. 단 직전에 가져온 지 최소 간격(dev 5분 / prod 24시간)이 지나지 않았으면 캐시를 쓴다.
-  그래서 prod는 바꾼 뒤 모든 기기에 반영되기까지 최대 24시간이 걸린다 — 모델 지원 종료일보다 **하루 이상 앞서** 바꾼다
+- **반영 시간**: 앱을 **처음부터 다시 실행할 때(콜드 스타트)만** 가져와 바로 적용한다. 백그라운드에서 돌아올 때는 가져오지 않는다.
+  다시 실행해도 직전에 가져온 지 최소 간격(dev 5분 / prod 24시간)이 지나지 않았으면 캐시를 쓴다.
+  그래서 prod는 바꾼 뒤 "24시간이 지나고 앱을 다시 실행한 기기"부터 반영된다. 앱을 오래 켜 둔 기기는 더 늦으므로
+  모델 지원 종료일보다 **며칠 이상 앞서** 바꾼다
 - **잘못된 모델 ID를 넣으면 OCR이 전부 실패한다.** 기본값으로 되돌리는 폴백이 없다(설정 오류를 가리지 않기 위해). 로그에 `Gemini 호출 실패 - 모델: ...`이 찍힌다
 
 ### 바꾸는 순서

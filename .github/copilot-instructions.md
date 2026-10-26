@@ -37,7 +37,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM 기반의 Flutter 공간�
 
 ### Dart 언어 버전
 
-이 프로젝트는 **Dart SDK `^3.10.4`** 를 사용합니다. 최신 문법을 오류로 지적하지 마세요.
+이 프로젝트는 **Dart SDK `^3.13.0`** 를 사용합니다. 최신 문법을 오류로 지적하지 마세요.
 
 - **null-aware elements** (Dart 3.8+): 컬렉션 리터럴에서 `?expr`는 값이 null이면 항목 자체를 생략합니다.
   `{'key': ?maybeNull}` 는 올바른 문법입니다. 조건부 map entry로 바꾸라고 제안하지 마세요.
