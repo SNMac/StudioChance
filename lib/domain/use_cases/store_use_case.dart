@@ -104,7 +104,11 @@ abstract interface class StoreUseCase {
   });
 
   /// 점포 삭제 (Soft Delete)
-  Future<Either<Exception, void>> softDeleteStore(String storeId);
+  /// - [expireImmediately]: 복구 여유 기간 없이 바로 만료시킨다 (계정 삭제용)
+  Future<Either<Exception, void>> softDeleteStore(
+    String storeId, {
+    bool expireImmediately = false,
+  });
 }
 
 class StoreUseCaseImpl implements StoreUseCase {
@@ -430,7 +434,13 @@ class StoreUseCaseImpl implements StoreUseCase {
   }
 
   @override
-  Future<Either<Exception, void>> softDeleteStore(String storeId) {
-    return _storeRepository.softDeleteStore(storeId);
+  Future<Either<Exception, void>> softDeleteStore(
+    String storeId, {
+    bool expireImmediately = false,
+  }) {
+    return _storeRepository.softDeleteStore(
+      storeId,
+      expireImmediately: expireImmediately,
+    );
   }
 }

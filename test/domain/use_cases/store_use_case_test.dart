@@ -224,5 +224,21 @@ void main() {
       expectRight(result);
       verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
     });
+
+    test('expireImmediately를 Repository에 그대로 넘긴다', () async {
+      when(
+        () => mockStoreRepo.softDeleteStore(
+          any(),
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      ).thenAnswer((_) async => right(null));
+
+      await useCase.softDeleteStore('store-123', expireImmediately: true);
+
+      verify(
+        () =>
+            mockStoreRepo.softDeleteStore('store-123', expireImmediately: true),
+      ).called(1);
+    });
   });
 }

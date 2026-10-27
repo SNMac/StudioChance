@@ -159,7 +159,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 ## Firestore 에뮬레이터 테스트
 
 - Rules: `functions/src/rules/*.test.ts` + `@firebase/rules-unit-testing`.
-- Functions 쿼리: `functions/src/queries/*.test.ts` + Admin SDK. 실제 Firestore와 결과가 갈릴 수 있는 쿼리를 검증한다
+- Functions 쿼리: `functions/src/queries/*.test.ts` + Admin SDK. 실제 Firestore와 결과가 갈릴 수 있는 쿼리와 `recursiveDelete` 동작을 검증한다
   - 대상 파일 옆이 아니라 `queries/`에 둔다. `test:unit`이 `invite/` 등의 테스트를 에뮬레이터 없이 통째로 돌리기 때문이다
 - 실행: `cd functions && npm run test:emulator` (에뮬레이터 필요) / `npm run test:unit` (불필요) / `npm test` (둘 다).
 - Rules를 고쳤으면 `npm run test:emulator`를 반드시 돌린다. `fake_cloud_firestore`는 Rules를 적용하지 않는다.
@@ -177,10 +177,21 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 - 날짜 키 `yyyy-MM-dd` 형식은 서버(`HolidayDays`)·앱(`holidayDateKey`)·스냅샷이 공유한다
 - 배포 전 Secret 설정과 첫 배포 직후 수동 실행: `docs/operations.md`
 
+## 만료 문서 자동 정리
+
+- **TTL 정책**은 `firestore.indexes.json`의 `fieldOverrides`(`ttl: true`)에 있다. 만료 후 최대 24시간 안에 지워진다
+  - `stores.expiresAt`: 점포 삭제 후 7일(`storeSoftDeleteDays`, 운영자 수동 복구 여유). 계정 삭제로 지운 점포는 바로 만료된다
+  - `inviteLookupAttempts.expiresAt`: 시도 창이 끝나는 시각(`expiresAtOf`)
+- **`cascadeStoreDelete`** (`functions/src/stores/`): 점포 문서가 지워지면 `recursiveDelete`로 예약 등 서브컬렉션을 지운다. TTL은 서브컬렉션을 지우지 않는다
+- **`purgeDeletedUsers`** (`functions/src/users/`): 매주 월요일 04:30 KST. 삭제한 지 7일(`PURGE_GRACE_DAYS`)이 지났고 작성한 예약이 하나도 남지 않은 삭제된 계정의 문서를 지운다 (ADR-0005)
+- 지워지기 전까지 만료 문서가 쿼리에 잡히므로 `getStore` 등의 `deletedAt` 가드는 유지한다
+- dev 동작 확인 절차: `docs/operations.md`
+
 ## Firestore Rules / Functions 배포 순서
 
-`firebase deploy --only functions` → `--only firestore:rules` → 앱 배포.
-반대로 하면 Rules만 조여진 구간에서 초대 코드 조회가 실패한다.
+`firebase deploy --only functions` → `--only firestore:indexes` → `--only firestore:rules` → 앱 배포.
+- Rules보다 Functions가 먼저여야 한다. 반대로 하면 Rules만 조여진 구간에서 초대 코드 조회가 실패한다
+- TTL(`firestore:indexes`)보다 `cascadeStoreDelete`가 먼저여야 한다. 반대로 하면 그 사이 지워진 점포의 예약이 고아가 된다
 
 ## 마이페이지 / 하단 탭바
 

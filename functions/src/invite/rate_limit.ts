@@ -7,6 +7,15 @@ export type AttemptRecord = {
 };
 
 /**
+ * 창이 끝나는 시각. 이 시각이 지나면 기록이 없는 것과 같으므로 문서의 `expiresAt`으로
+ * 함께 저장해 TTL이 지우게 한다. `windowStartAt`에 바로 TTL을 걸면 창이 끝나기 전에
+ * 지워져 카운터가 일찍 리셋될 수 있다.
+ */
+export function expiresAtOf(record: AttemptRecord): Date {
+  return new Date(record.windowStartAt.getTime() + RATE_LIMIT_WINDOW_MIN * 60 * 1000);
+}
+
+/**
  * 고정 창(fixed window) 방식으로 다음 상태를 계산한다.
  *
  * ponytail: 트랜잭션 없이 read → write로 쓰이므로 동시 요청이 한도를 약간
@@ -18,9 +27,7 @@ export function nextAttemptState(
   now: Date,
 ): { blocked: boolean; next: AttemptRecord } {
   const windowExpired =
-    record === null ||
-    now.getTime() - record.windowStartAt.getTime() >
-      RATE_LIMIT_WINDOW_MIN * 60 * 1000;
+    record === null || now.getTime() > expiresAtOf(record).getTime();
 
   if (windowExpired) {
     return { blocked: false, next: { count: 1, windowStartAt: now } };

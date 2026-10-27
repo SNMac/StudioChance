@@ -9,7 +9,7 @@ import {
   evaluateInviteStore,
   isValidInviteCode,
 } from './invite_code.js';
-import { type AttemptRecord, nextAttemptState } from './rate_limit.js';
+import { type AttemptRecord, expiresAtOf, nextAttemptState } from './rate_limit.js';
 
 type FailureReason = 'invalidCode' | 'notFound' | 'expired' | 'rateLimited';
 
@@ -71,6 +71,7 @@ export const lookupInviteCode = onCall<{ code?: unknown }, Promise<LookupResult>
       await attemptRef.set({
         count: next.count,
         windowStartAt: Timestamp.fromDate(next.windowStartAt),
+        expiresAt: Timestamp.fromDate(expiresAtOf(next)),
       });
       return { ok: false, reason };
     };

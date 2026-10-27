@@ -172,7 +172,10 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
-  Future<Either<Exception, void>> softDeleteStore(String storeId) async {
+  Future<Either<Exception, void>> softDeleteStore(
+    String storeId, {
+    bool expireImmediately = false,
+  }) async {
     try {
       final storeModel = await _storeDataSource.getStore(storeId);
       if (storeModel == null) return right(null);
@@ -182,7 +185,11 @@ class StoreRepositoryImpl implements StoreRepository {
         ...storeModel.waitingMemberById.keys,
       }.toList();
 
-      await _storeDataSource.softDeleteStore(storeId, memberUids);
+      await _storeDataSource.softDeleteStore(
+        storeId,
+        memberUids,
+        expireImmediately: expireImmediately,
+      );
       _logger.i('점포 삭제 완료\nid: $storeId');
       return right(null);
     } catch (e) {

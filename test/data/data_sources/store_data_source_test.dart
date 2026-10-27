@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/models/space_option_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
@@ -461,6 +462,52 @@ void main() {
         final storeById = doc.data()?['storeById'] as Map<String, dynamic>?;
         expect(storeById?.containsKey(storeId), isFalse);
       }
+    });
+
+    // expiresAt이 지나면 TTL이 점포를 지우고 cascadeStoreDelete가 예약을 지운다
+    Future<DateTime> expiresAtAfterSoftDelete({
+      required bool expireImmediately,
+    }) async {
+      final uid = FakeFirestoreHelper.generateId();
+      await _seedUserDoc(fakeFirestore, uid);
+      final created = await dataSource.createStore(
+        _testStore(),
+        uid,
+        _creatorInfo,
+      );
+
+      await dataSource.softDeleteStore(
+        created.id,
+        [],
+        expireImmediately: expireImmediately,
+      );
+
+      final doc = await fakeFirestore
+          .collection('stores')
+          .doc(created.id)
+          .get();
+      return (doc.data()!['expiresAt'] as Timestamp).toDate();
+    }
+
+    test('기본으로는 복구 여유 기간 뒤에 만료된다', () async {
+      final before = DateTime.now();
+
+      final expiresAt = await expiresAtAfterSoftDelete(
+        expireImmediately: false,
+      );
+
+      expect(
+        expiresAt.isAfter(
+          before.add(const Duration(days: storeSoftDeleteDays - 1)),
+        ),
+        isTrue,
+      );
+    });
+
+    test('expireImmediately면 바로 만료된다', () async {
+      final expiresAt = await expiresAtAfterSoftDelete(expireImmediately: true);
+
+      expect(expiresAt.isAfter(DateTime.now()), isFalse);
     });
   });
 
