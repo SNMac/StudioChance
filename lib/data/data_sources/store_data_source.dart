@@ -42,7 +42,15 @@ abstract interface class StoreDataSource {
   /// 점포 삭제 (Soft Delete)
   /// - [memberUids]: 삭제 시점의 멤버+대기 멤버 uid 목록. 각 사용자의
   ///   `storeById.{storeId}` 캐시를 함께 제거하여 데이터 불일치를 방지한다.
-  Future<void> softDeleteStore(String storeId, List<String> memberUids);
+  /// - [expireImmediately]: 복구 여유 기간([storeSoftDeleteDays]) 없이 바로 만료시킨다.
+  ///   계정 삭제처럼 되살려도 쓸 사람이 없는 점포에 쓴다
+  /// - `expiresAt`이 지나면 TTL이 점포 문서를 지우고, Functions의 `cascadeStoreDelete`가
+  ///   예약 등 서브컬렉션을 지운다
+  Future<void> softDeleteStore(
+    String storeId,
+    List<String> memberUids, {
+    bool expireImmediately = false,
+  });
 
   /// 멤버 역할 수정
   Future<void> updateMemberRole(String storeId, String uid, String role);
@@ -426,16 +434,24 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> softDeleteStore(String storeId, List<String> memberUids) async {
+  Future<void> softDeleteStore(
+    String storeId,
+    List<String> memberUids, {
+    bool expireImmediately = false,
+  }) async {
     try {
       final batch = _firestore.batch();
-      final hardDeleteDate = DateTime.now().add(
-        const Duration(days: storeSoftDeleteDays),
-      );
+      // 기기 시각 기준이라 시계가 틀어진 기기에서는 며칠 어긋날 수 있다. 7일은 정확한
+      // 계약이 아니라 대략적인 복구 여유이므로 허용한다
+      final Object expiresAt = expireImmediately
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(
+              DateTime.now().add(const Duration(days: storeSoftDeleteDays)),
+            );
 
       batch.update(_storeDocRef(storeId), {
         'deletedAt': FieldValue.serverTimestamp(),
-        'expiresAt': Timestamp.fromDate(hardDeleteDate),
+        'expiresAt': expiresAt,
         'updatedAt': FieldValue.serverTimestamp(),
         // memberById·waitingMemberById는 지우지 않는다. 점포 삭제 알림 함수
         // (notifyOnMembershipChange)가 이 문서에서 알림 받을 멤버·승인 대기자를 읽는다.

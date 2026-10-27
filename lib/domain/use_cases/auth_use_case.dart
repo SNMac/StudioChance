@@ -198,8 +198,10 @@ class AuthUseCaseImpl implements AuthUseCase {
               _StoreCleanup.cancelJoinRequest =>
                 _storeUseCase.cancelJoinRequest(info.id),
               _StoreCleanup.leave => _storeUseCase.leaveStore(info.id),
+              // 관리자 계정이 사라지면 되살려도 쓸 수 없으므로 복구 여유 기간을 두지 않는다
               _StoreCleanup.softDelete => _storeUseCase.softDeleteStore(
                 info.id,
+                expireImmediately: true,
               ),
             },
           ),

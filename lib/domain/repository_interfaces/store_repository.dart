@@ -34,7 +34,11 @@ abstract interface class StoreRepository {
   });
 
   /// 점포 삭제 (Soft Delete)
-  Future<Either<Exception, void>> softDeleteStore(String storeId);
+  /// - [expireImmediately]: 복구 여유 기간 없이 바로 만료시킨다 (계정 삭제용)
+  Future<Either<Exception, void>> softDeleteStore(
+    String storeId, {
+    bool expireImmediately = false,
+  });
 
   /// 초대 코드 생성/재발급
   Future<Either<Exception, InviteInfo>> createInviteCode(

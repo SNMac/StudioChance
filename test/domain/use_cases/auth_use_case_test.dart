@@ -207,7 +207,12 @@ void main() {
     void verifyNothingWritten() {
       verifyNever(() => mockStoreUseCase.leaveStore(any()));
       verifyNever(() => mockStoreUseCase.cancelJoinRequest(any()));
-      verifyNever(() => mockStoreUseCase.softDeleteStore(any()));
+      verifyNever(
+        () => mockStoreUseCase.softDeleteStore(
+          any(),
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      );
       verifyNever(
         () => mockUserRepo.markAccountDeleted(
           any(),
@@ -229,8 +234,12 @@ void main() {
           .thenAnswer((_) async => right(null));
       when(() => mockStoreUseCase.cancelJoinRequest(any()))
           .thenAnswer((_) async => right(null));
-      when(() => mockStoreUseCase.softDeleteStore(any()))
-          .thenAnswer((_) async => right(null));
+      when(
+        () => mockStoreUseCase.softDeleteStore(
+          any(),
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      ).thenAnswer((_) async => right(null));
       when(
         () => mockUserRepo.markAccountDeleted(
           any(),
@@ -303,7 +312,10 @@ void main() {
         () => mockAuthRepo.prepareDeletion(),
         () => mockStoreUseCase.leaveStore('store-staff'),
         () => mockStoreUseCase.cancelJoinRequest('store-pending'),
-        () => mockStoreUseCase.softDeleteStore('store-123'),
+        () => mockStoreUseCase.softDeleteStore(
+          'store-123',
+          expireImmediately: true,
+        ),
         () => mockUserRepo.markAccountDeleted('user-123', nickname: '닉네임'),
         () => mockAuthRepo.delete(),
       ]);
@@ -317,8 +329,18 @@ void main() {
 
       verifyNever(() => mockStoreUseCase.leaveStore('store-123'));
       verifyNever(() => mockStoreUseCase.leaveStore('store-pending'));
-      verifyNever(() => mockStoreUseCase.softDeleteStore('store-staff'));
-      verifyNever(() => mockStoreUseCase.softDeleteStore('store-pending'));
+      verifyNever(
+        () => mockStoreUseCase.softDeleteStore(
+          'store-staff',
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      );
+      verifyNever(
+        () => mockStoreUseCase.softDeleteStore(
+          'store-pending',
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      );
     });
 
     // 승인 전에는 멤버가 아니라 Rules가 점포 수정을 거부해 계정 삭제가 실패한다
@@ -340,7 +362,12 @@ void main() {
       expectRight(result);
       verify(() => mockStoreUseCase.cancelJoinRequest('store-pending'))
           .called(1);
-      verifyNever(() => mockStoreUseCase.softDeleteStore('store-pending'));
+      verifyNever(
+        () => mockStoreUseCase.softDeleteStore(
+          'store-pending',
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      );
     });
 
     test('점포 나가기가 실패하면 사용자 문서와 Auth 계정을 지우지 않는다', () async {
@@ -364,8 +391,12 @@ void main() {
     test('관리자 점포 삭제가 실패하면 사용자 문서와 Auth 계정을 지우지 않는다', () async {
       when(() => mockUserRepo.getCurrentUser())
           .thenAnswer((_) async => right(fakeUser));
-      when(() => mockStoreUseCase.softDeleteStore('store-123'))
-          .thenAnswer((_) async => left(Exception('점포 삭제 실패')));
+      when(
+        () => mockStoreUseCase.softDeleteStore(
+          'store-123',
+          expireImmediately: any(named: 'expireImmediately'),
+        ),
+      ).thenAnswer((_) async => left(Exception('점포 삭제 실패')));
 
       final result = await useCase.delete();
 

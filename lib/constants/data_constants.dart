@@ -14,6 +14,9 @@ const int maxConfirmationNotesCharCount = 3000;
 const int storeInviteCodeAvailableMin = 15;
 
 /// 점포 soft delete 유지 기간(일 단위)
+/// - 운영자가 콘솔에서 점포를 되살릴 수 있는 여유다. 앱에는 복구 기능이 없다
+/// - 계정 삭제로 지운 점포는 되살려도 관리자 계정이 없어 쓸 수 없으므로 기다리지 않는다
+///   (`softDeleteStore`의 `expireImmediately`)
 const int storeSoftDeleteDays = 7;
 
 /// 공휴일 값 표시용
