@@ -57,18 +57,25 @@ export const notifyOnStoreUpdate = onDocumentUpdatedWithAuthContext(
       authId: event.authId,
     };
 
-    const results = await Promise.allSettled([
-      notifyNewJoinRequests(update),
-      notifyMembershipChanges(update),
-    ]);
-    const failures = results.filter(
-      (result): result is PromiseRejectedResult => result.status === 'rejected',
-    );
-    if (failures.length > 0) {
-      throw new AggregateError(
-        failures.map((failure) => failure.reason),
-        '점포 수정 알림 일부 발송 실패',
-      );
+    const notifications = [
+      { label: '가입 신청 알림', send: notifyNewJoinRequests },
+      { label: '멤버 구성 변화 알림', send: notifyMembershipChanges },
+    ];
+    const results = await Promise.allSettled(notifications.map(({ send }) => send(update)));
+
+    const errors: unknown[] = [];
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') return;
+      errors.push(result.reason);
+      // AggregateError 안의 원인은 로그에서 찾기 어려우므로 알림마다 남긴다.
+      // Error 객체는 구조화 로그에서 {}로 직렬화되므로 문자열로 바꾼다
+      logger.error(`${notifications[index].label} 발송 실패`, {
+        storeId: update.storeId,
+        error: String(result.reason),
+      });
+    });
+    if (errors.length > 0) {
+      throw new AggregateError(errors, '점포 수정 알림 일부 발송 실패');
     }
   },
 );

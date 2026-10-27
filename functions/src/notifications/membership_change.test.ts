@@ -107,7 +107,7 @@ test('신청자가 스스로 대기 명단에서 지우면(신청 취소) 알리
   assert.deepEqual(classifyMembershipChanges(base, after, 'pending1'), []);
 });
 
-test('새 가입 신청은 이 함수의 사건이 아니다 (notifyNewJoinRequests가 담당)', () => {
+test('새 가입 신청은 이 함수의 사건이 아니다 (가입 신청 알림이 담당)', () => {
   const after = withMembers(base.memberById, {
     ...base.waitingMemberById,
     pending2: { role: 'STAFF' },
