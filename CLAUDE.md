@@ -183,7 +183,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   - `stores.expiresAt`: 점포 삭제 후 7일(`storeSoftDeleteDays`, 운영자 수동 복구 여유). 계정 삭제로 지운 점포는 바로 만료된다
   - `inviteLookupAttempts.expiresAt`: 시도 창이 끝나는 시각(`expiresAtOf`)
 - **`cascadeStoreDelete`** (`functions/src/stores/`): 점포 문서가 지워지면 `recursiveDelete`로 예약 등 서브컬렉션을 지운다. TTL은 서브컬렉션을 지우지 않는다
-- **`purgeDeletedUsers`** (`functions/src/users/`): 매주 월요일 04:30 KST. 작성한 예약이 하나도 남지 않은 삭제된 계정의 문서를 지운다 (ADR-0005)
+- **`purgeDeletedUsers`** (`functions/src/users/`): 매주 월요일 04:30 KST. 삭제한 지 7일(`PURGE_GRACE_DAYS`)이 지났고 작성한 예약이 하나도 남지 않은 삭제된 계정의 문서를 지운다 (ADR-0005)
 - 지워지기 전까지 만료 문서가 쿼리에 잡히므로 `getStore` 등의 `deletedAt` 가드는 유지한다
 - dev 동작 확인 절차: `docs/operations.md`
 

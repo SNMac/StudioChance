@@ -57,7 +57,7 @@ TTL과 `cascadeStoreDelete`는 에뮬레이터에서 돌릴 수 없어 dev에서
    - `stores/ttl-test`: `deletedAt`·`expiresAt`을 과거 시각으로, 하위에 `reservations/r1`·`r2`
    - `inviteLookupAttempts/ttl-test`: `count: 1`, `windowStartAt`·`expiresAt`을 과거 시각으로
 4. 24시간 안에 점포·예약 2건·시도 문서가 모두 사라졌는지 본다. 점포만 사라지고 예약이 남으면 `cascadeStoreDelete` 로그를 본다
-5. `purgeDeletedUsers`는 Cloud Scheduler 콘솔에서 "강제 실행"해 확인한다. `users/purge-test`에 `{nickname, deletedAt}`만 넣고 실행하면 지워지고,
+5. `purgeDeletedUsers`는 Cloud Scheduler 콘솔에서 "강제 실행"해 확인한다. `users/purge-test`에 `{nickname, deletedAt}`만 넣되 `deletedAt`을 8일 이상 전으로 두고 실행하면 지워지고,
    `writerId: 'purge-test'`인 예약이 어느 점포에든 있으면 남아야 한다
 
 ## App Check 디버그 토큰 등록 (dev 실기기)

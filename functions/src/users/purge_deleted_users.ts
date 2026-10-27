@@ -8,8 +8,7 @@ import { findUnreferencedDeletedUsers } from './find_unreferenced_deleted_users.
  * 매주 월요일 04:30 KST에 어디에도 연결되지 않은 삭제된 계정의 문서를 지운다 (ADR-0005).
  *
  * 삭제된 계정의 문서는 남은 예약에 작성자 닉네임을 보여 주려고 남긴 것이라, 작성한 예약이
- * 모두 사라지면 남길 이유가 없다. 계정 삭제 직후가 아니라 주 단위로 지우므로 계정 삭제가
- * 일으킨 점포 나가기 알림(notifyOnMembershipChange)은 닉네임을 읽을 수 있다.
+ * 모두 사라지면 남길 이유가 없다. 삭제한 지 얼마 안 된 계정은 건너뛴다(PURGE_GRACE_DAYS).
  */
 export const purgeDeletedUsers = onSchedule(
   {
@@ -20,7 +19,7 @@ export const purgeDeletedUsers = onSchedule(
   },
   async () => {
     const db = getFirestore();
-    const targets = await findUnreferencedDeletedUsers(db);
+    const targets = await findUnreferencedDeletedUsers(db, new Date());
 
     for (const ref of targets) {
       // 하위 문서(private/fcm 등)가 남아 있어도 함께 지운다
