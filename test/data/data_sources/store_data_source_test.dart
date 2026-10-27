@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
@@ -11,12 +12,13 @@ import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
+import '../../helpers/callable_stub.dart';
 import '../../helpers/fake_firestore_helper.dart';
 import '../../helpers/mocks.dart';
 
-// lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
-// 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
-// 파라미터를 채우는 용도로만 쓰인다.
+// Callable(lookupInviteCode·issueInviteCode)은 fake_cloud_firestore로
+// 검증할 수 없다. 서버 동작은 functions/의 테스트가 지키고, 여기서는 FirebaseFunctions
+// 목으로 요청·응답 변환만 확인한다.
 // @Default({})와 @Default([])의 Freezed 기본값은 const {}와 const []로 생성되어
 // 런타임 타입이 _Map<dynamic, dynamic>/_List<dynamic>입니다.
 // fake_cloud_firestore가 이를 Map<String, dynamic>으로 캐스팅하면 TypeError가 발생하므로,
@@ -127,14 +129,13 @@ Future<void> _seedUserWithStore(
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
+  late MockFirebaseFunctions mockFunctions;
   late StoreFirestoreDataSource dataSource;
 
   setUp(() {
     fakeFirestore = FakeFirestoreHelper.create();
-    dataSource = StoreFirestoreDataSource(
-      fakeFirestore,
-      MockFirebaseFunctions(),
-    );
+    mockFunctions = MockFirebaseFunctions();
+    dataSource = StoreFirestoreDataSource(fakeFirestore, mockFunctions);
   });
 
   // =========================================================================
@@ -412,7 +413,10 @@ void main() {
         uid,
         _creatorInfo,
       );
-      await dataSource.createInviteCode(created.id);
+      // 발급은 서버가 하므로 발급된 모양을 직접 넣는다
+      await fakeFirestore.collection('stores').doc(created.id).update({
+        'inviteInfo': {'inviteCode': 'AB3D9F', 'createdAt': Timestamp.now()},
+      });
 
       await dataSource.softDeleteStore(created.id, []);
 
@@ -512,68 +516,58 @@ void main() {
   });
 
   // =========================================================================
-  // createInviteCode & getInviteInfo
+  // issueInviteCode (같은 이름의 Callable)
   // =========================================================================
 
-  group('createInviteCode / getInviteInfo', () {
-    test('초대 코드를 생성하고 6자리 코드를 반환한다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
+  group('issueInviteCode', () {
+    test('점포 ID와 재발급 여부를 보내고 응답을 모델로 옮긴다', () async {
+      final createdAt = DateTime(2026, 8, 29, 9, 10);
+      final callable = stubCallable(mockFunctions, 'issueInviteCode', {
+        'inviteCode': 'AB3D9F',
+        'createdAtMillis': createdAt.millisecondsSinceEpoch,
+      });
+
+      final invite = await dataSource.issueInviteCode(
+        'store-1',
+        forceRegenerate: true,
       );
 
-      final inviteInfo = await dataSource.createInviteCode(created.id);
-
-      expect(inviteInfo.inviteCode, isNotEmpty);
-      expect(inviteInfo.inviteCode.length, 6);
+      expect(invite.inviteCode, 'AB3D9F');
+      expect(invite.createdAt, createdAt);
+      verify(
+        () => callable.call<dynamic>({
+          'storeId': 'store-1',
+          'forceRegenerate': true,
+        }),
+      ).called(1);
     });
 
-    test('반환된 모델에 서버가 확정한 createdAt이 담긴다', () async {
-      // serverTimestamp는 쓰기 시점에 값을 알 수 없어, 다시 읽지 않으면 null이
-      // 그대로 반환된다. 그러면 발급 직후 남은 유효 시간을 계산할 수 없다.
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
+    test('Android가 돌려주는 Map<Object?, Object?> 응답도 읽는다', () async {
+      stubCallable(mockFunctions, 'issueInviteCode', <Object?, Object?>{
+        'inviteCode': 'AB3D9F',
+        'createdAtMillis': 0,
+      });
 
-      final inviteInfo = await dataSource.createInviteCode(created.id);
+      final invite = await dataSource.issueInviteCode('store-1');
 
-      expect(inviteInfo.createdAt, isNotNull);
+      expect(invite.inviteCode, 'AB3D9F');
     });
 
-    test('getInviteInfo는 저장된 초대 코드를 반환한다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
+    test('서버가 권한 없음으로 거절하면 StorePermissionDeniedException', () async {
+      final callable = MockHttpsCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+        FirebaseException(
+          plugin: 'firebase_functions',
+          code: 'permission-denied',
+        ),
       );
-      final createdInvite = await dataSource.createInviteCode(created.id);
+      when(() => mockFunctions.httpsCallable('issueInviteCode'))
+          .thenReturn(callable);
 
-      final fetched = await dataSource.getInviteInfo(created.id);
-
-      expect(fetched, isNotNull);
-      expect(fetched!.inviteCode, createdInvite.inviteCode);
-    });
-
-    test('초대 코드가 없으면 null을 반환한다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
+      expect(
+        () => dataSource.issueInviteCode('store-1'),
+        throwsA(isA<StorePermissionDeniedException>()),
       );
-
-      final result = await dataSource.getInviteInfo(created.id);
-      expect(result, isNull);
     });
   });
 
@@ -794,25 +788,6 @@ void main() {
       final stores = userDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(stores?.containsKey(storeId), isTrue);
       expect(stores?[storeId]['role'], 'STAFF');
-    });
-  });
-
-  // =========================================================================
-  // getServerTime
-  // =========================================================================
-
-  group('getServerTime', () {
-    test('현재 시각과 근접한 DateTime을 반환한다', () async {
-      final before = DateTime.now();
-
-      final serverTime = await dataSource.getServerTime();
-
-      final after = DateTime.now();
-      expect(
-        serverTime.isAfter(before.subtract(const Duration(seconds: 5))),
-        true,
-      );
-      expect(serverTime.isBefore(after.add(const Duration(seconds: 5))), true);
     });
   });
 }

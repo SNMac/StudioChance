@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
+import 'package:studio_chance/data/data_sources/server_clock_data_source.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
@@ -35,11 +36,18 @@ class MockNotificationDataSource extends Mock
 
 class MockReservationDataSource extends Mock implements ReservationDataSource {}
 
+class MockServerClockDataSource extends Mock implements ServerClockDataSource {}
+
 class MockStoreDataSource extends Mock implements StoreDataSource {}
 
 class MockUserDataSource extends Mock implements UserDataSource {}
 
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
+
+class MockHttpsCallable extends Mock implements HttpsCallable {}
+
+class MockHttpsCallableResult extends Mock
+    implements HttpsCallableResult<dynamic> {}
 
 // ─── Repository ──────────────────────────────────────────────────────────────
 

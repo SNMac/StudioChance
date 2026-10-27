@@ -40,8 +40,8 @@ abstract interface class StoreRepository {
     bool expireImmediately = false,
   });
 
-  /// 초대 코드 생성/재발급
-  Future<Either<Exception, InviteInfo>> createInviteCode(
+  /// 초대 코드 발급/재발급. 유효한 코드가 남아 있으면 발급은 그 코드를 돌려준다
+  Future<Either<Exception, InviteInfo>> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   });

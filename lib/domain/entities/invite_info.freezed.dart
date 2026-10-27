@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteInfo {
 
- String get inviteCode;/// 서버가 확정한 생성 시각. 발급 직후에도 채워진다
-/// (`StoreDataSource.createInviteCode`가 쓰기 후 다시 읽어 온다).
+ String get inviteCode;/// 서버가 정한 발급 시각 (Callable `issueInviteCode`, ADR-0006).
  DateTime? get createdAt;
 /// Create a copy of InviteInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -219,8 +218,7 @@ class _InviteInfo extends InviteInfo {
   
 
 @override final  String inviteCode;
-/// 서버가 확정한 생성 시각. 발급 직후에도 채워진다
-/// (`StoreDataSource.createInviteCode`가 쓰기 후 다시 읽어 온다).
+/// 서버가 정한 발급 시각 (Callable `issueInviteCode`, ADR-0006).
 @override final  DateTime? createdAt;
 
 /// Create a copy of InviteInfo

@@ -61,7 +61,7 @@ final class InviteCodeControllerProvider
 }
 
 String _$inviteCodeControllerHash() =>
-    r'6949b9d104824e4b1305e682ca60bf5f0f6042f9';
+    r'c2f948df3575dd46c3b281e47a60320828773469';
 
 /// 관리자의 초대 코드 발급 액션을 UseCase에 위임한다.
 ///

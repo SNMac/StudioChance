@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/invite_store_preview_model.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 
@@ -55,6 +56,29 @@ void main() {
       final result = await repository.getStoreByInviteCode('EXPIRD');
 
       expect(expectLeft(result), isA<StoreInviteCodeExpiredException>());
+    });
+  });
+
+  group('issueInviteCode', () {
+    test('재발급 여부를 그대로 넘기고 발급 결과를 돌려준다', () async {
+      when(() => mockStoreDs.issueInviteCode('store-1', forceRegenerate: true))
+          .thenAnswer((_) async => const InviteInfoModel(inviteCode: 'AB3D9F'));
+
+      final result = await repository.issueInviteCode(
+        'store-1',
+        forceRegenerate: true,
+      );
+
+      expect(expectRight(result).inviteCode, 'AB3D9F');
+    });
+
+    test('서버가 거절하면 Left로 감싼다', () async {
+      when(() => mockStoreDs.issueInviteCode('store-1'))
+          .thenThrow(StorePermissionDeniedException(message: '권한 없음'));
+
+      final result = await repository.issueInviteCode('store-1');
+
+      expect(expectLeft(result), isA<StorePermissionDeniedException>());
     });
   });
 }

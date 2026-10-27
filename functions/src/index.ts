@@ -16,7 +16,9 @@ import { collectNewWaitingUids } from './notifications/waiting_member_diff.js';
 
 initializeApp();
 
+export { issueInviteCode } from './invite/issue_invite_code.js';
 export { lookupInviteCode } from './invite/lookup_invite_code.js';
+export { getServerTime } from './time/get_server_time.js';
 export { syncHolidays } from './holidays/sync_holidays.js';
 export { cascadeStoreDelete } from './stores/cascade_store_delete.js';
 export { purgeDeletedUsers } from './users/purge_deleted_users.js';

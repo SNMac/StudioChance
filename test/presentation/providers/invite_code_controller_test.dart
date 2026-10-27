@@ -27,7 +27,7 @@ void main() {
 
   void stubIssue(Either<Exception, InviteInfo> result) {
     when(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
@@ -57,7 +57,7 @@ void main() {
             .issue('store42');
 
         verify(
-          () => mockStoreUseCase.createInviteCode(
+          () => mockStoreUseCase.issueInviteCode(
             'store42',
             forceRegenerate: false,
           ),
@@ -70,10 +70,8 @@ void main() {
             .issue('store1', forceRegenerate: true);
 
         verify(
-          () => mockStoreUseCase.createInviteCode(
-            'store1',
-            forceRegenerate: true,
-          ),
+          () =>
+              mockStoreUseCase.issueInviteCode('store1', forceRegenerate: true),
         ).called(1);
       });
 

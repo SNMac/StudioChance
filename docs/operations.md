@@ -68,8 +68,9 @@ TTL과 `cascadeStoreDelete`는 에뮬레이터에서 돌릴 수 없어 dev에서
 
 ## App Check 디버그 토큰 등록 (dev 실기기)
 
-`lookupInviteCode`는 이 앱에서 App Check를 실제로 강제하는 첫 경로다. dev 실기기에서 디버그 토큰을 등록하지 않으면
-초대 코드 조회가 전부 "권한이 없습니다"로 떨어진다(`mapFirebaseCode`가 `unauthenticated` → `StorePermissionDeniedException`).
+초대 코드 Callable(`lookupInviteCode`·`issueInviteCode`·`getServerTime`)은 App Check를 강제한다. dev 실기기에서 디버그 토큰을 등록하지 않으면
+초대 코드 조회·발급이 전부 "권한이 없습니다"로 떨어진다(`mapFirebaseCode`가 `unauthenticated` → `StorePermissionDeniedException`).
+`getServerTime`은 실패해도 화면에 드러나지 않고 남은 시간이 기기 시계로 표시될 뿐이다.
 prod는 Play Integrity / App Attest를 쓰므로 이 절차가 필요 없다.
 
 1. **원인 확인**: 화면에는 원인이 드러나지 않으므로 서버 로그로 판별한다.

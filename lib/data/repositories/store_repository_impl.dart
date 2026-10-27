@@ -6,7 +6,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/common/exceptions/user_exceptions.dart';
 import 'package:studio_chance/common/utils/exception_utils.dart';
-import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
@@ -199,30 +198,20 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
-  Future<Either<Exception, InviteInfo>> createInviteCode(
+  Future<Either<Exception, InviteInfo>> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   }) async {
     try {
-      if (!forceRegenerate) {
-        final existing = await _storeDataSource.getInviteInfo(storeId);
-        if (existing != null && existing.createdAt != null) {
-          final expiresAt = existing.createdAt!.add(
-            const Duration(minutes: storeInviteCodeAvailableMin),
-          );
-          final serverNow = await _storeDataSource.getServerTime();
-          if (serverNow.isBefore(expiresAt)) {
-            _logger.i('유효한 초대 코드 재사용\nstoreId: $storeId');
-            return right(existing.toEntity());
-          }
-        }
-      }
-
-      final inviteModel = await _storeDataSource.createInviteCode(storeId);
-      _logger.i('초대 코드 생성 완료\nstoreId: $storeId');
+      // 유효한 코드 재사용 판정은 서버가 서버 시각으로 한다 (ADR-0006)
+      final inviteModel = await _storeDataSource.issueInviteCode(
+        storeId,
+        forceRegenerate: forceRegenerate,
+      );
+      _logger.i('초대 코드 발급 완료\nstoreId: $storeId');
       return right(inviteModel.toEntity());
     } catch (e) {
-      _logger.e('초대 코드 생성 실패');
+      _logger.e('초대 코드 발급 실패');
       return left(toException(e));
     }
   }

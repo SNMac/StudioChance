@@ -97,8 +97,8 @@ abstract interface class StoreUseCase {
     required String memo,
   });
 
-  /// 초대 코드 생성/재생성
-  Future<Either<Exception, InviteInfo>> createInviteCode(
+  /// 초대 코드 발급/재발급
+  Future<Either<Exception, InviteInfo>> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   });
@@ -423,11 +423,11 @@ class StoreUseCaseImpl implements StoreUseCase {
   }
 
   @override
-  Future<Either<Exception, InviteInfo>> createInviteCode(
+  Future<Either<Exception, InviteInfo>> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   }) {
-    return _storeRepository.createInviteCode(
+    return _storeRepository.issueInviteCode(
       storeId,
       forceRegenerate: forceRegenerate,
     );

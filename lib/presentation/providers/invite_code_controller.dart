@@ -25,8 +25,8 @@ class InviteCodeController extends _$InviteCodeController {
   /// 초대 코드를 발급한다.
   ///
   /// 기본값([forceRegenerate]가 false)에서는 유효 기간이 남은 코드가 있으면
-  /// Repository가 같은 코드를 되돌려주므로(`store_repository_impl.dart`의
-  /// `createInviteCode`) 재사용/재발급 분기를 UI가 판단하지 않는다.
+  /// 서버가 같은 코드를 되돌려주므로(`functions/src/invite/issue_invite_code.ts`)
+  /// 재사용/재발급 분기를 UI가 판단하지 않는다.
   ///
   /// [forceRegenerate]가 true면 유효 기간이 남아 있어도 새 코드를 만들어
   /// 덮어쓴다. 별도의 코드 폐기 경로가 없으므로, 유출된 코드를 즉시 막는
@@ -39,7 +39,7 @@ class InviteCodeController extends _$InviteCodeController {
 
     final result = await ref
         .read(storeUseCaseProvider)
-        .createInviteCode(storeId, forceRegenerate: forceRegenerate);
+        .issueInviteCode(storeId, forceRegenerate: forceRegenerate);
     final stackTrace = StackTrace.current;
 
     result.fold(
