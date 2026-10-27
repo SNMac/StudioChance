@@ -3,7 +3,7 @@ import { type DocumentReference, type Firestore, Timestamp } from 'firebase-admi
 /**
  * 계정을 삭제한 뒤 이 기간이 지나야 정리 대상이 된다.
  *
- * 계정 삭제가 일으킨 점포 나가기 알림(notifyOnMembershipChange)이 이 문서에서 닉네임을
+ * 계정 삭제가 일으킨 점포 나가기 알림(notifyOnStoreUpdate)이 이 문서에서 닉네임을
  * 읽는다. 작성한 예약이 없으면 문서는 삭제 직후부터 연결이 끊긴 상태라, 정리 함수가 마침
  * 그 몇 초 안에 실행되면 알림이 이름을 읽지 못한다. 알림에는 몇 초면 충분하지만 여유를 둔다.
  */

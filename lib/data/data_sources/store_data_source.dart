@@ -449,7 +449,7 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         'expiresAt': expiresAt,
         'updatedAt': FieldValue.serverTimestamp(),
         // memberById·waitingMemberById는 지우지 않는다. 점포 삭제 알림 함수
-        // (notifyOnMembershipChange)가 이 문서에서 알림 받을 멤버·승인 대기자를 읽는다.
+        // (notifyOnStoreUpdate)가 이 문서에서 알림 받을 멤버·승인 대기자를 읽는다.
         // deletedAt을 쓰는 경로는 반드시 inviteInfo도 함께 null로 만들어야 한다.
         // lookupInviteCode Callable(functions/src/invite/lookup_invite_code.ts)이
         // 이 불변식에 기대어 초대 코드로만 조회한다.
