@@ -44,7 +44,7 @@ test('창이 지나면 카운트가 초기화된다', () => {
 
 test('expiresAt은 창이 끝나는 시각이다', () => {
   const expiresAt = expiresAtOf({ count: 1, windowStartAt: NOW });
-  assert.equal(expiresAt.getTime() - NOW.getTime(), RATE_LIMIT_WINDOW_MIN * 60000);
+  assert.equal(expiresAt.getTime() - NOW.getTime(), RATE_LIMIT_WINDOW_MIN * 60 * 1000);
 });
 
 test('expiresAt이 지나면 기록이 없는 것과 같다', () => {
