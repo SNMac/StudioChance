@@ -11,7 +11,8 @@
 // firebase.json (Functions·Rules 배포에 필요한 부분만)
 {
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "functions": [
     {
@@ -39,11 +40,25 @@
 
 - `firebase deploy --only functions -P dev` / `-P prod` (Blaze 요금제 필요)
 - Rules는 `firebase deploy --only firestore:rules -P dev` / `-P prod`
-- 복합 인덱스나 `collectionGroup` 쿼리용 인덱스가 필요해지면(지금은 없다) 저장소에 `firestore.indexes.json`을 만들고,
-  `firebase.json`의 `firestore`에 `"indexes": "firestore.indexes.json"`을 추가해 `firebase deploy --only firestore:indexes -P dev` / `-P prod`로 배포한다.
-  dev 콘솔이나 오류 링크로 만든 인덱스는 `firebase firestore:indexes -P dev`로 내보내 이 파일에 반영한다
+- 인덱스와 TTL 정책은 `firestore.indexes.json`에 있고 `firebase deploy --only firestore:indexes -P dev` / `-P prod`로 배포한다.
+  dev 콘솔이나 오류 링크로 만든 인덱스는 `firebase firestore:indexes -P dev`로 내보내 이 파일에 반영한다.
+  파일에 없는 인덱스가 프로젝트에 있으면 배포가 지울지 묻는다 — 콘솔에서 만든 것이면 먼저 이 파일에 옮긴다
 - **배포 전 Secret 설정**(dev·prod 각각, 최초 1회): `firebase functions:secrets:set DATA_GO_KR_SERVICE_KEY -P dev`
 - **`syncHolidays` 첫 배포 직후 1회 수동 실행**: 스케줄 첫 실행이 다음 날 새벽이므로 Cloud Scheduler 콘솔에서 `syncHolidays` 작업을 "강제 실행"한다
+
+## TTL·cascade 동작 확인 (dev)
+
+TTL과 `cascadeStoreDelete`는 에뮬레이터에서 돌릴 수 없어 dev에서 확인한다. TTL 정책은 켠 뒤 활성화까지 시간이 걸리고, 만료 문서는 만료 후 최대 24시간 안에 지워진다.
+
+1. `firebase deploy --only functions -P dev` → `firebase deploy --only firestore:indexes -P dev` (순서를 바꾸면 그 사이 지워진 점포의 예약이 고아가 된다)
+   - `cascadeStoreDelete`는 재시도(`retry: true`)를 켜서 처음 배포할 때 CLI가 `--force`를 요구한다. 재시도해도 결과가 같은 함수라 붙여도 된다
+2. Firebase 콘솔 → Firestore → Time-to-live 탭에서 `stores.expiresAt`·`inviteLookupAttempts.expiresAt`이 **Serving**인지 본다
+3. 테스트 문서를 넣는다
+   - `stores/ttl-test`: `deletedAt`·`expiresAt`을 과거 시각으로, 하위에 `reservations/r1`·`r2`
+   - `inviteLookupAttempts/ttl-test`: `count: 1`, `windowStartAt`·`expiresAt`을 과거 시각으로
+4. 24시간 안에 점포·예약 2건·시도 문서가 모두 사라졌는지 본다. 점포만 사라지고 예약이 남으면 `cascadeStoreDelete` 로그를 본다
+5. `purgeDeletedUsers`는 Cloud Scheduler 콘솔에서 "강제 실행"해 확인한다. `users/purge-test`에 `{nickname, deletedAt}`만 넣고 실행하면 지워지고,
+   `writerId: 'purge-test'`인 예약이 어느 점포에든 있으면 남아야 한다
 
 ## App Check 디버그 토큰 등록 (dev 실기기)
 
