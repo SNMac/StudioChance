@@ -52,12 +52,15 @@ TTL과 `cascadeStoreDelete`는 에뮬레이터에서 돌릴 수 없어 dev에서
 
 1. `firebase deploy --only functions -P dev` → `firebase deploy --only firestore:indexes -P dev` (순서를 바꾸면 그 사이 지워진 점포의 예약이 고아가 된다)
    - `cascadeStoreDelete`는 재시도(`retry: true`)를 켜서 처음 배포할 때 CLI가 `--force`를 요구한다. 재시도해도 결과가 같은 함수라 붙여도 된다
-2. Firebase 콘솔 → Firestore → Time-to-live 탭에서 `stores.expiresAt`·`inviteLookupAttempts.expiresAt`이 **Serving**인지 본다
+2. TTL 정책과 `reservations.writerId` 인덱스가 `CREATING`에서 벗어났는지 본다 (첫 배포 후 수십 분 걸릴 수 있다)
+   - `gcloud firestore fields ttls list --project studio-chance` (prod는 `studio-chance-prod`)
+   - `gcloud firestore indexes fields describe writerId --collection-group=reservations --project studio-chance`
+   - 인덱스가 준비되기 전에 `purgeDeletedUsers`를 실행하면 `FAILED_PRECONDITION: ... index is not ready yet`으로 실패한다
 3. 테스트 문서를 넣는다
    - `stores/ttl-test`: `deletedAt`·`expiresAt`을 과거 시각으로, 하위에 `reservations/r1`·`r2`
    - `inviteLookupAttempts/ttl-test`: `count: 1`, `windowStartAt`·`expiresAt`을 과거 시각으로
 4. 24시간 안에 점포·예약 2건·시도 문서가 모두 사라졌는지 본다. 점포만 사라지고 예약이 남으면 `cascadeStoreDelete` 로그를 본다
-5. `purgeDeletedUsers`는 Cloud Scheduler 콘솔에서 "강제 실행"해 확인한다. `users/purge-test`에 `{nickname, deletedAt}`만 넣되 `deletedAt`을 8일 이상 전으로 두고 실행하면 지워지고,
+5. `purgeDeletedUsers`는 Cloud Scheduler 콘솔에서 "강제 실행"(또는 `gcloud scheduler jobs run firebase-schedule-purgeDeletedUsers-asia-northeast3 --location asia-northeast3 --project studio-chance`)해 확인한다. `users/purge-test`에 `{nickname, deletedAt}`만 넣되 `deletedAt`을 8일 이상 전으로 두고 실행하면 지워지고,
    `writerId: 'purge-test'`인 예약이 어느 점포에든 있으면 남아야 한다
 
 ## App Check 디버그 토큰 등록 (dev 실기기)
