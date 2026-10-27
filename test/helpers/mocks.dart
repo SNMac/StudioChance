@@ -41,6 +41,11 @@ class MockUserDataSource extends Mock implements UserDataSource {}
 
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
 
+class MockHttpsCallable extends Mock implements HttpsCallable {}
+
+class MockHttpsCallableResult extends Mock
+    implements HttpsCallableResult<dynamic> {}
+
 // ─── Repository ──────────────────────────────────────────────────────────────
 
 class MockAuthRepository extends Mock implements AuthRepository {}

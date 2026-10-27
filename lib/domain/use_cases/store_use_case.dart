@@ -97,11 +97,14 @@ abstract interface class StoreUseCase {
     required String memo,
   });
 
-  /// 초대 코드 생성/재생성
+  /// 초대 코드 발급/재발급
   Future<Either<Exception, InviteInfo>> createInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   });
+
+  /// 서버 시각에서 기기 시각을 뺀 값. 초대 코드의 남은 유효 시간 표시 보정용
+  Future<Either<Exception, Duration>> getServerClockOffset();
 
   /// 점포 삭제 (Soft Delete)
   /// - [expireImmediately]: 복구 여유 기간 없이 바로 만료시킨다 (계정 삭제용)
@@ -431,6 +434,11 @@ class StoreUseCaseImpl implements StoreUseCase {
       storeId,
       forceRegenerate: forceRegenerate,
     );
+  }
+
+  @override
+  Future<Either<Exception, Duration>> getServerClockOffset() {
+    return _storeRepository.getServerClockOffset();
   }
 
   @override

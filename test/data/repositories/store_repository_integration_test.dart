@@ -15,7 +15,7 @@ import '../../helpers/fake_firestore_helper.dart';
 import '../../helpers/either_expectations.dart';
 import '../../helpers/mocks.dart';
 
-// lookupInviteCode는 Callable(FirebaseFunctions)이라 fake_cloud_firestore로
+// 초대 코드 Callable(lookupInviteCode·issueInviteCode)은 fake_cloud_firestore로
 // 검증할 수 없다. 이 파일의 테스트는 이를 호출하지 않으므로 목은 생성자
 // 파라미터를 채우는 용도로만 쓰인다.
 Store _testStoreEntity(String uid, User adminUser) => Store(
@@ -395,35 +395,9 @@ void main() {
     });
   });
 
-  // =========================================================================
-  // createInviteCode
-  // =========================================================================
-
-  group('createInviteCode', () {
-    test('유효 시간 내 재호출 시 동일한 코드를 재사용한다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final adminUser = User(
-        id: uid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
-      final created = await repository.createStore(
-        store: _testStoreEntity(uid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final storeId = expectRight(created).id;
-
-      final first = await repository.createInviteCode(storeId);
-      final second = await repository.createInviteCode(storeId);
-
-      expect(expectRight(first).inviteCode, expectRight(second).inviteCode);
-    });
-  });
+  // createInviteCode: 유효한 코드 재사용 판정은 issueInviteCode Callable
+  // (functions/src/invite/)로 옮겨간 서버 책임이다 (ADR-0006).
+  // functions/의 invite_code.test.ts·queries/issue_invite_code.test.ts가 지킨다.
 
   // getStoreByInviteCode: lookupInviteCode Callable(functions/src/invite/)로
   // 옮겨간 서버 책임이라 fake_cloud_firestore로는 더 이상 검증할 수 없다.

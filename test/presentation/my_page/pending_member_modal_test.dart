@@ -13,6 +13,7 @@ import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
+import 'package:studio_chance/presentation/providers/server_clock_offset_provider.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
 
@@ -426,11 +427,18 @@ void main() {
   });
 
   /// 저장된 초대 코드를 가진 점포로 모달을 띄운다.
-  Future<void> pumpWithSavedInvite(WidgetTester tester, Store store) async {
+  ///
+  /// [clockOffset]은 서버 시각에서 기기 시각을 뺀 값이다.
+  Future<void> pumpWithSavedInvite(
+    WidgetTester tester,
+    Store store, {
+    Duration clockOffset = Duration.zero,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           storeDetailProvider(store.id).overrideWith((ref) async => store),
+          serverClockOffsetProvider.overrideWith((ref) async => clockOffset),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -475,6 +483,46 @@ void main() {
 
     expect(find.text('A7K2P9'), findsNothing);
     expect(find.text('발급'), findsOneWidget);
+  });
+
+  testWidgets('기기 시계로는 유효해도 서버 시각 기준으로 만료됐으면 발급 상태로 시작한다', (tester) async {
+    final store = storeWithWaiting([]).copyWith(
+      inviteInfo: InviteInfo(
+        inviteCode: 'A7K2P9',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+    );
+
+    // 기기 시계가 서버보다 늦다
+    await pumpWithSavedInvite(
+      tester,
+      store,
+      clockOffset: const Duration(minutes: storeInviteCodeAvailableMin),
+    );
+
+    expect(find.text('A7K2P9'), findsNothing);
+    expect(find.text('발급'), findsOneWidget);
+  });
+
+  testWidgets('기기 시계로는 만료됐어도 서버 시각 기준으로 유효하면 코드를 보여준다', (tester) async {
+    final store = storeWithWaiting([]).copyWith(
+      inviteInfo: InviteInfo(
+        inviteCode: 'A7K2P9',
+        createdAt: DateTime.now().subtract(
+          const Duration(minutes: storeInviteCodeAvailableMin + 1),
+        ),
+      ),
+    );
+
+    // 기기 시계가 서버보다 빠르다
+    await pumpWithSavedInvite(
+      tester,
+      store,
+      clockOffset: const Duration(minutes: -5),
+    );
+
+    expect(find.text('A7K2P9'), findsOneWidget);
+    expect(find.text('발급'), findsNothing);
   });
 
   testWidgets('createdAt을 모르는 저장된 코드는 만료를 판단할 수 없어 숨긴다', (tester) async {

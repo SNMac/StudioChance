@@ -19,6 +19,7 @@ import 'package:studio_chance/presentation/commons/widgets/modal_grabber.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
+import 'package:studio_chance/presentation/providers/server_clock_offset_provider.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 
 const double _kModalInitialSize = 0.5;
@@ -275,8 +276,8 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
 /// 생겨, 다른 점포 모달에 직전 점포의 코드가 새는 경로가 만들어진다.
 /// 대신 발급한 코드는 재조회가 끝난 뒤에 나타난다.
 ///
-/// 발급을 눌러도 유효 기간이 남아 있으면 Repository가 같은 코드를 되돌려주므로
-/// 코드가 바뀌지 않는다. 새 코드가 필요하면 재발급을 쓴다.
+/// 발급을 눌러도 서버 기준으로 유효 기간이 남아 있으면 서버가 같은 코드를
+/// 되돌려주므로 코드가 바뀌지 않는다. 새 코드가 필요하면 재발급을 쓴다.
 class _InviteCodeSection extends ConsumerStatefulWidget {
   const _InviteCodeSection({required this.storeId});
 
@@ -368,8 +369,9 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
 
   /// 남은 유효 시간 안내.
   ///
-  /// 기준은 로컬 시계다. 만료 판정 자체는 서버 시각으로 하므로(`StoreRepositoryImpl`)
-  /// 여기의 오차는 표시에만 영향을 준다.
+  /// 기준은 서버 시각으로 보정한 시계다([serverClockOffsetProvider]). 보정값을 받기
+  /// 전이나 받지 못했으면 기기 시계다. 만료 판정 자체는 서버가 하므로 여기의 오차는
+  /// 표시에만 영향을 준다.
   /// 만료되지 않은 코드만 [_visibleInvite]를 통과하므로 `expiresAt`은 non-null이고
   /// 남은 시간은 항상 양수다.
   String _validityLabel(InviteInfo invite, DateTime now) {
@@ -421,7 +423,9 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
         storeAsync.isLoading;
 
     // 한 프레임 안에서 시계를 두 번 읽으면 만료 순간에 두 판단이 엇갈린다.
-    final now = DateTime.now();
+    final clockOffset =
+        ref.watch(serverClockOffsetProvider).value ?? Duration.zero;
+    final now = DateTime.now().add(clockOffset);
     final invite = _visibleInvite(store?.inviteInfo, now);
     _syncTicker(needed: invite != null);
     final code = invite?.inviteCode;
