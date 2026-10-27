@@ -13,6 +13,7 @@ import {
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
   setDoc,
   updateDoc,
   where,
@@ -96,6 +97,77 @@ test('STAFF는 점포를 수정하지 못한다', async () => {
 test('ADMIN이 아니면 점포를 삭제하지 못한다', async () => {
   const db = env.authenticatedContext('staff1').firestore();
   await assertFails(deleteDoc(doc(db, 'stores/s1')));
+});
+
+// ─── 초대 코드(inviteInfo): 발급은 issueInviteCode(Admin SDK)만 한다 (ADR-0006) ───
+
+async function seedInviteInfo() {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'stores/s1'), {
+      inviteInfo: { inviteCode: 'AB3D9F', createdAt: new Date() },
+    });
+  });
+}
+
+test('ADMIN도 inviteInfo에 미래 발급 시각을 쓰지 못한다 (#49)', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      inviteInfo: { inviteCode: 'AB3D9F', createdAt: new Date(2099, 0, 1) },
+    }),
+  );
+});
+
+test('ADMIN도 inviteInfo를 직접 발급하지 못한다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      inviteInfo: { inviteCode: 'AB3D9F', createdAt: serverTimestamp() },
+    }),
+  );
+});
+
+test('ADMIN은 inviteInfo가 있는 점포의 다른 필드를 수정할 수 있다', async () => {
+  await seedInviteInfo();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(updateDoc(doc(db, 'stores/s1'), { name: '새 이름' }));
+});
+
+// store_data_source.dart의 softDeleteStore와 같은 쓰기 모양
+test('softDeleteStore 쓰기 모양으로 ADMIN이 점포를 삭제할 수 있다', async () => {
+  await seedInviteInfo();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      deletedAt: serverTimestamp(),
+      expiresAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      inviteInfo: null,
+    }),
+  );
+});
+
+test('inviteInfo를 넣어 점포를 만들면 거부된다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertFails(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: { creator1: { role: 'ADMIN' } },
+      inviteInfo: { inviteCode: 'AB3D9F', createdAt: new Date(2099, 0, 1) },
+    }),
+  );
+});
+
+// createStore는 inviteInfo를 null로 저장한다
+test('inviteInfo가 null이면 점포를 만들 수 있다', async () => {
+  const db = env.authenticatedContext('creator1').firestore();
+  await assertSucceeds(
+    setDoc(doc(collection(db, 'stores')), {
+      name: '새 점포',
+      memberById: { creator1: { role: 'ADMIN' } },
+      inviteInfo: null,
+    }),
+  );
 });
 
 test('비멤버는 waitingMemberById에 자기 항목을 추가할 수 있다 (가입 신청)', async () => {

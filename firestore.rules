@@ -61,6 +61,10 @@ service cloud.firestore {
     //      영향이 없다)
     // 수정/삭제: ADMIN 역할 보유자만 허용
     //   → 수정 후에도 ADMIN이 정확히 1명이어야 한다 (ADR-0004)
+    // 초대 코드(inviteInfo): 클라이언트는 생성·수정 모두 null로만 쓸 수 있다 (ADR-0006)
+    //   → 발급은 Callable issueInviteCode가 서버 시각으로 한다. 클라이언트가 쓸 수 있으면
+    //      ADMIN이 발급 시각을 미래로 적어 유효 시간을 늘릴 수 있다
+    //   → null 쓰기는 softDeleteStore 경로다
     match /stores/{storeId} {
       function isAdmin() {
         return request.auth != null
@@ -95,11 +99,19 @@ service cloud.firestore {
             - members.values().removeAll([{'role': 'ADMIN'}]).size();
       }
 
+      // 필드를 지운 경우도 null과 같이 본다
+      function inviteInfoCleared() {
+        return request.resource.data.get('inviteInfo', null) == null;
+      }
+
       allow read:   if isMember();
-      allow create: if isCreatorAdmin();
+      allow create: if isCreatorAdmin() && inviteInfoCleared();
       // 승인·역할 변경·추방·관리자 위임이 모두 이 규칙을 거친다.
       // ADMIN으로 승인·승격, 관리자 강등·본인 추방은 관리자 수가 1이 아니게 되어 거부된다
-      allow update: if isAdmin() && adminCountOf(request.resource.data.memberById) == 1;
+      allow update: if isAdmin()
+          && adminCountOf(request.resource.data.memberById) == 1
+          && (!('inviteInfo' in request.resource.data.diff(resource.data).affectedKeys())
+              || inviteInfoCleared());
       allow delete: if isAdmin();
 
       // 가입 신청·신청 취소(requestJoinWithBatch, cancelJoinRequest): 아직 멤버가 아닌
@@ -157,27 +169,6 @@ service cloud.firestore {
         allow read:  if isStoreMember();
         allow write: if isStaffOrAbove();
       }
-    }
-
-    // ─── system 컬렉션 (서버 시각 동기화 전용) ──────────────────────────────
-    // 경로: system/serverTime
-    //
-    // 클라이언트 기기 시각은 조작되거나 부정확할 수 있어 초대 코드 만료 검증 등에
-    // 그대로 신뢰할 수 없다. FieldValue.serverTimestamp()를 기록한 뒤 즉시
-    // 서버에서 재조회하는 왕복 조회(round-trip)로 신뢰 가능한 "현재 시각"을 얻기
-    // 위한 스크래치 문서이다.
-    //
-    // probe 필드는 반드시 실제 서버 시각(request.time)과 정확히 일치해야만 쓰기가
-    // 허용되므로, 다른 사용자가 임의의(미래/과거) 시각 값을 주입해 다른 사람의
-    // 초대 코드 만료 판정을 조작하는 것이 불가능하다 — 모든 성공한 쓰기는
-    // "진짜 현재 시각"만 담을 수 있다.
-    // TODO: 모든 사용자가 문서 하나를 공유하므로 동시 요청이 잦아지면 Firestore의
-    //   문서당 쓰기 속도 제한에 걸릴 수 있다 — 트래픽이 늘면 사용자별 분산(예:
-    //   system/serverTime/probes/{uid}) 검토
-    match /system/serverTime {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-          && request.resource.data.probe == request.time;
     }
 
     // ─── holidays 컬렉션 (공휴일 달력) ──────────────────────────────────────
