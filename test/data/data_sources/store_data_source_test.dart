@@ -12,10 +12,11 @@ import 'package:studio_chance/data/models/user_store_info_model.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 
+import '../../helpers/callable_stub.dart';
 import '../../helpers/fake_firestore_helper.dart';
 import '../../helpers/mocks.dart';
 
-// Callable(lookupInviteCode·issueInviteCode·getServerTime)은 fake_cloud_firestore로
+// Callable(lookupInviteCode·issueInviteCode)은 fake_cloud_firestore로
 // 검증할 수 없다. 서버 동작은 functions/의 테스트가 지키고, 여기서는 FirebaseFunctions
 // 목으로 요청·응답 변환만 확인한다.
 // @Default({})와 @Default([])의 Freezed 기본값은 const {}와 const []로 생성되어
@@ -136,16 +137,6 @@ void main() {
     mockFunctions = MockFirebaseFunctions();
     dataSource = StoreFirestoreDataSource(fakeFirestore, mockFunctions);
   });
-
-  /// [name] Callable이 [data]를 응답하게 하고 그 Callable 목을 돌려준다
-  MockHttpsCallable stubCallable(String name, Object? data) {
-    final callable = MockHttpsCallable();
-    final result = MockHttpsCallableResult();
-    when(() => result.data).thenReturn(data);
-    when(() => callable.call<dynamic>(any())).thenAnswer((_) async => result);
-    when(() => mockFunctions.httpsCallable(name)).thenReturn(callable);
-    return callable;
-  }
 
   // =========================================================================
   // createStore
@@ -525,18 +516,18 @@ void main() {
   });
 
   // =========================================================================
-  // createInviteCode (Callable issueInviteCode)
+  // issueInviteCode (같은 이름의 Callable)
   // =========================================================================
 
-  group('createInviteCode', () {
+  group('issueInviteCode', () {
     test('점포 ID와 재발급 여부를 보내고 응답을 모델로 옮긴다', () async {
       final createdAt = DateTime(2026, 8, 29, 9, 10);
-      final callable = stubCallable('issueInviteCode', {
+      final callable = stubCallable(mockFunctions, 'issueInviteCode', {
         'inviteCode': 'AB3D9F',
         'createdAtMillis': createdAt.millisecondsSinceEpoch,
       });
 
-      final invite = await dataSource.createInviteCode(
+      final invite = await dataSource.issueInviteCode(
         'store-1',
         forceRegenerate: true,
       );
@@ -552,12 +543,12 @@ void main() {
     });
 
     test('Android가 돌려주는 Map<Object?, Object?> 응답도 읽는다', () async {
-      stubCallable('issueInviteCode', <Object?, Object?>{
+      stubCallable(mockFunctions, 'issueInviteCode', <Object?, Object?>{
         'inviteCode': 'AB3D9F',
         'createdAtMillis': 0,
       });
 
-      final invite = await dataSource.createInviteCode('store-1');
+      final invite = await dataSource.issueInviteCode('store-1');
 
       expect(invite.inviteCode, 'AB3D9F');
     });
@@ -574,7 +565,7 @@ void main() {
           .thenReturn(callable);
 
       expect(
-        () => dataSource.createInviteCode('store-1'),
+        () => dataSource.issueInviteCode('store-1'),
         throwsA(isA<StorePermissionDeniedException>()),
       );
     });
@@ -797,21 +788,6 @@ void main() {
       final stores = userDoc.data()?['storeById'] as Map<String, dynamic>?;
       expect(stores?.containsKey(storeId), isTrue);
       expect(stores?[storeId]['role'], 'STAFF');
-    });
-  });
-
-  // =========================================================================
-  // getServerTime (Callable getServerTime)
-  // =========================================================================
-
-  group('getServerTime', () {
-    test('서버가 돌려준 시각을 DateTime으로 옮긴다', () async {
-      final serverNow = DateTime(2026, 8, 29, 9, 10);
-      stubCallable('getServerTime', <Object?, Object?>{
-        'nowMillis': serverNow.millisecondsSinceEpoch,
-      });
-
-      expect(await dataSource.getServerTime(), serverNow);
     });
   });
 }

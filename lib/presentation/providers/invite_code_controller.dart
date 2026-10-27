@@ -39,7 +39,7 @@ class InviteCodeController extends _$InviteCodeController {
 
     final result = await ref
         .read(storeUseCaseProvider)
-        .createInviteCode(storeId, forceRegenerate: forceRegenerate);
+        .issueInviteCode(storeId, forceRegenerate: forceRegenerate);
     final stackTrace = StackTrace.current;
 
     result.fold(

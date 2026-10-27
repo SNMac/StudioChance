@@ -395,7 +395,7 @@ void main() {
     });
   });
 
-  // createInviteCode: 유효한 코드 재사용 판정은 issueInviteCode Callable
+  // issueInviteCode: 유효한 코드 재사용 판정은 같은 이름의 Callable
   // (functions/src/invite/)로 옮겨간 서버 책임이다 (ADR-0006).
   // functions/의 invite_code.test.ts·queries/issue_invite_code.test.ts가 지킨다.
 

@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/constants/data_constants.dart';
+import 'package:studio_chance/data/data_sources/callable_helpers.dart';
 import 'package:studio_chance/data/data_sources/firestore_data_source_base.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/invite_store_preview_model.dart';
@@ -87,7 +88,7 @@ abstract interface class StoreDataSource {
 
   /// 초대 코드를 발급한다. 유효한 코드가 남아 있으면 그 코드를 돌려주고,
   /// [forceRegenerate]가 true면 새 코드로 바꾼다 (Callable `issueInviteCode`).
-  Future<InviteInfoModel> createInviteCode(
+  Future<InviteInfoModel> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   });
@@ -97,10 +98,6 @@ abstract interface class StoreDataSource {
   /// 코드가 없거나 삭제된 점포면 `null`을 반환한다. 만료·형식 불량·시도 한도
   /// 초과는 예외로 던진다.
   Future<InviteStorePreviewModel?> lookupInviteCode(String inviteCode);
-
-  /// 서버의 현재 시각 (Callable `getServerTime`). 초대 코드의 남은 유효 시간 표시를
-  /// 보정하는 데만 쓴다 — 만료 판정은 서버가 한다.
-  Future<DateTime> getServerTime();
 }
 
 class StoreFirestoreDataSource extends FirestoreDataSourceBase
@@ -473,7 +470,7 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<InviteInfoModel> createInviteCode(
+  Future<InviteInfoModel> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   }) async {
@@ -481,19 +478,14 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       // 클라이언트는 Rules상 inviteInfo를 쓸 수 없다. 발급 시각과 재사용 판정을
       // 서버 시각으로 정하기 위함이다 (functions/src/invite/issue_invite_code.ts, ADR-0006).
       // 권한 없음·점포 없음은 HttpsError로 와서 mapFirebaseCode가 그대로 옮긴다.
-      final callable = _functions.httpsCallable('issueInviteCode');
-      final response = await callable.call(<String, dynamic>{
+      final data = await _functions.callForMap('issueInviteCode', {
         'storeId': storeId,
         'forceRegenerate': forceRegenerate,
       });
-      // Android 플랫폼 채널은 Map<Object?, Object?>를 돌려준다 (lookupInviteCode 참고)
-      final data = Map<String, dynamic>.from(response.data as Map);
 
       return InviteInfoModel(
         inviteCode: data['inviteCode'] as String,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          (data['createdAtMillis'] as num).toInt(),
-        ),
+        createdAt: dateTimeFromCallableMillis(data['createdAtMillis']),
       );
     } catch (e) {
       throw handleFirestoreError(e);
@@ -505,13 +497,9 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
     try {
       // stores read가 멤버 전용이라 클라이언트 쿼리로는 조회할 수 없다.
       // 서버가 만료 판정과 시도 한도까지 처리한다 (functions/src/invite/).
-      final callable = _functions.httpsCallable('lookupInviteCode');
-      // Android 플랫폼 채널은 Map<Object?, Object?>를 돌려주므로 제네릭 캐스트가
-      // 런타임에 깨질 수 있다. 제네릭 없이 호출하고 방어적으로 변환한다.
-      final response = await callable.call(<String, dynamic>{
+      final data = await _functions.callForMap('lookupInviteCode', {
         'code': inviteCode,
       });
-      final data = Map<String, dynamic>.from(response.data as Map);
 
       if (data['ok'] != true) {
         // 도메인 실패는 HttpsError가 아니라 판별 값으로 온다. mapFirebaseCode는
@@ -524,19 +512,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
 
       return InviteStorePreviewModel.fromJson(
         Map<String, dynamic>.from(data['store'] as Map),
-      );
-    } catch (e) {
-      throw handleFirestoreError(e);
-    }
-  }
-
-  @override
-  Future<DateTime> getServerTime() async {
-    try {
-      final response = await _functions.httpsCallable('getServerTime').call();
-      final data = Map<String, dynamic>.from(response.data as Map);
-      return DateTime.fromMillisecondsSinceEpoch(
-        (data['nowMillis'] as num).toInt(),
       );
     } catch (e) {
       throw handleFirestoreError(e);

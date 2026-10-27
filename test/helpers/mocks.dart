@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/data_sources/auth_data_source.dart';
 import 'package:studio_chance/data/data_sources/notification_data_source.dart';
 import 'package:studio_chance/data/data_sources/reservation_data_source.dart';
+import 'package:studio_chance/data/data_sources/server_clock_data_source.dart';
 import 'package:studio_chance/data/data_sources/store_data_source.dart';
 import 'package:studio_chance/data/data_sources/user_data_source.dart';
 import 'package:studio_chance/data/models/reservation_model.dart';
@@ -34,6 +35,8 @@ class MockNotificationDataSource extends Mock
     implements NotificationDataSource {}
 
 class MockReservationDataSource extends Mock implements ReservationDataSource {}
+
+class MockServerClockDataSource extends Mock implements ServerClockDataSource {}
 
 class MockStoreDataSource extends Mock implements StoreDataSource {}
 

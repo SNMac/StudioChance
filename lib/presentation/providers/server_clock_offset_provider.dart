@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
+import 'package:studio_chance/domain/use_cases/server_clock_use_case_provider.dart';
 
 part 'server_clock_offset_provider.g.dart';
 
@@ -11,6 +11,8 @@ part 'server_clock_offset_provider.g.dart';
 /// 그대로 쓴다. 실패는 Repository가 로그로 남기며 화면에 알리지 않는다.
 @riverpod
 Future<Duration> serverClockOffset(Ref ref) async {
-  final result = await ref.watch(storeUseCaseProvider).getServerClockOffset();
+  final result = await ref
+      .watch(serverClockUseCaseProvider)
+      .getServerClockOffset();
   return result.fold((_) => Duration.zero, (offset) => offset);
 }

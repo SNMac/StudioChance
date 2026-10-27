@@ -198,13 +198,13 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
-  Future<Either<Exception, InviteInfo>> createInviteCode(
+  Future<Either<Exception, InviteInfo>> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   }) async {
     try {
       // 유효한 코드 재사용 판정은 서버가 서버 시각으로 한다 (ADR-0006)
-      final inviteModel = await _storeDataSource.createInviteCode(
+      final inviteModel = await _storeDataSource.issueInviteCode(
         storeId,
         forceRegenerate: forceRegenerate,
       );
@@ -212,21 +212,6 @@ class StoreRepositoryImpl implements StoreRepository {
       return right(inviteModel.toEntity());
     } catch (e) {
       _logger.e('초대 코드 발급 실패');
-      return left(toException(e));
-    }
-  }
-
-  @override
-  Future<Either<Exception, Duration>> getServerClockOffset() async {
-    try {
-      final sentAt = DateTime.now();
-      final serverNow = await _storeDataSource.getServerTime();
-      final receivedAt = DateTime.now();
-      // 서버가 응답을 만든 시각을 왕복의 한가운데로 본다
-      final midpoint = sentAt.add(receivedAt.difference(sentAt) ~/ 2);
-      return right(serverNow.difference(midpoint));
-    } catch (e) {
-      _logger.w('서버 시각 조회 실패');
       return left(toException(e));
     }
   }

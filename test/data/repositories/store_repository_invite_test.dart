@@ -59,12 +59,12 @@ void main() {
     });
   });
 
-  group('createInviteCode', () {
+  group('issueInviteCode', () {
     test('재발급 여부를 그대로 넘기고 발급 결과를 돌려준다', () async {
-      when(() => mockStoreDs.createInviteCode('store-1', forceRegenerate: true))
+      when(() => mockStoreDs.issueInviteCode('store-1', forceRegenerate: true))
           .thenAnswer((_) async => const InviteInfoModel(inviteCode: 'AB3D9F'));
 
-      final result = await repository.createInviteCode(
+      final result = await repository.issueInviteCode(
         'store-1',
         forceRegenerate: true,
       );
@@ -73,39 +73,12 @@ void main() {
     });
 
     test('서버가 거절하면 Left로 감싼다', () async {
-      when(() => mockStoreDs.createInviteCode('store-1'))
+      when(() => mockStoreDs.issueInviteCode('store-1'))
           .thenThrow(StorePermissionDeniedException(message: '권한 없음'));
 
-      final result = await repository.createInviteCode('store-1');
+      final result = await repository.issueInviteCode('store-1');
 
       expect(expectLeft(result), isA<StorePermissionDeniedException>());
-    });
-  });
-
-  group('getServerClockOffset', () {
-    test('서버 시각에서 기기 시각을 뺀 값을 돌려준다', () async {
-      // 기기 시계가 서버보다 1시간 늦은 상황
-      when(
-        () => mockStoreDs.getServerTime(),
-      ).thenAnswer((_) async => DateTime.now().add(const Duration(hours: 1)));
-
-      final offset = expectRight(await repository.getServerClockOffset());
-
-      // 왕복 보정의 오차만큼 여유를 둔다
-      expect(
-        (offset - const Duration(hours: 1)).abs(),
-        lessThan(const Duration(seconds: 1)),
-      );
-    });
-
-    test('조회에 실패하면 Left', () async {
-      when(() => mockStoreDs.getServerTime())
-          .thenThrow(StoreNetworkException(message: '네트워크 오류'));
-
-      expect(
-        expectLeft(await repository.getServerClockOffset()),
-        isA<StoreNetworkException>(),
-      );
     });
   });
 }

@@ -41,13 +41,10 @@ abstract interface class StoreRepository {
   });
 
   /// 초대 코드 발급/재발급. 유효한 코드가 남아 있으면 발급은 그 코드를 돌려준다
-  Future<Either<Exception, InviteInfo>> createInviteCode(
+  Future<Either<Exception, InviteInfo>> issueInviteCode(
     String storeId, {
     bool forceRegenerate = false,
   });
-
-  /// 서버 시각에서 기기 시각을 뺀 값. 초대 코드의 남은 유효 시간 표시 보정용
-  Future<Either<Exception, Duration>> getServerClockOffset();
 
   /// 초대 코드로 가입 전 표시 정보를 조회한다. 코드가 없으면 `right(null)`.
   Future<Either<Exception, InviteStorePreview?>> getStoreByInviteCode(

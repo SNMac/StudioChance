@@ -234,7 +234,7 @@ void main() {
 
     final mockStoreUseCase = MockStoreUseCase();
     when(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
@@ -272,7 +272,7 @@ void main() {
 
     expect(find.text('A7K2P9'), findsOneWidget);
     verify(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         storeWithoutCode.id,
         forceRegenerate: false,
       ),
@@ -283,7 +283,7 @@ void main() {
     final mockStoreUseCase = MockStoreUseCase();
     final completer = Completer<Either<Exception, InviteInfo>>();
     when(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
@@ -302,7 +302,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
@@ -316,7 +316,7 @@ void main() {
 
     final mockStoreUseCase = MockStoreUseCase();
     when(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
@@ -359,7 +359,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () => mockStoreUseCase.createInviteCode(store.id, forceRegenerate: true),
+      () => mockStoreUseCase.issueInviteCode(store.id, forceRegenerate: true),
     ).called(1);
   });
 
@@ -375,7 +375,7 @@ void main() {
 
     final mockStoreUseCase = MockStoreUseCase();
     when(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
@@ -416,7 +416,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () => mockStoreUseCase.createInviteCode(
+      () => mockStoreUseCase.issueInviteCode(
         any(),
         forceRegenerate: any(named: 'forceRegenerate'),
       ),
