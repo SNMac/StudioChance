@@ -383,7 +383,7 @@ class StoreUseCaseImpl implements StoreUseCase {
   /// 본인을 점포에서 지운다 (점포 나가기·신청 취소).
   ///
   /// 반드시 본인 계정으로 직접 쓴다. Rules는 본인 항목 삭제만 허용하고, 알림 함수
-  /// (notifyOnMembershipChange)는 쓴 사람과 지워진 uid가 같은지로 나가기·신청 취소를
+  /// (notifyOnStoreUpdate)는 쓴 사람과 지워진 uid가 같은지로 나가기·신청 취소를
   /// 추방·거절과 구분한다 — 다른 경로(Function 등)가 대신 쓰면 추방·거절로 알린다
   TaskEither<Exception, void> _removeSelf({
     required String storeId,
