@@ -155,6 +155,10 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   브루트포스 카운터 규칙은 `lookup_invite_code.ts`와 `store_data_source.dart`의 주석에 있다
   - 클라이언트: `cloud_functions` 패키지, `FirebaseFunctions.instanceFor(region: 'asia-northeast3')`.
   - **dev 실기기에서 초대 코드 조회가 전부 "권한이 없습니다"로 실패하면** App Check 디버그 토큰 미등록을 의심한다 → `docs/operations.md`
+- `issueInviteCode` (`functions/src/invite/`): 관리자의 초대 코드 발급·재발급. 클라이언트는 Rules상 `inviteInfo`를 `null`로만 쓸 수 있다 (ADR-0006).
+  유효한 코드가 남아 있으면 그 코드를 돌려주고, 다른 점포의 코드와 겹치지 않게 고른다. 실패는 `HttpsError`(`permission-denied`·`not-found`)다
+- `getServerTime` (`functions/src/time/`): 초대 코드 남은 시간 표시를 서버 시각으로 보정하는 데만 쓴다. 모달을 열 때마다 호출하며(`serverClockOffsetProvider`) 실패하면 기기 시계로 표시한다
+- 세 함수 모두 리전 `asia-northeast3`, `enforceAppCheck: true`, 인증 필수
 
 ## Firestore 에뮬레이터 테스트
 

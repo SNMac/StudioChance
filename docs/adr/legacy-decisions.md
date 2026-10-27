@@ -57,6 +57,7 @@ Firestore Security Rules가 주 보안 레이어. UseCase 레벨 검증은 UX �
 `stores` read는 `isMember()` 전용. 비멤버의 초대 코드 조회는 Callable `lookupInviteCode`가 대신한다.
 - 새 컬렉션(`inviteCodes`) 분리 대신 Callable을 고른 이유: 표시용 필드 비정규화가 없어 점포 정보가 낡지 않고,
   만료 판정이 서버 시각으로 이뤄지며, 발급 경로(`createInviteCode`, ADMIN이므로 이미 멤버)를 건드리지 않는다.
+  - 발급도 나중에 Callable `issueInviteCode`로 옮겼다(ADR-0006). 마지막 근거는 더 이상 성립하지 않지만, 표시 필드가 낡지 않는다는 근거만으로도 결정은 유지된다
 - 대가는 `cloud_functions` 의존성과 cold start. 초대 코드 입력은 온보딩 1회성이라 감내한다.
 - `stores`를 읽는 클라이언트 경로는 `getStore` 하나뿐이며 호출부는 전부 멤버 전제다
   (마이페이지 ADMIN 행, 예약 상세, 승인 대기 모달, 예약 가격 계산).
