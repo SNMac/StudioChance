@@ -59,7 +59,7 @@ test('메시지에 딥링크용 data와 Android 채널이 담긴다', () => {
   assert.equal(message.notification?.title, '가입 신청');
   assert.equal(
     message.notification?.body,
-    '홍길동님이 스튜디오 챈스 가입을 신청했습니다.',
+    '홍길동 님이 스튜디오 챈스 가입을 신청했습니다.',
   );
   assert.equal(message.android?.notification?.channelId, ANDROID_CHANNEL_ID);
 });

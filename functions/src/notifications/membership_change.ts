@@ -140,12 +140,12 @@ export function buildMembershipNotification(
     case ADMIN_DELEGATED_TYPE:
       return {
         title: `${storeName} 관리자가 되었습니다`,
-        body: `${subjectName}님이 관리자 역할을 위임했습니다.`,
+        body: `${subjectName} 님이 관리자 역할을 위임했습니다.`,
       };
     case MEMBER_LEFT_TYPE:
       return {
         title: `${storeName}에서 멤버가 나갔습니다`,
-        body: `${subjectName}님이 점포를 나갔습니다.`,
+        body: `${subjectName} 님이 점포를 나갔습니다.`,
       };
     case MEMBER_REMOVED_TYPE:
       return {

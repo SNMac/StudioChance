@@ -26,7 +26,7 @@ export function buildJoinRequestBody(
   applicantName: string,
   storeName: string,
 ): string {
-  return `${applicantName}님이 ${storeName} 가입을 신청했습니다.`;
+  return `${applicantName} 님이 ${storeName} 가입을 신청했습니다.`;
 }
 
 /** 관리자 기기 토큰마다 가입 신청 알림 메시지를 만든다. */
