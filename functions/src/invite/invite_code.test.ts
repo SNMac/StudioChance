@@ -3,8 +3,10 @@ import { test } from 'node:test';
 
 import {
   adminUidOf,
+  decideInviteIssue,
   displayNameOf,
   evaluateInviteStore,
+  generateInviteCode,
   INVITE_CODE_AVAILABLE_MIN,
   isInviteExpired,
   isValidInviteCode,
@@ -129,4 +131,85 @@ test('displayNameOf: nickname이 빈 문자열이면 name으로 폴백한다', (
 test('displayNameOf: 둘 다 없으면 빈 문자열', () => {
   assert.equal(displayNameOf(undefined, undefined), '');
   assert.equal(displayNameOf('', ''), '');
+});
+
+test('generateInviteCode: 만든 코드는 조회 검증을 통과한다', () => {
+  for (let i = 0; i < 100; i++) {
+    assert.equal(isValidInviteCode(generateInviteCode()), true);
+  }
+});
+
+test('generateInviteCode: 헷갈리기 쉬운 I·O·0·1을 쓰지 않는다', () => {
+  // 문자 집합 전체를 한 번씩 뽑아 본다
+  const all = Array.from({ length: 32 }, (_, i) => generateInviteCode(() => i)[0]).join('');
+  assert.doesNotMatch(all, /[IO01]/);
+  assert.equal(new Set(all).size, 32);
+});
+
+const issueBase = {
+  uid: 'admin-1',
+  exists: true,
+  deletedAt: undefined,
+  memberById: { 'admin-1': { role: 'ADMIN' }, 'staff-1': { role: 'STAFF' } },
+  inviteCode: 'AB3D9F',
+  inviteCreatedAt: new Date('2026-08-29T00:00:00Z'),
+  forceRegenerate: false,
+  now: new Date('2026-08-29T00:10:00Z'),
+};
+
+test('decideInviteIssue: 유효한 코드가 남아 있으면 그 코드를 돌려준다', () => {
+  assert.deepEqual(decideInviteIssue(issueBase), {
+    kind: 'reuse',
+    inviteCode: 'AB3D9F',
+    createdAt: issueBase.inviteCreatedAt,
+  });
+});
+
+test('decideInviteIssue: 재발급이면 유효한 코드가 있어도 새로 만든다', () => {
+  assert.deepEqual(decideInviteIssue({ ...issueBase, forceRegenerate: true }), {
+    kind: 'issue',
+  });
+});
+
+test('decideInviteIssue: 만료된 코드는 재사용하지 않는다', () => {
+  const now = new Date(
+    issueBase.inviteCreatedAt.getTime() + (INVITE_CODE_AVAILABLE_MIN * 60 + 1) * 1000,
+  );
+  assert.deepEqual(decideInviteIssue({ ...issueBase, now }), { kind: 'issue' });
+});
+
+test('decideInviteIssue: 코드가 없거나 발급 시각을 모르면 새로 만든다', () => {
+  assert.deepEqual(decideInviteIssue({ ...issueBase, inviteCode: undefined }), {
+    kind: 'issue',
+  });
+  assert.deepEqual(decideInviteIssue({ ...issueBase, inviteCreatedAt: null }), {
+    kind: 'issue',
+  });
+});
+
+test('decideInviteIssue: 관리자가 아니면 permissionDenied', () => {
+  assert.deepEqual(decideInviteIssue({ ...issueBase, uid: 'staff-1' }), {
+    kind: 'denied',
+    reason: 'permissionDenied',
+  });
+  assert.deepEqual(decideInviteIssue({ ...issueBase, uid: 'stranger' }), {
+    kind: 'denied',
+    reason: 'permissionDenied',
+  });
+});
+
+test('decideInviteIssue: 점포가 없으면 notFound', () => {
+  assert.deepEqual(decideInviteIssue({ ...issueBase, exists: false, memberById: undefined }), {
+    kind: 'denied',
+    reason: 'notFound',
+  });
+});
+
+test('decideInviteIssue: 삭제한 점포는 관리자에게 notFound, 그 밖의 사람에게는 permissionDenied', () => {
+  const deleted = { ...issueBase, deletedAt: new Date('2026-08-28T00:00:00Z') };
+  assert.deepEqual(decideInviteIssue(deleted), { kind: 'denied', reason: 'notFound' });
+  assert.deepEqual(decideInviteIssue({ ...deleted, uid: 'stranger' }), {
+    kind: 'denied',
+    reason: 'permissionDenied',
+  });
 });
