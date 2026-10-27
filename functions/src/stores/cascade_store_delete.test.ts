@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import { after, before, beforeEach, test } from 'node:test';
+
+import { type App, deleteApp, initializeApp } from 'firebase-admin/app';
+import { type Firestore, getFirestore } from 'firebase-admin/firestore';
+
+import { projectIdFor } from '../rules/helpers.js';
+import { deleteStoreSubcollections } from './cascade_store_delete.js';
+
+// fake가 아니라 에뮬레이터에서 실제로 서브컬렉션이 지워지는지 확인한다.
+// TTL은 에뮬레이터가 지원하지 않으므로 TTL 삭제가 트리거를 일으키는지는 dev에서 확인한다
+// (docs/operations.md).
+
+let app: App;
+let db: Firestore;
+
+before(() => {
+  app = initializeApp({ projectId: projectIdFor('cascade-store') }, 'cascade-store');
+  db = getFirestore(app);
+});
+
+after(async () => {
+  await deleteApp(app);
+});
+
+beforeEach(async () => {
+  await db.recursiveDelete(db.collection('stores'));
+});
+
+test('지워진 점포의 예약이 모두 지워진다', async () => {
+  await db.doc('stores/s1').set({ name: '점포' });
+  await db.doc('stores/s1/reservations/r1').set({ writerId: 'u1' });
+  await db.doc('stores/s1/reservations/r2').set({ writerId: 'u1' });
+  // TTL이 점포 문서를 지운 뒤 트리거가 실행되는 순서를 재현한다
+  await db.doc('stores/s1').delete();
+
+  await deleteStoreSubcollections(db, db.doc('stores/s1'));
+
+  const remaining = await db.collection('stores/s1/reservations').get();
+  assert.equal(remaining.size, 0);
+});
+
+test('다른 점포의 예약은 남는다', async () => {
+  await db.doc('stores/s1/reservations/r1').set({ writerId: 'u1' });
+  await db.doc('stores/s2').set({ name: '다른 점포' });
+  await db.doc('stores/s2/reservations/r2').set({ writerId: 'u1' });
+
+  await deleteStoreSubcollections(db, db.doc('stores/s1'));
+
+  const other = await db.collection('stores/s2/reservations').get();
+  assert.deepEqual(
+    other.docs.map((doc) => doc.id),
+    ['r2'],
+  );
+  assert.equal((await db.doc('stores/s2').get()).exists, true);
+});

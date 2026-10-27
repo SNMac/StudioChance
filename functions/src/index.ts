@@ -18,6 +18,7 @@ initializeApp();
 
 export { lookupInviteCode } from './invite/lookup_invite_code.js';
 export { syncHolidays } from './holidays/sync_holidays.js';
+export { cascadeStoreDelete } from './stores/cascade_store_delete.js';
 
 /**
  * 점포 대기 명단(`waitingMemberById`)에 새 신청자가 추가되면
