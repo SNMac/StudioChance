@@ -56,7 +56,10 @@ TTL과 `cascadeStoreDelete`는 에뮬레이터에서 돌릴 수 없어 dev에서
    - `gcloud firestore fields ttls list --project studio-chance` (prod는 `studio-chance-prod`)
    - `gcloud firestore indexes fields describe writerId --collection-group=reservations --project studio-chance`
    - 인덱스가 준비되기 전에 `purgeDeletedUsers`를 실행하면 `FAILED_PRECONDITION: ... index is not ready yet`으로 실패한다
-3. 테스트 문서를 넣는다
+   - **TTL 정책이 처음 켜질 때 이미 만료돼 있던 점포는 `cascadeStoreDelete` 없이 지워진다.** dev에서 정책이 ACTIVE가 되는 순간
+     만료된 점포가 일괄 삭제됐지만 트리거가 호출되지 않아 예약이 고아로 남았다(2026-10-27). 정책을 켜기 전에 `expiresAt`이 지난
+     점포가 있는지 보고, 있으면 먼저 콘솔에서 점포 문서를 지워 cascade를 돌린다
+3. 테스트 문서는 정책이 ACTIVE가 된 **뒤에** 넣는다 (위 이유로 그 전에 넣은 문서는 cascade 확인에 쓸 수 없다)
    - `stores/ttl-test`: `deletedAt`·`expiresAt`을 과거 시각으로, 하위에 `reservations/r1`·`r2`
    - `inviteLookupAttempts/ttl-test`: `count: 1`, `windowStartAt`·`expiresAt`을 과거 시각으로
 4. 24시간 안에 점포·예약 2건·시도 문서가 모두 사라졌는지 본다. 점포만 사라지고 예약이 남으면 `cascadeStoreDelete` 로그를 본다
