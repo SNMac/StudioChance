@@ -102,18 +102,22 @@ export function decideInviteIssue(input: {
   return { kind: 'issue' };
 }
 
+/** 문서에서 읽은 memberById. 객체가 아니면(필드 없음·손상) null */
+function membersOf(memberById: unknown): Record<string, { role?: string }> | null {
+  if (typeof memberById !== 'object' || memberById === null) return null;
+  return memberById as Record<string, { role?: string }>;
+}
+
 function isAdminOf(memberById: unknown, uid: string): boolean {
-  if (typeof memberById !== 'object' || memberById === null) return false;
-  return (memberById as Record<string, { role?: string }>)[uid]?.role === 'ADMIN';
+  return membersOf(memberById)?.[uid]?.role === 'ADMIN';
 }
 
 /** memberById에서 ADMIN 한 명의 uid를 고른다. 없으면 null */
 export function adminUidOf(memberById: unknown): string | null {
-  if (typeof memberById !== 'object' || memberById === null) return null;
+  const members = membersOf(memberById);
+  if (!members) return null;
 
-  const entry = Object.entries(
-    memberById as Record<string, { role?: string }>,
-  ).find(([, member]) => member?.role === 'ADMIN');
+  const entry = Object.entries(members).find(([, member]) => member?.role === 'ADMIN');
   return entry?.[0] ?? null;
 }
 
