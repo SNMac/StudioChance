@@ -80,7 +80,7 @@ sealed class StoreException extends AppException {
     StoreAdminRoleChangeException() =>
       '점포마다 관리자는 한 명입니다.\n관리자를 바꾸려면 관리자 위임을 이용해 주세요.',
     StoreAdminHandoverRequiredException(:final storeNames) =>
-      '${storeNames.map((name) => "'$name'").join(', ')} 점포의 관리자입니다.\n'
+      '${storeNames.join(', ')} 점포의 관리자입니다.\n'
           '다른 멤버에게 관리자를 위임하거나 점포를 삭제해 주세요.',
     StoreDelegationTargetInvalidException() =>
       '점포의 스태프나 뷰어에게만 관리자를 위임할 수 있습니다.\n멤버 목록을 새로 고친 뒤 다시 시도해 주세요.',

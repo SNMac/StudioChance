@@ -139,32 +139,32 @@ export function buildMembershipNotification(
   switch (event.type) {
     case ADMIN_DELEGATED_TYPE:
       return {
-        title: `'${storeName}' 관리자가 되었습니다`,
+        title: `${storeName} 관리자가 되었습니다`,
         body: `${subjectName}님이 관리자 역할을 위임했습니다.`,
       };
     case MEMBER_LEFT_TYPE:
       return {
-        title: `'${storeName}'에서 멤버가 나갔습니다`,
+        title: `${storeName}에서 멤버가 나갔습니다`,
         body: `${subjectName}님이 점포를 나갔습니다.`,
       };
     case MEMBER_REMOVED_TYPE:
       return {
-        title: `'${storeName}' 멤버에서 제외되었습니다`,
+        title: `${storeName} 멤버에서 제외되었습니다`,
         body: '더 이상 이 점포의 예약을 볼 수 없습니다.',
       };
     case JOIN_APPROVED_TYPE:
       return {
-        title: `'${storeName}' 가입이 승인되었습니다`,
+        title: `${storeName} 가입이 승인되었습니다`,
         body: `${event.role ? ROLE_DISPLAY_NAMES[event.role] : '멤버'}로 점포에 참여합니다.`,
       };
     case JOIN_REJECTED_TYPE:
       return {
-        title: `'${storeName}' 가입 신청이 거절되었습니다`,
+        title: `${storeName} 가입 신청이 거절되었습니다`,
         body: '초대 코드를 다시 받아 신청할 수 있습니다.',
       };
     case STORE_DELETED_TYPE:
       return {
-        title: `'${storeName}' 점포가 삭제되었습니다`,
+        title: `${storeName} 점포가 삭제되었습니다`,
         body: '관리자가 점포를 삭제했습니다.',
       };
   }

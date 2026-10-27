@@ -174,7 +174,7 @@ test('사건별 문구에 점포명과 이름·역할이 들어간다', () => {
       '갑',
     ),
     {
-      title: "'스튜디오A' 관리자가 되었습니다",
+      title: '스튜디오A 관리자가 되었습니다',
       body: '갑님이 관리자 역할을 위임했습니다.',
     },
   );
@@ -185,7 +185,7 @@ test('사건별 문구에 점포명과 이름·역할이 들어간다', () => {
       '을',
     ),
     {
-      title: "'스튜디오A'에서 멤버가 나갔습니다",
+      title: '스튜디오A에서 멤버가 나갔습니다',
       body: '을님이 점포를 나갔습니다.',
     },
   );
@@ -211,5 +211,5 @@ test('메시지에 사건 type·storeId와 Android 채널이 담긴다', () => {
   assert.equal(message.token, 't1');
   assert.deepEqual(message.data, { type: MEMBER_REMOVED_TYPE, storeId: 'store1' });
   assert.equal(message.android?.notification?.channelId, ANDROID_CHANNEL_ID);
-  assert.equal(message.notification?.title, "'스튜디오A' 멤버에서 제외되었습니다");
+  assert.equal(message.notification?.title, '스튜디오A 멤버에서 제외되었습니다');
 });
