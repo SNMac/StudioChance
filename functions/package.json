@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rm -rf lib && tsc",
     "test:unit": "npm run build && node --test \"lib/notifications/**/*.test.js\" \"lib/invite/**/*.test.js\" \"lib/holidays/**/*.test.js\" \"lib/contract/**/*.test.js\"",
-    "test:emulator": "npm run build && firebase emulators:exec --config ../firebase.emulator.json --only firestore --project demo-studio-chance \"node --test lib/rules/**/*.test.js lib/queries/**/*.test.js lib/stores/**/*.test.js\"",
+    "test:emulator": "npm run build && firebase emulators:exec --config ../firebase.emulator.json --only firestore --project demo-studio-chance \"node --test lib/rules/**/*.test.js lib/queries/**/*.test.js\"",
     "test": "npm run test:unit && npm run test:emulator",
     "serve": "npm run build && firebase emulators:start --only functions",
     "logs": "firebase functions:log"

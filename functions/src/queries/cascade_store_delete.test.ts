@@ -5,9 +5,9 @@ import { type App, deleteApp, initializeApp } from 'firebase-admin/app';
 import { type Firestore, getFirestore } from 'firebase-admin/firestore';
 
 import { projectIdFor } from '../rules/helpers.js';
-import { deleteStoreSubcollections } from './cascade_store_delete.js';
+import { deleteStoreSubcollections } from '../stores/cascade_store_delete.js';
 
-// fake가 아니라 에뮬레이터에서 실제로 서브컬렉션이 지워지는지 확인한다.
+// 이미 지워진 점포 문서에 recursiveDelete를 해도 서브컬렉션이 지워지는지 실제 Firestore 동작으로 확인한다.
 // TTL은 에뮬레이터가 지원하지 않으므로 TTL 삭제가 트리거를 일으키는지는 dev에서 확인한다
 // (docs/operations.md).
 
@@ -38,6 +38,16 @@ test('지워진 점포의 예약이 모두 지워진다', async () => {
 
   const remaining = await db.collection('stores/s1/reservations').get();
   assert.equal(remaining.size, 0);
+});
+
+test('예약이 아닌 서브컬렉션도 지워진다', async () => {
+  // 서브컬렉션을 이름으로 고르지 않는다는 전제. 예약만 지우도록 바뀌면 여기서 걸린다
+  await db.doc('stores/s1/someFutureCollection/d1').set({ value: 1 });
+  await db.doc('stores/s1').delete();
+
+  await deleteStoreSubcollections(db, db.doc('stores/s1'));
+
+  assert.deepEqual(await db.doc('stores/s1').listCollections(), []);
 });
 
 test('다른 점포의 예약은 남는다', async () => {
