@@ -225,20 +225,20 @@ void main() {
       verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
     });
 
-    test('expireImmediately를 Repository에 그대로 넘긴다', () async {
-      when(
-        () => mockStoreRepo.softDeleteStore(
-          any(),
-          expireImmediately: any(named: 'expireImmediately'),
-        ),
-      ).thenAnswer((_) async => right(null));
+    test('점포 복구는 Repository.restoreStore를 그대로 위임한다', () async {
+      when(() => mockStoreRepo.restoreStore(any()))
+          .thenAnswer((_) async => right(null));
 
-      await useCase.softDeleteStore('store-123', expireImmediately: true);
+      expectRight(await useCase.restoreStore('store-123'));
+      verify(() => mockStoreRepo.restoreStore('store-123')).called(1);
+    });
 
-      verify(
-        () =>
-            mockStoreRepo.softDeleteStore('store-123', expireImmediately: true),
-      ).called(1);
+    test('영구 삭제는 Repository.permanentlyDeleteStore를 그대로 위임한다', () async {
+      when(() => mockStoreRepo.permanentlyDeleteStore(any()))
+          .thenAnswer((_) async => right(null));
+
+      expectRight(await useCase.permanentlyDeleteStore('store-123'));
+      verify(() => mockStoreRepo.permanentlyDeleteStore('store-123')).called(1);
     });
   });
 }

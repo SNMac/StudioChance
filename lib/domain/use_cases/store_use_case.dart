@@ -103,12 +103,16 @@ abstract interface class StoreUseCase {
     bool forceRegenerate = false,
   });
 
-  /// 점포 삭제 (Soft Delete)
-  /// - [expireImmediately]: 복구 여유 기간 없이 바로 만료시킨다 (계정 삭제용)
-  Future<Either<Exception, void>> softDeleteStore(
-    String storeId, {
-    bool expireImmediately = false,
-  });
+  /// 점포 삭제 — 삭제 예정 점포로 만든다. 7일 안에 관리자가 복구할 수 있다 (ADR-0007)
+  Future<Either<Exception, void>> softDeleteStore(String storeId);
+
+  /// 점포 복구 (관리자용) — 기한이 지나면 Rules가 거부한다
+  Future<Either<Exception, void>> restoreStore(String storeId);
+
+  /// 영구 삭제 (관리자용) — 점포와 예약을 바로 지운다. 되돌릴 수 없다
+  /// - 화면에서는 삭제 예정 점포에서만 연다. 계정 삭제는 삭제 예정이 아닌 혼자 쓰던
+  ///   점포도 이것으로 지운다
+  Future<Either<Exception, void>> permanentlyDeleteStore(String storeId);
 }
 
 class StoreUseCaseImpl implements StoreUseCase {
@@ -196,7 +200,7 @@ class StoreUseCaseImpl implements StoreUseCase {
   Future<Either<Exception, Store>> getStoreForEdit(String storeId) async {
     final result = await _storeRepository.getStore(storeId);
     return result.flatMap<Store>(
-      (store) => store == null
+      (store) => store == null || store.isScheduledForDeletion
           ? left(StoreNotFoundException(message: '삭제된 점포: $storeId'))
           : right(store),
     );
@@ -426,13 +430,17 @@ class StoreUseCaseImpl implements StoreUseCase {
   }
 
   @override
-  Future<Either<Exception, void>> softDeleteStore(
-    String storeId, {
-    bool expireImmediately = false,
-  }) {
-    return _storeRepository.softDeleteStore(
-      storeId,
-      expireImmediately: expireImmediately,
-    );
+  Future<Either<Exception, void>> softDeleteStore(String storeId) {
+    return _storeRepository.softDeleteStore(storeId);
+  }
+
+  @override
+  Future<Either<Exception, void>> restoreStore(String storeId) {
+    return _storeRepository.restoreStore(storeId);
+  }
+
+  @override
+  Future<Either<Exception, void>> permanentlyDeleteStore(String storeId) {
+    return _storeRepository.permanentlyDeleteStore(storeId);
   }
 }

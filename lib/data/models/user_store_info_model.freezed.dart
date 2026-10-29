@@ -17,7 +17,8 @@ T _$identity<T>(T value) => value;
 mixin _$UserStoreInfoModel {
 
  String get name; UserRole get role; StoreColor get color; String get memo;/// 승인 전이면 true. 승인할 때 필드를 지우므로 없으면 승인된 점포다.
- bool get isPending;
+ bool get isPending;/// 점포가 삭제 예정이 된 시각. 점포 삭제·복구가 멤버마다 쓰고 지운다 (ADR-0007)
+@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? get deletedAt;
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +32,20 @@ $UserStoreInfoModelCopyWith<UserStoreInfoModel> get copyWith => _$UserStoreInfoM
 @override
 bool operator ==(Object other) {
   final _this = this as UserStoreInfoModel;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfoModel&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.isPending, _this.isPending) || other.isPending == _this.isPending));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserStoreInfoModel&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.isPending, _this.isPending) || other.isPending == _this.isPending)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as UserStoreInfoModel;
-  return Object.hash(runtimeType,_this.name,_this.role,_this.color,_this.memo,_this.isPending);
+  return Object.hash(runtimeType,_this.name,_this.role,_this.color,_this.memo,_this.isPending,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as UserStoreInfoModel;
-  return 'UserStoreInfoModel(name: ${_this.name}, role: ${_this.role}, color: ${_this.color}, memo: ${_this.memo}, isPending: ${_this.isPending})';
+  return 'UserStoreInfoModel(name: ${_this.name}, role: ${_this.role}, color: ${_this.color}, memo: ${_this.memo}, isPending: ${_this.isPending}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -55,7 +56,7 @@ abstract mixin class $UserStoreInfoModelCopyWith<$Res>  {
   factory $UserStoreInfoModelCopyWith(UserStoreInfoModel value, $Res Function(UserStoreInfoModel) _then) = _$UserStoreInfoModelCopyWithImpl;
 @useResult
 $Res call({
- String name, UserRole role, StoreColor color, String memo, bool isPending
+ String name, UserRole role, StoreColor color, String memo, bool isPending,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt
 });
 
 
@@ -72,14 +73,15 @@ class _$UserStoreInfoModelCopyWithImpl<$Res>
 
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,Object? deletedAt = freezed,}) {
   return _then(UserStoreInfoModel(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as UserRole,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,isPending: null == isPending ? _self.isPending : isPending // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -164,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  UserRole role,  StoreColor color,  String memo,  bool isPending)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  UserRole role,  StoreColor color,  String memo,  bool isPending, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserStoreInfoModel() when $default != null:
-return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending);case _:
+return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -185,10 +187,10 @@ return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  UserRole role,  StoreColor color,  String memo,  bool isPending)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  UserRole role,  StoreColor color,  String memo,  bool isPending, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserStoreInfoModel():
-return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending);case _:
+return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +207,10 @@ return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  UserRole role,  StoreColor color,  String memo,  bool isPending)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  UserRole role,  StoreColor color,  String memo,  bool isPending, @JsonKey(includeIfNull: false)@TimestampConverter()  DateTime? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserStoreInfoModel() when $default != null:
-return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending);case _:
+return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending,_that.deletedAt);case _:
   return null;
 
 }
@@ -220,7 +222,7 @@ return $default(_that.name,_that.role,_that.color,_that.memo,_that.isPending);ca
 @JsonSerializable()
 
 class _UserStoreInfoModel extends UserStoreInfoModel {
-  const _UserStoreInfoModel({required this.name, required this.role, required this.color, required this.memo, this.isPending = false}): super._();
+  const _UserStoreInfoModel({required this.name, required this.role, required this.color, required this.memo, this.isPending = false, @JsonKey(includeIfNull: false)@TimestampConverter() this.deletedAt}): super._();
   factory _UserStoreInfoModel.fromJson(Map<String, dynamic> json) => _$UserStoreInfoModelFromJson(json);
 
 @override final  String name;
@@ -229,6 +231,8 @@ class _UserStoreInfoModel extends UserStoreInfoModel {
 @override final  String memo;
 /// 승인 전이면 true. 승인할 때 필드를 지우므로 없으면 승인된 점포다.
 @override@JsonKey() final  bool isPending;
+/// 점포가 삭제 예정이 된 시각. 점포 삭제·복구가 멤버마다 쓰고 지운다 (ADR-0007)
+@override@JsonKey(includeIfNull: false)@TimestampConverter() final  DateTime? deletedAt;
 
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
@@ -243,18 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfoModel&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserStoreInfoModel&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.color, color) || other.color == color)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.isPending, isPending) || other.isPending == isPending)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,name,role,color,memo,isPending);
+    return Object.hash(runtimeType,name,role,color,memo,isPending,deletedAt);
 }
 
 @override
 String toString() {
-    return 'UserStoreInfoModel(name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending)';
+    return 'UserStoreInfoModel(name: $name, role: $role, color: $color, memo: $memo, isPending: $isPending, deletedAt: $deletedAt)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$UserStoreInfoModelCopyWith<$Res> implements $UserStoreInf
   factory _$UserStoreInfoModelCopyWith(_UserStoreInfoModel value, $Res Function(_UserStoreInfoModel) _then) = __$UserStoreInfoModelCopyWithImpl;
 @override @useResult
 $Res call({
- String name, UserRole role, StoreColor color, String memo, bool isPending
+ String name, UserRole role, StoreColor color, String memo, bool isPending,@JsonKey(includeIfNull: false)@TimestampConverter() DateTime? deletedAt
 });
 
 
@@ -282,14 +286,15 @@ class __$UserStoreInfoModelCopyWithImpl<$Res>
 
 /// Create a copy of UserStoreInfoModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? role = null,Object? color = null,Object? memo = null,Object? isPending = null,Object? deletedAt = freezed,}) {
   return _then(_UserStoreInfoModel(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as UserRole,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,memo: null == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String,isPending: null == isPending ? _self.isPending : isPending // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

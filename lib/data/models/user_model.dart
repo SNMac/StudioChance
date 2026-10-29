@@ -53,7 +53,10 @@ abstract class UserModel with _$UserModel {
     );
   }
 
+  /// 기한이 지난 삭제 예정 점포는 뺀다. 복구할 수 없고, TTL이 점포를 지울 때까지(최대
+  /// 하루) 남아 있을 뿐이다. 그 뒤 `cascadeStoreDelete`가 항목을 지운다 (ADR-0007)
   User toEntity() {
+    final now = DateTime.now();
     return User(
       id: id,
       name: name,
@@ -62,6 +65,7 @@ abstract class UserModel with _$UserModel {
       authProviders: authProviders,
       storeInfos: storeById.entries
           .map((entry) => entry.value.toEntity(storeId: entry.key))
+          .where((info) => !(info.deletionDeadline?.isBefore(now) ?? false))
           .toList(),
       isDeleted: isDeleted,
     );

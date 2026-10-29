@@ -23,7 +23,7 @@ abstract interface class StoreDataSource {
     UserStoreInfoModel creatorInfo,
   );
 
-  /// 점포 단일 조회
+  /// 점포 단일 조회. 삭제 예정 점포도 돌려준다 (`deletedAt`으로 구분)
   Future<StoreModel?> getStore(String storeId);
 
   /// 점포 정보 수정
@@ -38,18 +38,22 @@ abstract interface class StoreDataSource {
     required bool Function(StoreModel current) isUnchanged,
   });
 
-  /// 점포 삭제 (Soft Delete)
-  /// - [memberUids]: 삭제 시점의 멤버+대기 멤버 uid 목록. 각 사용자의
-  ///   `storeById.{storeId}` 캐시를 함께 제거하여 데이터 불일치를 방지한다.
-  /// - [expireImmediately]: 복구 여유 기간([storeSoftDeleteDays]) 없이 바로 만료시킨다.
-  ///   계정 삭제처럼 되살려도 쓸 사람이 없는 점포에 쓴다
+  /// 점포 삭제 — 삭제 예정 점포로 만든다 (ADR-0007)
+  /// - 멤버의 `storeById.{storeId}` 항목은 남기고 `deletedAt`만 표시한다. 그래야 멤버
+  ///   화면에 남은 기간이 보이고, 복구할 때 점포 색상·점포 메모가 그대로 돌아온다
+  /// - 승인 대기 중인 신청은 이때 정리한다 (대기 명단과 신청자의 `storeById` 항목)
+  /// - 이미 삭제 예정이면 아무것도 쓰지 않는다
   /// - `expiresAt`이 지나면 TTL이 점포 문서를 지우고, Functions의 `cascadeStoreDelete`가
-  ///   예약 등 서브컬렉션을 지운다
-  Future<void> softDeleteStore(
-    String storeId,
-    List<String> memberUids, {
-    bool expireImmediately = false,
-  });
+  ///   예약과 멤버의 점포 항목을 지운다
+  Future<void> softDeleteStore(String storeId);
+
+  /// 점포 복구 — 삭제 예정 표시를 점포 문서와 멤버의 `storeById` 항목에서 지운다.
+  /// 삭제 예정이 아니면 아무것도 쓰지 않는다
+  Future<void> restoreStore(String storeId);
+
+  /// 영구 삭제 — 점포 문서를 바로 지운다. 예약과 멤버의 점포 항목은
+  /// Functions의 `cascadeStoreDelete`가 지운다
+  Future<void> permanentlyDeleteStore(String storeId);
 
   /// 멤버 역할 수정
   Future<void> updateMemberRole(String storeId, String uid, String role);
@@ -184,8 +188,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
         data['id'] = docSnapshot.id;
-
-        if (data['deletedAt'] != null) return null;
 
         return StoreModel.fromJson(data);
       }
@@ -429,44 +431,133 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }
 
   @override
-  Future<void> softDeleteStore(
-    String storeId,
-    List<String> memberUids, {
-    bool expireImmediately = false,
-  }) async {
+  Future<void> softDeleteStore(String storeId) async {
     try {
-      final batch = _firestore.batch();
-      // 기기 시각 기준이라 시계가 틀어진 기기에서는 며칠 어긋날 수 있다. 7일은 정확한
-      // 계약이 아니라 대략적인 복구 여유이므로 허용한다
-      final Object expiresAt = expireImmediately
-          ? FieldValue.serverTimestamp()
-          : Timestamp.fromDate(
-              DateTime.now().add(const Duration(days: storeSoftDeleteDays)),
-            );
+      final storeRef = _storeDocRef(storeId);
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(storeRef);
+        final json = snapshot.data();
+        if (!snapshot.exists || json == null) {
+          throw StoreNotFoundException(message: '삭제할 점포가 없습니다: $storeId');
+        }
+        if (json['deletedAt'] != null) return;
+        json['id'] = snapshot.id;
+        final current = StoreModel.fromJson(json);
 
-      batch.update(_storeDocRef(storeId), {
-        'deletedAt': FieldValue.serverTimestamp(),
-        'expiresAt': expiresAt,
-        'updatedAt': FieldValue.serverTimestamp(),
-        // memberById·waitingMemberById는 지우지 않는다. 점포 삭제 알림 함수
-        // (notifyOnStoreUpdate)가 이 문서에서 알림 받을 멤버·승인 대기자를 읽는다.
-        // deletedAt을 쓰는 경로는 반드시 inviteInfo도 함께 null로 만들어야 한다.
-        // lookupInviteCode Callable(functions/src/invite/lookup_invite_code.ts)이
-        // 이 불변식에 기대어 초대 코드로만 조회한다.
-        'inviteInfo': null,
-      });
+        // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 사용자 문서부터 읽는다
+        final memberRefs = await _userRefsWithStoreEntry(
+          transaction,
+          storeId,
+          current.memberById.keys,
+        );
+        final applicantRefs = await _userRefsWithStoreEntry(
+          transaction,
+          storeId,
+          current.waitingMemberById.keys,
+        );
 
-      for (final uid in memberUids) {
-        batch.update(_firestore.collection('users').doc(uid), {
-          'storeById.$storeId': FieldValue.delete(),
+        // 남은 기간은 서버 시각인 deletedAt으로 센다. expiresAt은 TTL에만 쓰므로 기기 시각에
+        // 하루 여유를 더해, 시계가 틀어진 기기에서도 TTL이 화면에 보인 기한보다 먼저
+        // 지우지 않게 한다 (Rules는 현재로부터 7일에서 9일 사이만 받는다)
+        final expiresAt = Timestamp.fromDate(
+          DateTime.now().add(const Duration(days: storeSoftDeleteDays + 1)),
+        );
+        transaction.update(storeRef, {
+          'deletedAt': FieldValue.serverTimestamp(),
+          'expiresAt': expiresAt,
           'updatedAt': FieldValue.serverTimestamp(),
+          // memberById는 지우지 않는다. 멤버는 삭제 예정 점포를 계속 읽고, 점포 삭제
+          // 알림 함수(notifyOnStoreUpdate)가 알림 받을 사람을 이 문서에서 읽는다.
+          // 같은 쓰기에서 비운 승인 대기 명단도 알림 함수가 변경 전 문서에서 읽는다.
+          // deletedAt을 쓰는 경로는 반드시 inviteInfo도 함께 null로 만들어야 한다.
+          // lookupInviteCode Callable(functions/src/invite/lookup_invite_code.ts)이
+          // 이 불변식에 기대어 초대 코드로만 조회한다.
+          'inviteInfo': null,
+          for (final uid in current.waitingMemberById.keys)
+            'waitingMemberById.$uid': FieldValue.delete(),
         });
-      }
-
-      await batch.commit();
+        for (final userRef in memberRefs) {
+          transaction.update(userRef, {
+            'storeById.$storeId.deletedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        for (final userRef in applicantRefs) {
+          transaction.update(userRef, {
+            'storeById.$storeId': FieldValue.delete(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      });
     } catch (e) {
       throw handleFirestoreError(e);
     }
+  }
+
+  @override
+  Future<void> restoreStore(String storeId) async {
+    try {
+      final storeRef = _storeDocRef(storeId);
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(storeRef);
+        final json = snapshot.data();
+        if (!snapshot.exists || json == null) {
+          throw StoreNotFoundException(message: '복구할 점포가 없습니다: $storeId');
+        }
+        if (json['deletedAt'] == null) return;
+        json['id'] = snapshot.id;
+        final current = StoreModel.fromJson(json);
+
+        // 삭제 예정 중에 나간 멤버는 memberById에 없으므로 돌아오지 않는다
+        final memberRefs = await _userRefsWithStoreEntry(
+          transaction,
+          storeId,
+          current.memberById.keys,
+        );
+
+        transaction.update(storeRef, {
+          'deletedAt': FieldValue.delete(),
+          'expiresAt': FieldValue.delete(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        for (final userRef in memberRefs) {
+          transaction.update(userRef, {
+            'storeById.$storeId.deletedAt': FieldValue.delete(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      });
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  @override
+  Future<void> permanentlyDeleteStore(String storeId) async {
+    try {
+      await _storeDocRef(storeId).delete();
+    } catch (e) {
+      throw handleFirestoreError(e);
+    }
+  }
+
+  /// [uids] 중 사용자 문서에 [storeId] 점포 항목이 있는 사람의 문서 참조.
+  ///
+  /// 항목이 없는 사람에게 `storeById.{storeId}.필드` 점 경로로 쓰면 role 없는 항목이
+  /// 생겨 그 사용자를 읽는 점포 조회가 전부 파싱에 실패하므로 미리 거른다 (D13 참고)
+  Future<List<DocumentReference<Map<String, dynamic>>>> _userRefsWithStoreEntry(
+    Transaction transaction,
+    String storeId,
+    Iterable<String> uids,
+  ) async {
+    final refs = <DocumentReference<Map<String, dynamic>>>[];
+    for (final uid in uids) {
+      final userRef = _firestore.collection('users').doc(uid);
+      final userSnapshot = await transaction.get(userRef);
+      final storeById = userSnapshot.data()?['storeById'];
+      if (storeById is Map && storeById.containsKey(storeId)) refs.add(userRef);
+    }
+    return refs;
   }
 
   @override

@@ -113,7 +113,9 @@ class StoreRepositoryImpl implements StoreRepository {
   ) async {
     try {
       final storeModel = await _storeDataSource.getStore(storeId);
-      if (storeModel == null) return right(null);
+      if (storeModel == null || storeModel.deletedAt != null) {
+        return right(null);
+      }
 
       return right(
         StoreMembership(
@@ -154,28 +156,37 @@ class StoreRepositoryImpl implements StoreRepository {
   }
 
   @override
-  Future<Either<Exception, void>> softDeleteStore(
-    String storeId, {
-    bool expireImmediately = false,
-  }) async {
+  Future<Either<Exception, void>> softDeleteStore(String storeId) async {
     try {
-      final storeModel = await _storeDataSource.getStore(storeId);
-      if (storeModel == null) return right(null);
-
-      final memberUids = {
-        ...storeModel.memberById.keys,
-        ...storeModel.waitingMemberById.keys,
-      }.toList();
-
-      await _storeDataSource.softDeleteStore(
-        storeId,
-        memberUids,
-        expireImmediately: expireImmediately,
-      );
+      await _storeDataSource.softDeleteStore(storeId);
       _logger.i('점포 삭제 완료\nid: $storeId');
       return right(null);
     } catch (e) {
       _logger.e('점포 삭제 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> restoreStore(String storeId) async {
+    try {
+      await _storeDataSource.restoreStore(storeId);
+      _logger.i('점포 복구 완료\nid: $storeId');
+      return right(null);
+    } catch (e) {
+      _logger.e('점포 복구 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> permanentlyDeleteStore(String storeId) async {
+    try {
+      await _storeDataSource.permanentlyDeleteStore(storeId);
+      _logger.i('점포 영구 삭제 완료\nid: $storeId');
+      return right(null);
+    } catch (e) {
+      _logger.e('점포 영구 삭제 실패');
       return left(toException(e));
     }
   }

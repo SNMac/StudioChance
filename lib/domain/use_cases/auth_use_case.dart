@@ -126,8 +126,10 @@ class AuthUseCaseImpl implements AuthUseCase {
             ),
           )
           .flatMap(
-            (_) =>
-                _cleanUpStores(currentUser, only: {_StoreCleanup.softDelete}),
+            (_) => _cleanUpStores(
+              currentUser,
+              only: {_StoreCleanup.permanentlyDelete},
+            ),
           )
           .flatMap(
             (_) => TaskEither(
@@ -146,10 +148,14 @@ class AuthUseCaseImpl implements AuthUseCase {
   ///
   /// 관리자가 없는 점포가 남지 않도록 관리자 위임이나 점포 삭제를 먼저 하게 한다.
   /// 계정 삭제의 어떤 쓰기보다 먼저 실행해야 막혔을 때 아무것도 바뀌지 않는다.
-  /// 승인 대기자는 멤버가 아니므로 세지 않는다 (점포 삭제가 신청 기록까지 정리한다)
+  /// 승인 대기자는 멤버가 아니므로 세지 않는다 (영구 삭제가 신청 기록까지 정리한다).
+  /// 삭제 예정 점포는 다른 멤버가 있어도 막지 않는다 — 복구는 관리자만 할 수 있어
+  /// 관리자가 떠나면 남겨 둘 이유가 없으므로 영구 삭제한다 (ADR-0007)
   TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
     final adminStoreInfos = currentUser.storeInfos.where(
-      (info) => _StoreCleanup.of(info) == _StoreCleanup.softDelete,
+      (info) =>
+          _StoreCleanup.of(info) == _StoreCleanup.permanentlyDelete &&
+          !info.isScheduledForDeletion,
     );
 
     return TaskEither.traverseList(
@@ -198,11 +204,9 @@ class AuthUseCaseImpl implements AuthUseCase {
               _StoreCleanup.cancelJoinRequest =>
                 _storeUseCase.cancelJoinRequest(info.id),
               _StoreCleanup.leave => _storeUseCase.leaveStore(info.id),
-              // 관리자 계정이 사라지면 되살려도 쓸 수 없으므로 복구 여유 기간을 두지 않는다
-              _StoreCleanup.softDelete => _storeUseCase.softDeleteStore(
-                info.id,
-                expireImmediately: true,
-              ),
+              // 관리자 계정이 사라지면 복구할 사람이 없으므로 삭제 예정을 거치지 않는다
+              _StoreCleanup.permanentlyDelete =>
+                _storeUseCase.permanentlyDeleteStore(info.id),
             },
           ),
         );
@@ -235,12 +239,13 @@ enum _StoreCleanup {
   /// 관리자가 아닌 멤버. 멤버십을 남겨 두면 보이지 않는 멤버가 관리자의 계정 삭제를 막는다
   leave,
 
-  /// 관리자. [AuthUseCaseImpl._ensureNoSharedAdminStores]를 통과했다면 모두 혼자 쓰는 점포다
-  softDelete;
+  /// 관리자. [AuthUseCaseImpl._ensureNoSharedAdminStores]를 통과했다면 혼자 쓰는 점포이거나
+  /// 삭제 예정 점포다
+  permanentlyDelete;
 
   static _StoreCleanup of(UserStoreInfo info) {
     if (info.isPending) return cancelJoinRequest;
-    if (info.role == UserRole.admin) return softDelete;
+    if (info.role == UserRole.admin) return permanentlyDelete;
     return leave;
   }
 }

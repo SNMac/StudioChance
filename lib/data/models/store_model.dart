@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/data/models/invite_info_model.dart';
 import 'package:studio_chance/data/models/space_option_model.dart';
 import 'package:studio_chance/data/models/store_member_info_model.dart';
@@ -31,6 +33,10 @@ abstract class StoreModel with _$StoreModel {
     int? paymentDeadlineMinutes,
     String? infoNotes,
     String? cautionNotes,
+
+    /// 점포 삭제·복구만 쓴다 (`softDeleteStore`·`restoreStore`). 수정 쓰기에 섞이면
+    /// Rules가 거부하므로 JSON으로 쓰지 않는다
+    @JsonKey(includeToJson: false) @TimestampConverter() DateTime? deletedAt,
   }) = _StoreModel;
 
   factory StoreModel.fromJson(Map<String, dynamic> json) =>
@@ -78,6 +84,7 @@ abstract class StoreModel with _$StoreModel {
       paymentDeadlineMinutes: entity.paymentDeadlineMinutes,
       infoNotes: entity.infoNotes,
       cautionNotes: entity.cautionNotes,
+      deletedAt: entity.deletedAt,
     );
   }
 
@@ -101,6 +108,7 @@ abstract class StoreModel with _$StoreModel {
       paymentDeadlineMinutes: paymentDeadlineMinutes,
       infoNotes: infoNotes,
       cautionNotes: cautionNotes,
+      deletedAt: deletedAt,
     );
   }
 }

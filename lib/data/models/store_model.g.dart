@@ -38,6 +38,10 @@ _StoreModel _$StoreModelFromJson(Map<String, dynamic> json) => _StoreModel(
   paymentDeadlineMinutes: (json['paymentDeadlineMinutes'] as num?)?.toInt(),
   infoNotes: json['infoNotes'] as String?,
   cautionNotes: json['cautionNotes'] as String?,
+  deletedAt: _$JsonConverterFromJson<Timestamp, DateTime>(
+    json['deletedAt'],
+    const TimestampConverter().fromJson,
+  ),
 );
 
 Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
@@ -59,3 +63,8 @@ Map<String, dynamic> _$StoreModelToJson(_StoreModel instance) =>
       'infoNotes': instance.infoNotes,
       'cautionNotes': instance.cautionNotes,
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
