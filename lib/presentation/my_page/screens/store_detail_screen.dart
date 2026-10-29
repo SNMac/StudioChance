@@ -304,7 +304,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
 
   /// 확인을 받아 [action]을 하고, 성공하면 상세 화면을 닫는다.
   ///
-  /// `go`가 아니라 `pop`으로 닫아 들어온 화면(마이페이지 또는 계정 삭제 안내)으로 돌아간다.
+  /// `go`가 아니라 `pop`으로 닫아 들어온 화면(마이페이지 또는 계정 삭제 화면)으로 돌아간다.
   /// 안내 화면에서 왔다면 남은 막힌 점포를 이어서 처리할 수 있다
   void _confirmThenClose(
     BuildContext context, {

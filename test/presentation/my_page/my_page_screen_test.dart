@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store_member_info.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 
 import '../../helpers/fake_entities.dart';
 import 'my_page_test_harness.dart';
@@ -97,24 +98,28 @@ void main() {
     verifyNever(() => harness.storeUseCase.getStore(any()));
   });
 
-  testWidgets('계정 삭제는 확인을 받은 뒤에 하고, 성공하면 오류나 안내 화면을 띄우지 않는다', (tester) async {
-    // 성공 뒤 로그인 화면으로 가는 것은 인증 상태를 보는 라우터 redirect가 맡는다
+  const blockingStores = [(id: 'store-123', name: '테스트 점포')];
+  final accountDeletionButton = find.widgetWithText(TextActionButton, '계정 삭제');
+
+  testWidgets('계정 삭제는 막는 점포가 없으면 확인 화면을 열고, 그 화면에서 눌러야 삭제한다', (tester) async {
     final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => right([]));
     when(() => harness.authUseCase.delete())
         .thenAnswer((_) async => right(null));
 
     await tester.pumpWidget(harness.build());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('계정 삭제'));
+    await tester.tap(accountDeletionButton);
     await tester.pumpAndSettle();
     verifyNever(() => harness.authUseCase.delete());
+    expect(find.text('계정을 삭제할까요?'), findsOneWidget);
 
-    await tester.tap(find.text('삭제'));
+    await tester.tap(accountDeletionButton);
     await tester.pumpAndSettle();
 
     verify(() => harness.authUseCase.delete()).called(1);
-    expect(find.text('계정을 삭제하기 전에'), findsNothing);
     expect(find.text('오류'), findsNothing);
   });
 
@@ -122,53 +127,37 @@ void main() {
     final harness = MyPageHarness(user: fakeUser);
     when(() => harness.storeUseCase.getStore(any()))
         .thenAnswer((_) async => right(fakeStore));
-    when(() => harness.authUseCase.delete()).thenAnswer(
-      (_) async => left(
-        StoreAdminHandoverRequiredException(
-          stores: [(id: 'store-123', name: '테스트 점포')],
-          message: '다른 멤버가 있는 관리자 점포',
-        ),
-      ),
-    );
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => right(blockingStores));
 
     await tester.pumpWidget(harness.build());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('계정 삭제'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('삭제'));
+    await tester.tap(accountDeletionButton);
     await tester.pumpAndSettle();
 
     expect(find.text('계정을 삭제하기 전에'), findsOneWidget);
+    expect(accountDeletionButton, findsNothing);
 
     await tester.tap(find.text('테스트 점포'));
     await tester.pumpAndSettle();
 
     expect(find.text('점포 정보 수정'), findsOneWidget);
+    verifyNever(() => harness.authUseCase.delete());
   });
 
-  testWidgets('계정 삭제 안내에서 연 점포를 삭제하면 안내 화면으로 돌아오고, 막힌 점포가 없으면 다시 시도하라고 알린다', (
-    tester,
-  ) async {
+  testWidgets('계정 삭제 안내에서 연 점포를 삭제하고 돌아오면 계정 삭제 확인이 된다', (tester) async {
     final harness = MyPageHarness(user: fakeUser);
     when(() => harness.storeUseCase.getStore(any()))
         .thenAnswer((_) async => right(fakeStore));
     when(() => harness.storeUseCase.softDeleteStore(any()))
         .thenAnswer((_) async => right(null));
-    when(() => harness.authUseCase.delete()).thenAnswer(
-      (_) async => left(
-        StoreAdminHandoverRequiredException(
-          stores: [(id: 'store-123', name: '테스트 점포')],
-          message: '다른 멤버가 있는 관리자 점포',
-        ),
-      ),
-    );
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => right(blockingStores));
 
     await tester.pumpWidget(harness.build());
     await tester.pumpAndSettle();
-    await tester.tap(find.text('계정 삭제'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('삭제'));
+    await tester.tap(accountDeletionButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('테스트 점포'));
     await tester.pumpAndSettle();
@@ -184,8 +173,48 @@ void main() {
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();
 
+    expect(find.text('계정을 삭제할까요?'), findsOneWidget);
+    expect(accountDeletionButton, findsOneWidget);
+  });
+
+  testWidgets('계정 삭제 확인 뒤 그 사이 멤버가 늘어 막히면 오류 대신 막힌 점포를 안내한다', (tester) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => right([]));
+    when(() => harness.authUseCase.delete()).thenAnswer(
+      (_) async => left(
+        StoreAdminHandoverRequiredException(
+          stores: blockingStores,
+          message: '다른 멤버가 있는 관리자 점포',
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+
     expect(find.text('계정을 삭제하기 전에'), findsOneWidget);
-    expect(find.textContaining('이제 계정을 삭제할 수 있습니다'), findsOneWidget);
+    expect(find.text('테스트 점포'), findsOneWidget);
+    expect(find.text('오류'), findsNothing);
+  });
+
+  testWidgets('막는 점포를 확인하지 못하면 오류를 알리고 계정 삭제 화면을 열지 않는다', (tester) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => left(Exception('네트워크 오류')));
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('오류'), findsOneWidget);
+    expect(find.text('계정을 삭제할까요?'), findsNothing);
+    expect(find.text('계정을 삭제하기 전에'), findsNothing);
   });
 
   testWidgets('점포 상세에서 연 승인 대기 모달의 승인이 실패하면 오류 다이얼로그로 알린다', (tester) async {

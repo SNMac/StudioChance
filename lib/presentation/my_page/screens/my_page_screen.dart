@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,15 +38,28 @@ import 'package:studio_chance/router/router_path.dart';
 ///
 /// 점포별 기능(점포 정보 수정·승인 대기·멤버 관리·나가기·삭제)은 점포 행을 탭해
 /// 여는 점포 상세 화면에 있다.
-class MyPageScreen extends ConsumerWidget {
+class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyPageScreen> createState() => _MyPageScreenState();
+}
+
+class _MyPageScreenState extends ConsumerState<MyPageScreen> {
+  /// 계정 삭제 화면을 열기 전 막는 점포를 확인하는 중 (중복 탭 방지)
+  bool _isCheckingAccountDeletion = false;
+  bool _showLoadingOverlay = false;
+  Timer? _overlayTimer;
+
+  @override
+  void dispose() {
+    _overlayTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).asData?.value;
-    final isDeletingAccount = ref.watch(
-      accountDeletionControllerProvider.select((s) => s.isLoading),
-    );
 
     // 마이페이지와 그 아래 화면(점포 상세·위임·내 설정, 승인 대기 모달)의 실패를 여기서
     // 한 번만 알린다. 마이페이지는 /my-page 아래 화면이 열려 있는 동안 그 뒤에서 계속
@@ -64,14 +79,8 @@ class MyPageScreen extends ConsumerWidget {
     ref.listen(accountDeletionControllerProvider, (_, next) {
       next.whenOrNull(
         error: (e, _) {
-          // 다른 멤버가 있는 관리자 점포가 남아 있으면 위임·삭제로 안내한다
-          if (e is StoreAdminHandoverRequiredException) {
-            context.push(
-              SCRoute.accountDeletionBlocked.fullPath,
-              extra: e.stores,
-            );
-            return;
-          }
+          // 삭제 직전에 막히면 계정 삭제 화면이 그 점포를 안내한다
+          if (e is StoreAdminHandoverRequiredException) return;
           showMyPageErrorDialog(context, e);
         },
       );
@@ -106,11 +115,7 @@ class MyPageScreen extends ConsumerWidget {
                         info.isPending
                             ? _PendingStoreRow(
                                 info: info,
-                                onCancel: () => _confirmCancelJoinRequest(
-                                  context,
-                                  ref,
-                                  info,
-                                ),
+                                onCancel: () => _confirmCancelJoinRequest(info),
                               )
                             : _StoreRow(
                                 info: info,
@@ -143,9 +148,9 @@ class MyPageScreen extends ConsumerWidget {
                       TextActionButton(
                         title: '계정 삭제',
                         isDestructive: true,
-                        onPressed: isDeletingAccount
+                        onPressed: _isCheckingAccountDeletion
                             ? null
-                            : () => _confirmDeleteAccount(context, ref),
+                            : _openAccountDeletion,
                       ),
                     ],
                   ),
@@ -154,16 +159,12 @@ class MyPageScreen extends ConsumerWidget {
             ),
           ),
         ),
-        LoadingOverlay(isLoading: isDeletingAccount),
+        LoadingOverlay(isLoading: _showLoadingOverlay),
       ],
     );
   }
 
-  void _confirmCancelJoinRequest(
-    BuildContext context,
-    WidgetRef ref,
-    UserStoreInfo info,
-  ) {
+  void _confirmCancelJoinRequest(UserStoreInfo info) {
     showCustomAlertDialog(
       context: context,
       title: '${info.name} 가입 신청을 취소할까요?',
@@ -177,19 +178,34 @@ class MyPageScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
-    showCustomAlertDialog(
-      context: context,
-      title: '계정을 삭제할까요?',
-      content:
-          '혼자 쓰던 점포와 삭제 예정인 점포는 바로 지워지고, 나머지 점포에서는 모두 나가며, '
-          '승인 대기 중인 가입 신청은 취소됩니다. 삭제한 계정은 되돌릴 수 없습니다.',
-      confirmText: '삭제',
-      isDestructive: true,
-      onConfirmAfterPop: () {
-        ref.read(accountDeletionControllerProvider.notifier).delete();
-      },
-    );
+  /// 막는 점포를 확인하고 계정 삭제 화면을 연다. 막는 점포가 없으면 그 화면이
+  /// 계정 삭제 확인이 되고, 있으면 관리자 위임·점포 삭제로 안내한다
+  Future<void> _openAccountDeletion() async {
+    if (_isCheckingAccountDeletion) return;
+
+    setState(() => _isCheckingAccountDeletion = true);
+    _overlayTimer = Timer(const Duration(seconds: 1), () {
+      if (mounted) setState(() => _showLoadingOverlay = true);
+    });
+
+    List<StoreRef>? stores;
+    try {
+      stores = await ref
+          .read(accountDeletionControllerProvider.notifier)
+          .findStoresBlockingDeletion();
+    } finally {
+      _overlayTimer?.cancel();
+      _overlayTimer = null;
+      if (mounted) {
+        setState(() {
+          _isCheckingAccountDeletion = false;
+          _showLoadingOverlay = false;
+        });
+      }
+    }
+
+    if (stores == null || !mounted) return;
+    unawaited(context.push(SCRoute.accountDeletion.fullPath, extra: stores));
   }
 }
 

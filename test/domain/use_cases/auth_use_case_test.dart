@@ -184,6 +184,64 @@ void main() {
   });
 
   // =========================================================================
+  // findStoresBlockingDeletion
+  // =========================================================================
+
+  group('findStoresBlockingDeletion', () {
+    StoreMembership withStaff(String adminUid) => StoreMembership(
+      roleByUid: {adminUid: UserRole.admin, 'staff-1': UserRole.staff},
+    );
+
+    test('다른 멤버가 있는 관리자 점포만 돌려주고 아무것도 쓰지 않는다', () async {
+      final user = fakeUser.copyWith(
+        storeInfos: [
+          ...fakeUser.storeInfos,
+          fakeUser.storeInfos.first.copyWith(id: 'store-solo', name: '혼자 점포'),
+        ],
+      );
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(user));
+      when(() => mockStoreUseCase.getMembership('store-123'))
+          .thenAnswer((_) async => right(withStaff(user.id)));
+      when(() => mockStoreUseCase.getMembership('store-solo')).thenAnswer(
+        (_) async =>
+            right(StoreMembership(roleByUid: {user.id: UserRole.admin})),
+      );
+
+      final result = await useCase.findStoresBlockingDeletion();
+
+      expect(expectRight(result), [(id: 'store-123', name: '테스트 점포')]);
+      verifyNever(() => mockAuthRepo.prepareDeletion());
+      verifyNever(() => mockAuthRepo.delete());
+    });
+
+    test('삭제 예정 점포는 다른 멤버가 있어도 막지 않는다', () async {
+      final user = fakeUser.copyWith(
+        storeInfos: [
+          fakeUser.storeInfos.first.copyWith(deletedAt: DateTime.now()),
+        ],
+      );
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(user));
+      when(() => mockStoreUseCase.getMembership('store-123'))
+          .thenAnswer((_) async => right(withStaff(user.id)));
+
+      final result = await useCase.findStoresBlockingDeletion();
+
+      expect(expectRight(result), isEmpty);
+    });
+
+    test('로그인된 사용자가 없으면 실패한다', () async {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(null));
+
+      final result = await useCase.findStoresBlockingDeletion();
+
+      expect(expectLeft(result), isA<AuthUserNotFoundException>());
+    });
+  });
+
+  // =========================================================================
   // delete
   // =========================================================================
 

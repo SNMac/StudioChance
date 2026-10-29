@@ -28,9 +28,14 @@ abstract interface class AuthUseCase {
   /// 로그아웃
   Future<void> signOut();
 
+  /// 계정 삭제를 막는 점포(다른 멤버가 있는 관리자 점포). 비어 있으면 삭제할 수 있다.
+  /// 계정 삭제 화면을 열기 전에 확인 화면과 안내 화면 중 무엇을 보일지 정하는 데 쓴다
+  Future<Either<Exception, List<StoreRef>>> findStoresBlockingDeletion();
+
   /// 계정 삭제. 즉시 확정되며 되돌릴 수 없다 (ADR-0005)
   /// - 다른 멤버가 있는 점포의 관리자이면 아무것도 쓰지 않고
-  ///   `StoreAdminHandoverRequiredException`(막힌 점포 목록 포함)으로 실패한다
+  ///   `StoreAdminHandoverRequiredException`(막힌 점포 목록 포함)으로 실패한다.
+  ///   화면을 연 뒤에 멤버가 늘었을 수 있어 [findStoresBlockingDeletion]과 별개로 다시 확인한다
   /// - 재인증하고, Apple이 연동되어 있으면 Apple 토큰을 revoke한다
   /// - 멤버인 점포는 모두 나가고, 승인 대기 중인 신청은 모두 취소한다
   /// - 혼자 쓰는 관리자 점포는 Soft Delete한다
@@ -103,6 +108,22 @@ class AuthUseCaseImpl implements AuthUseCase {
   }
 
   @override
+  Future<Either<Exception, List<StoreRef>>> findStoresBlockingDeletion() async {
+    final currentUserResult = await _userRepository.getCurrentUser();
+
+    return currentUserResult.fold((error) => Future.value(left(error)), (
+      currentUser,
+    ) {
+      if (currentUser == null) {
+        return Future.value(
+          left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
+        );
+      }
+      return _storesBlockingDeletion(currentUser).run();
+    });
+  }
+
+  @override
   Future<Either<Exception, void>> delete() async {
     final currentUserResult = await _userRepository.getCurrentUser();
 
@@ -148,10 +169,29 @@ class AuthUseCaseImpl implements AuthUseCase {
   ///
   /// 관리자가 없는 점포가 남지 않도록 관리자 위임이나 점포 삭제를 먼저 하게 한다.
   /// 계정 삭제의 어떤 쓰기보다 먼저 실행해야 막혔을 때 아무것도 바뀌지 않는다.
+  TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
+    return _storesBlockingDeletion(currentUser).flatMap((blocked) {
+      if (blocked.isEmpty) return TaskEither.right(null);
+
+      return TaskEither.left(
+        StoreAdminHandoverRequiredException(
+          stores: blocked,
+          message:
+              '다른 멤버가 있는 관리자 점포가 있어 계정을 삭제할 수 없습니다: '
+              '${blocked.map((store) => store.id).join(', ')}',
+        ),
+      );
+    });
+  }
+
+  /// 다른 멤버가 있는 관리자 점포.
+  ///
   /// 승인 대기자는 멤버가 아니므로 세지 않는다 (영구 삭제가 신청 기록까지 정리한다).
   /// 삭제 예정 점포는 다른 멤버가 있어도 막지 않는다 — 복구는 관리자만 할 수 있어
   /// 관리자가 떠나면 남겨 둘 이유가 없으므로 영구 삭제한다 (ADR-0007)
-  TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
+  TaskEither<Exception, List<StoreRef>> _storesBlockingDeletion(
+    User currentUser,
+  ) {
     final adminStoreInfos = currentUser.storeInfos.where(
       (info) => info.canManageStore,
     );
@@ -165,22 +205,12 @@ class AuthUseCaseImpl implements AuthUseCase {
               membership?.hasMembersOtherThan(currentUser.id) ?? false,
         ),
       ),
-    ).flatMap((results) {
-      final blocked = results
+    ).map(
+      (results) => results
           .where((result) => result.hasOtherMembers)
           .map((result) => (id: result.info.id, name: result.info.name))
-          .toList();
-      if (blocked.isEmpty) return TaskEither.right(null);
-
-      return TaskEither.left(
-        StoreAdminHandoverRequiredException(
-          stores: blocked,
-          message:
-              '다른 멤버가 있는 관리자 점포가 있어 계정을 삭제할 수 없습니다: '
-              '${blocked.map((store) => store.id).join(', ')}',
-        ),
-      );
-    });
+          .toList(),
+    );
   }
 
   /// 점포 중 [only]에 해당하는 정리만 차례로 한다 (정리 방법은 [_StoreCleanup.of])

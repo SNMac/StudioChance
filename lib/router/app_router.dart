@@ -21,7 +21,7 @@ import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/home/screens/confirmation_notice_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
 import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
-import 'package:studio_chance/presentation/my_page/screens/account_deletion_blocked_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/account_deletion_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/delegate_admin_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_store_color_screen.dart';
@@ -175,10 +175,10 @@ GoRoute myPageRoute() => GoRoute(
         ),
       ],
     ),
-    // 계정 삭제가 막혔을 때의 안내
+    // 계정 삭제 확인, 또는 막혔을 때의 안내
     GoRoute(
-      path: SCRoute.accountDeletionBlocked.path,
-      builder: (context, state) => AccountDeletionBlockedScreen(
+      path: SCRoute.accountDeletion.path,
+      builder: (context, state) => AccountDeletionScreen(
         stores: state.extra as List<StoreRef>? ?? const [],
       ),
     ),
