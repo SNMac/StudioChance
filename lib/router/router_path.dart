@@ -13,6 +13,14 @@ enum SCRoute {
   storeEdit,
 
   // ---------------------------------------------------------------------------
+  // 마이페이지 전용 (점포 상세는 경로에 storeId가 들어가므로 storeDetailLocation으로 이동)
+  // ---------------------------------------------------------------------------
+  storeDetail,
+  storeMemo,
+  delegateAdmin,
+  accountDeletionBlocked,
+
+  // ---------------------------------------------------------------------------
   // 온보딩 전용
   // ---------------------------------------------------------------------------
   onboardingNickname,
@@ -52,6 +60,15 @@ enum SCRoute {
         return '/my-page';
       case SCRoute.storeEdit:
         return '/store-edit';
+
+      case SCRoute.storeDetail:
+        return 'store/:storeId';
+      case SCRoute.storeMemo:
+        return 'memo';
+      case SCRoute.delegateAdmin:
+        return 'delegate';
+      case SCRoute.accountDeletionBlocked:
+        return 'account-deletion-blocked';
 
       case SCRoute.onboardingNickname:
         return 'nickname';
@@ -108,6 +125,9 @@ enum SCRoute {
       case SCRoute.onboardingNickname:
         return '/onboarding/nickname';
 
+      case SCRoute.accountDeletionBlocked:
+        return '/my-page/account-deletion-blocked';
+
       default:
         throw UnsupportedError(
           '$name 은 공유 라우트입니다. fullPath 대신 pushChild(context) 를 사용하세요.',
@@ -121,3 +141,8 @@ enum SCRoute {
     context.push('$currentPath/$path', extra: extra);
   }
 }
+
+/// 점포 상세 화면 위치 — 마이페이지 아래에 쌓이므로 뒤로 가면 마이페이지가 나온다
+String storeDetailLocation(String storeId) =>
+    '${SCRoute.myPage.path}/'
+    '${SCRoute.storeDetail.path.replaceFirst(':storeId', storeId)}';

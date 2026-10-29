@@ -16,6 +16,7 @@ import 'package:studio_chance/domain/repository_interfaces/holiday_repository.da
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
+import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
 import 'package:studio_chance/domain/use_cases/holiday_use_case.dart';
 import 'package:studio_chance/domain/use_cases/reservation_use_case.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
@@ -62,6 +63,8 @@ class MockStoreRepository extends Mock implements StoreRepository {}
 class MockUserRepository extends Mock implements UserRepository {}
 
 // ─── UseCase ─────────────────────────────────────────────────────────────────
+
+class MockAuthUseCase extends Mock implements AuthUseCase {}
 
 class MockHolidayUseCase extends Mock implements HolidayUseCase {}
 

@@ -16,11 +16,17 @@ import 'package:studio_chance/presentation/commons/store_input/screens/store_add
 import 'package:studio_chance/presentation/commons/store_input/screens/store_color_selection_screen.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/home/screens/confirmation_notice_screen.dart';
 import 'package:studio_chance/presentation/home/screens/home_screen.dart';
 import 'package:studio_chance/presentation/home/screens/payment_instruction_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/account_deletion_blocked_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/delegate_admin_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/my_store_color_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/store_detail_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/store_memo_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/sign_in/screens/sign_in_screen.dart';
@@ -126,6 +132,59 @@ GoRoute _inviteCodeColorRoute() => GoRoute(
   ),
 );
 
+/// 마이페이지와 그 아래 화면들. 위젯 테스트도 이 라우트로 실제 화면 이동을 확인한다
+GoRoute myPageRoute() => GoRoute(
+  path: SCRoute.myPage.path,
+  name: SCRoute.myPage.name,
+  pageBuilder: (context, state) =>
+      _fadePage(state: state, child: const MyPageScreen()),
+  routes: [
+    // 점포 추가 — 온보딩과 동일한 역할 선택 → 등록/초대 코드 플로우 재사용
+    GoRoute(
+      path: SCRoute.role.path,
+      builder: (context, state) => const RoleSelectionScreen(),
+      routes: _roleSubRoutes(),
+    ),
+    // 닉네임 변경
+    GoRoute(
+      path: SCRoute.nickname.path,
+      builder: (context, state) => const MyPageNicknameScreen(),
+    ),
+    // 점포 상세 — 위치는 storeDetailLocation(storeId)
+    GoRoute(
+      path: SCRoute.storeDetail.path,
+      builder: (context, state) =>
+          StoreDetailScreen(storeId: state.pathParameters['storeId']!),
+      routes: [
+        // 내 설정 — 점포 색상. 고르면 저장하고 바로 닫힌다
+        GoRoute(
+          path: SCRoute.storeColor.path,
+          builder: (context, state) =>
+              MyStoreColorScreen(storeId: state.pathParameters['storeId']!),
+        ),
+        // 내 설정 — 점포 메모
+        GoRoute(
+          path: SCRoute.storeMemo.path,
+          builder: (context, state) =>
+              StoreMemoScreen(storeId: state.pathParameters['storeId']!),
+        ),
+        GoRoute(
+          path: SCRoute.delegateAdmin.path,
+          builder: (context, state) =>
+              DelegateAdminScreen(storeId: state.pathParameters['storeId']!),
+        ),
+      ],
+    ),
+    // 계정 삭제가 막혔을 때의 안내
+    GoRoute(
+      path: SCRoute.accountDeletionBlocked.path,
+      builder: (context, state) => AccountDeletionBlockedScreen(
+        stores: state.extra as List<StoreRef>? ?? const [],
+      ),
+    ),
+  ],
+);
+
 class _UnfocusNavigatorObserver extends NavigatorObserver {
   void _unfocus() => FocusManager.instance.primaryFocus?.unfocus();
 
@@ -188,25 +247,7 @@ GoRouter goRouter(Ref ref) {
       ),
 
       // 마이페이지
-      GoRoute(
-        path: SCRoute.myPage.path,
-        name: SCRoute.myPage.name,
-        pageBuilder: (context, state) =>
-            _fadePage(state: state, child: const MyPageScreen()),
-        routes: [
-          // 점포 추가 — 온보딩과 동일한 역할 선택 → 등록/초대 코드 플로우 재사용
-          GoRoute(
-            path: SCRoute.role.path,
-            builder: (context, state) => const RoleSelectionScreen(),
-            routes: _roleSubRoutes(),
-          ),
-          // 닉네임 변경
-          GoRoute(
-            path: SCRoute.nickname.path,
-            builder: (context, state) => const MyPageNicknameScreen(),
-          ),
-        ],
-      ),
+      myPageRoute(),
 
       // 점포 수정 — 마이페이지와 예약 모달 위 어디서든 push로 연다 (`pushStoreEdit`)
       GoRoute(

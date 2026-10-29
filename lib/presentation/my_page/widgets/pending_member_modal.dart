@@ -100,13 +100,10 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
     );
   }
 
-  String _displayName(StoreMemberInfo info) =>
-      info.user.nickname ?? info.user.name;
-
   void _onApprove(StoreMemberInfo info) {
     showCustomAlertDialog(
       context: context,
-      title: '${_displayName(info)} 님을 승인할까요?',
+      title: '${info.user.displayName} 님을 승인할까요?',
       content: '${info.role.displayName} 역할로 점포에 참여하게 됩니다.',
       onConfirmAfterPop: () {
         ref
@@ -123,7 +120,7 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
   void _onReject(StoreMemberInfo info) {
     showCustomAlertDialog(
       context: context,
-      title: '${_displayName(info)} 님의 신청을 거절할까요?',
+      title: '${info.user.displayName} 님의 신청을 거절할까요?',
       content: '거절한 신청은 되돌릴 수 없습니다.',
       confirmText: '거절',
       isDestructive: true,
@@ -246,7 +243,7 @@ class _PendingMemberModalState extends ConsumerState<PendingMemberModal>
                           children: [
                             for (final info in waitingInfos)
                               _PendingMemberRow(
-                                name: _displayName(info),
+                                name: info.user.displayName,
                                 roleLabel: info.role.displayName,
                                 disabled: isMutating,
                                 onApprove: () => _onApprove(info),
