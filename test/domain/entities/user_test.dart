@@ -44,4 +44,14 @@ void main() {
       expect(applicant.memberStoreInfos == applicant.memberStoreInfos, isTrue);
     });
   });
+
+  group('displayName', () {
+    test('닉네임이 있으면 닉네임을 쓴다', () {
+      expect(fakeUser.displayName, '닉네임');
+    });
+
+    test('닉네임이 없으면(가입 직후) 소셜 계정 이름을 쓴다', () {
+      expect(fakeUser.copyWith(nickname: null).displayName, '테스트 유저');
+    });
+  });
 }

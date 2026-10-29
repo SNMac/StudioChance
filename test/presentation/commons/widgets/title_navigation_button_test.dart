@@ -1,5 +1,6 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
@@ -107,4 +108,49 @@ void main() {
       }
     });
   }
+
+  group('prioritizeContent', () {
+    // 마이페이지 점포 행·멤버 행: 이름(title)이 길고 역할(content)이 짧다.
+    // 역할은 잘리면 안 되고, 남는 폭은 모두 이름이 쓴다.
+    testWidgets('긴 제목이 짧은 내용을 자르지 않고, 남는 폭을 제목이 쓴다', (tester) async {
+      const dotKey = Key('dot');
+
+      await tester.pumpWidget(
+        _wrap(
+          TitleNavigationButton(
+            title: '$_maxLengthTitle 파티룸 2호점',
+            titleLeading: Container(
+              key: dotKey,
+              width: 8,
+              height: 8,
+              color: Colors.red,
+            ),
+            content: '관리자',
+            prioritizeContent: true,
+            onPressed: () {},
+          ),
+          375,
+        ),
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('$_maxLengthTitle 파티룸 2호점'),
+      );
+      final content = tester.renderObject<RenderParagraph>(find.text('관리자'));
+
+      expect(content.didExceedMaxLines, isFalse, reason: '역할이 잘렸다');
+      expect(title.didExceedMaxLines, isTrue, reason: '제목이 말줄임되지 않았다');
+      // 점 → 제목 → 내용 순서로 겹치지 않는다
+      expect(
+        tester.getRect(find.byKey(dotKey)).right,
+        lessThanOrEqualTo(
+          tester.getRect(find.text('$_maxLengthTitle 파티룸 2호점')).left,
+        ),
+      );
+      expect(
+        tester.getRect(find.text('$_maxLengthTitle 파티룸 2호점')).right,
+        lessThanOrEqualTo(tester.getRect(find.text('관리자')).left),
+      );
+    });
+  });
 }

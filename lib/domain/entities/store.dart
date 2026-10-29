@@ -29,6 +29,14 @@ abstract class Store with _$Store {
     String? cautionNotes,
   }) = _Store;
 
+  /// 멤버 목록 표시 순서: 관리자 → 스태프 → 뷰어, 같은 역할은 이름 가나다순
+  List<StoreMemberInfo> get sortedMemberInfos => [...memberInfos]
+    ..sort((a, b) {
+      final byRole = a.role.index.compareTo(b.role.index);
+      if (byRole != 0) return byRole;
+      return a.user.displayName.compareTo(b.user.displayName);
+    });
+
   /// spaceOptionId에 해당하는 PriceSetting 반환.
   /// null이거나 찾지 못하면 첫 번째 공간의 PriceSetting 반환.
   PriceSetting? priceSettingForSpace(String? spaceOptionId) {
