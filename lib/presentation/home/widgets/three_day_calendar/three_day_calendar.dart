@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/domain/entities/reservation.dart';
 import 'package:studio_chance/domain/entities/store_summary.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/home/utils/calendar_events_utils.dart';
 import 'package:studio_chance/presentation/home/widgets/three_day_calendar/all_day_row.dart';
@@ -385,9 +384,8 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
       ),
     );
     final filtered = storeInfos
-        ?.where(
-          (info) => info.role == UserRole.admin || info.role == UserRole.staff,
-        )
+        // 예약을 옮겨 갈 수 있는 점포. 삭제 예정 점포로는 옮길 수 없다
+        ?.where((info) => info.canWriteReservations)
         .map(
           (info) =>
               StoreSummary(id: info.id, name: info.name, color: info.color),

@@ -14,9 +14,10 @@ import 'package:studio_chance/domain/entities/store_summary.dart';
 import 'package:studio_chance/common/enums/payment_method.dart';
 import 'package:studio_chance/common/enums/reservation_platform.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
 import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
+import 'package:studio_chance/presentation/commons/widgets/store_deletion_notice.dart';
+import 'package:studio_chance/presentation/commons/extensions/store_deletion_formatter.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
@@ -164,13 +165,26 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
   List<StoreSummary> get _availableStores =>
       widget.availableStores ?? [widget.reservation.storeSummary];
 
-  /// 현재 사용자가 이 예약의 점포에 대해 수정 권한(admin/staff)을 가지는지 여부.
+  /// 현재 사용자가 이 예약의 점포에서 예약을 고칠 수 있는지 (관리자·스태프, 삭제 예정 아님)
   bool get _canEdit {
     final storeId = _saved.storeSummary.id;
-    final role = ref.watch(
-      currentUserProvider.select((u) => u.asData?.value?.roleIn(storeId)),
+    return ref.watch(
+      currentUserProvider.select(
+        (u) =>
+            u.asData?.value?.storeInfoOf(storeId)?.canWriteReservations ??
+            false,
+      ),
     );
-    return role == UserRole.admin || role == UserRole.staff;
+  }
+
+  /// 이 예약의 점포가 삭제 예정이면 완전히 지워지는 시각 (ADR-0007)
+  DateTime? get _storeDeletionDeadline {
+    final storeId = _saved.storeSummary.id;
+    return ref.watch(
+      currentUserProvider.select(
+        (u) => u.asData?.value?.storeInfoOf(storeId)?.deletionDeadline,
+      ),
+    );
   }
 
   @override
@@ -960,6 +974,12 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       child: Column(
         spacing: 20,
         children: [
+          if (_storeDeletionDeadline case final deadline?)
+            StoreDeletionNotice(
+              title:
+                  '점포가 ${deadline.remainingUntilDeletion(DateTime.now())} 삭제됩니다',
+              message: '관리자가 점포를 복구하기 전까지 예약을 추가하거나 고칠 수 없습니다.',
+            ),
           _buildSection1ReadOnly(),
           _buildSection2ReadOnly(),
           _buildSection3ReadOnly(),

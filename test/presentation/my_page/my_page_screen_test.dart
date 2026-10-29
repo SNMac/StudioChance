@@ -28,6 +28,31 @@ void main() {
     expect(find.text('점포 정보 수정'), findsOneWidget);
   });
 
+  testWidgets('삭제 예정 점포는 역할 대신 남은 기간을 표시하고, 탭하면 상세 화면을 연다', (tester) async {
+    final harness = MyPageHarness(
+      user: fakeUser.copyWith(
+        storeInfos: [
+          fakeUser.storeInfos.first.copyWith(
+            deletedAt: DateTime.now().subtract(const Duration(days: 4)),
+          ),
+        ],
+      ),
+    );
+    when(() => harness.storeUseCase.getStore(any()))
+        .thenAnswer((_) async => right(fakeStore));
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+
+    expect(find.text('3일 후 삭제'), findsOneWidget);
+    expect(find.text('관리자'), findsNothing);
+
+    await tester.tap(find.text('테스트 점포'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('점포 복구'), findsOneWidget);
+  });
+
   testWidgets('승인 대기 중인 점포는 역할 대신 승인 대기로 표시하고, 신청을 취소할 수 있다', (tester) async {
     final applicant = fakeUser.copyWith(
       storeInfos: [
@@ -122,7 +147,7 @@ void main() {
     expect(find.text('점포 정보 수정'), findsOneWidget);
   });
 
-  testWidgets('계정 삭제 안내에서 연 점포를 삭제하면 안내 화면으로 돌아오고, 막힌 점포가 없으면 다시 시도하라고 알린다', (
+  testWidgets('계정 삭제 안내에서 연 점포를 삭제하고 돌아오면, 막힌 점포가 없으므로 다시 시도하라고 알린다', (
     tester,
   ) async {
     final harness = MyPageHarness(user: fakeUser);
@@ -148,11 +173,19 @@ void main() {
     await tester.tap(find.text('테스트 점포'));
     await tester.pumpAndSettle();
 
-    // 삭제하면 사용자 정보를 다시 읽고, 그 점포는 내 목록에서 사라진다
-    harness.user = fakeUser.copyWith(storeInfos: []);
+    // 삭제하면 사용자 정보를 다시 읽고, 그 점포는 삭제 예정 점포가 되어 계정 삭제를 막지 않는다
+    harness.user = fakeUser.copyWith(
+      storeInfos: [
+        fakeUser.storeInfos.first.copyWith(deletedAt: DateTime.now()),
+      ],
+    );
     await tester.tap(find.text('점포 삭제'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
+    // 삭제 예정 점포로 다시 그려진 상세 화면에 머문다
+    expect(find.text('점포 복구'), findsOneWidget);
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     expect(find.text('계정을 삭제하기 전에'), findsOneWidget);

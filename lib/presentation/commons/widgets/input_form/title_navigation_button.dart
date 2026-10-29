@@ -19,6 +19,10 @@ class TitleNavigationButton extends StatelessWidget {
   final Widget? trailing;
   final bool isChangeable;
 
+  /// content 글자색. 없으면 [isChangeable]에 따라 secondaryLabel 또는 label
+  /// (예: 삭제 예정 점포의 남은 기간은 systemRed)
+  final Color? contentColor;
+
   /// true면 content가 필요한 만큼 먼저 쓰고 남는 폭을 title이 쓴다.
   /// 이름(title)이 길고 값(content)이 짧은 행에 쓴다 (예: 점포명 · 역할).
   /// false면 title이 먼저 쓰고 남는 폭을 content가 쓴다 (예: 주소 · 긴 값).
@@ -38,6 +42,7 @@ class TitleNavigationButton extends StatelessWidget {
     this.contentLeading,
     this.trailing,
     this.isChangeable = false,
+    this.contentColor,
     this.prioritizeContent = false,
     this.showChevron = true,
     this.onPressed,
@@ -73,7 +78,9 @@ class TitleNavigationButton extends StatelessWidget {
               content!,
               style: textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.normal,
-                color: isChangeable ? context.secondaryLabel : context.label,
+                color:
+                    contentColor ??
+                    (isChangeable ? context.secondaryLabel : context.label),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

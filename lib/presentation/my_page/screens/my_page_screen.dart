@@ -8,6 +8,7 @@ import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/extensions/store_deletion_formatter.dart';
 import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_save_screen.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_caption.dart';
@@ -180,7 +181,7 @@ class MyPageScreen extends ConsumerWidget {
       context: context,
       title: '계정을 삭제할까요?',
       content:
-          '혼자 쓰던 점포는 삭제되고, 나머지 점포에서는 모두 나가며, '
+          '혼자 쓰던 점포와 삭제 예정인 점포는 바로 지워지고, 나머지 점포에서는 모두 나가며, '
           '승인 대기 중인 가입 신청은 취소됩니다. 삭제한 계정은 되돌릴 수 없습니다.',
       confirmText: '삭제',
       isDestructive: true,
@@ -259,6 +260,22 @@ class _StoreRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isAdmin = info.role == UserRole.admin;
+    final deletionDeadline = info.deletionDeadline;
+
+    // 삭제 예정 점포는 역할 대신 남은 기간을 보여준다. 승인 대기 명단은 점포 삭제 때
+    // 비웠으므로 대기 인원도 조회하지 않는다 (ADR-0007)
+    if (deletionDeadline != null) {
+      return TitleNavigationButton(
+        title: info.name,
+        titleLeading: StoreColorDot(color: info.color),
+        content:
+            '${deletionDeadline.remainingUntilDeletion(DateTime.now())} 삭제',
+        contentColor: context.systemRed,
+        isChangeable: true,
+        prioritizeContent: true,
+        onPressed: onPressed,
+      );
+    }
 
     // 관리자인 점포만 대기 인원을 조회한다 (불필요한 Firestore 읽기 방지)
     final waitingCount = isAdmin

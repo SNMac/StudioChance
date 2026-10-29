@@ -12,7 +12,6 @@ import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/payment_method.dart';
 import 'package:studio_chance/common/enums/reservation_platform.dart';
 import 'package:studio_chance/common/enums/reservation_status.dart';
-import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
@@ -98,9 +97,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     });
 
-    // admin·staff만 예약 생성 가능
+    // 관리자·스태프인 점포에만 예약을 만들 수 있다. 삭제 예정 점포는 뺀다
     final canCreateReservation = storeInfos.any(
-      (info) => info.role == UserRole.admin || info.role == UserRole.staff,
+      (info) => info.canWriteReservations,
     );
 
     return Stack(
@@ -208,9 +207,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_isLoadingForModal) return;
 
     final creatableInfos = storeInfos
-        .where(
-          (info) => info.role == UserRole.admin || info.role == UserRole.staff,
-        )
+        .where((info) => info.canWriteReservations)
         .toList();
     final defaultInfo = creatableInfos.first;
     final defaultStoreSummary = StoreSummary(

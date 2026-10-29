@@ -28,6 +28,13 @@ abstract class UserStoreInfo with _$UserStoreInfo {
   /// 삭제 예정 점포. 읽기 전용이며 예약을 추가하거나 고칠 수 없다
   bool get isScheduledForDeletion => deletedAt != null;
 
+  /// 예약을 추가·수정·삭제할 수 있는 점포. 관리자·스태프여야 하고, 승인 대기 중이거나
+  /// 삭제 예정이면 Rules가 예약 쓰기를 거부한다
+  bool get canWriteReservations =>
+      !isPending &&
+      !isScheduledForDeletion &&
+      (role == UserRole.admin || role == UserRole.staff);
+
   /// 완전히 지워지는 시각. 이 시각이 지나면 점포 복구를 할 수 없다
   DateTime? get deletionDeadline =>
       deletedAt?.add(const Duration(days: storeSoftDeleteDays));

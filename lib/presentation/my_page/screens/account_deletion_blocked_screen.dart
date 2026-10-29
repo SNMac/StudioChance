@@ -16,8 +16,9 @@ import 'package:studio_chance/router/router_path.dart';
 /// 계정 삭제가 막혔을 때의 안내 — 다른 멤버가 있는 관리자 점포를 보여주고,
 /// 행을 탭하면 그 점포 상세에서 관리자 위임이나 점포 삭제를 하게 한다.
 ///
-/// [stores]는 `StoreAdminHandoverRequiredException.stores`다. 위임·삭제를 마친 점포는
-/// 내 역할이 관리자가 아니게 되므로 목록에서 빠진다.
+/// [stores]는 `StoreAdminHandoverRequiredException.stores`다. 위임을 마친 점포는 내 역할이
+/// 관리자가 아니게 되고, 삭제한 점포는 삭제 예정 점포가 되어 계정 삭제를 막지 않으므로
+/// 목록에서 빠진다 (ADR-0007).
 class AccountDeletionBlockedScreen extends ConsumerWidget {
   const AccountDeletionBlockedScreen({super.key, required this.stores});
 
@@ -29,10 +30,11 @@ class AccountDeletionBlockedScreen extends ConsumerWidget {
     // 다시 그리는 비용이 작다
     final user = ref.watch(currentUserProvider).asData?.value;
     final textTheme = Theme.of(context).textTheme;
-    final remaining = stores
-        // 위임·삭제를 마친 점포는 내가 더는 관리자가 아니므로 빠진다
-        .where((store) => user?.roleIn(store.id) == UserRole.admin)
-        .toList();
+    final remaining = stores.where((store) {
+      final info = user?.storeInfoOf(store.id);
+      return user?.roleIn(store.id) == UserRole.admin &&
+          !(info?.isScheduledForDeletion ?? false);
+    }).toList();
 
     return Scaffold(
       backgroundColor: context.systemGroupedBackground,

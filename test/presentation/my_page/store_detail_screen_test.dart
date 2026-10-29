@@ -14,8 +14,10 @@ import 'my_page_test_harness.dart';
 
 const _location = '/my-page/store/store-123';
 
-User _userWithRole(UserRole role) => fakeUser.copyWith(
-  storeInfos: [fakeUser.storeInfos.first.copyWith(role: role)],
+User _userWithRole(UserRole role, {DateTime? deletedAt}) => fakeUser.copyWith(
+  storeInfos: [
+    fakeUser.storeInfos.first.copyWith(role: role, deletedAt: deletedAt),
+  ],
 );
 
 final _staff = fakeUser.copyWith(id: 'staff-1', nickname: '김스태프');
@@ -46,14 +48,14 @@ void main() {
   Future<MyPageHarness> pumpDetail(
     WidgetTester tester, {
     required UserRole myRole,
+    DateTime? deletedAt,
   }) async {
     final harness = MyPageHarness(
-      user: _userWithRole(myRole),
+      user: _userWithRole(myRole, deletedAt: deletedAt),
       initialLocation: _location,
     );
     when(() => harness.storeUseCase.getStore(any())).thenAnswer(
-      (_) async =>
-          right(myRole == UserRole.admin ? adminStore : staffStore),
+      (_) async => right(myRole == UserRole.admin ? adminStore : staffStore),
     );
 
     await tester.pumpWidget(harness.build());
@@ -73,14 +75,13 @@ void main() {
     });
 
     testWidgets('다른 멤버가 없으면 관리자 위임을 보여주지 않는다', (tester) async {
-      final harness = MyPageHarness(
-        user: fakeUser,
-        initialLocation: _location,
-      );
+      final harness = MyPageHarness(user: fakeUser, initialLocation: _location);
       when(() => harness.storeUseCase.getStore(any())).thenAnswer(
         (_) async => right(
           fakeStore.copyWith(
-            memberInfos: [StoreMemberInfo(user: fakeUser, role: UserRole.admin)],
+            memberInfos: [
+              StoreMemberInfo(user: fakeUser, role: UserRole.admin),
+            ],
           ),
         ),
       );
@@ -210,9 +211,8 @@ void main() {
 
   testWidgets('점포 나가기에 성공하면 마이페이지로 돌아간다', (tester) async {
     final harness = await pumpDetail(tester, myRole: UserRole.staff);
-    when(
-      () => harness.storeUseCase.leaveStore(any()),
-    ).thenAnswer((_) async => right(null));
+    when(() => harness.storeUseCase.leaveStore(any()))
+        .thenAnswer((_) async => right(null));
 
     await tester.tap(find.text('점포 나가기'));
     await tester.pumpAndSettle();
@@ -223,11 +223,107 @@ void main() {
     expect(find.text('마이페이지'), findsWidgets);
   });
 
+  testWidgets('점포를 삭제하면 상세 화면에 머물며 삭제 예정 점포로 다시 그린다', (tester) async {
+    final harness = await pumpDetail(tester, myRole: UserRole.admin);
+    when(() => harness.storeUseCase.softDeleteStore(any()))
+        .thenAnswer((_) async => right(null));
+    // 삭제하면 사용자 정보를 다시 읽는다
+    harness.user = _userWithRole(UserRole.admin, deletedAt: DateTime.now());
+
+    await tester.tap(find.text('점포 삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
+
+    verify(() => harness.storeUseCase.softDeleteStore('store-123')).called(1);
+    expect(find.text('점포 복구'), findsOneWidget);
+    expect(find.text('마이페이지'), findsNothing);
+  });
+
+  group('삭제 예정 점포', () {
+    testWidgets('관리자는 점포 복구·영구 삭제만 보고 점포 관리 항목은 숨긴다', (tester) async {
+      await pumpDetail(
+        tester,
+        myRole: UserRole.admin,
+        deletedAt: DateTime.now(),
+      );
+
+      expect(find.text('점포 복구'), findsOneWidget);
+      expect(find.text('영구 삭제'), findsOneWidget);
+      expect(find.text('점포 정보 수정'), findsNothing);
+      expect(find.text('승인 대기'), findsNothing);
+      expect(find.text('관리자 위임'), findsNothing);
+      expect(find.text('점포 삭제'), findsNothing);
+    });
+
+    testWidgets('관리자도 멤버 행을 탭해 역할을 바꾸거나 추방하지 못한다', (tester) async {
+      await pumpDetail(
+        tester,
+        myRole: UserRole.admin,
+        deletedAt: DateTime.now(),
+      );
+
+      await tester.tap(find.text('김스태프'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('추방'), findsNothing);
+    });
+
+    testWidgets('스태프는 점포 나가기를 계속 할 수 있다', (tester) async {
+      await pumpDetail(
+        tester,
+        myRole: UserRole.staff,
+        deletedAt: DateTime.now(),
+      );
+
+      expect(find.text('점포 나가기'), findsOneWidget);
+      expect(find.text('점포 복구'), findsNothing);
+    });
+
+    testWidgets('점포 복구는 확인 없이 바로 하고 원래 관리자 화면으로 다시 그린다', (tester) async {
+      final harness = await pumpDetail(
+        tester,
+        myRole: UserRole.admin,
+        deletedAt: DateTime.now(),
+      );
+      when(() => harness.storeUseCase.restoreStore(any()))
+          .thenAnswer((_) async => right(null));
+      harness.user = _userWithRole(UserRole.admin);
+
+      await tester.tap(find.text('점포 복구'));
+      await tester.pumpAndSettle();
+
+      verify(() => harness.storeUseCase.restoreStore('store-123')).called(1);
+      expect(find.text('점포 정보 수정'), findsOneWidget);
+    });
+
+    testWidgets('영구 삭제는 확인을 거치고, 성공하면 마이페이지로 돌아간다', (tester) async {
+      final harness = await pumpDetail(
+        tester,
+        myRole: UserRole.admin,
+        deletedAt: DateTime.now(),
+      );
+      when(() => harness.storeUseCase.permanentlyDeleteStore(any()))
+          .thenAnswer((_) async => right(null));
+
+      await tester.tap(find.text('영구 삭제'));
+      await tester.pumpAndSettle();
+      verifyNever(() => harness.storeUseCase.permanentlyDeleteStore(any()));
+      // 다이얼로그의 확인 버튼 (화면의 같은 이름 버튼과 구분해 마지막 것을 누른다)
+      await tester.tap(find.text('영구 삭제').last);
+      await tester.pumpAndSettle();
+
+      verify(() => harness.storeUseCase.permanentlyDeleteStore('store-123'))
+          .called(1);
+      expect(find.text('마이페이지'), findsWidgets);
+    });
+  });
+
   testWidgets('점포 삭제가 실패하면 상세 화면에 머물고 오류를 알린다', (tester) async {
     final harness = await pumpDetail(tester, myRole: UserRole.admin);
-    when(() => harness.storeUseCase.softDeleteStore(any())).thenAnswer(
-      (_) async => left(StoreNetworkException(message: '네트워크 오류')),
-    );
+    when(
+      () => harness.storeUseCase.softDeleteStore(any()),
+    ).thenAnswer((_) async => left(StoreNetworkException(message: '네트워크 오류')));
 
     await tester.tap(find.text('점포 삭제'));
     await tester.pumpAndSettle();
@@ -306,9 +402,8 @@ void main() {
   testWidgets('점포 정보 수정은 새로 조회한 점포로 수정 화면을 연다', (tester) async {
     final harness = await pumpDetail(tester, myRole: UserRole.admin);
     // 상세 화면 캐시와 다른 최신 값 — 진입할 때 새로 조회했는지 구분한다
-    when(() => harness.storeUseCase.getStoreForEdit(any())).thenAnswer(
-      (_) async => right(adminStore.copyWith(address: '최신 주소')),
-    );
+    when(() => harness.storeUseCase.getStoreForEdit(any()))
+        .thenAnswer((_) async => right(adminStore.copyWith(address: '최신 주소')));
 
     await tester.tap(find.text('점포 정보 수정'));
     await tester.pumpAndSettle();
