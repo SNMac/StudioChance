@@ -23,6 +23,7 @@ abstract interface class UserUseCase {
     required String storeId,
     String? name,
     StoreColor? color,
+    String? memo,
   });
 }
 
@@ -56,12 +57,14 @@ class UserUseCaseImpl implements UserUseCase {
     required String storeId,
     String? name,
     StoreColor? color,
+    String? memo,
   }) {
     return _repository.updateStoreInfo(
       uid: uid,
       storeId: storeId,
       name: name,
       color: color,
+      memo: memo,
     );
   }
 }

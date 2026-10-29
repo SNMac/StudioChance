@@ -127,11 +127,13 @@ class UserRepositoryImpl implements UserRepository {
     required String storeId,
     String? name,
     StoreColor? color,
+    String? memo,
   }) async {
     try {
       final Map<String, dynamic> data = {};
 
       if (name != null) data['name'] = name;
+      if (memo != null) data['memo'] = memo;
       if (color != null) {
         // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
         // (store_repository_impl.dart의 updateStore와 동일한 패턴)

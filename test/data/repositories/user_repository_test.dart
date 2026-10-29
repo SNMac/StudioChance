@@ -41,6 +41,24 @@ void main() {
       expectRight(result);
       expect(capturedData?['color'], 'GREEN');
     });
+
+    test('넘긴 값만 바꾼다 — 메모만 넘기면 색상은 쓰지 않는다', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockUserDs.updateStoreInfo(any(), any(), any()))
+          .thenAnswer((invocation) async {
+            capturedData =
+                invocation.positionalArguments[2] as Map<String, dynamic>;
+          });
+
+      final result = await repository.updateStoreInfo(
+        uid: 'user-123',
+        storeId: 'store-123',
+        memo: '주차 2대',
+      );
+
+      expectRight(result);
+      expect(capturedData, {'memo': '주차 2대'});
+    });
   });
 
   group('markAccountDeleted', () {
