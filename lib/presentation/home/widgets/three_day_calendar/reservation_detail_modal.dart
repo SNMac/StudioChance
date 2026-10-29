@@ -19,6 +19,7 @@ import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart'
 import 'package:studio_chance/presentation/commons/widgets/store_deletion_notice.dart';
 import 'package:studio_chance/presentation/commons/extensions/store_deletion_formatter.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/server_clock_offset_provider.dart';
 import 'package:studio_chance/presentation/colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
 import 'package:studio_chance/presentation/commons/extensions/phone_formatter.dart';
@@ -538,7 +539,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           ) ??
           0,
       holidayNamesOf: _currentHolidays.namesOn,
-      onOpenPriceSetting: isStoreAdmin(_storeSummary.id)
+      onOpenPriceSetting: canEditStore(_storeSummary.id)
           ? _openPriceSetting
           : null,
     );
@@ -977,7 +978,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           if (_storeDeletionDeadline case final deadline?)
             StoreDeletionNotice(
               title:
-                  '점포가 ${deadline.remainingUntilDeletion(DateTime.now())} 삭제됩니다',
+                  '점포가 ${deadline.remainingUntilDeletion(serverCorrectedNow(ref))} 삭제됩니다',
               message: '관리자가 점포를 복구하기 전까지 예약을 추가하거나 고칠 수 없습니다.',
             ),
           _buildSection1ReadOnly(),

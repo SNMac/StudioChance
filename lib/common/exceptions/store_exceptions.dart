@@ -37,6 +37,9 @@ sealed class StoreException extends AppException {
     StoreAdminRoleChangeException() => '관리자 역할은 위임으로만 바꿀 수 있습니다',
     StoreAdminHandoverRequiredException() => '관리자 위임 또는 점포 삭제가 필요합니다',
     StoreDelegationTargetInvalidException() => '위임할 수 없는 멤버입니다',
+
+    // 9. 기기 환경
+    StoreDeviceClockMismatchException() => '기기의 날짜와 시간이 맞지 않습니다',
   };
 
   @override
@@ -84,6 +87,11 @@ sealed class StoreException extends AppException {
           '다른 멤버에게 관리자를 위임하거나 점포를 삭제해 주세요.',
     StoreDelegationTargetInvalidException() =>
       '점포의 스태프나 뷰어에게만 관리자를 위임할 수 있습니다.\n멤버 목록을 새로 고친 뒤 다시 시도해 주세요.',
+
+    // 9. 기기 환경
+    StoreDeviceClockMismatchException() =>
+      '기기 시계가 실제 시각과 하루 넘게 달라 점포를 삭제할 수 없습니다.\n'
+          '설정에서 날짜와 시간을 자동으로 맞춘 뒤 다시 시도해 주세요.',
   };
 
   @override
@@ -104,6 +112,7 @@ sealed class StoreException extends AppException {
     StoreAdminRoleChangeException() ||
     StoreAdminHandoverRequiredException() ||
     StoreDelegationTargetInvalidException() ||
+    StoreDeviceClockMismatchException() ||
     StoreUnknownException() => false,
   };
 }
@@ -257,5 +266,15 @@ class StoreAdminHandoverRequiredException extends StoreException {
 /// 승인 대기자, 이미 나간 멤버, 자기 자신에게는 위임할 수 없다.
 class StoreDelegationTargetInvalidException extends StoreException {
   StoreDelegationTargetInvalidException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 기기 시계가 서버 시각과 너무 달라 점포 삭제를 할 수 없을 때 발생하는 예외
+///
+/// 점포 삭제는 TTL 만료 시각을 기기 시각으로 쓰고, Rules는 서버 시각 기준의 범위만
+/// 받는다 (`storeDeletionExpiryBufferDays`). 그대로 쓰면 권한 오류로만 보여 원인을 알 수
+/// 없으므로, UseCase가 쓰기 전에 확인해 시계를 고치라고 안내한다 (ADR-0007)
+class StoreDeviceClockMismatchException extends StoreException {
+  StoreDeviceClockMismatchException({required String message, String? code})
     : super(message, code: code);
 }

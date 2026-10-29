@@ -9,6 +9,8 @@ import 'package:studio_chance/domain/entities/store_member_info.dart';
 import 'package:studio_chance/domain/entities/store_membership.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/constants/data_constants.dart';
+import 'package:studio_chance/domain/repository_interfaces/server_clock_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 
@@ -104,6 +106,7 @@ abstract interface class StoreUseCase {
   });
 
   /// 점포 삭제 — 삭제 예정 점포로 만든다. 7일 안에 관리자가 복구할 수 있다 (ADR-0007)
+  /// - 기기 시계가 서버 시각과 너무 다르면 `StoreDeviceClockMismatchException`
   Future<Either<Exception, void>> softDeleteStore(String storeId);
 
   /// 점포 복구 (관리자용) — 기한이 지나면 Rules가 거부한다
@@ -118,11 +121,20 @@ abstract interface class StoreUseCase {
 class StoreUseCaseImpl implements StoreUseCase {
   final StoreRepository _storeRepository;
   final UserRepository _userRepository;
+  final ServerClockRepository _serverClockRepository;
 
   const StoreUseCaseImpl({
     required this._storeRepository,
     required this._userRepository,
+    required this._serverClockRepository,
   });
+
+  /// 점포 삭제가 받아들여지는 기기 시계 오차. Rules가 허용하는 오차
+  /// ([storeDeletionExpiryBufferDays])보다 한 시간 짧게 잡아 경계에서 거부되지 않게 한다
+  static const _maxDeletionClockSkew = Duration(
+    days: storeDeletionExpiryBufferDays,
+    hours: -1,
+  );
 
   /// 현재 유저가 보유한 다른 점포와 이름이 중복되는지 검증한다.
   /// [store.id]가 [currentUser.storeInfos] 항목과 일치하면 자기 자신이므로 제외한다.
@@ -429,8 +441,22 @@ class StoreUseCaseImpl implements StoreUseCase {
     );
   }
 
+  /// 쓰기 전에 기기 시계를 서버 시각과 견준다. 서버 시각을 구하지 못하면(오프라인 등)
+  /// 확인 없이 시도한다 — 시계가 맞는 대부분의 기기를 막지 않기 위해서다
   @override
-  Future<Either<Exception, void>> softDeleteStore(String storeId) {
+  Future<Either<Exception, void>> softDeleteStore(String storeId) async {
+    final offsetResult = await _serverClockRepository.getServerClockOffset();
+    final isClockSkewed = offsetResult.fold(
+      (_) => false,
+      (offset) => offset.abs() > _maxDeletionClockSkew,
+    );
+    if (isClockSkewed) {
+      return left(
+        StoreDeviceClockMismatchException(
+          message: '기기 시계가 서버 시각과 하루 넘게 다릅니다: $storeId',
+        ),
+      );
+    }
     return _storeRepository.softDeleteStore(storeId);
   }
 

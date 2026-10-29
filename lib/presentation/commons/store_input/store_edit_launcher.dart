@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
@@ -21,10 +20,15 @@ mixin StoreEditLauncher<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
   bool get showStoreEditOverlay => _showStoreEditOverlay;
 
-  /// 점포 수정 진입점은 그 점포의 ADMIN에게만 보여준다 — 점포 정보와 요금표는 ADMIN만 고칠 수 있다
-  bool isStoreAdmin(String storeId) {
-    return ref.read(currentUserProvider).value?.roleIn(storeId) ==
-        UserRole.admin;
+  /// 점포 수정 진입점은 점포를 관리할 수 있을 때만 보여준다 — 점포 정보와 요금표는 ADMIN만
+  /// 고칠 수 있고, 삭제 예정 점포는 아무도 고칠 수 없다 (ADR-0007)
+  bool canEditStore(String storeId) {
+    return ref
+            .read(currentUserProvider)
+            .value
+            ?.storeInfoOf(storeId)
+            ?.canManageStore ??
+        false;
   }
 
   @override

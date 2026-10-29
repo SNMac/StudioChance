@@ -223,31 +223,20 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
 
         // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 이름 캐시 대상부터 읽는다
         final newName = data['name'] as String?;
-        final cacheTargets = <DocumentReference<Map<String, dynamic>>>[];
-        if (newName != null) {
-          // 폼을 연 뒤 들어온 가입 신청까지 반영되도록 저장 시점의 멤버 목록을 쓴다
-          final memberUids = {
-            ...current.memberById.keys,
-            ...current.waitingMemberById.keys,
-          };
-          for (final uid in memberUids) {
-            final userRef = _firestore.collection('users').doc(uid);
-            final userSnapshot = await transaction.get(userRef);
-            final storeById = userSnapshot.data()?['storeById'];
-            // 사용자 문서에 그 점포 항목이 없으면 건너뛴다 — 점 경로 update가 role 없는
-            // {name} 항목을 만들면 그 사용자를 읽는 점포 조회가 전부 파싱에 실패한다
-            if (storeById is Map && storeById.containsKey(storeId)) {
-              cacheTargets.add(userRef);
-            }
-          }
-        }
+        // 폼을 연 뒤 들어온 가입 신청까지 반영되도록 저장 시점의 멤버 목록을 쓴다
+        final cacheTargets = newName == null
+            ? const <String>{}
+            : await _uidsWithStoreEntry(transaction, storeId, {
+                ...current.memberById.keys,
+                ...current.waitingMemberById.keys,
+              });
 
         transaction.update(storeRef, {
           ...data,
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        for (final userRef in cacheTargets) {
-          transaction.update(userRef, {
+        for (final uid in cacheTargets) {
+          transaction.update(_userRef(uid), {
             'storeById.$storeId.name': newName,
             'updatedAt': FieldValue.serverTimestamp(),
           });
@@ -290,8 +279,6 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   }) async {
     try {
       final storeRef = _storeDocRef(storeId);
-      final fromUserRef = _firestore.collection('users').doc(fromUid);
-      final toUserRef = _firestore.collection('users').doc(toUid);
 
       await _firestore.runTransaction((transaction) async {
         final snapshot = await transaction.get(storeRef);
@@ -314,17 +301,11 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
           );
         }
 
-        // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 역할 캐시 대상부터 읽는다.
-        // 사용자 문서에 그 점포 항목이 없으면 건너뛴다 — 점 경로 update가 role만 있는
-        // 항목을 만들면 그 사용자를 읽는 점포 조회가 파싱에 실패한다 (D13 참고)
-        final fromUserSnapshot = await transaction.get(fromUserRef);
-        final toUserSnapshot = await transaction.get(toUserRef);
-        bool hasStoreEntry(
-          DocumentSnapshot<Map<String, dynamic>> userSnapshot,
-        ) {
-          final storeById = userSnapshot.data()?['storeById'];
-          return storeById is Map && storeById.containsKey(storeId);
-        }
+        // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 역할 캐시 대상부터 읽는다
+        final cacheTargets = await _uidsWithStoreEntry(transaction, storeId, [
+          fromUid,
+          toUid,
+        ]);
 
         // 두 역할을 한 번에 바꿔야 Rules의 관리자 1명 검증을 통과한다 (ADR-0004)
         transaction.update(storeRef, {
@@ -332,14 +313,14 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
           'memberById.$toUid.role': UserRole.admin.jsonValue,
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        if (hasStoreEntry(fromUserSnapshot)) {
-          transaction.update(fromUserRef, {
+        if (cacheTargets.contains(fromUid)) {
+          transaction.update(_userRef(fromUid), {
             'storeById.$storeId.role': previousRole,
             'updatedAt': FieldValue.serverTimestamp(),
           });
         }
-        if (hasStoreEntry(toUserSnapshot)) {
-          transaction.update(toUserRef, {
+        if (cacheTargets.contains(toUid)) {
+          transaction.update(_userRef(toUid), {
             'storeById.$storeId.role': UserRole.admin.jsonValue,
             'updatedAt': FieldValue.serverTimestamp(),
           });
@@ -446,22 +427,26 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         final current = StoreModel.fromJson(json);
 
         // 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 사용자 문서부터 읽는다
-        final memberRefs = await _userRefsWithStoreEntry(
+        final memberUids = await _uidsWithStoreEntry(
           transaction,
           storeId,
           current.memberById.keys,
         );
-        final applicantRefs = await _userRefsWithStoreEntry(
+        final applicantUids = await _uidsWithStoreEntry(
           transaction,
           storeId,
           current.waitingMemberById.keys,
         );
 
         // 남은 기간은 서버 시각인 deletedAt으로 센다. expiresAt은 TTL에만 쓰므로 기기 시각에
-        // 하루 여유를 더해, 시계가 틀어진 기기에서도 TTL이 화면에 보인 기한보다 먼저
-        // 지우지 않게 한다 (Rules는 현재로부터 7일에서 9일 사이만 받는다)
+        // 여유를 더해 TTL이 화면에 보인 기한보다 먼저 지우지 않게 한다 (여유와 Rules의 허용
+        // 범위는 storeDeletionExpiryBufferDays 주석)
         final expiresAt = Timestamp.fromDate(
-          DateTime.now().add(const Duration(days: storeSoftDeleteDays + 1)),
+          DateTime.now().add(
+            const Duration(
+              days: storeSoftDeleteDays + storeDeletionExpiryBufferDays,
+            ),
+          ),
         );
         transaction.update(storeRef, {
           'deletedAt': FieldValue.serverTimestamp(),
@@ -477,14 +462,14 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
           for (final uid in current.waitingMemberById.keys)
             'waitingMemberById.$uid': FieldValue.delete(),
         });
-        for (final userRef in memberRefs) {
-          transaction.update(userRef, {
+        for (final uid in memberUids) {
+          transaction.update(_userRef(uid), {
             'storeById.$storeId.deletedAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
         }
-        for (final userRef in applicantRefs) {
-          transaction.update(userRef, {
+        for (final uid in applicantUids) {
+          transaction.update(_userRef(uid), {
             'storeById.$storeId': FieldValue.delete(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
@@ -510,7 +495,7 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         final current = StoreModel.fromJson(json);
 
         // 삭제 예정 중에 나간 멤버는 memberById에 없으므로 돌아오지 않는다
-        final memberRefs = await _userRefsWithStoreEntry(
+        final memberUids = await _uidsWithStoreEntry(
           transaction,
           storeId,
           current.memberById.keys,
@@ -521,8 +506,8 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
           'expiresAt': FieldValue.delete(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        for (final userRef in memberRefs) {
-          transaction.update(userRef, {
+        for (final uid in memberUids) {
+          transaction.update(_userRef(uid), {
             'storeById.$storeId.deletedAt': FieldValue.delete(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
@@ -544,14 +529,14 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
         json['id'] = snapshot.id;
         final current = StoreModel.fromJson(json);
 
-        final userRefs = await _userRefsWithStoreEntry(transaction, storeId, {
+        final uids = await _uidsWithStoreEntry(transaction, storeId, {
           ...current.memberById.keys,
           ...current.waitingMemberById.keys,
         });
 
         transaction.delete(storeRef);
-        for (final userRef in userRefs) {
-          transaction.update(userRef, {
+        for (final uid in uids) {
+          transaction.update(_userRef(uid), {
             'storeById.$storeId': FieldValue.delete(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
@@ -562,23 +547,28 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
     }
   }
 
-  /// [uids] 중 사용자 문서에 [storeId] 점포 항목이 있는 사람의 문서 참조.
+  DocumentReference<Map<String, dynamic>> _userRef(String uid) =>
+      _firestore.collection('users').doc(uid);
+
+  /// [uids] 중 사용자 문서에 [storeId] 점포 항목이 있는 사람.
   ///
   /// 항목이 없는 사람에게 `storeById.{storeId}.필드` 점 경로로 쓰면 role 없는 항목이
-  /// 생겨 그 사용자를 읽는 점포 조회가 전부 파싱에 실패하므로 미리 거른다 (D13 참고)
-  Future<List<DocumentReference<Map<String, dynamic>>>> _userRefsWithStoreEntry(
+  /// 생겨 그 사용자를 읽는 점포 조회가 전부 파싱에 실패하므로 미리 거른다 (D13 참고).
+  /// 트랜잭션은 모든 읽기가 쓰기보다 먼저여야 하므로 쓰기 전에 부른다
+  Future<Set<String>> _uidsWithStoreEntry(
     Transaction transaction,
     String storeId,
     Iterable<String> uids,
   ) async {
-    final refs = <DocumentReference<Map<String, dynamic>>>[];
+    final withEntry = <String>{};
     for (final uid in uids) {
-      final userRef = _firestore.collection('users').doc(uid);
-      final userSnapshot = await transaction.get(userRef);
+      final userSnapshot = await transaction.get(_userRef(uid));
       final storeById = userSnapshot.data()?['storeById'];
-      if (storeById is Map && storeById.containsKey(storeId)) refs.add(userRef);
+      if (storeById is Map && storeById.containsKey(storeId)) {
+        withEntry.add(uid);
+      }
     }
-    return refs;
+    return withEntry;
   }
 
   @override

@@ -39,6 +39,15 @@ abstract class User with _$User {
   List<UserStoreInfo> get memberStoreInfos => _memberStoreInfosCache[this] ??=
       List.unmodifiable(storeInfos.where((info) => !info.isPending));
 
+  /// 기한이 지난 삭제 예정 점포를 뺀 사용자. TTL이 점포를 지우고 `cascadeStoreDelete`가
+  /// 항목을 지울 때까지(최대 이틀) 남아 있는 점포를 목록에서 감춘다 (ADR-0007)
+  /// - [now]는 서버 시각으로 보정한 시각이어야 한다. 기한은 서버 시각 기준이다
+  User withoutExpiredStores(DateTime now) => copyWith(
+    storeInfos: storeInfos
+        .where((info) => !info.isDeletionDeadlinePassedAt(now))
+        .toList(),
+  );
+
   /// [storeId] 점포에서의 내 정보(표시 이름·역할·색상·메모). 소속되지 않았으면 null
   UserStoreInfo? storeInfoOf(String storeId) =>
       storeInfos.where((info) => info.id == storeId).firstOrNull;

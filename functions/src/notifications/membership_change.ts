@@ -1,6 +1,6 @@
 import type { TokenMessage } from 'firebase-admin/messaging';
 
-import { STORE_SOFT_DELETE_DAYS } from '../stores/store_deletion.js';
+import { STORE_SOFT_DELETE_DAYS, deletionDeadlineOf } from '../stores/store_deletion.js';
 import { adminUidsOf } from './join_request_payload.js';
 import { ROLE_DISPLAY_NAMES, isAdmin, type MemberInfo, type Role } from './member_role.js';
 import { buildTokenMessage } from './token_message.js';
@@ -40,15 +40,22 @@ export type StoreDeletionKind = 'scheduled' | 'applicationCanceled' | 'permanent
  * - `recipientUids`: 알림을 받을 사용자
  * - `subjectUid`: 문구에 이름이 들어가는 사용자 (위임한 이전 관리자, 나간 멤버)
  * - `role`: 승인된 역할 (가입 승인만)
- * - `deletion`: 점포 삭제 알림의 갈래 (점포 삭제만)
+ * - `deletion`: 점포 삭제 알림의 갈래 (점포 삭제만, 반드시 있다)
  */
-export type MembershipEvent = {
-  type: MembershipEventType;
+type MembershipEventBase = {
   recipientUids: string[];
   subjectUid?: string;
   role?: Role;
-  deletion?: StoreDeletionKind;
 };
+
+export type StoreDeletedEvent = MembershipEventBase & {
+  type: typeof STORE_DELETED_TYPE;
+  deletion: StoreDeletionKind;
+};
+
+export type MembershipEvent =
+  | StoreDeletedEvent
+  | (MembershipEventBase & { type: Exclude<MembershipEventType, typeof STORE_DELETED_TYPE> });
 
 /** 트리거가 넘겨주는 점포 문서 중 분류에 필요한 필드 */
 export type StoreSnapshot = {
@@ -165,9 +172,9 @@ export function classifyMembershipChanges(
  *
  * 문서 삭제 트리거에는 쓴 사람이 없으므로 지운 사람인 관리자를 역할로 뺀다.
  */
-export function classifyStoreRemoval(removed: StoreSnapshot, now: Date): MembershipEvent[] {
+export function classifyStoreRemoval(removed: StoreSnapshot, now: Date): StoreDeletedEvent[] {
   const deletedAt = toDate(removed.deletedAt);
-  if (deletedAt && now.getTime() >= deletedAt.getTime() + STORE_SOFT_DELETE_DAYS * DAY_MS) {
+  if (deletedAt && now >= deletionDeadlineOf(deletedAt)) {
     return [];
   }
 
@@ -182,13 +189,12 @@ export function classifyStoreRemoval(removed: StoreSnapshot, now: Date): Members
   ]);
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function uniqueUids(...maps: Record<string, MemberInfo>[]): string[] {
-  return [...new Set(maps.flatMap(Object.keys))];
+/** 여러 멤버 목록(`memberById`·`waitingMemberById` 등)에 한 번이라도 나온 uid */
+export function uniqueUids(...maps: Record<string, MemberInfo>[]): string[] {
+  return [...new Set(maps.flatMap((map) => Object.keys(map)))];
 }
 
-function nonEmpty(events: MembershipEvent[]): MembershipEvent[] {
+function nonEmpty<T extends MembershipEvent>(events: T[]): T[] {
   return events.filter((event) => event.recipientUids.length > 0);
 }
 
@@ -244,7 +250,7 @@ export function buildMembershipNotification(
 }
 
 function storeDeletionNotification(
-  deletion: StoreDeletionKind | undefined,
+  deletion: StoreDeletionKind,
   storeName: string,
 ): { title: string; body: string } {
   switch (deletion) {
@@ -259,7 +265,6 @@ function storeDeletionNotification(
         body: '가입 신청이 취소되었습니다.',
       };
     case 'permanent':
-    case undefined:
       return {
         title: `${storeName} 점포가 삭제되었습니다`,
         body: '관리자가 점포를 영구 삭제했습니다.',

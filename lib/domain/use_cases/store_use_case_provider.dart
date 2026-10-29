@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:studio_chance/data/repositories/server_clock_repository_impl.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
 import 'package:studio_chance/data/repositories/user_repository_impl.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
@@ -13,5 +14,6 @@ StoreUseCase storeUseCase(Ref ref) {
   return StoreUseCaseImpl(
     storeRepository: storeRepository,
     userRepository: userRepository,
+    serverClockRepository: ref.watch(serverClockRepositoryProvider),
   );
 }

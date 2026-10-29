@@ -9,6 +9,7 @@ import 'package:studio_chance/domain/use_cases/user_use_case_provider.dart';
 import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/server_clock_offset_provider.dart';
 import 'package:studio_chance/router/app_router.dart';
 import 'package:studio_chance/router/router_path.dart';
 
@@ -53,6 +54,8 @@ class MyPageHarness {
         storeUseCaseProvider.overrideWith((ref) => storeUseCase),
         userUseCaseProvider.overrideWith((ref) => userUseCase),
         authUseCaseProvider.overrideWith((ref) => authUseCase),
+        // 삭제 예정 점포의 남은 기간 표시가 서버 시각을 구한다 (기기 시계와 같다고 둔다)
+        serverClockOffsetProvider.overrideWith((ref) async => Duration.zero),
       ],
       child: MaterialApp.router(
         routerConfig: router,

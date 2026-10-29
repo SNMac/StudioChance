@@ -30,11 +30,9 @@ class AccountDeletionBlockedScreen extends ConsumerWidget {
     // 다시 그리는 비용이 작다
     final user = ref.watch(currentUserProvider).asData?.value;
     final textTheme = Theme.of(context).textTheme;
-    final remaining = stores.where((store) {
-      final info = user?.storeInfoOf(store.id);
-      return user?.roleIn(store.id) == UserRole.admin &&
-          !(info?.isScheduledForDeletion ?? false);
-    }).toList();
+    final remaining = stores
+        .where((store) => user?.storeInfoOf(store.id)?.canManageStore ?? false)
+        .toList();
 
     return Scaffold(
       backgroundColor: context.systemGroupedBackground,

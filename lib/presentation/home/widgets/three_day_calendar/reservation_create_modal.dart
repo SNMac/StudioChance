@@ -309,7 +309,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
           .read(holidayCalendarControllerProvider)
           .calendar
           .namesOn,
-      onOpenPriceSetting: isStoreAdmin(_storeSummary.id)
+      onOpenPriceSetting: canEditStore(_storeSummary.id)
           ? _openPriceSetting
           : null,
     );

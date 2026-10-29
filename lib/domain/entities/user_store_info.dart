@@ -35,7 +35,16 @@ abstract class UserStoreInfo with _$UserStoreInfo {
       !isScheduledForDeletion &&
       (role == UserRole.admin || role == UserRole.staff);
 
+  /// 점포 정보·요금·멤버를 관리할 수 있는 점포. 관리자이고 삭제 예정이 아니어야 한다.
+  /// 삭제 예정 점포의 관리자는 점포 복구와 영구 삭제만 할 수 있다 (ADR-0007)
+  bool get canManageStore =>
+      !isPending && !isScheduledForDeletion && role == UserRole.admin;
+
   /// 완전히 지워지는 시각. 이 시각이 지나면 점포 복구를 할 수 없다
   DateTime? get deletionDeadline =>
       deletedAt?.add(const Duration(days: storeSoftDeleteDays));
+
+  /// [now]에 기한이 지난 삭제 예정 점포. 복구할 수 없고 TTL이 지우기를 기다릴 뿐이다
+  bool isDeletionDeadlinePassedAt(DateTime now) =>
+      !(deletionDeadline?.isAfter(now) ?? true);
 }

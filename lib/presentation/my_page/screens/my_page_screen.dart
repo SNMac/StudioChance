@@ -23,6 +23,7 @@ import 'package:studio_chance/presentation/my_page/widgets/pending_member_badge.
 import 'package:studio_chance/presentation/commons/widgets/store_color_dot.dart';
 import 'package:studio_chance/presentation/providers/account_deletion_controller.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/server_clock_offset_provider.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
 import 'package:studio_chance/presentation/providers/my_store_settings_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
@@ -269,7 +270,7 @@ class _StoreRow extends ConsumerWidget {
         title: info.name,
         titleLeading: StoreColorDot(color: info.color),
         content:
-            '${deletionDeadline.remainingUntilDeletion(DateTime.now())} 삭제',
+            '${deletionDeadline.remainingUntilDeletion(serverCorrectedNow(ref))} 삭제',
         contentColor: context.systemRed,
         isChangeable: true,
         prioritizeContent: true,

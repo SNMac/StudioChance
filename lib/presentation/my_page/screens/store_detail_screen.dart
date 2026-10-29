@@ -25,6 +25,7 @@ import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.
 import 'package:studio_chance/presentation/commons/widgets/store_color_dot.dart';
 import 'package:studio_chance/presentation/commons/widgets/store_deletion_notice.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/presentation/providers/server_clock_offset_provider.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
 import 'package:studio_chance/presentation/providers/store_membership_controller.dart';
 import 'package:studio_chance/router/router_path.dart';
@@ -78,7 +79,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
 
     final isAdmin = myInfo.role == UserRole.admin;
     final deletionDeadline = myInfo.deletionDeadline;
-    final isScheduledForDeletion = deletionDeadline != null;
+    final canManageStore = myInfo.canManageStore;
     final store = storeAsync.asData?.value;
     final storeName = store?.name ?? myInfo.name;
 
@@ -100,7 +101,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
                   if (deletionDeadline != null)
                     StoreDeletionNotice(
                       title:
-                          '${deletionDeadline.remainingUntilDeletion(DateTime.now())} 삭제됩니다',
+                          '${deletionDeadline.remainingUntilDeletion(serverCorrectedNow(ref))} 삭제됩니다',
                       message: isAdmin
                           ? '삭제되기 전에 복구하면 예약과 멤버가 그대로 돌아옵니다. '
                                 '그때까지 예약을 추가하거나 고칠 수 없습니다.'
@@ -108,7 +109,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
                                 '그때까지 예약을 추가하거나 고칠 수 없습니다.',
                     ),
 
-                  if (isAdmin && !isScheduledForDeletion)
+                  if (canManageStore)
                     GroupedFormContainer(
                       children: [
                         TitleNavigationButton(
@@ -132,60 +133,60 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
                     isLoading: storeAsync.isLoading,
                     myUid: myUid,
                     // 삭제 예정 점포에서는 멤버 관리를 할 수 없다
-                    canManageMembers: isAdmin && !isScheduledForDeletion,
+                    canManageMembers: canManageStore,
                     onMemberPressed: (member) =>
                         _showMemberActions(context, member),
                   ),
 
                   GroupedFormContainer(
-                    children: isAdmin && isScheduledForDeletion
-                        ? [
-                            TextActionButton(
-                              title: '점포 복구',
-                              onPressed: isWorking ? null : _restoreStore,
-                            ),
-                            TextActionButton(
-                              title: '영구 삭제',
-                              isDestructive: true,
-                              onPressed: isWorking
-                                  ? null
-                                  : () => _confirmPermanentlyDeleteStore(
-                                      context,
-                                      storeName,
-                                    ),
-                            ),
-                          ]
-                        : isAdmin
-                        ? [
-                            // 다른 멤버가 없으면 위임할 대상이 없다 (그때는 계정 삭제도 막히지 않는다)
-                            if ((store?.memberInfos.length ?? 0) > 1)
-                              TextActionButton(
-                                title: '관리자 위임',
-                                isDestructive: true,
-                                onPressed: isWorking
-                                    ? null
-                                    : () => SCRoute.delegateAdmin.pushChild(
-                                        context,
-                                      ),
-                              ),
-                            TextActionButton(
-                              title: '점포 삭제',
-                              isDestructive: true,
-                              onPressed: isWorking
-                                  ? null
-                                  : () =>
-                                        _confirmDeleteStore(context, storeName),
-                            ),
-                          ]
-                        : [
-                            TextActionButton(
-                              title: '점포 나가기',
-                              isDestructive: true,
-                              onPressed: isWorking
-                                  ? null
-                                  : () => _confirmLeave(context, storeName),
-                            ),
-                          ],
+                    children: switch ((isAdmin, deletionDeadline != null)) {
+                      // 삭제 예정 점포의 관리자
+                      (true, true) => [
+                        TextActionButton(
+                          title: '점포 복구',
+                          onPressed: isWorking ? null : _restoreStore,
+                        ),
+                        TextActionButton(
+                          title: '영구 삭제',
+                          isDestructive: true,
+                          onPressed: isWorking
+                              ? null
+                              : () => _confirmPermanentlyDeleteStore(
+                                  context,
+                                  storeName,
+                                ),
+                        ),
+                      ],
+                      (true, false) => [
+                        // 다른 멤버가 없으면 위임할 대상이 없다 (그때는 계정 삭제도 막히지 않는다)
+                        if ((store?.memberInfos.length ?? 0) > 1)
+                          TextActionButton(
+                            title: '관리자 위임',
+                            isDestructive: true,
+                            onPressed: isWorking
+                                ? null
+                                : () =>
+                                      SCRoute.delegateAdmin.pushChild(context),
+                          ),
+                        TextActionButton(
+                          title: '점포 삭제',
+                          isDestructive: true,
+                          onPressed: isWorking
+                              ? null
+                              : () => _confirmDeleteStore(context, storeName),
+                        ),
+                      ],
+                      // 스태프·뷰어는 삭제 예정이어도 나갈 수 있다
+                      (false, _) => [
+                        TextActionButton(
+                          title: '점포 나가기',
+                          isDestructive: true,
+                          onPressed: isWorking
+                              ? null
+                              : () => _confirmLeave(context, storeName),
+                        ),
+                      ],
+                    },
                   ),
                 ],
               ),

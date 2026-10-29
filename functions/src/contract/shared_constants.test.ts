@@ -122,3 +122,29 @@ test('삭제 예정 기간이 Functions·앱·Rules에서 같다', () => {
   assert.equal(Number(dartDays), STORE_SOFT_DELETE_DAYS);
   assert.equal(Number(rulesDays), STORE_SOFT_DELETE_DAYS);
 });
+
+test('점포 삭제의 만료 시각 허용 범위가 앱이 쓰는 값과 맞는다', () => {
+  // 앱은 기기 시각 + (기간 + 여유)일을 쓰고, Rules는 서버 시각 + 기간일부터
+  // + (기간 + 여유 × 2)일까지 받는다. 그래야 기기 시계가 여유만큼 틀려도 통과한다
+  const bufferDays = Number(
+    capture(
+      read('lib/constants/data_constants.dart'),
+      /const int storeDeletionExpiryBufferDays = (\d+);/,
+      'storeDeletionExpiryBufferDays',
+    ),
+  );
+  const rules = read('firestore.rules');
+  const lowerDays = capture(
+    rules,
+    /expiresAt >= request\.time \+ duration\.value\((\d+), 'd'\)/,
+    'firestore.rules expiresAt 하한',
+  );
+  const upperDays = capture(
+    rules,
+    /expiresAt <= request\.time \+ duration\.value\((\d+), 'd'\)/,
+    'firestore.rules expiresAt 상한',
+  );
+
+  assert.equal(Number(lowerDays), STORE_SOFT_DELETE_DAYS);
+  assert.equal(Number(upperDays), STORE_SOFT_DELETE_DAYS + bufferDays * 2);
+});

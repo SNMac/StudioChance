@@ -153,9 +153,7 @@ class AuthUseCaseImpl implements AuthUseCase {
   /// 관리자가 떠나면 남겨 둘 이유가 없으므로 영구 삭제한다 (ADR-0007)
   TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
     final adminStoreInfos = currentUser.storeInfos.where(
-      (info) =>
-          _StoreCleanup.of(info) == _StoreCleanup.permanentlyDelete &&
-          !info.isScheduledForDeletion,
+      (info) => info.canManageStore,
     );
 
     return TaskEither.traverseList(

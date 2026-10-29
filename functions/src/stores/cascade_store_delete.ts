@@ -12,6 +12,7 @@ import {
   buildMembershipMessages,
   classifyStoreRemoval,
   type StoreSnapshot,
+  uniqueUids,
 } from '../notifications/membership_change.js';
 import { sendToUsers } from '../notifications/send_to_users.js';
 
@@ -83,12 +84,11 @@ export const cascadeStoreDelete = onDocumentDeleted(
     const db = getFirestore();
 
     await deleteStoreSubcollections(db, db.doc(`stores/${storeId}`));
-    await clearStoreEntries(db, storeId, [
-      ...new Set([
-        ...Object.keys(removed.memberById ?? {}),
-        ...Object.keys(removed.waitingMemberById ?? {}),
-      ]),
-    ]);
+    await clearStoreEntries(
+      db,
+      storeId,
+      uniqueUids(removed.memberById ?? {}, removed.waitingMemberById ?? {}),
+    );
     logger.info('삭제된 점포의 서브컬렉션·멤버 항목 정리 완료', { storeId });
 
     const storeName = removed.name ?? '점포';

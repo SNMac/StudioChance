@@ -54,4 +54,29 @@ void main() {
       expect(fakeUser.copyWith(nickname: null).displayName, '테스트 유저');
     });
   });
+
+  group('삭제 예정 점포', () {
+    final now = DateTime(2026, 10, 29, 12);
+    final scheduled = fakeUser.storeInfos.first.copyWith(
+      deletedAt: now.subtract(const Duration(days: 3)),
+    );
+    final expired = fakeUser.storeInfos.first.copyWith(
+      id: 'store-expired',
+      deletedAt: now.subtract(const Duration(days: 7)),
+    );
+
+    test('기한이 지난 점포만 뺀다', () {
+      final user = fakeUser.copyWith(storeInfos: [scheduled, expired]);
+
+      expect(user.withoutExpiredStores(now).storeInfos.map((info) => info.id), [
+        scheduled.id,
+      ]);
+    });
+
+    test('관리자라도 삭제 예정 점포는 관리할 수 없다', () {
+      expect(fakeUser.storeInfos.first.canManageStore, isTrue);
+      expect(scheduled.canManageStore, isFalse);
+      expect(scheduled.canWriteReservations, isFalse);
+    });
+  });
 }

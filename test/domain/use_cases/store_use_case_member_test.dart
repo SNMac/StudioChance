@@ -32,6 +32,7 @@ void main() {
     useCase = StoreUseCaseImpl(
       storeRepository: mockStoreRepo,
       userRepository: mockUserRepo,
+      serverClockRepository: MockServerClockRepository(),
     );
     when(() => mockStoreRepo.getMembership(any()))
         .thenAnswer((_) async => right(membership));
