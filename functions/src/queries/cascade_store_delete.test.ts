@@ -5,7 +5,7 @@ import { type App, deleteApp, initializeApp } from 'firebase-admin/app';
 import { type Firestore, getFirestore } from 'firebase-admin/firestore';
 
 import { projectIdFor } from '../rules/helpers.js';
-import { deleteStoreSubcollections } from '../stores/cascade_store_delete.js';
+import { clearStoreEntries, deleteStoreSubcollections } from '../stores/cascade_store_delete.js';
 
 // 이미 지워진 점포 문서에 recursiveDelete를 해도 서브컬렉션이 지워지는지 실제 Firestore 동작으로 확인한다.
 // TTL은 에뮬레이터가 지원하지 않으므로 TTL 삭제가 트리거를 일으키는지는 dev에서 확인한다
@@ -25,6 +25,7 @@ after(async () => {
 
 beforeEach(async () => {
   await db.recursiveDelete(db.collection('stores'));
+  await db.recursiveDelete(db.collection('users'));
 });
 
 test('지워진 점포의 예약이 모두 지워진다', async () => {
@@ -63,4 +64,24 @@ test('다른 점포의 예약은 남는다', async () => {
     ['r2'],
   );
   assert.equal((await db.doc('stores/s2').get()).exists, true);
+});
+
+test('멤버의 지워진 점포 항목만 지우고 다른 점포 항목은 남긴다', async () => {
+  await db.doc('users/u1').set({
+    storeById: { s1: { name: '점포', role: 'STAFF' }, s2: { name: '다른 점포', role: 'ADMIN' } },
+  });
+
+  await clearStoreEntries(db, 's1', ['u1']);
+
+  assert.deepEqual(Object.keys((await db.doc('users/u1').get()).get('storeById')), ['s2']);
+});
+
+test('사용자 문서가 없거나 항목이 없어도 실패하지 않는다', async () => {
+  // 정리된 삭제 계정과 이미 나간 멤버
+  await db.doc('users/u2').set({ storeById: {} });
+
+  await clearStoreEntries(db, 's1', ['missing', 'u2']);
+
+  assert.equal((await db.doc('users/missing').get()).exists, false);
+  assert.deepEqual((await db.doc('users/u2').get()).get('storeById'), {});
 });

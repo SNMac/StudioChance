@@ -13,8 +13,10 @@ import {
   MEMBER_LEFT_TYPE,
   MEMBER_REMOVED_TYPE,
   STORE_DELETED_TYPE,
+  STORE_RESTORED_TYPE,
 } from '../notifications/membership_change.js';
 import { ANDROID_CHANNEL_ID } from '../notifications/token_message.js';
+import { STORE_SOFT_DELETE_DAYS } from '../stores/store_deletion.js';
 
 /**
  * Functions와 앱이 공유하는 값의 계약 테스트.
@@ -53,6 +55,7 @@ test('알림 data.type 값이 Functions와 앱에서 같다', () => {
     JOIN_APPROVED_TYPE,
     JOIN_REJECTED_TYPE,
     STORE_DELETED_TYPE,
+    STORE_RESTORED_TYPE,
   ];
 
   assert.deepEqual(new Set(dartTypes), new Set(functionsTypes));
@@ -102,4 +105,20 @@ test('멤버 역할 값과 표시 이름이 Functions와 앱에서 같다', () =
   );
 
   assert.deepEqual(dartDisplayNames, ROLE_DISPLAY_NAMES);
+});
+
+test('삭제 예정 기간이 Functions·앱·Rules에서 같다', () => {
+  const dartDays = capture(
+    read('lib/constants/data_constants.dart'),
+    /const int storeSoftDeleteDays = (\d+);/,
+    'storeSoftDeleteDays',
+  );
+  const rulesDays = capture(
+    read('firestore.rules'),
+    /request\.time < resource\.data\.deletedAt \+ duration\.value\((\d+), 'd'\)/,
+    'firestore.rules 복구 기한',
+  );
+
+  assert.equal(Number(dartDays), STORE_SOFT_DELETE_DAYS);
+  assert.equal(Number(rulesDays), STORE_SOFT_DELETE_DAYS);
 });
