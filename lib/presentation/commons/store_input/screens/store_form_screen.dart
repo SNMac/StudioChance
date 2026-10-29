@@ -177,11 +177,28 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
 
   Future<void> _submit(StoreFormControllerable notifier) async {
     final succeeded = await notifier.submit();
-    if (!succeeded || widget.storeToEdit == null || !mounted) return;
+    if (!succeeded || !mounted) return;
+
+    if (widget.storeToEdit == null) {
+      _onCreated();
+      return;
+    }
 
     // 예약 모달 위에서 열렸어도 보이도록 앱 최상단 토스트로 알린다
     showAppToast(context, '점포 정보를 저장했습니다');
     context.pop(true);
+  }
+
+  /// 점포 생성 후 이동 (초대 코드 가입 신청과 같은 방식)
+  /// - 마이페이지 플로우: 마이페이지로 복귀. 이동하지 않으면 생성 화면에 남아 다시 누르게 된다
+  /// - 온보딩 플로우: currentUser 무효화로 라우터 redirect가 홈으로 보낸다
+  void _onCreated() {
+    final isFromMyPage = GoRouterState.of(context).uri.path
+        .startsWith(SCRoute.myPage.fullPath);
+    if (!isFromMyPage) return;
+
+    showAppToast(context, '점포를 만들었습니다');
+    context.go(SCRoute.myPage.fullPath);
   }
 
   @override
