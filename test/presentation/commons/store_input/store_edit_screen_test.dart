@@ -77,8 +77,6 @@ void main() {
       () => mockStoreUseCase.updateStore(
         original: any(named: 'original'),
         store: any(named: 'store'),
-        color: any(named: 'color'),
-        memo: any(named: 'memo'),
       ),
     ).thenAnswer((_) async => result);
   }

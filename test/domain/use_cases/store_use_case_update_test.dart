@@ -40,9 +40,6 @@ void main() {
         () => mockStoreRepo.updateStore(
           original: any(named: 'original'),
           store: any(named: 'store'),
-          uid: any(named: 'uid'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       ).thenAnswer((_) async => right(null));
 
@@ -51,19 +48,11 @@ void main() {
       final result = await useCase.updateStore(
         original: fakeStore,
         store: edited,
-        color: StoreColor.blue,
-        memo: '새 메모',
       );
 
       expectRight(result);
       verify(
-        () => mockStoreRepo.updateStore(
-          original: fakeStore,
-          store: edited,
-          uid: fakeUser.id,
-          color: StoreColor.blue,
-          memo: '새 메모',
-        ),
+        () => mockStoreRepo.updateStore(original: fakeStore, store: edited),
       ).called(1);
     });
 
@@ -75,8 +64,6 @@ void main() {
       final result = await useCase.updateStore(
         original: fakeStore,
         store: fakeStore,
-        color: StoreColor.blue,
-        memo: '새 메모',
       );
 
       expectLeft(result);
@@ -84,9 +71,6 @@ void main() {
         () => mockStoreRepo.updateStore(
           original: any(named: 'original'),
           store: any(named: 'store'),
-          uid: any(named: 'uid'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       );
     });
@@ -98,8 +82,6 @@ void main() {
       final result = await useCase.updateStore(
         original: fakeStore,
         store: fakeStore,
-        color: StoreColor.blue,
-        memo: '새 메모',
       );
 
       expectLeft(result);
@@ -113,17 +95,12 @@ void main() {
         () => mockStoreRepo.updateStore(
           original: any(named: 'original'),
           store: any(named: 'store'),
-          uid: any(named: 'uid'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       ).thenAnswer((_) async => left(exception));
 
       final result = await useCase.updateStore(
         original: fakeStore,
         store: fakeStore,
-        color: StoreColor.blue,
-        memo: '새 메모',
       );
 
       expectLeft(result);
@@ -150,8 +127,6 @@ void main() {
       final result = await useCase.updateStore(
         original: duplicateNameStore,
         store: duplicateNameStore,
-        color: StoreColor.blue,
-        memo: '메모',
       );
 
       expect(expectLeft(result), isA<StoreNameDuplicateException>());
@@ -159,9 +134,6 @@ void main() {
         () => mockStoreRepo.updateStore(
           original: any(named: 'original'),
           store: any(named: 'store'),
-          uid: any(named: 'uid'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       );
     });
@@ -173,9 +145,6 @@ void main() {
         () => mockStoreRepo.updateStore(
           original: any(named: 'original'),
           store: any(named: 'store'),
-          uid: any(named: 'uid'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       ).thenAnswer((_) async => right(null));
 
@@ -183,8 +152,6 @@ void main() {
       final result = await useCase.updateStore(
         original: fakeStore,
         store: fakeStore,
-        color: StoreColor.blue,
-        memo: '메모',
       );
 
       expectRight(result);
@@ -216,8 +183,6 @@ void main() {
       final result = await useCase.updateStore(
         original: duplicateSpaceStore,
         store: duplicateSpaceStore,
-        color: StoreColor.blue,
-        memo: '메모',
       );
 
       expect(expectLeft(result), isA<SpaceNameDuplicateException>());

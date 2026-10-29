@@ -85,11 +85,10 @@ class StoreUpdateController extends _$StoreUpdateController
 
     try {
       final storeUseCase = ref.read(storeUseCaseProvider);
+      // 색상·메모는 수정 폼에 없다 (점포 상세 '내 설정'에서 고친다)
       final result = await storeUseCase.updateStore(
         original: _original,
         store: data.store,
-        color: data.color,
-        memo: data.memo,
       );
       final stackTrace = StackTrace.current;
       return result.fold<bool>(

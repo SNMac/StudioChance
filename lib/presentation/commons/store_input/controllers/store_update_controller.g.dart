@@ -59,7 +59,7 @@ final class StoreUpdateControllerProvider
 }
 
 String _$storeUpdateControllerHash() =>
-    r'9f3fc036c07d67db9692a9b9fb378b3ef818e6e4';
+    r'5373a9d6a6e46fa56ff424e759a57c13d6fda919';
 
 final class StoreUpdateControllerFamily extends $Family
     with
