@@ -7,7 +7,6 @@ import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/common/exceptions/app_exception.dart';
 import 'package:studio_chance/presentation/commons/extensions/address_formatter.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/invite_code/controllers/invite_code_verification_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_back_button.dart';
@@ -21,6 +20,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
+import 'package:studio_chance/presentation/commons/widgets/store_color_dot.dart';
 
 class InviteCodeVerifiedScreen extends ConsumerStatefulWidget {
   const InviteCodeVerifiedScreen({super.key});
@@ -209,14 +209,7 @@ class _InviteCodeVerifiedScreenState
                           TitleNavigationButton(
                             title: '색상',
                             content: state.color.displayName,
-                            contentLeading: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: Color(state.color.foregroundColorValue),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
+                            contentLeading: StoreColorDot(color: state.color),
                             onPressed: () =>
                                 SCRoute.storeColor.pushChild(context),
                           ),

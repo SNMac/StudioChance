@@ -28,9 +28,6 @@ abstract interface class StoreRepository {
   Future<Either<Exception, void>> updateStore({
     required Store original,
     required Store store,
-    required String uid,
-    required StoreColor color,
-    required String memo,
   });
 
   /// 점포 삭제 (Soft Delete)

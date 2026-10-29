@@ -27,6 +27,9 @@ abstract class User with _$User {
 
   bool get isNewUser => nickname == null;
 
+  /// 다른 사람에게 보이는 이름. 닉네임이 없으면(가입 직후) 소셜 계정 이름을 쓴다
+  String get displayName => nickname ?? name;
+
   /// 승인된(멤버인) 점포만. 승인 대기 점포는 Rules가 점포·예약 읽기를 거부하므로
   /// 예약 조회·필터·예약 생성처럼 점포 데이터를 읽는 곳은 이 목록을 쓴다.
   ///

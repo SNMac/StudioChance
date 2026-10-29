@@ -83,6 +83,26 @@ prod는 Play Integrity / App Attest를 쓰므로 이 절차가 필요 없다.
    Android 앱과 iOS 앱은 **각각 따로** 등록해야 한다.
    Firebase CLI에는 `appcheck` 명령이 없다 — 자동화가 필요하면 App Check REST API의 `projects.apps.debugTokens`를 쓴다
 
+## Sign in with Apple 설정 (dev·prod)
+
+Apple 로그인은 Apple이 준 idToken만 검증하므로 아래 설정이 틀려도 성공한다. 틀린 설정은 계정 삭제의 Apple revoke에서야 드러나고,
+revoke가 실패해도 삭제는 계속되므로(#31) 화면에는 아무것도 보이지 않는다.
+
+- **증상**: 계정 삭제 로그에 `Apple revoke 실패`가 찍히고 예외가 `invalid-credential`, 메시지가 `HttpMetadata{status=400, ...}`다.
+  Apple ID 이메일로 연결 해제 메일이 오지 않는다
+- **Apple Developer > Identifiers**: primary App ID `com.snmac.studio-chance`의 Sign in with Apple 그룹에 아래가 모두 있어야 한다
+  - dev App ID `com.snmac.studio-chance.dev`
+  - Services ID `com.snmac.studio-chance.signin`(prod)·`com.snmac.studio-chance.dev.signin`(dev). 각 Services ID의 도메인은 `<Firebase 프로젝트 ID>.firebaseapp.com`,
+    Return URL은 Firebase 콘솔 Apple 제공자 창에 나오는 콜백 URL
+- **Firebase 콘솔 > Authentication > 로그인 방법 > Apple** (dev·prod 각각)
+  - 서비스 ID: 위 Services ID
+  - OAuth 코드 흐름 구성: 팀 ID `NCJMGH8Z64`, 키 ID·비공개 키는 **Apple Developer > Keys에 실제로 있는** Sign in with Apple 키.
+    키는 primary App ID 그룹 단위라 dev·prod가 같은 키를 써도 된다
+  - 콘솔은 저장한 비공개 키를 다시 보여주지 않는다. 키 ID가 Keys 목록에 있는지로 확인한다
+  - 2026-10-29 dev에는 Keys에 없는 키가 들어 있어 revoke가 모두 실패했다(#48)
+- **확인**: 계정을 삭제한 뒤 연결 해제 메일이 오면 revoke된 것이다. 시뮬레이터의 Apple 시트는 해제 뒤에도 동의 화면 없이
+  바로 '로그인'으로 나올 수 있어 판단 근거가 되지 않는다
+
 ## iOS 포그라운드 알림 표시 확인
 
 iOS에서 포그라운드 알림이 보이지 않으면 `setForegroundNotificationPresentationOptions` 설정을 의심한다(이유는 `NotificationController` 주석).

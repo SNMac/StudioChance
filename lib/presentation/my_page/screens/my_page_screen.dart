@@ -3,135 +3,128 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:studio_chance/common/exceptions/app_exception.dart';
-import 'package:studio_chance/constants/ui_constants.dart';
+import 'package:studio_chance/common/exceptions/store_exceptions.dart';
+import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/nickname_input/screens/nickname_save_screen.dart';
-import 'package:studio_chance/presentation/commons/store_input/store_edit_launcher.dart';
-import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
 import 'package:studio_chance/presentation/commons/widgets/custom_alert_dialog.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_caption.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_navigation_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/presentation/home/widgets/home_tab_bar.dart';
-import 'package:studio_chance/presentation/my_page/widgets/pending_member_modal.dart';
+import 'package:studio_chance/presentation/my_page/widgets/my_page_error_dialog.dart';
+import 'package:studio_chance/presentation/my_page/widgets/pending_member_badge.dart';
+import 'package:studio_chance/presentation/commons/widgets/store_color_dot.dart';
+import 'package:studio_chance/presentation/providers/account_deletion_controller.dart';
 import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 import 'package:studio_chance/presentation/providers/invite_code_controller.dart';
+import 'package:studio_chance/presentation/providers/my_store_settings_controller.dart';
 import 'package:studio_chance/presentation/providers/pending_member_controller.dart';
 import 'package:studio_chance/presentation/providers/sign_out_controller.dart';
 import 'package:studio_chance/presentation/providers/store_detail_provider.dart';
+import 'package:studio_chance/presentation/providers/store_membership_controller.dart';
 import 'package:studio_chance/router/router_path.dart';
 
-/// [home_screen.dart]의 에러 다이얼로그 패턴과 동일하게, silentable하지 않은
-/// 에러만 사용자에게 알린다.
-void _showErrorDialog(BuildContext context, Object error) {
-  if (!context.mounted) return;
-  if (error is AppException && !error.isSilentable) {
-    showCustomAlertDialog(
-      context: context,
-      title: error.title,
-      content: error.content,
-      showCancel: false,
-    );
-  } else if (error is! AppException) {
-    showCustomAlertDialog(
-      context: context,
-      title: '오류',
-      content: '잠시 후 다시 시도해 주세요.',
-      showCancel: false,
-    );
-  }
-}
-
-class MyPageScreen extends ConsumerStatefulWidget {
+/// 마이페이지 — 프로필, 내 점포, 로그아웃·계정 삭제.
+///
+/// 점포별 기능(점포 정보 수정·승인 대기·멤버 관리·나가기·삭제)은 점포 행을 탭해
+/// 여는 점포 상세 화면에 있다.
+class MyPageScreen extends ConsumerWidget {
   const MyPageScreen({super.key});
 
   @override
-  ConsumerState<MyPageScreen> createState() => _MyPageScreenState();
-}
-
-class _MyPageScreenState extends ConsumerState<MyPageScreen>
-    with StoreEditLauncher {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).asData?.value;
+    final isDeletingAccount = ref.watch(
+      accountDeletionControllerProvider.select((s) => s.isLoading),
+    );
 
-    // 승인/거절·초대 코드 발급·로그아웃 실패를 사용자에게 알린다.
-    // 모달(PendingMemberModal)은 사용자가 드래그로 먼저 닫아버릴 수 있어
-    // 리스너를 걸어도 결과가 도착했을 때 이미 dispose됐을 수 있다.
-    // MyPageScreen은 모달이 열려 있든 닫혀 있든 바텀시트 뒤에서 계속
-    // mounted 상태로 남아 있으므로 여기서 듣는다.
-    ref.listen(pendingMemberControllerProvider, (_, next) {
-      next.whenOrNull(error: (e, _) => _showErrorDialog(context, e));
-    });
-    ref.listen(inviteCodeControllerProvider, (_, next) {
-      next.whenOrNull(error: (e, _) => _showErrorDialog(context, e));
-    });
-    ref.listen(signOutControllerProvider, (_, next) {
-      next.whenOrNull(error: (e, _) => _showErrorDialog(context, e));
+    // 마이페이지와 그 아래 화면(점포 상세·위임·내 설정, 승인 대기 모달)의 실패를 여기서
+    // 한 번만 알린다. 마이페이지는 /my-page 아래 화면이 열려 있는 동안 그 뒤에서 계속
+    // mounted 상태라, 아래 화면도 같은 컨트롤러를 들으면 다이얼로그가 두 번 뜬다.
+    // 모달은 사용자가 먼저 닫아 버릴 수 있어 모달 쪽 리스너는 결과를 놓칠 수 있다.
+    for (final provider in [
+      signOutControllerProvider,
+      storeMembershipControllerProvider,
+      myStoreSettingsControllerProvider,
+      pendingMemberControllerProvider,
+      inviteCodeControllerProvider,
+    ]) {
+      ref.listen(provider, (_, next) {
+        next.whenOrNull(error: (e, _) => showMyPageErrorDialog(context, e));
+      });
+    }
+    ref.listen(accountDeletionControllerProvider, (_, next) {
+      next.whenOrNull(
+        error: (e, _) {
+          // 다른 멤버가 있는 관리자 점포가 남아 있으면 위임·삭제로 안내한다
+          if (e is StoreAdminHandoverRequiredException) {
+            context.push(
+              SCRoute.accountDeletionBlocked.fullPath,
+              extra: e.stores,
+            );
+            return;
+          }
+          showMyPageErrorDialog(context, e);
+        },
+      );
     });
 
     return Stack(
       children: [
         Scaffold(
           backgroundColor: context.systemGroupedBackground,
-          appBar: const CustomAppBar(title: '마이페이지'),
+          // 앱바를 두지 않는다 — 위치는 하단 탭바가 보여주고, 맨 위 프로필 카드가
+          // 머리글 역할을 한다 (홈 화면도 제목 없이 시작한다)
           bottomNavigationBar: const HomeTabBar(),
           body: SingleChildScrollView(
             child: SafeAreaWithPadding(
-              top: false,
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                horizontalPadding,
-                16,
-                horizontalPadding,
-                16,
+              padding: const EdgeInsetsDirectional.symmetric(
+                horizontal: 16,
+                vertical: 16,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 spacing: 24,
                 children: [
-                  // 프로필
-                  GroupedFormContainer(
-                    children: [
-                      TitleNavigationButton(
-                        title: '닉네임',
-                        content: user?.nickname ?? '',
-                        isChangeable: true,
-                        onPressed: () => SCRoute.nickname.pushChild(context),
-                      ),
-                      TitleNavigationButton(
-                        title: '이메일',
-                        content: user?.email ?? '',
-                        onPressed: () {},
-                      ),
-                    ],
+                  _ProfileHeader(
+                    user: user,
+                    onPressed: () => SCRoute.nickname.pushChild(context),
                   ),
 
-                  // 내 점포
                   GroupedFormContainer(
-                    header: const _SectionHeader(title: '내 점포'),
+                    header: const GroupedFormCaption.header('내 점포'),
                     children: [
                       for (final info in user?.storeInfos ?? <UserStoreInfo>[])
-                        _StoreRow(
-                          info: info,
-                          onEdit: () => openStoreEdit(info.id),
-                        ),
+                        info.isPending
+                            ? _PendingStoreRow(
+                                info: info,
+                                onCancel: () => _confirmCancelJoinRequest(
+                                  context,
+                                  ref,
+                                  info,
+                                ),
+                              )
+                            : _StoreRow(
+                                info: info,
+                                onPressed: () =>
+                                    context.push(storeDetailLocation(info.id)),
+                              ),
                       TitleNavigationButton(
                         title: '점포 추가',
-                        isChangeable: true,
                         onPressed: () => SCRoute.role.pushChild(context),
                       ),
                     ],
                   ),
 
-                  // 로그아웃
                   GroupedFormContainer(
                     children: [
-                      TitleNavigationButton(
+                      TextActionButton(
                         title: '로그아웃',
                         onPressed: () => showCustomAlertDialog(
                           context: context,
@@ -145,6 +138,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen>
                           },
                         ),
                       ),
+                      TextActionButton(
+                        title: '계정 삭제',
+                        isDestructive: true,
+                        onPressed: isDeletingAccount
+                            ? null
+                            : () => _confirmDeleteAccount(context, ref),
+                      ),
                     ],
                   ),
                 ],
@@ -152,88 +152,113 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen>
             ),
           ),
         ),
-        LoadingOverlay(isLoading: showStoreEditOverlay),
+        LoadingOverlay(isLoading: isDeletingAccount),
       ],
     );
   }
-}
 
-/// 그룹 상단 라벨
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+  void _confirmCancelJoinRequest(
+    BuildContext context,
+    WidgetRef ref,
+    UserStoreInfo info,
+  ) {
+    showCustomAlertDialog(
+      context: context,
+      title: '${info.name} 가입 신청을 취소할까요?',
+      content: '취소한 뒤에도 초대 코드로 다시 신청할 수 있습니다.',
+      cancelText: '닫기',
+      confirmText: '신청 취소',
+      isDestructive: true,
+      onConfirmAfterPop: () => ref
+          .read(storeMembershipControllerProvider.notifier)
+          .cancelJoinRequest(info.id),
+    );
+  }
 
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(horizontalPadding, 0, 0, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.bodyMedium
-            ?.copyWith(color: context.secondaryLabel),
-      ),
+  void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
+    showCustomAlertDialog(
+      context: context,
+      title: '계정을 삭제할까요?',
+      content:
+          '혼자 쓰던 점포는 삭제되고, 나머지 점포에서는 모두 나가며, '
+          '승인 대기 중인 가입 신청은 취소됩니다. 삭제한 계정은 되돌릴 수 없습니다.',
+      confirmText: '삭제',
+      isDestructive: true,
+      onConfirmAfterPop: () {
+        ref.read(accountDeletionControllerProvider.notifier).delete();
+      },
     );
   }
 }
 
-/// 승인 대기 인원 배지.
-///
-/// 관리자에게 조치가 필요한 상태라 눈에 띄어야 하고, 점포명이 길어도
-/// 잘리면 안 되므로 텍스트가 아닌 고정 크기 요소로 표시한다.
-class _PendingBadge extends StatelessWidget {
-  const _PendingBadge({required this.count});
+/// 닉네임(크게)과 이메일. 탭하면 닉네임을 바꾼다
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({required this.user, required this.onPressed});
 
-  final int count;
+  final User? user;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    // 앱 강조색은 my_app.dart의 ColorScheme 한 곳에서만 정의된다.
-    // systemBlue를 직접 쓰면 강조색을 바꿀 때 여기만 남는다.
-    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-    // 숫자를 담는 고정 크기 chrome이라 높이를 고정한다. textTheme을 쓰면
-    // labelMedium의 height 1.5가 곱해져 세로로 길쭉해지고 행 높이를 넘어선다.
-    return Semantics(
-      label: '승인 대기 $count명',
-      child: ExcludeSemantics(
-        child: Container(
-          height: 20,
-          constraints: const BoxConstraints(minWidth: 20),
-          padding: const EdgeInsetsDirectional.symmetric(horizontal: 6),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: colorScheme.primary,
-            borderRadius: BorderRadius.circular(100),
-          ),
-          child: Text(
-            '$count',
-            style: TextStyle(
-              color: colorScheme.onPrimary,
-              fontSize: 12,
-              height: 1.0,
-              fontWeight: FontWeight.w600,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.secondarySystemGroupedBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: CupertinoButton(
+        padding: const EdgeInsets.all(16),
+        onPressed: onPressed,
+        child: Row(
+          spacing: 8,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 2,
+                children: [
+                  Text(
+                    user?.nickname ?? '',
+                    style: textTheme.headlineSmall?.copyWith(
+                      color: context.label,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    user?.email ?? '',
+                    style: textTheme.labelLarge?.copyWith(
+                      color: context.secondaryLabel,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              size: 18,
+              color: context.tertiaryLabel,
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// 점포 한 줄. ADMIN 점포는 대기 인원과 수정 버튼을 함께 표시하고 탭하면 승인 대기 모달을 연다.
+/// 멤버인 점포 행. 관리자 점포는 승인 대기 인원을 배지로 보여준다
 class _StoreRow extends ConsumerWidget {
-  const _StoreRow({required this.info, required this.onEdit});
+  const _StoreRow({required this.info, required this.onPressed});
 
   final UserStoreInfo info;
-
-  /// 점포 수정 화면 열기 (ADMIN 전용). 최종 진입점 디자인은 #48에서 정한다
-  final VoidCallback onEdit;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 승인 전에는 멤버가 아니라 점포를 읽을 수 없으므로 관리자 기능을 열지 않는다
-    final isAdmin = info.role == UserRole.admin && !info.isPending;
+    final isAdmin = info.role == UserRole.admin;
 
     // 관리자인 점포만 대기 인원을 조회한다 (불필요한 Firestore 읽기 방지)
     final waitingCount = isAdmin
@@ -248,56 +273,44 @@ class _StoreRow extends ConsumerWidget {
 
     return TitleNavigationButton(
       title: info.name,
-      // 대기 인원을 content에 문자열로 붙이면 긴 점포명과 한 줄을 다투다
-      // '관리자 · 신...'처럼 잘린다. 길이가 고정된 배지로 분리한다.
-      content: info.isPending ? '승인 대기' : info.role.displayName,
-      trailing: isAdmin
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 8,
-              children: [
-                if (waitingCount > 0) _PendingBadge(count: waitingCount),
-                _EditStoreButton(storeName: info.name, onPressed: onEdit),
-              ],
-            )
+      titleLeading: StoreColorDot(color: info.color),
+      content: info.role.displayName,
+      isChangeable: true,
+      prioritizeContent: true,
+      trailing: waitingCount > 0
+          ? PendingMemberBadge(count: waitingCount)
           : null,
-      isChangeable: isAdmin,
-      contentLeading: Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Color(info.color.foregroundColorValue),
-        ),
-      ),
-      onPressed: isAdmin
-          ? () => showPendingMemberModal(context, info.id)
-          : () {},
+      onPressed: onPressed,
     );
   }
 }
 
-/// 점포 수정 버튼. 행 탭(승인 대기 모달)과 겹치지 않게 별도 버튼으로 둔다
-class _EditStoreButton extends StatelessWidget {
-  const _EditStoreButton({required this.storeName, required this.onPressed});
+/// 승인 대기 점포 행. 멤버가 아니라 점포를 읽을 수 없으므로 상세 화면이 없고,
+/// '신청 취소' 버튼만 동작한다
+class _PendingStoreRow extends StatelessWidget {
+  const _PendingStoreRow({required this.info, required this.onCancel});
 
-  final String storeName;
-  final VoidCallback onPressed;
+  final UserStoreInfo info;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: '$storeName 수정',
-      child: ExcludeSemantics(
-        child: CupertinoButton(
-          padding: const EdgeInsets.all(4),
-          minimumSize: Size.zero,
-          onPressed: onPressed,
-          child: Icon(
-            CupertinoIcons.pencil,
-            size: 20,
-            color: context.secondaryLabel,
+    return TitleNavigationButton(
+      title: info.name,
+      titleLeading: StoreColorDot(color: info.color),
+      content: '승인 대기',
+      isChangeable: true,
+      prioritizeContent: true,
+      showChevron: false,
+      trailing: CupertinoButton(
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+        onPressed: onCancel,
+        child: Text(
+          '신청 취소',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: context.systemBlue,
           ),
         ),
       ),
@@ -316,7 +329,7 @@ class MyPageNicknameScreen extends ConsumerWidget {
     return NicknameSaveScreen(
       initialNickname: user?.nickname,
       title: '닉네임 변경',
-      onError: (error) => _showErrorDialog(context, error),
+      onError: (error) => showMyPageErrorDialog(context, error),
       onSaved: () {
         ref.invalidate(currentUserProvider);
         if (context.mounted) context.pop();

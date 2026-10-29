@@ -132,9 +132,6 @@ class StoreRepositoryImpl implements StoreRepository {
   Future<Either<Exception, void>> updateStore({
     required Store original,
     required Store store,
-    required String uid,
-    required StoreColor color,
-    required String memo,
   }) async {
     try {
       final originalJson = _comparableEditableJson(
@@ -148,20 +145,6 @@ class StoreRepositoryImpl implements StoreRepository {
           originalJson,
         ),
       );
-
-      // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
-      final colorJson =
-          UserStoreInfoModel(
-                name: '',
-                role: UserRole.none,
-                color: color,
-                memo: '',
-              ).toJson()['color']
-              as String;
-      await _userDataSource.updateStoreInfo(uid, store.id, {
-        'color': colorJson,
-        'memo': memo,
-      });
 
       return right(null);
     } catch (e) {

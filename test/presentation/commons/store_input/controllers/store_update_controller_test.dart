@@ -46,8 +46,6 @@ void main() {
       () => mockStoreUseCase.updateStore(
         original: any(named: 'original'),
         store: any(named: 'store'),
-        color: any(named: 'color'),
-        memo: any(named: 'memo'),
       ),
     ).thenAnswer((_) async => result);
   }
@@ -65,8 +63,6 @@ void main() {
         () => mockStoreUseCase.updateStore(
           original: captureAny(named: 'original'),
           store: captureAny(named: 'store'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       ).captured;
       expect(captured[0], opened);
@@ -112,8 +108,6 @@ void main() {
         () => mockStoreUseCase.updateStore(
           original: captureAny(named: 'original'),
           store: any(named: 'store'),
-          color: any(named: 'color'),
-          memo: any(named: 'memo'),
         ),
       ).captured;
       expect(captured.single, latest);

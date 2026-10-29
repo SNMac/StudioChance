@@ -233,12 +233,15 @@ class StoreAdminRoleChangeException extends StoreException {
     : super(message, code: code);
 }
 
+/// 점포 id와 표시 이름 — 화면이 점포를 안내하고 그 점포로 이동할 때 쓴다
+typedef StoreRef = ({String id, String name});
+
 /// 다른 멤버가 있는 점포의 관리자가 계정 삭제나 점포 나가기를 하려 할 때 발생하는 예외
 ///
 /// 관리자가 없는 점포가 남지 않도록, 관리자 위임이나 점포 삭제를 먼저 해야 한다.
 /// [stores]는 막힌 점포의 id와 표시 이름이다 (화면이 위임·삭제로 안내할 때 쓴다).
 class StoreAdminHandoverRequiredException extends StoreException {
-  final List<({String id, String name})> stores;
+  final List<StoreRef> stores;
 
   StoreAdminHandoverRequiredException({
     required this.stores,

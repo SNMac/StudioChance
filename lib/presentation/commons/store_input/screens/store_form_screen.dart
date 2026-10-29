@@ -13,7 +13,6 @@ import 'package:studio_chance/domain/entities/day_group.dart';
 import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
-import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/extensions/address_formatter.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
@@ -32,6 +31,7 @@ import 'package:studio_chance/presentation/commons/widgets/input_form/title_text
 import 'package:studio_chance/presentation/commons/widgets/loading_overlay.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
 import 'package:studio_chance/router/router_path.dart';
+import 'package:studio_chance/presentation/commons/widgets/store_color_dot.dart';
 
 /// 점포 수정 화면(`/store-edit`) 진입 인자
 class StoreEditArgs {
@@ -302,24 +302,20 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               LengthLimitingTextInputFormatter(15),
                             ],
                           ),
-                          TitleNavigationButton(
-                            title: '색상',
-                            content: state.color.displayName,
-                            contentLeading: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: Color(state.color.foregroundColorValue),
-                                shape: BoxShape.circle,
-                              ),
+                          // 점포 색상·점포 메모는 멤버마다 따로 두는 값이라, 수정 때는
+                          // 점포 정보와 함께 고치지 않고 점포 상세의 '내 설정'에서 고친다
+                          if (!isEditMode)
+                            TitleNavigationButton(
+                              title: '색상',
+                              content: state.color.displayName,
+                              contentLeading: StoreColorDot(color: state.color),
+                              onPressed: () {
+                                SCRoute.storeColor.pushChild(
+                                  context,
+                                  extra: widget.storeToEdit,
+                                );
+                              },
                             ),
-                            onPressed: () {
-                              SCRoute.storeColor.pushChild(
-                                context,
-                                extra: widget.storeToEdit,
-                              );
-                            },
-                          ),
                           TitleNavigationButton(
                             title: '주소',
                             content: state.formattedAddress,
@@ -351,17 +347,18 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                               );
                             },
                           ),
-                          MemoTextField(
-                            placeholder: '메모',
-                            controller: _memoController,
-                            onChanged: notifier.setMemo,
-                            maxLength: maxMemoCharCount,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(
-                                maxMemoCharCount,
-                              ),
-                            ],
-                          ),
+                          if (!isEditMode)
+                            MemoTextField(
+                              placeholder: '메모',
+                              controller: _memoController,
+                              onChanged: notifier.setMemo,
+                              maxLength: maxMemoCharCount,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(
+                                  maxMemoCharCount,
+                                ),
+                              ],
+                            ),
                         ],
                       ),
 

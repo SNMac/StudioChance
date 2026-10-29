@@ -23,12 +23,13 @@ abstract interface class UserRepository {
     String? nickname,
   });
 
-  /// 사용자의 점포 정보 수정
+  /// 사용자의 점포 정보 수정 — 넘긴 값만 바꾼다
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
     String? name,
     StoreColor? color,
+    String? memo,
   });
 
   /// 현재 기기의 FCM 토큰을 찾아 DB에서 제거 (로그아웃용)

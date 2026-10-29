@@ -1,98 +1,34 @@
-import 'package:material_ui/material_ui.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:studio_chance/domain/entities/store_member_info.dart';
-import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/common/exceptions/store_exceptions.dart';
-import 'package:studio_chance/domain/use_cases/store_use_case_provider.dart';
-import 'package:studio_chance/presentation/commons/store_input/screens/store_form_screen.dart';
-import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
-import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
+import 'package:studio_chance/domain/entities/store_member_info.dart';
 
 import '../../helpers/fake_entities.dart';
-import '../../helpers/mocks.dart';
+import 'my_page_test_harness.dart';
 
 void main() {
   setUpAll(() {
     registerFallbackValue(UserRole.staff);
   });
 
-  // MyPageScreen은 bottomNavigationBar로 HomeTabBar를 포함하고,
-  // HomeTabBar는 GoRouterState.of(context)를 호출하므로 GoRouter 없이는 pump 시 즉시 throw한다.
-  // showCustomAlertDialog의 확인 버튼도 go_router의 context.pop()을 쓰므로
-  // (custom_alert_dialog.dart) 어차피 GoRouter 하네스가 필요하다.
-  Widget wrap(MockStoreUseCase mockStoreUseCase, {User? user}) {
-    final router = GoRouter(
-      initialLocation: '/my-page',
-      routes: [
-        GoRoute(path: '/my-page', builder: (_, _) => const MyPageScreen()),
-        GoRoute(
-          path: '/store-edit',
-          builder: (_, state) => Scaffold(
-            body: Text(
-              '수정 화면: ${(state.extra! as StoreEditArgs).store.address}',
-            ),
-          ),
-        ),
-      ],
-    );
+  testWidgets('점포 행을 탭하면 그 점포의 상세 화면을 연다', (tester) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.storeUseCase.getStore(any()))
+        .thenAnswer((_) async => right(fakeStore));
 
-    return ProviderScope(
-      overrides: [
-        currentUserProvider.overrideWith((ref) async => user ?? fakeUser),
-        storeUseCaseProvider.overrideWith((ref) => mockStoreUseCase),
-      ],
-      child: MaterialApp.router(routerConfig: router),
-    );
-  }
-
-  testWidgets('승인 실패 시 오류 다이얼로그로 사용자에게 알린다', (tester) async {
-    final mockStoreUseCase = MockStoreUseCase();
-    final store = fakeStore.copyWith(
-      waitingMemberInfos: [
-        StoreMemberInfo(
-          user: fakeUser.copyWith(id: 'applicant-1', nickname: '홍길동'),
-          role: UserRole.staff,
-        ),
-      ],
-    );
-    when(() => mockStoreUseCase.getStore(any()))
-        .thenAnswer((_) async => right(store));
-    when(
-      () => mockStoreUseCase.approveMember(
-        storeId: any(named: 'storeId'),
-        targetUid: any(named: 'targetUid'),
-        role: any(named: 'role'),
-      ),
-    ).thenAnswer((_) async => left(Exception('네트워크 오류')));
-
-    await tester.pumpWidget(wrap(mockStoreUseCase));
+    await tester.pumpWidget(harness.build());
     await tester.pumpAndSettle();
 
-    // 관리자 점포 행 탭 → 승인 대기 모달
     await tester.tap(find.text('테스트 점포'));
     await tester.pumpAndSettle();
 
-    // 승인 → 확인 다이얼로그 → 확인 → approve() 실패
-    await tester.tap(find.text('승인'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('확인'));
-    await tester.pumpAndSettle();
-
-    // PendingMemberController 상태가 AsyncError로 끝나는 것만으로는 부족하고,
-    // MyPageScreen의 ref.listen이 실제로 오류 다이얼로그를 띄우는지까지 확인한다.
-    // (본문은 showCustomAlertDialog가 insertZwj()로 글자 사이에 ZWJ를 삽입해
-    // 정확한 문자열 매칭이 되지 않으므로 title만 검증한다.)
-    expect(find.text('오류'), findsOneWidget);
+    expect(find.text('점포 정보 수정'), findsOneWidget);
   });
 
-  testWidgets('승인 대기 중인 점포는 역할 대신 승인 대기로 표시한다', (tester) async {
-    final mockStoreUseCase = MockStoreUseCase();
+  testWidgets('승인 대기 중인 점포는 역할 대신 승인 대기로 표시하고, 신청을 취소할 수 있다', (tester) async {
     final applicant = fakeUser.copyWith(
       storeInfos: [
         fakeUser.storeInfos.first.copyWith(
@@ -101,63 +37,163 @@ void main() {
         ),
       ],
     );
+    final harness = MyPageHarness(user: applicant);
+    when(() => harness.storeUseCase.cancelJoinRequest(any()))
+        .thenAnswer((_) async => right(null));
 
-    await tester.pumpWidget(wrap(mockStoreUseCase, user: applicant));
+    await tester.pumpWidget(harness.build());
     await tester.pumpAndSettle();
 
     expect(find.text('승인 대기'), findsOneWidget);
     expect(find.text(UserRole.staff.displayName), findsNothing);
+
+    await tester.tap(find.text('신청 취소'));
+    await tester.pumpAndSettle();
+    // 다이얼로그의 확인 버튼도 '신청 취소'다
+    await tester.tap(find.text('신청 취소').last);
+    await tester.pumpAndSettle();
+
+    verify(() => harness.storeUseCase.cancelJoinRequest('store-123')).called(1);
   });
 
-  group('점포 수정 진입', () {
-    testWidgets('관리자 점포의 수정 버튼을 누르면 새로 조회한 점포로 수정 화면을 연다', (tester) async {
-      final mockStoreUseCase = MockStoreUseCase();
-      // 마이페이지 캐시와 다른 최신 값 — 진입할 때 새로 조회했는지 구분한다
-      final latest = fakeStore.copyWith(address: '최신 주소');
-      when(() => mockStoreUseCase.getStore(any()))
-          .thenAnswer((_) async => right(fakeStore));
-      when(() => mockStoreUseCase.getStoreForEdit(any()))
-          .thenAnswer((_) async => right(latest));
+  testWidgets('승인 대기 점포 행은 탭해도 상세 화면을 열지 않는다', (tester) async {
+    final applicant = fakeUser.copyWith(
+      storeInfos: [fakeUser.storeInfos.first.copyWith(isPending: true)],
+    );
+    final harness = MyPageHarness(user: applicant);
 
-      await tester.pumpWidget(wrap(mockStoreUseCase));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel('테스트 점포 수정'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('테스트 점포'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('수정 화면: 최신 주소'), findsOneWidget);
-    });
+    expect(find.text('점포 정보 수정'), findsNothing);
+    verifyNever(() => harness.storeUseCase.getStore(any()));
+  });
 
-    testWidgets('관리자가 아닌 점포에는 수정 버튼이 없다', (tester) async {
-      final mockStoreUseCase = MockStoreUseCase();
-      when(() => mockStoreUseCase.getStore(any()))
-          .thenAnswer((_) async => right(fakeStore));
-      final staffUser = fakeUser.copyWith(
-        storeInfos: [fakeUser.storeInfos.first.copyWith(role: UserRole.staff)],
-      );
+  testWidgets('계정 삭제는 확인을 받은 뒤에 하고, 성공하면 오류나 안내 화면을 띄우지 않는다', (tester) async {
+    // 성공 뒤 로그인 화면으로 가는 것은 인증 상태를 보는 라우터 redirect가 맡는다
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.authUseCase.delete())
+        .thenAnswer((_) async => right(null));
 
-      await tester.pumpWidget(wrap(mockStoreUseCase, user: staffUser));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
 
-      expect(find.bySemanticsLabel('테스트 점포 수정'), findsNothing);
-    });
+    await tester.tap(find.text('계정 삭제'));
+    await tester.pumpAndSettle();
+    verifyNever(() => harness.authUseCase.delete());
 
-    testWidgets('점포를 불러오지 못하면 오류를 알리고 마이페이지에 머문다', (tester) async {
-      final mockStoreUseCase = MockStoreUseCase();
-      when(() => mockStoreUseCase.getStore(any()))
-          .thenAnswer((_) async => right(fakeStore));
-      when(() => mockStoreUseCase.getStoreForEdit(any())).thenAnswer(
-        (_) async => left(StoreNotFoundException(message: '삭제된 점포')),
-      );
+    await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
 
-      await tester.pumpWidget(wrap(mockStoreUseCase));
-      await tester.pumpAndSettle();
+    verify(() => harness.authUseCase.delete()).called(1);
+    expect(find.text('계정을 삭제하기 전에'), findsNothing);
+    expect(find.text('오류'), findsNothing);
+  });
 
-      await tester.tap(find.bySemanticsLabel('테스트 점포 수정'));
-      await tester.pumpAndSettle();
+  testWidgets('계정 삭제가 막히면 막힌 점포를 보여주고, 행을 탭하면 그 점포 상세로 간다', (tester) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.storeUseCase.getStore(any()))
+        .thenAnswer((_) async => right(fakeStore));
+    when(() => harness.authUseCase.delete()).thenAnswer(
+      (_) async => left(
+        StoreAdminHandoverRequiredException(
+          stores: [(id: 'store-123', name: '테스트 점포')],
+          message: '다른 멤버가 있는 관리자 점포',
+        ),
+      ),
+    );
 
-      expect(find.text('점포를 찾을 수 없습니다'), findsOneWidget);
-      expect(find.textContaining('수정 화면'), findsNothing);
-    });
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('계정 삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('계정을 삭제하기 전에'), findsOneWidget);
+
+    await tester.tap(find.text('테스트 점포'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('점포 정보 수정'), findsOneWidget);
+  });
+
+  testWidgets('계정 삭제 안내에서 연 점포를 삭제하면 안내 화면으로 돌아오고, 막힌 점포가 없으면 다시 시도하라고 알린다', (
+    tester,
+  ) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.storeUseCase.getStore(any()))
+        .thenAnswer((_) async => right(fakeStore));
+    when(() => harness.storeUseCase.softDeleteStore(any()))
+        .thenAnswer((_) async => right(null));
+    when(() => harness.authUseCase.delete()).thenAnswer(
+      (_) async => left(
+        StoreAdminHandoverRequiredException(
+          stores: [(id: 'store-123', name: '테스트 점포')],
+          message: '다른 멤버가 있는 관리자 점포',
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('계정 삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('테스트 점포'));
+    await tester.pumpAndSettle();
+
+    // 삭제하면 사용자 정보를 다시 읽고, 그 점포는 내 목록에서 사라진다
+    harness.user = fakeUser.copyWith(storeInfos: []);
+    await tester.tap(find.text('점포 삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('계정을 삭제하기 전에'), findsOneWidget);
+    expect(find.textContaining('이제 계정을 삭제할 수 있습니다'), findsOneWidget);
+  });
+
+  testWidgets('점포 상세에서 연 승인 대기 모달의 승인이 실패하면 오류 다이얼로그로 알린다', (tester) async {
+    final harness = MyPageHarness(user: fakeUser);
+    final store = fakeStore.copyWith(
+      waitingMemberInfos: [
+        StoreMemberInfo(
+          user: fakeUser.copyWith(id: 'applicant-1', nickname: '홍길동'),
+          role: UserRole.staff,
+        ),
+      ],
+    );
+    when(() => harness.storeUseCase.getStore(any()))
+        .thenAnswer((_) async => right(store));
+    when(
+      () => harness.storeUseCase.approveMember(
+        storeId: any(named: 'storeId'),
+        targetUid: any(named: 'targetUid'),
+        role: any(named: 'role'),
+      ),
+    ).thenAnswer((_) async => left(Exception('네트워크 오류')));
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('테스트 점포'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('승인 대기'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('승인'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+
+    // 실패는 뒤에 깔린 마이페이지가 한 번만 알린다. 본문은 insertZwj()로 글자 사이에
+    // ZWJ가 들어가 정확히 매칭되지 않으므로 제목만 검증한다
+    expect(find.text('오류'), findsOneWidget);
   });
 }

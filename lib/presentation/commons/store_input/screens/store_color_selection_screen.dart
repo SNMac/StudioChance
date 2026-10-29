@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
-import 'package:studio_chance/presentation/commons/extensions/store_color_extensions.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_creation_controller.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_form_controllerable.dart';
 import 'package:studio_chance/presentation/commons/store_input/controllers/states/store_form_state.dart';
@@ -13,9 +12,10 @@ import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_ba
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_selection_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/safe_area_with_padding.dart';
+import 'package:studio_chance/presentation/commons/widgets/store_color_dot.dart';
 
 class StoreColorSelectionScreen extends ConsumerWidget {
-  /// 점포 폼 컨트롤러가 아닌 다른 상태에 색상을 연결할 때 사용 (예: 가입 신청 화면).
+  /// 점포 폼 컨트롤러가 아닌 다른 상태에 색상을 연결할 때 사용 (예: 가입 신청 화면, 점포 상세의 내 설정).
   /// 둘 다 생략하면 점포 생성/수정 컨트롤러를 사용한다.
   final StoreColor? selected;
   final ValueChanged<StoreColor>? onSelected;
@@ -59,16 +59,12 @@ class StoreColorSelectionScreen extends ConsumerWidget {
               value: color,
               title: color.displayName,
               isSelected: selectedColor == color,
-              leading: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Color(color.foregroundColorValue),
-                  shape: BoxShape.circle,
-                ),
-              ),
+              leading: StoreColorDot(color: color),
+              // 고르면 바로 닫는다 — 색상 하나만 고르는 화면이라 뒤로 가기를 한 번 더
+              // 누르게 할 이유가 없다
               onPressed: () {
                 onColorSelected(color);
+                context.pop();
               },
             );
           }).toList(),

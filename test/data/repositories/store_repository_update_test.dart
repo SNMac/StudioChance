@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:studio_chance/data/repositories/store_repository_impl.dart';
-import 'package:studio_chance/common/enums/store_color.dart';
 
 import '../../helpers/fake_data.dart';
 import '../../helpers/either_expectations.dart';
@@ -22,7 +21,7 @@ void main() {
   });
 
   group('updateStore', () {
-    test('StoreDataSource와 UserDataSource가 올바른 파라미터로 호출된다', () async {
+    test('점포 문서만 고치고, 멤버별 값인 색상·메모(사용자 문서)는 쓰지 않는다', () async {
       when(
         () => mockStoreDataSource.updateStore(
           any(),
@@ -30,20 +29,14 @@ void main() {
           isUnchanged: any(named: 'isUnchanged'),
         ),
       ).thenAnswer((_) async {});
-      when(() => mockUserDataSource.updateStoreInfo(any(), any(), any()))
-          .thenAnswer((_) async {});
 
       final result = await repository.updateStore(
         original: fakeStore,
         store: fakeStore,
-        uid: fakeUser.id,
-        color: StoreColor.blue,
-        memo: '새 메모',
       );
 
       expectRight(result);
 
-      // 점포 문서 업데이트 호출 확인
       final capturedStoreArgs = verify(
         () => mockStoreDataSource.updateStore(
           captureAny(),
@@ -60,19 +53,9 @@ void main() {
       expect(storeData.containsKey('spaceOptions'), true);
       expect(storeData['name'], fakeStore.name);
 
-      // 유저 점포 정보 업데이트 호출 확인
-      final capturedUserArgs = verify(
-        () => mockUserDataSource.updateStoreInfo(
-          captureAny(),
-          captureAny(),
-          captureAny(),
-        ),
-      ).captured;
-      expect(capturedUserArgs[0], fakeUser.id);
-      expect(capturedUserArgs[1], fakeStore.id);
-      final userStoreData = capturedUserArgs[2] as Map<String, dynamic>;
-      expect(userStoreData['color'], 'BLUE');
-      expect(userStoreData['memo'], '새 메모');
+      verifyNever(
+        () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
+      );
     });
 
     test('StoreDataSource 실패 시 left(exception)를 반환한다', () async {
@@ -87,34 +70,6 @@ void main() {
       final result = await repository.updateStore(
         original: fakeStore,
         store: fakeStore,
-        uid: fakeUser.id,
-        color: StoreColor.blue,
-        memo: '새 메모',
-      );
-
-      expectLeft(result);
-      verifyNever(
-        () => mockUserDataSource.updateStoreInfo(any(), any(), any()),
-      );
-    });
-
-    test('UserDataSource 실패 시 left(exception)를 반환한다', () async {
-      when(
-        () => mockStoreDataSource.updateStore(
-          any(),
-          any(),
-          isUnchanged: any(named: 'isUnchanged'),
-        ),
-      ).thenAnswer((_) async {});
-      when(() => mockUserDataSource.updateStoreInfo(any(), any(), any()))
-          .thenThrow(Exception('유저 정보 업데이트 오류'));
-
-      final result = await repository.updateStore(
-        original: fakeStore,
-        store: fakeStore,
-        uid: fakeUser.id,
-        color: StoreColor.blue,
-        memo: '새 메모',
       );
 
       expectLeft(result);

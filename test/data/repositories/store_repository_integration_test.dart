@@ -214,9 +214,6 @@ void main() {
       await repository.updateStore(
         original: storeWithStaff,
         store: storeWithStaff.copyWith(name: '변경된 점포명'),
-        uid: ownerUid,
-        color: StoreColor.green,
-        memo: '',
       );
 
       final staffDoc = await fakeFirestore
@@ -259,9 +256,6 @@ void main() {
         final result = await repository.updateStore(
           original: opened,
           store: opened.copyWith(name: '변경된 점포명'),
-          uid: ownerUid,
-          color: StoreColor.blue,
-          memo: '',
         );
 
         expectRight(result);
@@ -276,9 +270,6 @@ void main() {
         final result = await repository.updateStore(
           original: opened,
           store: opened.copyWith(name: '내가 바꾼 점포명'),
-          uid: ownerUid,
-          color: StoreColor.green,
-          memo: '',
         );
 
         expect(expectLeft(result), isA<StoreUpdateConflictException>());
@@ -307,9 +298,6 @@ void main() {
         final result = await repository.updateStore(
           original: opened,
           store: opened.copyWith(name: '변경된 점포명'),
-          uid: ownerUid,
-          color: StoreColor.blue,
-          memo: '',
         );
 
         expectRight(result);
@@ -326,9 +314,6 @@ void main() {
         final result = await repository.updateStore(
           original: legacy,
           store: legacy.copyWith(name: '변경된 점포명'),
-          uid: ownerUid,
-          color: StoreColor.blue,
-          memo: '',
         );
 
         expectRight(result);

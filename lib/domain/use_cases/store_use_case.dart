@@ -90,11 +90,11 @@ abstract interface class StoreUseCase {
   /// 점포 정보 수정
   /// - [original]: 수정 폼을 연 시점의 점포. 그 뒤 다른 관리자가 설정을 먼저 저장했으면
   ///   `StoreUpdateConflictException`으로 실패한다 (D13)
+  /// - 점포 색상·점포 메모는 멤버마다 따로 두는 값이라 여기서 고치지 않는다
+  ///   (`UserUseCase.updateStoreInfo`)
   Future<Either<Exception, void>> updateStore({
     required Store original,
     required Store store,
-    required StoreColor color,
-    required String memo,
   });
 
   /// 초대 코드 발급/재발급
@@ -398,8 +398,6 @@ class StoreUseCaseImpl implements StoreUseCase {
   Future<Either<Exception, void>> updateStore({
     required Store original,
     required Store store,
-    required StoreColor color,
-    required String memo,
   }) {
     return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       final duplicateError = _findDuplicateNameError(
@@ -411,13 +409,7 @@ class StoreUseCaseImpl implements StoreUseCase {
       }
 
       return TaskEither(
-        () => _storeRepository.updateStore(
-          original: original,
-          store: store,
-          uid: currentUser.id,
-          color: color,
-          memo: memo,
-        ),
+        () => _storeRepository.updateStore(original: original, store: store),
       );
     }).run();
   }
