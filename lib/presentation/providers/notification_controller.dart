@@ -50,6 +50,23 @@ String? membershipChangeStoreIdOf(PushMessage message) {
   return storeId;
 }
 
+/// 멤버 구성 변화 알림을 탭했을 때 열 위치.
+///
+/// 점포를 계속 볼 수 있는 알림(관리자 위임·멤버 나가기·가입 승인)은 그 점포 상세를,
+/// 더는 볼 수 없는 알림(추방·거절·점포 삭제)은 마이페이지를 연다.
+/// 멤버 구성 변화가 아니면 null.
+String? membershipChangeLocationOf(PushMessage message) {
+  final storeId = membershipChangeStoreIdOf(message);
+  if (storeId == null) return null;
+
+  return switch (message.type) {
+    adminDelegatedNotificationType ||
+    memberLeftNotificationType ||
+    joinApprovedNotificationType => storeDetailLocation(storeId),
+    _ => SCRoute.myPage.path,
+  };
+}
+
 /// 알림 권한 요청, FCM 토큰 등록, 수신 메시지 표시·딥링크를 담당한다.
 ///
 /// `MyApp`에서 watch하여 앱 생명주기 동안 살아 있게 한다.
@@ -190,8 +207,8 @@ class NotificationController extends _$NotificationController {
 
   void _handleMessage(PushMessage message) {
     final storeId = joinRequestStoreIdOf(message);
-    final isMembershipChange = membershipChangeStoreIdOf(message) != null;
-    if (storeId == null && !isMembershipChange) return;
+    final membershipLocation = membershipChangeLocationOf(message);
+    if (storeId == null && membershipLocation == null) return;
 
     final status = ref.read(appAuthControllerProvider).value;
     if (status != AppStatus.authenticated) {
@@ -203,10 +220,15 @@ class NotificationController extends _$NotificationController {
     _refreshMembership(message);
 
     final router = ref.read(goRouterProvider);
-    router.go(SCRoute.myPage.path);
 
-    // 멤버 구성 변화는 마이페이지까지만 이동한다.
-    // TODO: #48 멤버 관리 화면이 생기면 위임·나가기 알림은 해당 점포의 멤버 관리 화면으로 연다
+    // 멤버 구성 변화는 해당 위치로 이동만 한다. 점포 상세도 마이페이지 아래에
+    // 쌓이므로 뒤로 가면 마이페이지가 나온다
+    if (membershipLocation != null) {
+      router.go(membershipLocation);
+      return;
+    }
+
+    router.go(SCRoute.myPage.path);
     if (storeId == null) return;
 
     // go()는 선언적 이동이라 GoRouter가 다음 프레임에 Navigator의 페이지 목록을
