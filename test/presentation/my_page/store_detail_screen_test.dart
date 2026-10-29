@@ -223,7 +223,7 @@ void main() {
     expect(find.text('마이페이지'), findsWidgets);
   });
 
-  testWidgets('점포를 삭제하면 상세 화면에 머물며 삭제 예정 점포로 다시 그린다', (tester) async {
+  testWidgets('점포를 삭제하면 마이페이지로 돌아가고, 행에 남은 기간이 보인다', (tester) async {
     final harness = await pumpDetail(tester, myRole: UserRole.admin);
     when(() => harness.storeUseCase.softDeleteStore(any()))
         .thenAnswer((_) async => right(null));
@@ -236,8 +236,8 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => harness.storeUseCase.softDeleteStore('store-123')).called(1);
-    expect(find.text('점포 복구'), findsOneWidget);
-    expect(find.text('마이페이지'), findsNothing);
+    expect(find.text('7일 후 삭제'), findsOneWidget);
+    expect(find.text('점포 복구'), findsNothing);
   });
 
   group('삭제 예정 점포', () {

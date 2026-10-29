@@ -259,22 +259,17 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
     );
   }
 
-  /// 점포 삭제. 삭제 예정 점포가 되어도 계속 볼 수 있으므로 화면을 닫지 않고 삭제 예정
-  /// 구성으로 다시 그린다. 실수로 지웠다면 바로 복구할 수 있다 (ADR-0007)
+  /// 점포 삭제. 삭제 예정 점포는 계속 볼 수 있지만 상세 화면은 닫는다. 영구 삭제는
+  /// 점포 상세에 다시 들어와서 하게 해 삭제와 영구 삭제를 잇달아 누르지 않게 한다 (ADR-0007)
   void _confirmDeleteStore(BuildContext context, String storeName) {
-    showCustomAlertDialog(
-      context: context,
+    _confirmThenClose(
+      context,
       title: '${storeName.withObjectParticle()} 삭제할까요?',
       content:
           '$storeSoftDeleteDays일 후 점포와 예약이 지워집니다. 그때까지 예약을 추가하거나 '
           '고칠 수 없고, 점포 상세에서 복구할 수 있습니다.',
       confirmText: '삭제',
-      isDestructive: true,
-      onConfirmAfterPop: () async {
-        await ref
-            .read(storeMembershipControllerProvider.notifier)
-            .deleteStore(_storeId);
-      },
+      action: (controller) => controller.deleteStore(_storeId),
     );
   }
 
@@ -306,7 +301,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
     );
   }
 
-  /// 확인을 받아 [action]을 하고, 성공하면 이 점포를 더 볼 수 없으므로 상세 화면을 닫는다.
+  /// 확인을 받아 [action]을 하고, 성공하면 상세 화면을 닫는다.
   ///
   /// `go`가 아니라 `pop`으로 닫아 들어온 화면(마이페이지 또는 계정 삭제 안내)으로 돌아간다.
   /// 안내 화면에서 왔다면 남은 막힌 점포를 이어서 처리할 수 있다

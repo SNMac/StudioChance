@@ -51,8 +51,9 @@ abstract interface class StoreDataSource {
   /// 삭제 예정이 아니면 아무것도 쓰지 않는다
   Future<void> restoreStore(String storeId);
 
-  /// 영구 삭제 — 점포 문서를 바로 지운다. 예약과 멤버의 점포 항목은
-  /// Functions의 `cascadeStoreDelete`가 지운다
+  /// 영구 삭제 — 점포 문서와 멤버·승인 대기자의 `storeById.{storeId}` 항목을 함께 지운다.
+  /// 예약은 Functions의 `cascadeStoreDelete`가 지운다. 그 함수도 항목을 지우지만 트리거라
+  /// 늦게 돌아, 여기서 지우지 않으면 바로 다시 읽은 점포 목록에 지운 점포가 남는다
   Future<void> permanentlyDeleteStore(String storeId);
 
   /// 멤버 역할 수정
@@ -535,7 +536,27 @@ class StoreFirestoreDataSource extends FirestoreDataSourceBase
   @override
   Future<void> permanentlyDeleteStore(String storeId) async {
     try {
-      await _storeDocRef(storeId).delete();
+      final storeRef = _storeDocRef(storeId);
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(storeRef);
+        final json = snapshot.data();
+        if (!snapshot.exists || json == null) return;
+        json['id'] = snapshot.id;
+        final current = StoreModel.fromJson(json);
+
+        final userRefs = await _userRefsWithStoreEntry(transaction, storeId, {
+          ...current.memberById.keys,
+          ...current.waitingMemberById.keys,
+        });
+
+        transaction.delete(storeRef);
+        for (final userRef in userRefs) {
+          transaction.update(userRef, {
+            'storeById.$storeId': FieldValue.delete(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      });
     } catch (e) {
       throw handleFirestoreError(e);
     }

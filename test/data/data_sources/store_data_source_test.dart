@@ -516,13 +516,23 @@ void main() {
       expect((await storeDoc(seed.storeId))['waitingMemberById'], isNotEmpty);
     });
 
-    test('영구 삭제는 점포 문서를 지운다', () async {
+    test('영구 삭제는 점포 문서와 멤버의 점포 항목을 함께 지운다', () async {
       final seed = await seedStoreWithMembers();
       await dataSource.softDeleteStore(seed.storeId);
 
       await dataSource.permanentlyDeleteStore(seed.storeId);
 
       expect(await dataSource.getStore(seed.storeId), isNull);
+      // cascadeStoreDelete를 기다리지 않고 바로 다시 읽은 점포 목록에서도 빠져야 한다
+      expect(await storeEntryOf(seed.memberUid, seed.storeId), isNull);
+    });
+
+    test('계정 삭제처럼 삭제 예정을 거치지 않은 점포도 승인 대기자 항목까지 지운다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.permanentlyDeleteStore(seed.storeId);
+
+      expect(await storeEntryOf(seed.waitingUid, seed.storeId), isNull);
     });
   });
 

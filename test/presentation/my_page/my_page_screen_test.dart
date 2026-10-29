@@ -147,7 +147,7 @@ void main() {
     expect(find.text('점포 정보 수정'), findsOneWidget);
   });
 
-  testWidgets('계정 삭제 안내에서 연 점포를 삭제하고 돌아오면, 막힌 점포가 없으므로 다시 시도하라고 알린다', (
+  testWidgets('계정 삭제 안내에서 연 점포를 삭제하면 안내 화면으로 돌아오고, 막힌 점포가 없으면 다시 시도하라고 알린다', (
     tester,
   ) async {
     final harness = MyPageHarness(user: fakeUser);
@@ -182,10 +182,6 @@ void main() {
     await tester.tap(find.text('점포 삭제'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('삭제'));
-    await tester.pumpAndSettle();
-    // 삭제 예정 점포로 다시 그려진 상세 화면에 머문다
-    expect(find.text('점포 복구'), findsOneWidget);
-    await tester.pageBack();
     await tester.pumpAndSettle();
 
     expect(find.text('계정을 삭제하기 전에'), findsOneWidget);
