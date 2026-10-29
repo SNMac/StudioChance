@@ -69,7 +69,7 @@ class PaymentInstructionScreen extends ConsumerWidget {
             icon: Icon(CupertinoIcons.doc_on_doc, color: context.systemBlue),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: text));
-              showAppToast(context, '복사 완료');
+              showAppToast(context, '복사했습니다');
             },
           ),
         ],

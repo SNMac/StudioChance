@@ -144,7 +144,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
                     padding: EdgeInsets.zero,
                     onPressed: () => showCustomAlertDialog(
                       context: context,
-                      title: '요일별 요금 설정',
+                      title: '시간별 요금 설정',
                       content: '모든 영업시간에 대해 설정해 주세요.\n(최대 23개)',
                       showCancel: false,
                     ),
@@ -157,7 +157,7 @@ class _TimeSlotInputFormState extends State<TimeSlotInputForm>
                           color: context.secondaryLabel,
                         ),
                         Text(
-                          '요일별 요금 설정',
+                          '시간별 요금 설정',
                           style: textTheme.labelMedium?.copyWith(
                             color: context.secondaryLabel,
                           ),
