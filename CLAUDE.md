@@ -159,7 +159,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   - **dev 실기기에서 초대 코드 조회가 전부 "권한이 없습니다"로 실패하면** App Check 디버그 토큰 미등록을 의심한다 → `docs/operations.md`
 - `issueInviteCode` (`functions/src/invite/`): 관리자의 초대 코드 발급·재발급. 클라이언트는 Rules상 `inviteInfo`를 `null`로만 쓸 수 있다 (ADR-0006).
   유효한 코드가 남아 있으면 그 코드를 돌려주고, 다른 점포의 코드와 겹치지 않게 고른다. 실패는 `HttpsError`(`permission-denied`·`not-found`)다
-- `getServerTime` (`functions/src/time/`): 초대 코드 남은 시간 표시를 서버 시각으로 보정하는 데만 쓴다. 모달을 열 때마다 호출하며(`serverClockOffsetProvider` → `ServerClockUseCase`) 실패하면 기기 시계로 표시한다
+- `getServerTime` (`functions/src/time/`): 서버 시각 보정에 쓴다 — 초대 코드 남은 시간, 삭제 예정 점포의 남은 기간과 기한 지난 점포 숨김, 점포 삭제 전 기기 시계 확인. 화면에서는 `serverClockOffsetProvider`(→ `ServerClockUseCase`)로 보는 동안 한 번 구하고 실패하면 기기 시계로 표시한다. 사용자 정보는 삭제 예정 점포가 있을 때만 구한다
 - 세 함수 모두 리전 `asia-northeast3`, `enforceAppCheck: true`, 인증 필수
 
 ## Firestore 에뮬레이터 테스트
@@ -190,7 +190,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   - `inviteLookupAttempts.expiresAt`: 시도 창이 끝나는 시각(`expiresAtOf`)
 - **`cascadeStoreDelete`** (`functions/src/stores/`): 점포 문서가 지워지면(TTL·영구 삭제·계정 삭제) `recursiveDelete`로 예약 등 서브컬렉션을 지우고, 멤버·승인 대기자의 `storeById` 항목을 지운다. TTL은 서브컬렉션을 지우지 않고, 점포 삭제는 멤버 항목을 남긴다
 - **`purgeDeletedUsers`** (`functions/src/users/`): 매주 월요일 04:30 KST. 삭제한 지 7일(`PURGE_GRACE_DAYS`)이 지났고 작성한 예약이 하나도 남지 않은 삭제된 계정의 문서를 지운다 (ADR-0005)
-- 지워지기 전까지 기한이 지난 점포가 남아 있으므로 `UserModel.toEntity`가 그 점포를 점포 목록에서 뺀다. `getStore`는 삭제 예정 점포도 돌려주니 쓰는 쪽이 `Store.isScheduledForDeletion`을 본다
+- 지워지기 전까지 기한이 지난 점포가 남아 있으므로 `currentUserProvider`가 서버 시각으로 판정해 그 점포를 점포 목록에서 뺀다 (`User.withoutExpiredStores`). `getStore`는 삭제 예정 점포도 돌려주니 쓰는 쪽이 `Store.isScheduledForDeletion`을 본다
 - dev 동작 확인 절차: `docs/operations.md`
 
 ## Firestore Rules / Functions 배포 순서
