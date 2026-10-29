@@ -19,17 +19,21 @@ import 'package:studio_chance/router/router_path.dart';
 /// 계정 삭제 전에 알리는 결과
 const _accountDeletionWarning =
     '혼자 쓰던 점포와 삭제 예정인 점포는 바로 지워지고, 나머지 점포에서는 모두 나가며, '
-    '승인 대기 중인 가입 신청은 취소됩니다. 삭제한 계정은 되돌릴 수 없습니다.';
+    '승인 대기 중인 가입 신청은 취소됩니다. 작성한 예약이 남아 있는 동안에는 '
+    '닉네임이 다른 멤버에게 보입니다. 삭제한 계정은 되돌릴 수 없습니다.';
 
 /// 계정 삭제 화면. 막는 점포가 없으면 계정 삭제 확인을, 있으면 그 점포를 안내한다.
 ///
 /// 안내에서는 다른 멤버가 있는 관리자 점포를 보여주고, 행을 탭하면 그 점포 상세에서
 /// 관리자 위임이나 점포 삭제를 하게 한다. 위임을 마친 점포는 내 역할이 관리자가 아니게 되고,
 /// 삭제한 점포는 삭제 예정 점포가 되어 계정 삭제를 막지 않으므로 목록에서 빠진다 (ADR-0007).
+/// 다른 멤버를 모두 내보낸 점포도 막지 않으므로, 점포 상세에서 돌아오면 막는 점포를 다시 구한다.
 /// 모두 빠지면 이 화면이 그대로 계정 삭제 확인이 된다.
 ///
 /// [stores]는 마이페이지가 화면을 열기 전에 구한 막는 점포다. 그 뒤 멤버가 늘어 삭제가
 /// 막히면 `StoreAdminHandoverRequiredException.stores`로 바꿔 다시 안내한다.
+///
+/// 실패는 스스로 알리지 않는다. 뒤에 깔린 마이페이지가 알린다 (MyPageScreen의 리스너 주석)
 class AccountDeletionScreen extends ConsumerStatefulWidget {
   const AccountDeletionScreen({super.key, required this.stores});
 
@@ -45,10 +49,12 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 막힌 경우만 여기서 받는다. 그 밖의 실패는 뒤에 깔린 마이페이지가 알린다
-    // (MyPageScreen의 리스너 주석)
+    // 막힌 경우만 받아 안내를 바꾼다. 로딩 상태도 직전 오류를 `error`로 들고 있으므로
+    // 오류 상태일 때만 본다 — 그러지 않으면 다시 삭제할 때 지난 막힘 목록이 되살아난다
     ref.listen(accountDeletionControllerProvider, (_, next) {
-      if (next.error case final StoreAdminHandoverRequiredException e) {
+      if (next case AsyncError(
+        error: final StoreAdminHandoverRequiredException e,
+      )) {
         setState(() => _stores = e.stores);
       }
     });
@@ -139,8 +145,7 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                             content: UserRole.admin.displayName,
                             isChangeable: true,
                             prioritizeContent: true,
-                            onPressed: () =>
-                                context.push(storeDetailLocation(store.id)),
+                            onPressed: () => _openStore(store.id),
                           ),
                       ],
                     ),
@@ -152,5 +157,17 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         LoadingOverlay(isLoading: isDeletingAccount),
       ],
     );
+  }
+
+  /// 점포 상세에서 위임·점포 삭제·멤버 정리를 하고 돌아오면 막는 점포를 다시 구한다.
+  /// 멤버를 모두 내보낸 것은 사용자 정보에 드러나지 않아 화면만으로는 알 수 없다
+  Future<void> _openStore(String storeId) async {
+    await context.push(storeDetailLocation(storeId));
+    if (!mounted) return;
+
+    final stores = await ref
+        .read(accountDeletionControllerProvider.notifier)
+        .findStoresBlockingDeletion();
+    if (stores != null && mounted) setState(() => _stores = stores);
   }
 }

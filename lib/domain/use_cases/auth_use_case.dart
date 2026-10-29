@@ -108,34 +108,13 @@ class AuthUseCaseImpl implements AuthUseCase {
   }
 
   @override
-  Future<Either<Exception, List<StoreRef>>> findStoresBlockingDeletion() async {
-    final currentUserResult = await _userRepository.getCurrentUser();
-
-    return currentUserResult.fold((error) => Future.value(left(error)), (
-      currentUser,
-    ) {
-      if (currentUser == null) {
-        return Future.value(
-          left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
-        );
-      }
-      return _storesBlockingDeletion(currentUser).run();
-    });
+  Future<Either<Exception, List<StoreRef>>> findStoresBlockingDeletion() {
+    return _withCurrentUser(_storesBlockingDeletion).run();
   }
 
   @override
-  Future<Either<Exception, void>> delete() async {
-    final currentUserResult = await _userRepository.getCurrentUser();
-
-    return currentUserResult.fold((error) => Future.value(left(error)), (
-      currentUser,
-    ) {
-      if (currentUser == null) {
-        return Future.value(
-          left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
-        );
-      }
-
+  Future<Either<Exception, void>> delete() {
+    return _withCurrentUser((currentUser) {
       // 막힐 사람에게 재인증 창부터 띄우지 않도록 점포 확인을 먼저 한다 (둘 다 쓰기 없음)
       // 사용자 문서는 점포 정리가 끝난 뒤에 덮어쓴다 — 덮어쓴 뒤로는 다음 로그인이 새 사용자가 된다
       return _ensureNoSharedAdminStores(currentUser)
@@ -160,9 +139,21 @@ class AuthUseCaseImpl implements AuthUseCase {
               ),
             ),
           )
-          .flatMap((_) => TaskEither(() => _authRepository.delete()))
-          .run();
-    });
+          .flatMap((_) => TaskEither(() => _authRepository.delete()));
+    }).run();
+  }
+
+  /// 로그인된 사용자로 [action]을 한다. 사용자가 없으면 `AuthUserNotFoundException`
+  TaskEither<Exception, T> _withCurrentUser<T>(
+    TaskEither<Exception, T> Function(User currentUser) action,
+  ) {
+    return TaskEither(() => _userRepository.getCurrentUser()).flatMap(
+      (currentUser) => currentUser == null
+          ? TaskEither.left(
+              AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'),
+            )
+          : action(currentUser),
+    );
   }
 
   /// 다른 멤버가 있는 관리자 점포가 하나라도 있으면 실패한다.

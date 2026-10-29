@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:studio_chance/common/enums/user_role.dart';
@@ -175,6 +178,68 @@ void main() {
 
     expect(find.text('계정을 삭제할까요?'), findsOneWidget);
     expect(accountDeletionButton, findsOneWidget);
+  });
+
+  testWidgets('계정 삭제 안내에서 연 점포의 멤버를 모두 내보내고 돌아오면 다시 확인해 계정 삭제 확인이 된다', (
+    tester,
+  ) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.storeUseCase.getStore(any()))
+        .thenAnswer((_) async => right(fakeStore));
+    var checks = 0;
+    // 처음엔 막히고, 점포 상세에서 돌아온 뒤에는 막지 않는다 (멤버를 모두 내보냄)
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => right(checks++ == 0 ? blockingStores : []));
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('테스트 점포'));
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.text('점포 정보 수정'))).pop();
+    await tester.pumpAndSettle();
+
+    expect(find.text('계정을 삭제할까요?'), findsOneWidget);
+    expect(accountDeletionButton, findsOneWidget);
+  });
+
+  testWidgets('한 번 막혔던 뒤 다시 계정 삭제를 진행하는 동안 지난 막힘 안내로 돌아가지 않는다', (tester) async {
+    final harness = MyPageHarness(user: fakeUser);
+    when(() => harness.authUseCase.findStoresBlockingDeletion())
+        .thenAnswer((_) async => right([]));
+    when(() => harness.authUseCase.delete()).thenAnswer(
+      (_) async => left(
+        StoreAdminHandoverRequiredException(
+          stores: blockingStores,
+          message: '다른 멤버가 있는 관리자 점포',
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+    expect(find.text('계정을 삭제하기 전에'), findsOneWidget);
+
+    // 마이페이지로 돌아가 다시 연다. 그 사이 막던 점포는 정리됐다
+    GoRouter.of(tester.element(find.text('계정을 삭제하기 전에'))).pop();
+    await tester.pumpAndSettle();
+    final deletion = Completer<Either<Exception, void>>();
+    when(() => harness.authUseCase.delete()).thenAnswer((_) => deletion.future);
+    await tester.tap(accountDeletionButton);
+    await tester.pumpAndSettle();
+    await tester.tap(accountDeletionButton);
+    await tester.pump();
+
+    expect(find.text('계정을 삭제할까요?'), findsOneWidget);
+    expect(find.text('계정을 삭제하기 전에'), findsNothing);
+
+    deletion.complete(right(null));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('계정 삭제 확인 뒤 그 사이 멤버가 늘어 막히면 오류 대신 막힌 점포를 안내한다', (tester) async {

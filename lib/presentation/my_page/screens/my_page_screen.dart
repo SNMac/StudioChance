@@ -61,7 +61,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).asData?.value;
 
-    // 마이페이지와 그 아래 화면(점포 상세·위임·내 설정, 승인 대기 모달)의 실패를 여기서
+    // 마이페이지와 그 아래 화면(점포 상세·위임·내 설정·계정 삭제, 승인 대기 모달)의 실패를 여기서
     // 한 번만 알린다. 마이페이지는 /my-page 아래 화면이 열려 있는 동안 그 뒤에서 계속
     // mounted 상태라, 아래 화면도 같은 컨트롤러를 들으면 다이얼로그가 두 번 뜬다.
     // 모달은 사용자가 먼저 닫아 버릴 수 있어 모달 쪽 리스너는 결과를 놓칠 수 있다.
