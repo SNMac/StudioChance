@@ -40,7 +40,7 @@ final class CurrentUserProvider
   }
 }
 
-String _$currentUserHash() => r'014e18458bfbbc64e15da66c2b2a340b3b76bed3';
+String _$currentUserHash() => r'40ade47ca586ca482d479b25ce12f1ab254be201';
 
 @ProviderFor(AppAuthController)
 final appAuthControllerProvider = AppAuthControllerProvider._();

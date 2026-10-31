@@ -48,4 +48,4 @@ final class StoreUseCaseProvider
   }
 }
 
-String _$storeUseCaseHash() => r'a34e50b47f26acbca35afcb05b16ad745a22ffb6';
+String _$storeUseCaseHash() => r'9d70768bf449cae6e654cd02349196ccca67c91c';
