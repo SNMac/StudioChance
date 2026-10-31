@@ -81,8 +81,9 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
     final deletionDeadline = myInfo.deletionDeadline;
     final canManageStore = myInfo.canManageStore;
     final store = storeAsync.asData?.value;
-    // 내 화면이므로 점포 별명이 있으면 별명으로 부른다. 점포 이름은 '내 설정' 아래에 보인다
-    final storeName = myInfo.alias ?? store?.name ?? myInfo.name;
+    // 점포 자체를 관리하는 화면이라 앱바와 확인 문구에 내 별명이 아니라 점포 이름을 쓴다.
+    // 별명은 '내 설정' 첫 행에 보인다
+    final storeName = store?.name ?? myInfo.name;
 
     return Stack(
       children: [
@@ -338,17 +339,12 @@ class _MySettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alias = info.alias;
     return GroupedFormContainer(
       header: const GroupedFormCaption.header('내 설정'),
-      // 앱바가 별명을 보여주므로 별명이 있을 때는 점포 이름을 따로 알려준다
-      footer: alias == null
-          ? null
-          : GroupedFormCaption.footer('점포 이름은 ‘${info.name}’입니다.'),
       children: [
         TitleNavigationButton(
           title: '점포 별명',
-          content: alias ?? '',
+          content: info.alias ?? '',
           isChangeable: true,
           onPressed: () => SCRoute.storeAlias.pushChild(context),
         ),

@@ -1,5 +1,4 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:studio_chance/common/exceptions/store_exceptions.dart';
 import 'package:studio_chance/domain/entities/user.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
@@ -20,15 +19,19 @@ abstract interface class UserUseCase {
     String? nickname,
   });
 
-  /// 내 점포 색상·점포 메모·점포 별명 수정 — 넘긴 값만 바꾼다
-  /// - [alias]: 앞뒤 공백을 지우고 저장한다. 비어 있으면 점포 별명을 지운다.
-  ///   내 다른 점포의 화면 이름과 같으면 실패한다 (`StoreAliasDuplicateException`)
+  /// 내 점포 색상·점포 메모 수정 — 넘긴 값만 바꾼다
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
-    String? alias,
     StoreColor? color,
     String? memo,
+  });
+
+  /// 내 점포 별명 저장. 비어 있으면 점포 별명을 지운다. 검증 규칙은 `normalizeStoreAlias`
+  Future<Either<Exception, void>> updateStoreAlias({
+    required String uid,
+    required String storeId,
+    required String alias,
   });
 }
 
@@ -60,37 +63,39 @@ class UserUseCaseImpl implements UserUseCase {
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
-    String? alias,
     StoreColor? color,
     String? memo,
   }) {
-    final trimmedAlias = alias?.trim();
-    final TaskEither<Exception, void> validation =
-        trimmedAlias == null || trimmedAlias.isEmpty
-        ? TaskEither.right(null)
-        : getCurrentUserOrThrow(_repository).flatMap(
-            (currentUser) =>
-                currentUser.hasOtherStoreDisplayedAs(
-                  trimmedAlias,
-                  exceptStoreId: storeId,
-                )
-                ? TaskEither.left(
-                    StoreAliasDuplicateException(
-                      message: '중복된 점포 별명: $trimmedAlias',
-                    ),
-                  )
-                : TaskEither.right(null),
-          );
+    return _repository.updateStoreInfo(
+      uid: uid,
+      storeId: storeId,
+      color: color,
+      memo: memo,
+    );
+  }
 
-    return validation
+  @override
+  Future<Either<Exception, void>> updateStoreAlias({
+    required String uid,
+    required String storeId,
+    required String alias,
+  }) {
+    return getCurrentUserOrThrow(_repository)
         .flatMap(
-          (_) => TaskEither(
-            () => _repository.updateStoreInfo(
+          (currentUser) => TaskEither.fromEither(
+            normalizeStoreAlias(
+              alias,
+              currentUser: currentUser,
+              storeId: storeId,
+            ),
+          ),
+        )
+        .flatMap(
+          (normalizedAlias) => TaskEither(
+            () => _repository.updateStoreAlias(
               uid: uid,
               storeId: storeId,
-              alias: trimmedAlias,
-              color: color,
-              memo: memo,
+              alias: normalizedAlias,
             ),
           ),
         )

@@ -7,6 +7,7 @@ import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
@@ -304,6 +305,12 @@ void main() {
           memo: '',
         ),
       ).called(1);
+    });
+
+    test('별명이 최대 글자 수를 넘으면 신청하지 않는다', () async {
+      final result = await join('가' * (maxStoreNameCharCount + 1));
+
+      expect(expectLeft(result), isA<StoreAliasTooLongException>());
     });
 
     test('별명이 내 다른 점포의 화면 이름과 같으면 신청하지 않는다', () async {

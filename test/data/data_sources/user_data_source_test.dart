@@ -314,6 +314,33 @@ void main() {
       expect(storeInfo['name'], '테스트 점포');
       expect(storeInfo['role'], 'ADMIN');
     });
+
+    test('값이 null인 키는 필드를 지운다', () async {
+      final user = _testUser();
+      await fakeFirestore.collection('users').doc(user.id).set({
+        'email': user.email,
+        'name': user.name,
+        'authProviders': <String>[],
+        'storeById': <String, dynamic>{
+          'store-1': <String, dynamic>{
+            'name': '테스트 점포',
+            'alias': '본점',
+            'role': 'ADMIN',
+            'color': 'RED',
+            'memo': '',
+          },
+        },
+      });
+
+      await dataSource.updateStoreInfo(user.id, 'store-1', {'alias': null});
+
+      final doc = await fakeFirestore.collection('users').doc(user.id).get();
+      final storeInfo =
+          (doc.data()?['storeById'] as Map<String, dynamic>)['store-1']
+              as Map<String, dynamic>;
+      expect(storeInfo.containsKey('alias'), isFalse);
+      expect(storeInfo['name'], '테스트 점포');
+    });
   });
 
   // =========================================================================

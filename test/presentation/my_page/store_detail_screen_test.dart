@@ -411,7 +411,7 @@ void main() {
         deletedAt: DateTime.now(),
       );
       when(
-        () => harness.userUseCase.updateStoreInfo(
+        () => harness.userUseCase.updateStoreAlias(
           uid: any(named: 'uid'),
           storeId: any(named: 'storeId'),
           alias: any(named: 'alias'),
@@ -425,7 +425,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () => harness.userUseCase.updateStoreInfo(
+        () => harness.userUseCase.updateStoreAlias(
           uid: 'user-123',
           storeId: 'store-123',
           alias: '본점',

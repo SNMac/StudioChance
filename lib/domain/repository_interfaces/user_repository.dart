@@ -24,13 +24,18 @@ abstract interface class UserRepository {
   });
 
   /// 사용자의 점포 정보 수정 — 넘긴 값만 바꾼다
-  /// - [alias]: 빈 문자열이면 점포 별명을 지운다
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
-    String? alias,
     StoreColor? color,
     String? memo,
+  });
+
+  /// 점포 별명 저장 — [alias]가 null이면 점포 별명을 지운다
+  Future<Either<Exception, void>> updateStoreAlias({
+    required String uid,
+    required String storeId,
+    required String? alias,
   });
 
   /// 현재 기기의 FCM 토큰을 찾아 DB에서 제거 (로그아웃용)

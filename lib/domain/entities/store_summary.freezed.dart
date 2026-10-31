@@ -15,9 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreSummary {
 
- String get id;/// 점포 이름. 고객에게 보내는 안내문처럼 다른 사람이 읽는 곳에 쓴다
- String get name;/// 내 점포 별명. 없으면 null
- String? get alias; StoreColor get color;
+ String get id; String get name; String? get alias; StoreColor get color;
 /// Create a copy of StoreSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -221,9 +219,7 @@ class _StoreSummary extends StoreSummary {
   
 
 @override final  String id;
-/// 점포 이름. 고객에게 보내는 안내문처럼 다른 사람이 읽는 곳에 쓴다
 @override final  String name;
-/// 내 점포 별명. 없으면 null
 @override final  String? alias;
 @override final  StoreColor color;
 

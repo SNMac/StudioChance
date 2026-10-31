@@ -41,9 +41,8 @@ abstract interface class StoreUseCase {
 
   /// 점포 참여 요청 (대기열 등록)
   /// - [storeName]: 초대 코드로 조회한 점포 이름. 승인 전에는 점포 문서를 읽을 수 없어 넘겨받는다
-  /// - [alias]: 점포 별명. 비어 있으면 별명 없이 신청한다
+  /// - [alias]: 점포 별명. 비어 있으면 별명 없이 신청한다. 검증 규칙은 `normalizeStoreAlias`
   /// - ADMIN 역할로는 신청할 수 없다 (`StoreAdminRoleChangeException`)
-  /// - 별명이 내 다른 점포의 화면 이름과 같으면 실패한다 (`StoreAliasDuplicateException`)
   Future<Either<Exception, void>> joinStore({
     required String storeId,
     required String storeName,
@@ -240,32 +239,28 @@ class StoreUseCaseImpl implements StoreUseCase {
     required StoreColor color,
     required String memo,
   }) {
-    final trimmedAlias = alias.trim();
-    return _rejectAdminRole(role, 'ADMIN 역할로 가입 신청할 수 없습니다')
-        .flatMap((_) => getCurrentUserOrThrow(_userRepository))
-        .flatMap((currentUser) {
-          if (trimmedAlias.isNotEmpty &&
-              currentUser.hasOtherStoreDisplayedAs(
-                trimmedAlias,
-                exceptStoreId: storeId,
-              )) {
-            return TaskEither<Exception, void>.left(
-              StoreAliasDuplicateException(message: '중복된 점포 별명: $trimmedAlias'),
-            );
-          }
-          return TaskEither(
-            () => _storeRepository.requestJoinStore(
-              storeId: storeId,
-              uid: currentUser.id,
-              role: role,
-              color: color,
-              storeName: storeName,
-              alias: trimmedAlias.isEmpty ? null : trimmedAlias,
-              memo: memo,
-            ),
-          );
-        })
-        .run();
+    return _rejectAdminRole(
+      role,
+      'ADMIN 역할로 가입 신청할 수 없습니다',
+    ).flatMap((_) => getCurrentUserOrThrow(_userRepository)).flatMap((
+      currentUser,
+    ) {
+      return TaskEither.fromEither(
+        normalizeStoreAlias(alias, currentUser: currentUser, storeId: storeId),
+      ).flatMap(
+        (normalizedAlias) => TaskEither(
+          () => _storeRepository.requestJoinStore(
+            storeId: storeId,
+            uid: currentUser.id,
+            role: role,
+            color: color,
+            storeName: storeName,
+            alias: normalizedAlias,
+            memo: memo,
+          ),
+        ),
+      );
+    }).run();
   }
 
   @override
