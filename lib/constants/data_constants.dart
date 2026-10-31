@@ -1,6 +1,9 @@
 /// 메모 최대 글자 수
 const int maxMemoCharCount = 500;
 
+/// 점포 이름·점포 별명 최대 글자 수
+const int maxStoreNameCharCount = 15;
+
 /// 닉네임 최대 글자 수
 /// - 계정 삭제 때 닉네임 대신 남기는 소셜 계정 이름도 이 길이로 자른다
 const int maxNicknameCharCount = 10;

@@ -8,21 +8,24 @@ part of 'my_store_settings_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 점포 상세 '내 설정'의 점포 색상·점포 메모 저장을 UseCase에 위임한다.
+/// 점포 상세 '내 설정'의 점포 별명·점포 색상·점포 메모 저장을 UseCase에 위임한다.
 ///
-/// 둘 다 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다 (CONTEXT.md "점포 색상").
+/// 모두 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다
+/// (CONTEXT.md "점포 별명"·"점포 색상"·"점포 메모").
 
 @ProviderFor(MyStoreSettingsController)
 final myStoreSettingsControllerProvider = MyStoreSettingsControllerProvider._();
 
-/// 점포 상세 '내 설정'의 점포 색상·점포 메모 저장을 UseCase에 위임한다.
+/// 점포 상세 '내 설정'의 점포 별명·점포 색상·점포 메모 저장을 UseCase에 위임한다.
 ///
-/// 둘 다 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다 (CONTEXT.md "점포 색상").
+/// 모두 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다
+/// (CONTEXT.md "점포 별명"·"점포 색상"·"점포 메모").
 final class MyStoreSettingsControllerProvider
     extends $AsyncNotifierProvider<MyStoreSettingsController, void> {
-  /// 점포 상세 '내 설정'의 점포 색상·점포 메모 저장을 UseCase에 위임한다.
+  /// 점포 상세 '내 설정'의 점포 별명·점포 색상·점포 메모 저장을 UseCase에 위임한다.
   ///
-  /// 둘 다 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다 (CONTEXT.md "점포 색상").
+  /// 모두 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다
+  /// (CONTEXT.md "점포 별명"·"점포 색상"·"점포 메모").
   MyStoreSettingsControllerProvider._()
     : super(
         from: null,
@@ -43,11 +46,12 @@ final class MyStoreSettingsControllerProvider
 }
 
 String _$myStoreSettingsControllerHash() =>
-    r'84d1ee5dae8b56ba7098a35ab1f657694921a1f3';
+    r'55bb9b4dc29629f2d70f9fe6ff3fb3bf31a0d115';
 
-/// 점포 상세 '내 설정'의 점포 색상·점포 메모 저장을 UseCase에 위임한다.
+/// 점포 상세 '내 설정'의 점포 별명·점포 색상·점포 메모 저장을 UseCase에 위임한다.
 ///
-/// 둘 다 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다 (CONTEXT.md "점포 색상").
+/// 모두 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다
+/// (CONTEXT.md "점포 별명"·"점포 색상"·"점포 메모").
 
 abstract class _$MyStoreSettingsController extends $AsyncNotifier<void> {
   FutureOr<void> build();

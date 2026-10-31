@@ -386,10 +386,7 @@ class _ThreeDayCalendarState extends ConsumerState<ThreeDayCalendar> {
     final filtered = storeInfos
         // 예약을 옮겨 갈 수 있는 점포. 삭제 예정 점포로는 옮길 수 없다
         ?.where((info) => info.canWriteReservations)
-        .map(
-          (info) =>
-              StoreSummary(id: info.id, name: info.name, color: info.color),
-        )
+        .map((info) => info.toStoreSummary())
         .toList();
     // 빈 리스트면 null로 전달 → detail modal의 ?? fallback 작동
     final availableStores = (filtered == null || filtered.isEmpty)

@@ -51,12 +51,15 @@ abstract interface class StoreRepository {
   );
 
   /// 가입 신청 (대기 명단 추가 + 사용자 점포 정보 저장)
+  /// - [storeName]: 사용자 점포 정보의 점포 이름 캐시로 저장한다
+  /// - [alias]: 점포 별명. null이면 별명 없이 저장한다
   Future<Either<Exception, void>> requestJoinStore({
     required String storeId,
     required String uid,
     required UserRole role,
     required StoreColor color,
-    required String storeAlias,
+    required String storeName,
+    String? alias,
     required String memo,
   });
 

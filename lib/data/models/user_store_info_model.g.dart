@@ -12,6 +12,7 @@ _UserStoreInfoModel _$UserStoreInfoModelFromJson(Map<String, dynamic> json) =>
       role: $enumDecode(_$UserRoleEnumMap, json['role']),
       color: $enumDecode(_$StoreColorEnumMap, json['color']),
       memo: json['memo'] as String,
+      alias: json['alias'] as String?,
       isPending: json['isPending'] as bool? ?? false,
       deletedAt: _$JsonConverterFromJson<Timestamp, DateTime>(
         json['deletedAt'],
@@ -25,6 +26,7 @@ Map<String, dynamic> _$UserStoreInfoModelToJson(_UserStoreInfoModel instance) =>
       'role': _$UserRoleEnumMap[instance.role]!,
       'color': _$StoreColorEnumMap[instance.color]!,
       'memo': instance.memo,
+      'alias': ?instance.alias,
       'isPending': instance.isPending,
       'deletedAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
         instance.deletedAt,

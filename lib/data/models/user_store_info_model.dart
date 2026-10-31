@@ -14,10 +14,15 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
   const UserStoreInfoModel._();
 
   const factory UserStoreInfoModel({
+    /// 점포 이름 캐시. 점포 이름이 바뀌면 `StoreDataSource.updateStore`가
+    /// 멤버 모두에게 동기화한다. 멤버가 붙이는 점포 별명은 [alias]에 따로 둔다
     required String name,
     required UserRole role,
     required StoreColor color,
     required String memo,
+
+    /// 점포 별명. 없으면 필드를 두지 않는다
+    @JsonKey(includeIfNull: false) String? alias,
 
     /// 승인 전이면 true. 승인할 때 필드를 지우므로 없으면 승인된 점포다.
     @Default(false) bool isPending,
@@ -32,6 +37,7 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
   factory UserStoreInfoModel.fromEntity(UserStoreInfo entity) {
     return UserStoreInfoModel(
       name: entity.name,
+      alias: entity.alias,
       role: entity.role,
       color: entity.color,
       memo: entity.memo,
@@ -44,6 +50,7 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
     return UserStoreInfo(
       id: storeId,
       name: name,
+      alias: alias,
       role: role,
       color: color,
       memo: memo,

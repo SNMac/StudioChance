@@ -1,4 +1,5 @@
 import 'package:studio_chance/common/exceptions/app_exception.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 
 /// 점포(DB) 관련 최상위 예외
 sealed class StoreException extends AppException {
@@ -27,6 +28,8 @@ sealed class StoreException extends AppException {
 
     // 7. 중복 검증
     StoreNameDuplicateException() => '이미 사용 중인 점포명입니다',
+    StoreAliasDuplicateException() => '이미 사용 중인 이름입니다',
+    StoreAliasTooLongException() => '점포 별명이 너무 깁니다',
     SpaceNameDuplicateException() => '중복된 공간명이 있습니다',
 
     // 6. 유효성 검사 / 알 수 없는 에러
@@ -70,6 +73,9 @@ sealed class StoreException extends AppException {
     // 7. 중복 검증
     StoreNameDuplicateException() =>
       '이미 보유하신 다른 점포와 이름이 같습니다.\n다른 점포명으로 입력해 주세요.',
+    StoreAliasDuplicateException() => '내 다른 점포와 이름이 같습니다.\n다른 별명으로 입력해 주세요.',
+    StoreAliasTooLongException() =>
+      '점포 별명은 $maxStoreNameCharCount자까지 입력할 수 있습니다.',
     SpaceNameDuplicateException() =>
       '같은 점포 안에서는 공간명을 중복해서 사용할 수 없습니다.\n공간명을 다르게 입력해 주세요.',
 
@@ -108,6 +114,8 @@ sealed class StoreException extends AppException {
     StoreValidationException() ||
     StoreInviteCodeExpiredException() ||
     StoreNameDuplicateException() ||
+    StoreAliasDuplicateException() ||
+    StoreAliasTooLongException() ||
     SpaceNameDuplicateException() ||
     StoreAdminRoleChangeException() ||
     StoreAdminHandoverRequiredException() ||
@@ -222,8 +230,24 @@ class StoreInviteCodeExpiredException extends StoreException {
 }
 
 /// 이미 보유한 다른 점포와 이름이 중복될 때 발생하는 예외
+///
+/// 다른 점포의 점포 이름이 아니라 내 화면에 보이는 이름(점포 별명, 없으면 점포 이름)과 비교한다.
 class StoreNameDuplicateException extends StoreException {
   StoreNameDuplicateException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 점포 별명이 내 다른 점포의 화면 이름(점포 별명, 없으면 점포 이름)과 같을 때 발생하는 예외
+class StoreAliasDuplicateException extends StoreException {
+  StoreAliasDuplicateException({required String message, String? code})
+    : super(message, code: code);
+}
+
+/// 점포 별명이 [maxStoreNameCharCount]자를 넘을 때 발생하는 예외
+///
+/// 입력 화면이 길이를 막으므로 화면을 거치지 않은 호출에서만 난다.
+class StoreAliasTooLongException extends StoreException {
+  StoreAliasTooLongException({required String message, String? code})
     : super(message, code: code);
 }
 

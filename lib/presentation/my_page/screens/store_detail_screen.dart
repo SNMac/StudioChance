@@ -81,13 +81,15 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
     final deletionDeadline = myInfo.deletionDeadline;
     final canManageStore = myInfo.canManageStore;
     final store = storeAsync.asData?.value;
+    // 점포 자체를 관리하는 화면이라 앱바와 확인 문구에 내 별명이 아니라 점포 이름을 쓴다.
+    // 별명은 '내 설정' 첫 행에 보인다
     final storeName = store?.name ?? myInfo.name;
 
     return Stack(
       children: [
         Scaffold(
           backgroundColor: context.systemGroupedBackground,
-          appBar: CustomAppBar(title: store?.name ?? myInfo.name),
+          appBar: CustomAppBar(title: storeName),
           body: SingleChildScrollView(
             child: SafeAreaWithPadding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -340,6 +342,12 @@ class _MySettingsSection extends StatelessWidget {
     return GroupedFormContainer(
       header: const GroupedFormCaption.header('내 설정'),
       children: [
+        TitleNavigationButton(
+          title: '점포 별명',
+          content: info.alias ?? '',
+          isChangeable: true,
+          onPressed: () => SCRoute.storeAlias.pushChild(context),
+        ),
         TitleNavigationButton(
           title: '점포 색상',
           content: info.color.displayName,

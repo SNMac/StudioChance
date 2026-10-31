@@ -36,11 +36,7 @@ class InviteCodeVerificationController
       (exception) => state = state.copyWith(
         status: AsyncError(exception, StackTrace.current),
       ),
-      // 점포 별명 기본값은 점포명
-      (preview) => state = state.copyWith(
-        status: AsyncData(preview),
-        storeAlias: preview?.storeName ?? '',
-      ),
+      (preview) => state = state.copyWith(status: AsyncData(preview)),
     );
   }
 
@@ -57,7 +53,9 @@ class InviteCodeVerificationController
     final storeUseCase = ref.read(storeUseCaseProvider);
     final result = await storeUseCase.joinStore(
       storeId: preview.storeId,
-      storeAlias: state.storeAlias.trim(),
+      storeName: preview.storeName,
+      // 비워 두면 별명 없이 신청한다. 점포 이름을 미리 채우지 않는 이유는 State 주석
+      alias: state.storeAlias.trim(),
       role: role,
       color: state.color,
       memo: state.memo,

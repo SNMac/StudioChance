@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreSummary {
 
- String get id; String get name; StoreColor get color;
+ String get id; String get name; String? get alias; StoreColor get color;
 /// Create a copy of StoreSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $StoreSummaryCopyWith<StoreSummary> get copyWith => _$StoreSummaryCopyWithImpl<S
 @override
 bool operator ==(Object other) {
   final _this = this as StoreSummary;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreSummary&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.color, _this.color) || other.color == _this.color));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreSummary&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.alias, _this.alias) || other.alias == _this.alias)&&(identical(other.color, _this.color) || other.color == _this.color));
 }
 
 
 @override
 int get hashCode {
   final _this = this as StoreSummary;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.color);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.alias,_this.color);
 }
 
 @override
 String toString() {
   final _this = this as StoreSummary;
-  return 'StoreSummary(id: ${_this.id}, name: ${_this.name}, color: ${_this.color})';
+  return 'StoreSummary(id: ${_this.id}, name: ${_this.name}, alias: ${_this.alias}, color: ${_this.color})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $StoreSummaryCopyWith<$Res>  {
   factory $StoreSummaryCopyWith(StoreSummary value, $Res Function(StoreSummary) _then) = _$StoreSummaryCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, StoreColor color
+ String id, String name, String? alias, StoreColor color
 });
 
 
@@ -68,11 +68,12 @@ class _$StoreSummaryCopyWithImpl<$Res>
 
 /// Create a copy of StoreSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? color = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? alias = freezed,Object? color = null,}) {
   return _then(StoreSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as String,alias: freezed == alias ? _self.alias : alias // ignore: cast_nullable_to_non_nullable
+as String?,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,
   ));
 }
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  StoreColor color)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? alias,  StoreColor color)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreSummary() when $default != null:
-return $default(_that.id,_that.name,_that.color);case _:
+return $default(_that.id,_that.name,_that.alias,_that.color);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.id,_that.name,_that.color);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  StoreColor color)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? alias,  StoreColor color)  $default,) {final _that = this;
 switch (_that) {
 case _StoreSummary():
-return $default(_that.id,_that.name,_that.color);case _:
+return $default(_that.id,_that.name,_that.alias,_that.color);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.name,_that.color);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  StoreColor color)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? alias,  StoreColor color)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreSummary() when $default != null:
-return $default(_that.id,_that.name,_that.color);case _:
+return $default(_that.id,_that.name,_that.alias,_that.color);case _:
   return null;
 
 }
@@ -213,12 +214,13 @@ return $default(_that.id,_that.name,_that.color);case _:
 /// @nodoc
 
 
-class _StoreSummary implements StoreSummary {
-  const _StoreSummary({required this.id, required this.name, required this.color});
+class _StoreSummary extends StoreSummary {
+  const _StoreSummary({required this.id, required this.name, this.alias, required this.color}): super._();
   
 
 @override final  String id;
 @override final  String name;
+@override final  String? alias;
 @override final  StoreColor color;
 
 /// Create a copy of StoreSummary
@@ -231,18 +233,18 @@ _$StoreSummaryCopyWith<_StoreSummary> get copyWith => __$StoreSummaryCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.alias, alias) || other.alias == alias)&&(identical(other.color, color) || other.color == color));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,color);
+    return Object.hash(runtimeType,id,name,alias,color);
 }
 
 @override
 String toString() {
-    return 'StoreSummary(id: $id, name: $name, color: $color)';
+    return 'StoreSummary(id: $id, name: $name, alias: $alias, color: $color)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$StoreSummaryCopyWith<$Res> implements $StoreSummaryCopyWi
   factory _$StoreSummaryCopyWith(_StoreSummary value, $Res Function(_StoreSummary) _then) = __$StoreSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, StoreColor color
+ String id, String name, String? alias, StoreColor color
 });
 
 
@@ -270,11 +272,12 @@ class __$StoreSummaryCopyWithImpl<$Res>
 
 /// Create a copy of StoreSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? color = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? alias = freezed,Object? color = null,}) {
   return _then(_StoreSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as String,alias: freezed == alias ? _self.alias : alias // ignore: cast_nullable_to_non_nullable
+as String?,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as StoreColor,
   ));
 }

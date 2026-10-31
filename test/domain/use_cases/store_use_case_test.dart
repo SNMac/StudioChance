@@ -7,6 +7,7 @@ import 'package:studio_chance/domain/entities/space_option.dart';
 import 'package:studio_chance/domain/entities/price_setting.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
+import 'package:studio_chance/constants/data_constants.dart';
 import 'package:studio_chance/domain/use_cases/store_use_case.dart';
 
 import '../../helpers/fake_entities.dart';
@@ -195,6 +196,135 @@ void main() {
         () => mockStoreRepo.createStore(
           store: any(named: 'store'),
           color: any(named: 'color'),
+          memo: any(named: 'memo'),
+        ),
+      );
+    });
+
+    group('점포 이름 중복은 내 화면 이름(점포 별명, 없으면 점포 이름)과 비교한다', () {
+      final aliasedUser = fakeUser.copyWith(
+        storeInfos: [fakeUser.storeInfos.first.copyWith(alias: '강남')],
+      );
+
+      setUp(() {
+        when(() => mockUserRepo.getCurrentUser())
+            .thenAnswer((_) async => right(aliasedUser));
+        when(
+          () => mockStoreRepo.createStore(
+            store: any(named: 'store'),
+            color: any(named: 'color'),
+            memo: any(named: 'memo'),
+          ),
+        ).thenAnswer((_) async => right(fakeStore));
+      });
+
+      test('다른 점포의 별명과 같으면 left(StoreNameDuplicateException)', () async {
+        final result = await useCase.createStore(
+          store: fakeStore.copyWith(id: '', name: '강남'),
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expect(expectLeft(result), isA<StoreNameDuplicateException>());
+      });
+
+      test('별명을 붙인 다른 점포의 점포 이름과는 같아도 만든다', () async {
+        final result = await useCase.createStore(
+          store: fakeStore.copyWith(
+            id: '',
+            name: fakeUser.storeInfos.first.name,
+          ),
+          color: StoreColor.blue,
+          memo: '',
+        );
+
+        expectRight(result);
+      });
+    });
+  });
+
+  // =========================================================================
+  // joinStore — 점포 별명
+  // =========================================================================
+
+  group('joinStore 점포 별명', () {
+    setUpAll(() => registerFallbackValue(UserRole.staff));
+
+    setUp(() {
+      when(() => mockUserRepo.getCurrentUser())
+          .thenAnswer((_) async => right(fakeUser));
+      when(
+        () => mockStoreRepo.requestJoinStore(
+          storeId: any(named: 'storeId'),
+          uid: any(named: 'uid'),
+          role: any(named: 'role'),
+          color: any(named: 'color'),
+          storeName: any(named: 'storeName'),
+          alias: any(named: 'alias'),
+          memo: any(named: 'memo'),
+        ),
+      ).thenAnswer((_) async => right(null));
+    });
+
+    Future<Either<Exception, void>> join(String alias) => useCase.joinStore(
+      storeId: 'store-new',
+      storeName: '새 점포',
+      alias: alias,
+      role: UserRole.staff,
+      color: StoreColor.red,
+      memo: '',
+    );
+
+    test('점포 이름과 앞뒤 공백을 지운 별명을 넘긴다', () async {
+      expectRight(await join('  새 별명  '));
+
+      verify(
+        () => mockStoreRepo.requestJoinStore(
+          storeId: 'store-new',
+          uid: fakeUser.id,
+          role: UserRole.staff,
+          color: StoreColor.red,
+          storeName: '새 점포',
+          alias: '새 별명',
+          memo: '',
+        ),
+      ).called(1);
+    });
+
+    test('별명이 비어 있으면 별명 없이 신청한다', () async {
+      expectRight(await join('   '));
+
+      verify(
+        () => mockStoreRepo.requestJoinStore(
+          storeId: 'store-new',
+          uid: fakeUser.id,
+          role: UserRole.staff,
+          color: StoreColor.red,
+          storeName: '새 점포',
+          alias: null,
+          memo: '',
+        ),
+      ).called(1);
+    });
+
+    test('별명이 최대 글자 수를 넘으면 신청하지 않는다', () async {
+      final result = await join('가' * (maxStoreNameCharCount + 1));
+
+      expect(expectLeft(result), isA<StoreAliasTooLongException>());
+    });
+
+    test('별명이 내 다른 점포의 화면 이름과 같으면 신청하지 않는다', () async {
+      final result = await join(fakeUser.storeInfos.first.name);
+
+      expect(expectLeft(result), isA<StoreAliasDuplicateException>());
+      verifyNever(
+        () => mockStoreRepo.requestJoinStore(
+          storeId: any(named: 'storeId'),
+          uid: any(named: 'uid'),
+          role: any(named: 'role'),
+          color: any(named: 'color'),
+          storeName: any(named: 'storeName'),
+          alias: any(named: 'alias'),
           memo: any(named: 'memo'),
         ),
       );

@@ -40,10 +40,13 @@ abstract interface class StoreUseCase {
   );
 
   /// 점포 참여 요청 (대기열 등록)
+  /// - [storeName]: 초대 코드로 조회한 점포 이름. 승인 전에는 점포 문서를 읽을 수 없어 넘겨받는다
+  /// - [alias]: 점포 별명. 비어 있으면 별명 없이 신청한다. 검증 규칙은 `normalizeStoreAlias`
   /// - ADMIN 역할로는 신청할 수 없다 (`StoreAdminRoleChangeException`)
   Future<Either<Exception, void>> joinStore({
     required String storeId,
-    required String storeAlias,
+    required String storeName,
+    required String alias,
     required UserRole role,
     required StoreColor color,
     required String memo,
@@ -92,7 +95,7 @@ abstract interface class StoreUseCase {
   /// 점포 정보 수정
   /// - [original]: 수정 폼을 연 시점의 점포. 그 뒤 다른 관리자가 설정을 먼저 저장했으면
   ///   `StoreUpdateConflictException`으로 실패한다 (D13)
-  /// - 점포 색상·점포 메모는 멤버마다 따로 두는 값이라 여기서 고치지 않는다
+  /// - 점포 색상·점포 메모·점포 별명은 멤버마다 따로 두는 값이라 여기서 고치지 않는다
   ///   (`UserUseCase.updateStoreInfo`)
   Future<Either<Exception, void>> updateStore({
     required Store original,
@@ -136,7 +139,8 @@ class StoreUseCaseImpl implements StoreUseCase {
     hours: -1,
   );
 
-  /// 현재 유저가 보유한 다른 점포와 이름이 중복되는지 검증한다.
+  /// 현재 유저의 다른 점포와 이름이 중복되는지 검증한다.
+  /// 다른 점포의 점포 이름이 아니라 내 화면에 보이는 이름(점포 별명, 없으면 점포 이름)과 비교한다.
   /// [store.id]가 [currentUser.storeInfos] 항목과 일치하면 자기 자신이므로 제외한다.
   /// (신규 생성 시 store.id는 빈 문자열이라 자연히 아무 항목도 제외되지 않는다)
   /// 또한 같은 점포 내 공간명 중복을 검증한다.
@@ -145,8 +149,9 @@ class StoreUseCaseImpl implements StoreUseCase {
     required User currentUser,
   }) {
     final trimmedStoreName = store.name.trim();
-    final hasDuplicateStoreName = currentUser.storeInfos.any(
-      (info) => info.id != store.id && info.name.trim() == trimmedStoreName,
+    final hasDuplicateStoreName = currentUser.hasOtherStoreDisplayedAs(
+      trimmedStoreName,
+      exceptStoreId: store.id,
     );
     if (hasDuplicateStoreName) {
       return StoreNameDuplicateException(message: '중복된 점포명: $trimmedStoreName');
@@ -228,26 +233,34 @@ class StoreUseCaseImpl implements StoreUseCase {
   @override
   Future<Either<Exception, void>> joinStore({
     required String storeId,
-    required String storeAlias,
+    required String storeName,
+    required String alias,
     required UserRole role,
     required StoreColor color,
     required String memo,
   }) {
-    return _rejectAdminRole(role, 'ADMIN 역할로 가입 신청할 수 없습니다')
-        .flatMap((_) => getCurrentUserOrThrow(_userRepository))
-        .flatMap((currentUser) {
-          return TaskEither(
-            () => _storeRepository.requestJoinStore(
-              storeId: storeId,
-              uid: currentUser.id,
-              role: role,
-              color: color,
-              storeAlias: storeAlias,
-              memo: memo,
-            ),
-          );
-        })
-        .run();
+    return _rejectAdminRole(
+      role,
+      'ADMIN 역할로 가입 신청할 수 없습니다',
+    ).flatMap((_) => getCurrentUserOrThrow(_userRepository)).flatMap((
+      currentUser,
+    ) {
+      return TaskEither.fromEither(
+        normalizeStoreAlias(alias, currentUser: currentUser, storeId: storeId),
+      ).flatMap(
+        (normalizedAlias) => TaskEither(
+          () => _storeRepository.requestJoinStore(
+            storeId: storeId,
+            uid: currentUser.id,
+            role: role,
+            color: color,
+            storeName: storeName,
+            alias: normalizedAlias,
+            memo: memo,
+          ),
+        ),
+      );
+    }).run();
   }
 
   @override
@@ -344,7 +357,7 @@ class StoreUseCaseImpl implements StoreUseCase {
   Future<Either<Exception, void>> leaveStore(String storeId) {
     return getCurrentUserOrThrow(_userRepository).flatMap((currentUser) {
       if (currentUser.roleIn(storeId) == UserRole.admin) {
-        final name = currentUser.storeInfoOf(storeId)?.name ?? '';
+        final name = currentUser.storeInfoOf(storeId)?.displayName ?? '';
         return TaskEither<Exception, void>.left(
           StoreAdminHandoverRequiredException(
             stores: [(id: storeId, name: name)],

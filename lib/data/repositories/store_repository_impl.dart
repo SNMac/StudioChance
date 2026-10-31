@@ -233,14 +233,16 @@ class StoreRepositoryImpl implements StoreRepository {
     required String uid,
     required UserRole role,
     required StoreColor color,
-    required String storeAlias,
+    required String storeName,
+    String? alias,
     required String memo,
   }) async {
     try {
       final memberInfo = StoreMemberInfoModel(role: role);
 
       final userStoreInfo = UserStoreInfoModel(
-        name: storeAlias,
+        name: storeName,
+        alias: alias,
         color: color,
         role: role,
         memo: memo,

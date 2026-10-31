@@ -641,7 +641,7 @@ class _ReservationCreateModalState extends ConsumerState<ReservationCreateModal>
             title: '예약 점포',
             selectedValue: _storeSummary,
             items: _availableStores,
-            itemLabelBuilder: (s) => s.name,
+            itemLabelBuilder: (s) => s.displayName,
             itemLeadingBuilder: (s) => Container(
               width: 8,
               height: 8,

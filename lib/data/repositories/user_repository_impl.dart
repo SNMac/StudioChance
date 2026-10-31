@@ -125,14 +125,12 @@ class UserRepositoryImpl implements UserRepository {
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
-    String? name,
     StoreColor? color,
     String? memo,
   }) async {
     try {
       final Map<String, dynamic> data = {};
 
-      if (name != null) data['name'] = name;
       if (memo != null) data['memo'] = memo;
       if (color != null) {
         // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화
@@ -156,6 +154,24 @@ class UserRepositoryImpl implements UserRepository {
       return right(null);
     } catch (e) {
       _logger.e('사용자 점포 설정 변경 실패');
+      return left(toException(e));
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> updateStoreAlias({
+    required String uid,
+    required String storeId,
+    required String? alias,
+  }) async {
+    try {
+      // null은 DataSource가 필드를 지우는 값으로 바꾼다
+      await _userDataSource.updateStoreInfo(uid, storeId, {'alias': alias});
+
+      _logger.i('점포 별명 변경 완료\nuid: $uid, storeId: $storeId, alias: $alias');
+      return right(null);
+    } catch (e) {
+      _logger.e('점포 별명 변경 실패');
       return left(toException(e));
     }
   }

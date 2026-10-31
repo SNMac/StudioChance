@@ -29,7 +29,7 @@ abstract interface class UserDataSource {
     String? fcmToken,
   });
 
-  /// 점포 정보 업데이트
+  /// 점포 정보 업데이트 — 값이 null인 필드는 지운다
   Future<void> updateStoreInfo(
     String uid,
     String storeId,
@@ -201,7 +201,7 @@ class UserFirestoreDataSource extends FirestoreDataSourceBase
     try {
       final Map<String, dynamic> updates = {};
       data.forEach((key, value) {
-        updates['storeById.$storeId.$key'] = value;
+        updates['storeById.$storeId.$key'] = value ?? FieldValue.delete();
       });
 
       updates['updatedAt'] = FieldValue.serverTimestamp();

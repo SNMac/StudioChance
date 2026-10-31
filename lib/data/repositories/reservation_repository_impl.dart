@@ -281,6 +281,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
     return StoreSummary(
       id: storeId,
       name: userStoreInfo?.name ?? '',
+      alias: userStoreInfo?.alias,
       color: userStoreInfo?.color ?? StoreColor.red,
     );
   }

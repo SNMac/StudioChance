@@ -16,6 +16,7 @@ enum SCRoute {
   // 마이페이지 전용 (점포 상세는 경로에 storeId가 들어가므로 storeDetailLocation으로 이동)
   // ---------------------------------------------------------------------------
   storeDetail,
+  storeAlias,
   storeMemo,
   delegateAdmin,
   accountDeletion,
@@ -63,6 +64,8 @@ enum SCRoute {
 
       case SCRoute.storeDetail:
         return 'store/:storeId';
+      case SCRoute.storeAlias:
+        return 'alias';
       case SCRoute.storeMemo:
         return 'memo';
       case SCRoute.delegateAdmin:
