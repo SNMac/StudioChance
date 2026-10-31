@@ -40,7 +40,6 @@ class _InviteCodeVerifiedScreenState
   void initState() {
     super.initState();
     final initialState = ref.read(inviteCodeVerificationControllerProvider);
-    // 점포 별명 기본값(= 점포명)은 초대 코드 조회 성공 시 컨트롤러가 채워 둔다.
     _storeAliasController = TextEditingController(
       text: initialState.storeAlias,
     );
@@ -203,7 +202,9 @@ class _InviteCodeVerifiedScreenState
                             controller: _storeAliasController,
                             onChanged: notifier.setStoreAlias,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(15),
+                              LengthLimitingTextInputFormatter(
+                                maxStoreNameCharCount,
+                              ),
                             ],
                           ),
                           TitleNavigationButton(

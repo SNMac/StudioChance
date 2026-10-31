@@ -199,7 +199,7 @@ class AuthUseCaseImpl implements AuthUseCase {
     ).map(
       (results) => results
           .where((result) => result.hasOtherMembers)
-          .map((result) => (id: result.info.id, name: result.info.name))
+          .map((result) => (id: result.info.id, name: result.info.displayName))
           .toList(),
     );
   }

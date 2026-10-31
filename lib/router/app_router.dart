@@ -25,6 +25,7 @@ import 'package:studio_chance/presentation/my_page/screens/account_deletion_scre
 import 'package:studio_chance/presentation/my_page/screens/delegate_admin_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_page_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/my_store_color_screen.dart';
+import 'package:studio_chance/presentation/my_page/screens/store_alias_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/store_detail_screen.dart';
 import 'package:studio_chance/presentation/my_page/screens/store_memo_screen.dart';
 import 'package:studio_chance/presentation/onboarding/screens/onboarding_nickname_screen.dart';
@@ -156,6 +157,12 @@ GoRoute myPageRoute() => GoRoute(
       builder: (context, state) =>
           StoreDetailScreen(storeId: state.pathParameters['storeId']!),
       routes: [
+        // 내 설정 — 점포 별명
+        GoRoute(
+          path: SCRoute.storeAlias.path,
+          builder: (context, state) =>
+              StoreAliasScreen(storeId: state.pathParameters['storeId']!),
+        ),
         // 내 설정 — 점포 색상. 고르면 저장하고 바로 닫힌다
         GoRoute(
           path: SCRoute.storeColor.path,

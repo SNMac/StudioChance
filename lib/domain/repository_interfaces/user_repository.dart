@@ -24,10 +24,11 @@ abstract interface class UserRepository {
   });
 
   /// 사용자의 점포 정보 수정 — 넘긴 값만 바꾼다
+  /// - [alias]: 빈 문자열이면 점포 별명을 지운다
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
-    String? name,
+    String? alias,
     StoreColor? color,
     String? memo,
   });

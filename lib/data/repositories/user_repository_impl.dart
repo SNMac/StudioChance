@@ -125,14 +125,14 @@ class UserRepositoryImpl implements UserRepository {
   Future<Either<Exception, void>> updateStoreInfo({
     required String uid,
     required String storeId,
-    String? name,
+    String? alias,
     StoreColor? color,
     String? memo,
   }) async {
     try {
       final Map<String, dynamic> data = {};
 
-      if (name != null) data['name'] = name;
+      if (alias != null) data['alias'] = alias.isEmpty ? null : alias;
       if (memo != null) data['memo'] = memo;
       if (color != null) {
         // color.name은 Dart 식별자('green')를 반환하므로 toJson()으로 JSON 값('GREEN') 직렬화

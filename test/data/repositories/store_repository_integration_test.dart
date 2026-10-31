@@ -173,57 +173,62 @@ void main() {
   // =========================================================================
 
   group('updateStore', () {
-    test('점포명 변경 시 다른 멤버(staff)의 storeById.name 캐시도 함께 갱신된다', () async {
-      final ownerUid = FakeFirestoreHelper.generateId();
-      final staffUid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, ownerUid);
-      await _seedUserDoc(fakeFirestore, staffUid);
-      final adminUser = User(
-        id: ownerUid,
-        name: '테스트 유저',
-        email: 'test@example.com',
-        nickname: null,
-        authProviders: [],
-        storeInfos: [],
-      );
+    test(
+      '점포명 변경 시 다른 멤버(staff)의 storeById.name 캐시는 갱신되고 점포 별명은 그대로다',
+      () async {
+        final ownerUid = FakeFirestoreHelper.generateId();
+        final staffUid = FakeFirestoreHelper.generateId();
+        await _seedUserDoc(fakeFirestore, ownerUid);
+        await _seedUserDoc(fakeFirestore, staffUid);
+        final adminUser = User(
+          id: ownerUid,
+          name: '테스트 유저',
+          email: 'test@example.com',
+          nickname: null,
+          authProviders: [],
+          storeInfos: [],
+        );
 
-      final created = await repository.createStore(
-        store: _testStoreEntity(ownerUid, adminUser),
-        color: StoreColor.blue,
-        memo: '',
-      );
-      final createdStore = expectRight(created);
+        final created = await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        );
+        final createdStore = expectRight(created);
 
-      await repository.requestJoinStore(
-        storeId: createdStore.id,
-        uid: staffUid,
-        role: UserRole.staff,
-        color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
-        memo: '',
-      );
-      await repository.approveMember(
-        storeId: createdStore.id,
-        uid: staffUid,
-        role: UserRole.staff,
-      );
+        await repository.requestJoinStore(
+          storeId: createdStore.id,
+          uid: staffUid,
+          role: UserRole.staff,
+          color: StoreColor.red,
+          storeName: '통합 테스트 점포',
+          alias: '스태프 별명',
+          memo: '',
+        );
+        await repository.approveMember(
+          storeId: createdStore.id,
+          uid: staffUid,
+          role: UserRole.staff,
+        );
 
-      final fetched = await repository.getStore(createdStore.id);
-      final storeWithStaff = expectRight(fetched)!;
+        final fetched = await repository.getStore(createdStore.id);
+        final storeWithStaff = expectRight(fetched)!;
 
-      await repository.updateStore(
-        original: storeWithStaff,
-        store: storeWithStaff.copyWith(name: '변경된 점포명'),
-      );
+        await repository.updateStore(
+          original: storeWithStaff,
+          store: storeWithStaff.copyWith(name: '변경된 점포명'),
+        );
 
-      final staffDoc = await fakeFirestore
-          .collection('users')
-          .doc(staffUid)
-          .get();
-      final staffStoreById =
-          staffDoc.data()?['storeById'] as Map<String, dynamic>?;
-      expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
-    });
+        final staffDoc = await fakeFirestore
+            .collection('users')
+            .doc(staffUid)
+            .get();
+        final staffStoreById =
+            staffDoc.data()?['storeById'] as Map<String, dynamic>?;
+        expect(staffStoreById?[createdStore.id]['name'], '변경된 점포명');
+        expect(staffStoreById?[createdStore.id]['alias'], '스태프 별명');
+      },
+    );
 
     group('동시 수정 감지 (D13)', () {
       late String ownerUid;
@@ -286,7 +291,7 @@ void main() {
           uid: staffUid,
           role: UserRole.staff,
           color: StoreColor.red,
-          storeAlias: '통합 테스트 점포',
+          storeName: '통합 테스트 점포',
           memo: '',
         );
         await repository.approveMember(
@@ -352,7 +357,7 @@ void main() {
         uid: staffUid,
         role: UserRole.staff,
         color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
+        storeName: '통합 테스트 점포',
         memo: '',
       );
       await repository.approveMember(
@@ -454,7 +459,7 @@ void main() {
         uid: memberUid,
         role: UserRole.staff,
         color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
+        storeName: '통합 테스트 점포',
         memo: '',
       );
       await repository.approveMember(
@@ -503,7 +508,7 @@ void main() {
         uid: memberUid,
         role: UserRole.staff,
         color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
+        storeName: '통합 테스트 점포',
         memo: '',
       );
       expect(await isPendingFor(memberUid), isTrue);
@@ -514,6 +519,53 @@ void main() {
         role: UserRole.staff,
       );
       expect(await isPendingFor(memberUid), isFalse);
+    });
+
+    test('가입 신청 시 점포 이름 캐시와 점포 별명을 따로 저장한다', () async {
+      final ownerUid = FakeFirestoreHelper.generateId();
+      final aliasedUid = FakeFirestoreHelper.generateId();
+      final plainUid = FakeFirestoreHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      await _seedUserDoc(fakeFirestore, aliasedUid);
+      await _seedUserDoc(fakeFirestore, plainUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final created = await repository.createStore(
+        store: _testStoreEntity(ownerUid, adminUser),
+        color: StoreColor.blue,
+        memo: '',
+      );
+      final storeId = expectRight(created).id;
+
+      for (final (uid, alias) in [(aliasedUid, '내 별명'), (plainUid, null)]) {
+        await repository.requestJoinStore(
+          storeId: storeId,
+          uid: uid,
+          role: UserRole.staff,
+          color: StoreColor.red,
+          storeName: '통합 테스트 점포',
+          alias: alias,
+          memo: '',
+        );
+      }
+
+      final aliased = (await userDataSource.getUser(aliasedUid))!
+          .toEntity()
+          .storeInfoOf(storeId)!;
+      expect(aliased.name, '통합 테스트 점포');
+      expect(aliased.displayName, '내 별명');
+
+      final plain = (await userDataSource.getUser(plainUid))!
+          .toEntity()
+          .storeInfoOf(storeId)!;
+      expect(plain.alias, isNull);
+      expect(plain.displayName, '통합 테스트 점포');
     });
   });
 
@@ -548,7 +600,7 @@ void main() {
         uid: memberUid,
         role: UserRole.staff,
         color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
+        storeName: '통합 테스트 점포',
         memo: '',
       );
       await repository.approveMember(
@@ -675,7 +727,7 @@ void main() {
         uid: memberUid,
         role: UserRole.staff,
         color: StoreColor.red,
-        storeAlias: '통합 테스트 점포',
+        storeName: '통합 테스트 점포',
         memo: '',
       );
       await repository.approveMember(

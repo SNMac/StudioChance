@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InviteCodeVerificationState {
 
- String get inviteCode; AsyncValue<InviteStorePreview?> get status; String get storeAlias; StoreColor get color; String get memo; AsyncValue<void> get submitStatus;
+ String get inviteCode; AsyncValue<InviteStorePreview?> get status;/// 점포 별명. 선택 입력이며 점포 이름을 미리 채우지 않는다 — 채워 두면 신청자 모두에게
+/// 별명이 생겨 관리자가 점포 이름을 바꿔도 화면에 반영되지 않는다
+ String get storeAlias; StoreColor get color; String get memo; AsyncValue<void> get submitStatus;
 /// Create a copy of InviteCodeVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -222,6 +224,8 @@ class _InviteCodeVerificationState extends InviteCodeVerificationState {
 
 @override@JsonKey() final  String inviteCode;
 @override@JsonKey() final  AsyncValue<InviteStorePreview?> status;
+/// 점포 별명. 선택 입력이며 점포 이름을 미리 채우지 않는다 — 채워 두면 신청자 모두에게
+/// 별명이 생겨 관리자가 점포 이름을 바꿔도 화면에 반영되지 않는다
 @override@JsonKey() final  String storeAlias;
 @override@JsonKey() final  StoreColor color;
 @override@JsonKey() final  String memo;

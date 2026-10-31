@@ -308,7 +308,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       // 어느 점포로 바꾸는지 분명하도록 점포명만 강조한다
       contentSpans: [
         TextSpan(
-          text: store.name,
+          text: store.displayName,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         const TextSpan(
@@ -597,7 +597,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
     if (ocrStoreName != null && _availableStores.length > 1) {
       // 동일 이름 점포가 2개 이상이면 어느 쪽인지 특정할 수 없으므로 모호한 매칭으로 처리
       final candidates = _availableStores
-          .where((s) => s.name == ocrStoreName)
+          .where((s) => s.isCalled(ocrStoreName))
           .toList();
       matchedStore = candidates.length == 1 ? candidates.first : null;
       if (matchedStore != null) {
@@ -1111,7 +1111,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
       children: [
         TitleTextLabel(
           title: '예약 점포',
-          content: _storeSummary.name,
+          content: _storeSummary.displayName,
           leading: Container(
             width: 8,
             height: 8,
@@ -1140,7 +1140,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
             title: '예약 점포',
             selectedValue: _storeSummary,
             items: _availableStores,
-            itemLabelBuilder: (s) => s.name,
+            itemLabelBuilder: (s) => s.displayName,
             itemLeadingBuilder: (s) => Container(
               width: 8,
               height: 8,

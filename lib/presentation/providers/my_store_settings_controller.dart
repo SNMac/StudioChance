@@ -9,15 +9,20 @@ import 'package:studio_chance/presentation/providers/app_auth_controller.dart';
 
 part 'my_store_settings_controller.g.dart';
 
-/// 점포 상세 '내 설정'의 점포 색상·점포 메모 저장을 UseCase에 위임한다.
+/// 점포 상세 '내 설정'의 점포 별명·점포 색상·점포 메모 저장을 UseCase에 위임한다.
 ///
-/// 둘 다 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다 (CONTEXT.md "점포 색상").
+/// 모두 멤버마다 따로 두는 값이라 역할과 관계없이 본인이 바꾼다 (CONTEXT.md "점포 색상").
 @riverpod
 class MyStoreSettingsController extends _$MyStoreSettingsController {
   final _logger = Logger();
 
   @override
   FutureOr<void> build() {}
+
+  /// [alias]가 비어 있으면 점포 별명을 지운다
+  Future<bool> updateAlias({required String storeId, required String alias}) {
+    return _update(storeId, alias: alias);
+  }
 
   Future<bool> updateColor({
     required String storeId,
@@ -32,6 +37,7 @@ class MyStoreSettingsController extends _$MyStoreSettingsController {
 
   Future<bool> _update(
     String storeId, {
+    String? alias,
     StoreColor? color,
     String? memo,
   }) async {
@@ -45,6 +51,7 @@ class MyStoreSettingsController extends _$MyStoreSettingsController {
               .updateStoreInfo(
                 uid: uid,
                 storeId: storeId,
+                alias: alias,
                 color: color,
                 memo: memo,
               );

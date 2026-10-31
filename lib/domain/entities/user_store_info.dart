@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
 import 'package:studio_chance/constants/data_constants.dart';
+import 'package:studio_chance/domain/entities/store_summary.dart';
 
 part 'user_store_info.freezed.dart';
 
@@ -12,10 +13,15 @@ abstract class UserStoreInfo with _$UserStoreInfo {
 
   const factory UserStoreInfo({
     required String id,
+
+    /// 점포 이름(관리자가 정한 이름)의 캐시. 점포 이름이 바뀌면 멤버 모두에게 동기화된다 (#26)
     required String name,
     required UserRole role,
     required StoreColor color,
     required String memo,
+
+    /// 점포 별명. 없으면 null이며 화면에는 [name]이 보인다 (CONTEXT.md "점포 별명")
+    String? alias,
 
     /// 가입을 신청했지만 아직 관리자가 승인하지 않은 점포.
     /// 멤버가 아니라 Rules가 점포·예약 읽기를 거부하므로 구독하면 안 된다.
@@ -24,6 +30,12 @@ abstract class UserStoreInfo with _$UserStoreInfo {
     /// 점포 삭제로 삭제 예정 점포가 된 시각(서버 시각). 점포 복구를 하면 지워진다 (ADR-0007)
     DateTime? deletedAt,
   }) = _UserStoreInfo;
+
+  /// 내 화면에 보이는 점포 이름 — 점포 별명이 있으면 별명, 없으면 점포 이름
+  String get displayName => alias ?? name;
+
+  StoreSummary toStoreSummary() =>
+      StoreSummary(id: id, name: name, alias: alias, color: color);
 
   /// 삭제 예정 점포. 읽기 전용이며 예약을 추가하거나 고칠 수 없다
   bool get isScheduledForDeletion => deletedAt != null;

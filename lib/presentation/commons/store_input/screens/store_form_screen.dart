@@ -316,7 +316,9 @@ class _StoreFormScreenState extends ConsumerState<StoreFormScreen> {
                             controller: _nameController,
                             onChanged: notifier.setName,
                             inputFormatters: [
-                              LengthLimitingTextInputFormatter(15),
+                              LengthLimitingTextInputFormatter(
+                                maxStoreNameCharCount,
+                              ),
                             ],
                           ),
                           // 점포 색상·점포 메모는 멤버마다 따로 두는 값이라, 수정 때는

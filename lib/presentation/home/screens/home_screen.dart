@@ -210,16 +210,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .where((info) => info.canWriteReservations)
         .toList();
     final defaultInfo = creatableInfos.first;
-    final defaultStoreSummary = StoreSummary(
-      id: defaultInfo.id,
-      name: defaultInfo.name,
-      color: defaultInfo.color,
-    );
+    final defaultStoreSummary = defaultInfo.toStoreSummary();
     final availableStores = creatableInfos
-        .map(
-          (info) =>
-              StoreSummary(id: info.id, name: info.name, color: info.color),
-        )
+        .map((info) => info.toStoreSummary())
         .toList();
 
     final start = DateTime(

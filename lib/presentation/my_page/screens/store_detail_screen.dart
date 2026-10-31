@@ -81,13 +81,14 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen>
     final deletionDeadline = myInfo.deletionDeadline;
     final canManageStore = myInfo.canManageStore;
     final store = storeAsync.asData?.value;
-    final storeName = store?.name ?? myInfo.name;
+    // 내 화면이므로 점포 별명이 있으면 별명으로 부른다. 점포 이름은 '내 설정' 아래에 보인다
+    final storeName = myInfo.alias ?? store?.name ?? myInfo.name;
 
     return Stack(
       children: [
         Scaffold(
           backgroundColor: context.systemGroupedBackground,
-          appBar: CustomAppBar(title: store?.name ?? myInfo.name),
+          appBar: CustomAppBar(title: storeName),
           body: SingleChildScrollView(
             child: SafeAreaWithPadding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -337,9 +338,20 @@ class _MySettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final alias = info.alias;
     return GroupedFormContainer(
       header: const GroupedFormCaption.header('내 설정'),
+      // 앱바가 별명을 보여주므로 별명이 있을 때는 점포 이름을 따로 알려준다
+      footer: alias == null
+          ? null
+          : GroupedFormCaption.footer('점포 이름은 ‘${info.name}’입니다.'),
       children: [
+        TitleNavigationButton(
+          title: '점포 별명',
+          content: alias ?? '',
+          isChangeable: true,
+          onPressed: () => SCRoute.storeAlias.pushChild(context),
+        ),
         TitleNavigationButton(
           title: '점포 색상',
           content: info.color.displayName,

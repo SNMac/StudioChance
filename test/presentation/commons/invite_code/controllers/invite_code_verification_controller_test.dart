@@ -192,7 +192,8 @@ void main() {
       when(
         () => mockStoreUseCase.joinStore(
           storeId: any(named: 'storeId'),
-          storeAlias: any(named: 'storeAlias'),
+          storeName: any(named: 'storeName'),
+          alias: any(named: 'alias'),
           role: any(named: 'role'),
           color: any(named: 'color'),
           memo: any(named: 'memo'),
@@ -200,11 +201,11 @@ void main() {
       ).thenAnswer((_) async => result);
     }
 
-    test('초대 코드 조회 성공 시 점포 별명 기본값이 점포명으로 채워진다', () async {
+    test('초대 코드 조회 성공 시 점포 별명을 비워 두고, 그대로 제출할 수 있다', () async {
       await arrangeVerified();
 
       final state = container.read(inviteCodeVerificationControllerProvider);
-      expect(state.storeAlias, testPreview.storeName);
+      expect(state.storeAlias, isEmpty);
       expect(state.canSubmit, isTrue);
     });
 
@@ -224,7 +225,8 @@ void main() {
       verify(
         () => mockStoreUseCase.joinStore(
           storeId: testPreview.storeId,
-          storeAlias: '내 점포',
+          storeName: testPreview.storeName,
+          alias: '내 점포',
           role: UserRole.staff,
           color: StoreColor.blue,
           memo: '메모입니다',
@@ -253,22 +255,24 @@ void main() {
       expect(state.submitStatus.error, isA<StoreNetworkException>());
     });
 
-    test('점포 별명이 비어 있으면 제출하지 않는다', () async {
+    test('점포 별명이 공백뿐이면 빈 별명으로 제출한다', () async {
       final notifier = await arrangeVerified();
       arrangeJoinResult(right(null));
 
       notifier.setStoreAlias('   ');
       await notifier.submitJoinRequest();
 
-      verifyNever(
+      final captured = verify(
         () => mockStoreUseCase.joinStore(
           storeId: any(named: 'storeId'),
-          storeAlias: any(named: 'storeAlias'),
+          storeName: any(named: 'storeName'),
+          alias: captureAny(named: 'alias'),
           role: any(named: 'role'),
           color: any(named: 'color'),
           memo: any(named: 'memo'),
         ),
-      );
+      ).captured;
+      expect(captured.single, isEmpty);
     });
 
     test('제출 중에는 중복 호출해도 UseCase가 한 번만 호출된다', () async {
@@ -282,7 +286,8 @@ void main() {
       verify(
         () => mockStoreUseCase.joinStore(
           storeId: any(named: 'storeId'),
-          storeAlias: any(named: 'storeAlias'),
+          storeName: any(named: 'storeName'),
+          alias: any(named: 'alias'),
           role: any(named: 'role'),
           color: any(named: 'color'),
           memo: any(named: 'memo'),

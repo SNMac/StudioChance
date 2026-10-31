@@ -13,6 +13,9 @@ abstract class InviteCodeVerificationState with _$InviteCodeVerificationState {
   const factory InviteCodeVerificationState({
     @Default('') String inviteCode,
     @Default(AsyncData(null)) AsyncValue<InviteStorePreview?> status,
+
+    /// 점포 별명. 선택 입력이며 점포 이름을 미리 채우지 않는다 — 채워 두면 신청자 모두에게
+    /// 별명이 생겨 관리자가 점포 이름을 바꿔도 화면에 반영되지 않는다
     @Default('') String storeAlias,
     @Default(StoreColor.red) StoreColor color,
     @Default('') String memo,
@@ -30,8 +33,5 @@ abstract class InviteCodeVerificationState with _$InviteCodeVerificationState {
   }
 
   /// 가입 신청 제출 가능 여부 (제출 중이면 false — 중복 제출 차단)
-  bool get canSubmit =>
-      status.value != null &&
-      storeAlias.trim().isNotEmpty &&
-      !submitStatus.isLoading;
+  bool get canSubmit => status.value != null && !submitStatus.isLoading;
 }

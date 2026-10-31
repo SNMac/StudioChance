@@ -55,7 +55,8 @@ void main() {
     test('ADMIN 역할 가입 신청은 거부되고 Repository를 호출하지 않는다', () async {
       final result = await useCase.joinStore(
         storeId: 'store-123',
-        storeAlias: '별명',
+        storeName: '점포',
+        alias: '별명',
         role: UserRole.admin,
         color: StoreColor.red,
         memo: '',
@@ -68,7 +69,8 @@ void main() {
           uid: any(named: 'uid'),
           role: any(named: 'role'),
           color: any(named: 'color'),
-          storeAlias: any(named: 'storeAlias'),
+          storeName: any(named: 'storeName'),
+          alias: any(named: 'alias'),
           memo: any(named: 'memo'),
         ),
       );

@@ -167,7 +167,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   void _confirmCancelJoinRequest(UserStoreInfo info) {
     showCustomAlertDialog(
       context: context,
-      title: '${info.name} 가입 신청을 취소할까요?',
+      title: '${info.displayName} 가입 신청을 취소할까요?',
       content: '취소한 뒤에도 초대 코드로 다시 신청할 수 있습니다.',
       cancelText: '닫기',
       confirmText: '신청 취소',
@@ -283,7 +283,7 @@ class _StoreRow extends ConsumerWidget {
     // 비웠으므로 대기 인원도 조회하지 않는다 (ADR-0007)
     if (deletionDeadline != null) {
       return TitleNavigationButton(
-        title: info.name,
+        title: info.displayName,
         titleLeading: StoreColorDot(color: info.color),
         content:
             '${deletionDeadline.remainingUntilDeletion(serverCorrectedNow(ref))} 삭제',
@@ -306,7 +306,7 @@ class _StoreRow extends ConsumerWidget {
         : 0;
 
     return TitleNavigationButton(
-      title: info.name,
+      title: info.displayName,
       titleLeading: StoreColorDot(color: info.color),
       content: info.role.displayName,
       isChangeable: true,
@@ -330,7 +330,7 @@ class _PendingStoreRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TitleNavigationButton(
-      title: info.name,
+      title: info.displayName,
       titleLeading: StoreColorDot(color: info.color),
       content: '승인 대기',
       isChangeable: true,

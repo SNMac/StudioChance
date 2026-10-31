@@ -137,7 +137,8 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                         for (final store in remaining)
                           TitleNavigationButton(
                             title:
-                                user?.storeInfoOf(store.id)?.name ?? store.name,
+                                user?.storeInfoOf(store.id)?.displayName ??
+                                store.name,
                             titleLeading: switch (user?.storeInfoOf(store.id)) {
                               final info? => StoreColorDot(color: info.color),
                               null => null,

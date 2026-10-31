@@ -230,6 +230,9 @@ void main() {
     // 삭제하면 사용자 정보를 다시 읽는다
     harness.user = _userWithRole(UserRole.admin, deletedAt: DateTime.now());
 
+    // 테스트 화면 높이에서는 맨 아래 버튼이 화면 밖에 있을 수 있다
+    await tester.ensureVisible(find.text('점포 삭제'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('점포 삭제'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('삭제'));
@@ -325,6 +328,9 @@ void main() {
       () => harness.storeUseCase.softDeleteStore(any()),
     ).thenAnswer((_) async => left(StoreNetworkException(message: '네트워크 오류')));
 
+    // 테스트 화면 높이에서는 맨 아래 버튼이 화면 밖에 있을 수 있다
+    await tester.ensureVisible(find.text('점포 삭제'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('점포 삭제'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('삭제'));
@@ -393,6 +399,36 @@ void main() {
           uid: 'user-123',
           storeId: 'store-123',
           memo: '주차 2대',
+        ),
+      ).called(1);
+      expect(find.text('점포 나가기'), findsOneWidget);
+    });
+
+    testWidgets('삭제 예정 점포에서도 점포 별명을 고칠 수 있다', (tester) async {
+      final harness = await pumpDetail(
+        tester,
+        myRole: UserRole.staff,
+        deletedAt: DateTime.now(),
+      );
+      when(
+        () => harness.userUseCase.updateStoreInfo(
+          uid: any(named: 'uid'),
+          storeId: any(named: 'storeId'),
+          alias: any(named: 'alias'),
+        ),
+      ).thenAnswer((_) async => right(null));
+
+      await tester.tap(find.text('점포 별명'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '본점');
+      await tester.tap(find.text('완료'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => harness.userUseCase.updateStoreInfo(
+          uid: 'user-123',
+          storeId: 'store-123',
+          alias: '본점',
         ),
       ).called(1);
       expect(find.text('점포 나가기'), findsOneWidget);

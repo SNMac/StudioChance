@@ -32,6 +32,7 @@ abstract interface class StoreDataSource {
   ///   쓰지 않는다 (D13). 비교 규칙은 legacy fallback을 아는 Repository가 정한다.
   /// - `data`에 `name`이 포함되면 저장 시점의 멤버+대기 멤버 중 사용자 문서에 그 점포
   ///   항목이 있는 사람의 `storeById.{storeId}.name` 캐시를 함께 동기화한다.
+  ///   멤버마다 붙이는 점포 별명(`alias`)은 건드리지 않는다.
   Future<void> updateStore(
     String storeId,
     Map<String, dynamic> data, {

@@ -199,7 +199,7 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                                       // 점포명
                                       Expanded(
                                         child: Text(
-                                          info.name,
+                                          info.displayName,
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyLarge,

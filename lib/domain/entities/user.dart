@@ -48,9 +48,18 @@ abstract class User with _$User {
         .toList(),
   );
 
-  /// [storeId] 점포에서의 내 정보(표시 이름·역할·색상·메모). 소속되지 않았으면 null
+  /// [storeId] 점포에서의 내 정보(점포 이름·별명·역할·색상·메모). 소속되지 않았으면 null
   UserStoreInfo? storeInfoOf(String storeId) =>
       storeInfos.where((info) => info.id == storeId).firstOrNull;
+
+  /// [exceptStoreId]가 아닌 내 점포(승인 대기 포함) 중 화면 이름이 [name]인 점포가 있는지.
+  /// 앞뒤 공백은 무시한다. 같으면 필터·예약 점포 선택에서 두 점포를 구분할 수 없다
+  bool hasOtherStoreDisplayedAs(String name, {required String exceptStoreId}) {
+    final trimmed = name.trim();
+    return storeInfos.any(
+      (info) => info.id != exceptStoreId && info.displayName.trim() == trimmed,
+    );
+  }
 
   /// [storeId] 점포에서의 내 역할. 소속되지 않았거나 승인 대기 중이면 null
   ///
