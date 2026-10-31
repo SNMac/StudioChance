@@ -9,9 +9,11 @@ import {
   MEMBER_LEFT_TYPE,
   MEMBER_REMOVED_TYPE,
   STORE_DELETED_TYPE,
+  STORE_RESTORED_TYPE,
   buildMembershipMessages,
   buildMembershipNotification,
   classifyMembershipChanges,
+  classifyStoreRemoval,
   type StoreSnapshot,
 } from './membership_change.js';
 
@@ -123,18 +125,17 @@ test('관리자가 없는 점포에서 멤버가 나가면 받을 사람이 없�
   assert.deepEqual(classifyMembershipChanges(before, after, 'staff1'), []);
 });
 
-test('점포 삭제는 삭제한 사람을 뺀 멤버와 승인 대기자 전원에게 알린다', () => {
-  const after: StoreSnapshot = { ...base, deletedAt: new Date() };
+test('점포 삭제는 삭제한 사람을 뺀 멤버에게 삭제 예정을, 승인 대기자에게 신청 취소를 알린다', () => {
+  // 점포 삭제는 같은 쓰기에서 승인 대기 명단을 비운다 (ADR-0007)
+  const after: StoreSnapshot = { ...base, waitingMemberById: {}, deletedAt: new Date() };
 
   assert.deepEqual(classifyMembershipChanges(base, after, 'admin1'), [
-    {
-      type: STORE_DELETED_TYPE,
-      recipientUids: ['staff1', 'viewer1', 'pending1'],
-    },
+    { type: STORE_DELETED_TYPE, recipientUids: ['staff1', 'viewer1'], deletion: 'scheduled' },
+    { type: STORE_DELETED_TYPE, recipientUids: ['pending1'], deletion: 'applicationCanceled' },
   ]);
 });
 
-test('점포 삭제와 멤버 변화가 한 쓰기에 섞이면 삭제 알림 하나만 보낸다', () => {
+test('점포 삭제와 멤버 변화가 한 쓰기에 섞이면 삭제 알림만 보낸다', () => {
   // 삭제 경로가 멤버 목록까지 비우게 바뀌어도 추방·거절 알림이 섞여 나가지 않아야 한다
   const after: StoreSnapshot = {
     memberById: { admin1: { role: 'ADMIN' } },
@@ -143,20 +144,78 @@ test('점포 삭제와 멤버 변화가 한 쓰기에 섞이면 삭제 알림 �
   };
 
   assert.deepEqual(classifyMembershipChanges(base, after, 'admin1'), [
-    {
-      type: STORE_DELETED_TYPE,
-      recipientUids: ['staff1', 'viewer1', 'pending1'],
-    },
+    { type: STORE_DELETED_TYPE, recipientUids: ['staff1', 'viewer1'], deletion: 'scheduled' },
+    { type: STORE_DELETED_TYPE, recipientUids: ['pending1'], deletion: 'applicationCanceled' },
   ]);
 });
 
-test('혼자 쓰는 점포가 계정 삭제와 함께 삭제되면 승인 대기자에게만 알린다', () => {
+test('혼자 쓰는 점포를 삭제하면 승인 대기자에게만 알린다', () => {
   const before = withMembers({ admin1: { role: 'ADMIN' } });
-  const after: StoreSnapshot = { ...before, deletedAt: new Date() };
+  const after: StoreSnapshot = { ...before, waitingMemberById: {}, deletedAt: new Date() };
 
   assert.deepEqual(classifyMembershipChanges(before, after, 'admin1'), [
-    { type: STORE_DELETED_TYPE, recipientUids: ['pending1'] },
+    { type: STORE_DELETED_TYPE, recipientUids: ['pending1'], deletion: 'applicationCanceled' },
   ]);
+});
+
+test('점포 복구는 복구한 사람을 뺀 멤버에게 알린다', () => {
+  const before: StoreSnapshot = { ...base, waitingMemberById: {}, deletedAt: new Date() };
+  const after: StoreSnapshot = { ...base, waitingMemberById: {} };
+
+  assert.deepEqual(classifyMembershipChanges(before, after, 'admin1'), [
+    { type: STORE_RESTORED_TYPE, recipientUids: ['staff1', 'viewer1'] },
+  ]);
+});
+
+test('삭제 예정 점포에서 멤버가 나가면 관리자에게 알린다', () => {
+  const before: StoreSnapshot = { ...base, deletedAt: new Date() };
+  const after: StoreSnapshot = {
+    ...before,
+    memberById: { admin1: { role: 'ADMIN' }, viewer1: { role: 'VIEWER' } },
+  };
+
+  assert.deepEqual(classifyMembershipChanges(before, after, 'staff1'), [
+    { type: MEMBER_LEFT_TYPE, recipientUids: ['admin1'], subjectUid: 'staff1' },
+  ]);
+});
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+test('기한 전에 영구 삭제되면 관리자를 뺀 멤버에게 알린다', () => {
+  const now = new Date();
+  const removed: StoreSnapshot = {
+    ...base,
+    waitingMemberById: {},
+    deletedAt: new Date(now.getTime() - 2 * DAY_MS),
+  };
+
+  assert.deepEqual(classifyStoreRemoval(removed, now), [
+    { type: STORE_DELETED_TYPE, recipientUids: ['staff1', 'viewer1'], deletion: 'permanent' },
+  ]);
+});
+
+test('기한이 지나 지워지면 다시 알리지 않는다', () => {
+  const now = new Date();
+  const removed: StoreSnapshot = { ...base, deletedAt: new Date(now.getTime() - 8 * DAY_MS) };
+
+  assert.deepEqual(classifyStoreRemoval(removed, now), []);
+});
+
+test('삭제 예정을 거치지 않고 지워진 점포는 멤버와 승인 대기자에게 알린다', () => {
+  // 계정 삭제가 혼자 쓰던 점포를 바로 지우는 경로. 이때 승인 대기 명단은 남아 있다
+  const removed = withMembers({ admin1: { role: 'ADMIN' } });
+
+  assert.deepEqual(classifyStoreRemoval(removed, new Date()), [
+    { type: STORE_DELETED_TYPE, recipientUids: ['pending1'], deletion: 'applicationCanceled' },
+  ]);
+});
+
+test('트리거가 넘겨주는 Timestamp 형태의 deletedAt도 읽는다', () => {
+  const now = new Date();
+  const deletedAt = new Date(now.getTime() - 8 * DAY_MS);
+  const removed: StoreSnapshot = { ...base, deletedAt: { toDate: () => deletedAt } };
+
+  assert.deepEqual(classifyStoreRemoval(removed, now), []);
 });
 
 test('이미 삭제된 점포의 이후 수정은 삭제로 다시 알리지 않는다', () => {
@@ -164,6 +223,19 @@ test('이미 삭제된 점포의 이후 수정은 삭제로 다시 알리지 않
   const after: StoreSnapshot = { ...before };
 
   assert.deepEqual(classifyMembershipChanges(before, after, 'admin1'), []);
+});
+
+test('점포 삭제 문구는 갈래마다 다르다', () => {
+  const titleOf = (deletion: 'scheduled' | 'applicationCanceled' | 'permanent') =>
+    buildMembershipNotification(
+      { type: STORE_DELETED_TYPE, recipientUids: ['staff1'], deletion },
+      '스튜디오A',
+      '',
+    ).title;
+
+  assert.equal(titleOf('scheduled'), '스튜디오A 점포가 7일 후 삭제됩니다');
+  assert.equal(titleOf('applicationCanceled'), '스튜디오A 점포가 삭제되었습니다');
+  assert.equal(titleOf('permanent'), '스튜디오A 점포가 삭제되었습니다');
 });
 
 test('사건별 문구에 점포명과 이름·역할이 들어간다', () => {

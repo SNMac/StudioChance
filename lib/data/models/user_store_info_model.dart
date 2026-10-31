@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:studio_chance/common/converters/timestamp_converter.dart';
 import 'package:studio_chance/domain/entities/user_store_info.dart';
 import 'package:studio_chance/common/enums/store_color.dart';
 import 'package:studio_chance/common/enums/user_role.dart';
@@ -19,6 +21,9 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
 
     /// 승인 전이면 true. 승인할 때 필드를 지우므로 없으면 승인된 점포다.
     @Default(false) bool isPending,
+
+    /// 점포가 삭제 예정이 된 시각. 점포 삭제·복구가 멤버마다 쓰고 지운다 (ADR-0007)
+    @JsonKey(includeIfNull: false) @TimestampConverter() DateTime? deletedAt,
   }) = _UserStoreInfoModel;
 
   factory UserStoreInfoModel.fromJson(Map<String, dynamic> json) =>
@@ -31,6 +36,7 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
       color: entity.color,
       memo: entity.memo,
       isPending: entity.isPending,
+      deletedAt: entity.deletedAt,
     );
   }
 
@@ -42,6 +48,7 @@ abstract class UserStoreInfoModel with _$UserStoreInfoModel {
       color: color,
       memo: memo,
       isPending: isPending,
+      deletedAt: deletedAt,
     );
   }
 }

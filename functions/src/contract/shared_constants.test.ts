@@ -13,8 +13,10 @@ import {
   MEMBER_LEFT_TYPE,
   MEMBER_REMOVED_TYPE,
   STORE_DELETED_TYPE,
+  STORE_RESTORED_TYPE,
 } from '../notifications/membership_change.js';
 import { ANDROID_CHANNEL_ID } from '../notifications/token_message.js';
+import { STORE_SOFT_DELETE_DAYS } from '../stores/store_deletion.js';
 
 /**
  * Functions와 앱이 공유하는 값의 계약 테스트.
@@ -53,6 +55,7 @@ test('알림 data.type 값이 Functions와 앱에서 같다', () => {
     JOIN_APPROVED_TYPE,
     JOIN_REJECTED_TYPE,
     STORE_DELETED_TYPE,
+    STORE_RESTORED_TYPE,
   ];
 
   assert.deepEqual(new Set(dartTypes), new Set(functionsTypes));
@@ -102,4 +105,46 @@ test('멤버 역할 값과 표시 이름이 Functions와 앱에서 같다', () =
   );
 
   assert.deepEqual(dartDisplayNames, ROLE_DISPLAY_NAMES);
+});
+
+test('삭제 예정 기간이 Functions·앱·Rules에서 같다', () => {
+  const dartDays = capture(
+    read('lib/constants/data_constants.dart'),
+    /const int storeSoftDeleteDays = (\d+);/,
+    'storeSoftDeleteDays',
+  );
+  const rulesDays = capture(
+    read('firestore.rules'),
+    /request\.time < resource\.data\.deletedAt \+ duration\.value\((\d+), 'd'\)/,
+    'firestore.rules 복구 기한',
+  );
+
+  assert.equal(Number(dartDays), STORE_SOFT_DELETE_DAYS);
+  assert.equal(Number(rulesDays), STORE_SOFT_DELETE_DAYS);
+});
+
+test('점포 삭제의 만료 시각 허용 범위가 앱이 쓰는 값과 맞는다', () => {
+  // 앱은 기기 시각 + (기간 + 여유)일을 쓰고, Rules는 서버 시각 + 기간일부터
+  // + (기간 + 여유 × 2)일까지 받는다. 그래야 기기 시계가 여유만큼 틀려도 통과한다
+  const bufferDays = Number(
+    capture(
+      read('lib/constants/data_constants.dart'),
+      /const int storeDeletionExpiryBufferDays = (\d+);/,
+      'storeDeletionExpiryBufferDays',
+    ),
+  );
+  const rules = read('firestore.rules');
+  const lowerDays = capture(
+    rules,
+    /expiresAt >= request\.time \+ duration\.value\((\d+), 'd'\)/,
+    'firestore.rules expiresAt 하한',
+  );
+  const upperDays = capture(
+    rules,
+    /expiresAt <= request\.time \+ duration\.value\((\d+), 'd'\)/,
+    'firestore.rules expiresAt 상한',
+  );
+
+  assert.equal(Number(lowerDays), STORE_SOFT_DELETE_DAYS);
+  assert.equal(Number(upperDays), STORE_SOFT_DELETE_DAYS + bufferDays * 2);
 });

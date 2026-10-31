@@ -138,12 +138,14 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                   const ModalGrabber(),
                   ModalAppBar(
                     title: '점포 선택',
+                    // 점포가 없으면 고를 대상이 없다. 0 == 0이라 '전체 해제'로 보이므로 숨긴다
                     actions: [
-                      AppBarActionButton(
-                        label: isAllSelected ? '전체 해제' : '전체 선택',
-                        onPressed: notifier.toggleAll,
-                        isRegularWeight: true,
-                      ),
+                      if (storeInfos.isNotEmpty)
+                        AppBarActionButton(
+                          label: isAllSelected ? '전체 해제' : '전체 선택',
+                          onPressed: notifier.toggleAll,
+                          isRegularWeight: true,
+                        ),
                     ],
                   ),
                 ],
@@ -159,68 +161,81 @@ class _StoreFilterModalState extends ConsumerState<StoreFilterModal>
                     horizontalPadding,
                     8,
                   ),
-                  child: GroupedFormContainer(
-                    children: [
-                      for (final info in storeInfos)
-                        SizedBox(
-                          height: inputFormComponentHeight,
-                          child: CupertinoButton(
-                            padding: const EdgeInsetsDirectional.symmetric(
-                              horizontal: horizontalPadding,
-                            ),
-                            onPressed: () => notifier.toggle(info.id),
-                            child: Row(
-                              children: [
-                                // 색상 도트
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(
-                                      info.color.foregroundColorValue,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                // 점포명
-                                Expanded(
-                                  child: Text(
-                                    info.name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                // 역할명
-                                Text(
-                                  info.role.displayName,
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.normal,
-                                        color: context.secondaryLabel,
-                                      ),
-                                ),
-                                const SizedBox(width: 12),
-                                // 선택 checkmark — 항상 20px 폭을 점유하여 역할명 위치 고정
-                                SizedBox(
-                                  width: 20,
-                                  child: selectedIds.contains(info.id)
-                                      ? Icon(
-                                          CupertinoIcons.checkmark_alt,
-                                          size: 20,
-                                          color: context.systemBlue,
-                                        )
-                                      : null,
-                                ),
-                              ],
-                            ),
+                  child: storeInfos.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Text(
+                            '표시할 점포가 없습니다',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: context.secondaryLabel),
                           ),
+                        )
+                      : GroupedFormContainer(
+                          children: [
+                            for (final info in storeInfos)
+                              SizedBox(
+                                height: inputFormComponentHeight,
+                                child: CupertinoButton(
+                                  padding:
+                                      const EdgeInsetsDirectional.symmetric(
+                                        horizontal: horizontalPadding,
+                                      ),
+                                  onPressed: () => notifier.toggle(info.id),
+                                  child: Row(
+                                    children: [
+                                      // 색상 도트
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(
+                                            info.color.foregroundColorValue,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // 점포명
+                                      Expanded(
+                                        child: Text(
+                                          info.name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      // 역할명
+                                      Text(
+                                        info.role.displayName,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.normal,
+                                              color: context.secondaryLabel,
+                                            ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      // 선택 checkmark — 항상 20px 폭을 점유하여 역할명 위치 고정
+                                      SizedBox(
+                                        width: 20,
+                                        child: selectedIds.contains(info.id)
+                                            ? Icon(
+                                                CupertinoIcons.checkmark_alt,
+                                                size: 20,
+                                                color: context.systemBlue,
+                                              )
+                                            : null,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
                 ),
               ),
             ),

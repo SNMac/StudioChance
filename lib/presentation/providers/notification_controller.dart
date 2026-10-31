@@ -37,9 +37,10 @@ const _membershipChangeNotificationTypes = {
   joinApprovedNotificationType,
   joinRejectedNotificationType,
   storeDeletedNotificationType,
+  storeRestoredNotificationType,
 };
 
-/// 푸시 메시지가 멤버 구성 변화(관리자 위임·점포 나가기·추방·가입 승인·거절·점포 삭제)면
+/// 푸시 메시지가 멤버 구성 변화(관리자 위임·점포 나가기·추방·가입 승인·거절·점포 삭제·복구)면
 /// 해당 점포 ID를, 아니면 null을 반환한다.
 String? membershipChangeStoreIdOf(PushMessage message) {
   if (!_membershipChangeNotificationTypes.contains(message.type)) return null;
@@ -52,8 +53,9 @@ String? membershipChangeStoreIdOf(PushMessage message) {
 
 /// 멤버 구성 변화 알림을 탭했을 때 열 위치.
 ///
-/// 점포를 계속 볼 수 있는 알림(관리자 위임·멤버 나가기·가입 승인)은 그 점포 상세를,
-/// 더는 볼 수 없는 알림(추방·거절·점포 삭제)은 마이페이지를 연다.
+/// 점포를 계속 볼 수 있는 알림(관리자 위임·멤버 나가기·가입 승인·점포 복구)은 그 점포 상세를,
+/// 더는 볼 수 없는 알림(추방·거절·점포 삭제)은 마이페이지를 연다. 점포 삭제는 영구 삭제와
+/// 같은 type이라 아직 볼 수 있는 삭제 예정 점포여도 마이페이지를 연다
 /// 멤버 구성 변화가 아니면 null.
 String? membershipChangeLocationOf(PushMessage message) {
   final storeId = membershipChangeStoreIdOf(message);
@@ -62,7 +64,8 @@ String? membershipChangeLocationOf(PushMessage message) {
   return switch (message.type) {
     adminDelegatedNotificationType ||
     memberLeftNotificationType ||
-    joinApprovedNotificationType => storeDetailLocation(storeId),
+    joinApprovedNotificationType ||
+    storeRestoredNotificationType => storeDetailLocation(storeId),
     _ => SCRoute.myPage.path,
   };
 }

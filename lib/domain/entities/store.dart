@@ -27,7 +27,13 @@ abstract class Store with _$Store {
     int? paymentDeadlineMinutes,
     String? infoNotes,
     String? cautionNotes,
+
+    /// 점포 삭제로 삭제 예정 점포가 된 시각(서버 시각). 없으면 삭제 예정이 아니다 (ADR-0007)
+    DateTime? deletedAt,
   }) = _Store;
+
+  /// 삭제 예정 점포. 읽기 전용이며 관리자만 점포 복구·영구 삭제를 할 수 있다
+  bool get isScheduledForDeletion => deletedAt != null;
 
   /// 멤버 목록 표시 순서: 관리자 → 스태프 → 뷰어, 같은 역할은 이름 가나다순
   List<StoreMemberInfo> get sortedMemberInfos => [...memberInfos]

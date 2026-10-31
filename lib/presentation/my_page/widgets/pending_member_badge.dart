@@ -24,18 +24,22 @@ class PendingMemberBadge extends StatelessWidget {
           height: 20,
           constraints: const BoxConstraints(minWidth: 20),
           padding: const EdgeInsetsDirectional.symmetric(horizontal: 6),
-          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: colorScheme.primary,
             borderRadius: BorderRadius.circular(100),
           ),
-          child: Text(
-            '$count',
-            style: TextStyle(
-              color: colorScheme.onPrimary,
-              fontSize: 12,
-              height: 1.0,
-              fontWeight: FontWeight.w600,
+          // Container의 alignment는 받은 폭을 모두 채운다. TitleNavigationButton이
+          // 행 폭만큼 느슨한 제약을 주므로 배지가 점포명을 덮는다. 폭은 숫자에 맞춘다
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              '$count',
+              style: TextStyle(
+                color: colorScheme.onPrimary,
+                fontSize: 12,
+                height: 1.0,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),

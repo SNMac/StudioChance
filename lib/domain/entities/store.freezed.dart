@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Store {
 
- String get id; String get name; String get address; String get addressDetail; String get addressGuide; List<StoreMemberInfo> get memberInfos; List<StoreMemberInfo> get waitingMemberInfos; List<SpaceOption> get spaceOptions; InviteInfo? get inviteInfo; String? get bankName; String? get bankAccountNumber; String? get bankAccountHolder; int? get paymentDeadlineMinutes; String? get infoNotes; String? get cautionNotes;
+ String get id; String get name; String get address; String get addressDetail; String get addressGuide; List<StoreMemberInfo> get memberInfos; List<StoreMemberInfo> get waitingMemberInfos; List<SpaceOption> get spaceOptions; InviteInfo? get inviteInfo; String? get bankName; String? get bankAccountNumber; String? get bankAccountHolder; int? get paymentDeadlineMinutes; String? get infoNotes; String? get cautionNotes;/// 점포 삭제로 삭제 예정 점포가 된 시각(서버 시각). 없으면 삭제 예정이 아니다 (ADR-0007)
+ DateTime? get deletedAt;
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +28,20 @@ $StoreCopyWith<Store> get copyWith => _$StoreCopyWithImpl<Store>(this as Store, 
 @override
 bool operator ==(Object other) {
   final _this = this as Store;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.addressDetail, _this.addressDetail) || other.addressDetail == _this.addressDetail)&&(identical(other.addressGuide, _this.addressGuide) || other.addressGuide == _this.addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, _this.memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, _this.waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, _this.spaceOptions)&&(identical(other.inviteInfo, _this.inviteInfo) || other.inviteInfo == _this.inviteInfo)&&(identical(other.bankName, _this.bankName) || other.bankName == _this.bankName)&&(identical(other.bankAccountNumber, _this.bankAccountNumber) || other.bankAccountNumber == _this.bankAccountNumber)&&(identical(other.bankAccountHolder, _this.bankAccountHolder) || other.bankAccountHolder == _this.bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, _this.paymentDeadlineMinutes) || other.paymentDeadlineMinutes == _this.paymentDeadlineMinutes)&&(identical(other.infoNotes, _this.infoNotes) || other.infoNotes == _this.infoNotes)&&(identical(other.cautionNotes, _this.cautionNotes) || other.cautionNotes == _this.cautionNotes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.addressDetail, _this.addressDetail) || other.addressDetail == _this.addressDetail)&&(identical(other.addressGuide, _this.addressGuide) || other.addressGuide == _this.addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, _this.memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, _this.waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, _this.spaceOptions)&&(identical(other.inviteInfo, _this.inviteInfo) || other.inviteInfo == _this.inviteInfo)&&(identical(other.bankName, _this.bankName) || other.bankName == _this.bankName)&&(identical(other.bankAccountNumber, _this.bankAccountNumber) || other.bankAccountNumber == _this.bankAccountNumber)&&(identical(other.bankAccountHolder, _this.bankAccountHolder) || other.bankAccountHolder == _this.bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, _this.paymentDeadlineMinutes) || other.paymentDeadlineMinutes == _this.paymentDeadlineMinutes)&&(identical(other.infoNotes, _this.infoNotes) || other.infoNotes == _this.infoNotes)&&(identical(other.cautionNotes, _this.cautionNotes) || other.cautionNotes == _this.cautionNotes)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Store;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.address,_this.addressDetail,_this.addressGuide,const DeepCollectionEquality().hash(_this.memberInfos),const DeepCollectionEquality().hash(_this.waitingMemberInfos),const DeepCollectionEquality().hash(_this.spaceOptions),_this.inviteInfo,_this.bankName,_this.bankAccountNumber,_this.bankAccountHolder,_this.paymentDeadlineMinutes,_this.infoNotes,_this.cautionNotes);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.address,_this.addressDetail,_this.addressGuide,const DeepCollectionEquality().hash(_this.memberInfos),const DeepCollectionEquality().hash(_this.waitingMemberInfos),const DeepCollectionEquality().hash(_this.spaceOptions),_this.inviteInfo,_this.bankName,_this.bankAccountNumber,_this.bankAccountHolder,_this.paymentDeadlineMinutes,_this.infoNotes,_this.cautionNotes,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as Store;
-  return 'Store(id: ${_this.id}, name: ${_this.name}, address: ${_this.address}, addressDetail: ${_this.addressDetail}, addressGuide: ${_this.addressGuide}, memberInfos: ${_this.memberInfos}, waitingMemberInfos: ${_this.waitingMemberInfos}, spaceOptions: ${_this.spaceOptions}, inviteInfo: ${_this.inviteInfo}, bankName: ${_this.bankName}, bankAccountNumber: ${_this.bankAccountNumber}, bankAccountHolder: ${_this.bankAccountHolder}, paymentDeadlineMinutes: ${_this.paymentDeadlineMinutes}, infoNotes: ${_this.infoNotes}, cautionNotes: ${_this.cautionNotes})';
+  return 'Store(id: ${_this.id}, name: ${_this.name}, address: ${_this.address}, addressDetail: ${_this.addressDetail}, addressGuide: ${_this.addressGuide}, memberInfos: ${_this.memberInfos}, waitingMemberInfos: ${_this.waitingMemberInfos}, spaceOptions: ${_this.spaceOptions}, inviteInfo: ${_this.inviteInfo}, bankName: ${_this.bankName}, bankAccountNumber: ${_this.bankAccountNumber}, bankAccountHolder: ${_this.bankAccountHolder}, paymentDeadlineMinutes: ${_this.paymentDeadlineMinutes}, infoNotes: ${_this.infoNotes}, cautionNotes: ${_this.cautionNotes}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $StoreCopyWith<$Res>  {
   factory $StoreCopyWith(Store value, $Res Function(Store) _then) = _$StoreCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String address, String addressDetail, String addressGuide, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, List<SpaceOption> spaceOptions, InviteInfo? inviteInfo, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes
+ String id, String name, String address, String addressDetail, String addressGuide, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, List<SpaceOption> spaceOptions, InviteInfo? inviteInfo, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes, DateTime? deletedAt
 });
 
 
@@ -68,7 +69,7 @@ class _$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? spaceOptions = null,Object? inviteInfo = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? infoNotes = freezed,Object? cautionNotes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? spaceOptions = null,Object? inviteInfo = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? infoNotes = freezed,Object? cautionNotes = freezed,Object? deletedAt = freezed,}) {
   return _then(Store(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -85,7 +86,8 @@ as String?,bankAccountHolder: freezed == bankAccountHolder ? _self.bankAccountHo
 as String?,paymentDeadlineMinutes: freezed == paymentDeadlineMinutes ? _self.paymentDeadlineMinutes : paymentDeadlineMinutes // ignore: cast_nullable_to_non_nullable
 as int?,infoNotes: freezed == infoNotes ? _self.infoNotes : infoNotes // ignore: cast_nullable_to_non_nullable
 as String?,cautionNotes: freezed == cautionNotes ? _self.cautionNotes : cautionNotes // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 /// Create a copy of Store
@@ -182,10 +184,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  List<SpaceOption> spaceOptions,  InviteInfo? inviteInfo,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  List<SpaceOption> spaceOptions,  InviteInfo? inviteInfo,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes,  DateTime? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.spaceOptions,_that.inviteInfo,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.spaceOptions,_that.inviteInfo,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -203,10 +205,10 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  List<SpaceOption> spaceOptions,  InviteInfo? inviteInfo,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  List<SpaceOption> spaceOptions,  InviteInfo? inviteInfo,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes,  DateTime? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Store():
-return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.spaceOptions,_that.inviteInfo,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.spaceOptions,_that.inviteInfo,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -223,10 +225,10 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  List<SpaceOption> spaceOptions,  InviteInfo? inviteInfo,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String address,  String addressDetail,  String addressGuide,  List<StoreMemberInfo> memberInfos,  List<StoreMemberInfo> waitingMemberInfos,  List<SpaceOption> spaceOptions,  InviteInfo? inviteInfo,  String? bankName,  String? bankAccountNumber,  String? bankAccountHolder,  int? paymentDeadlineMinutes,  String? infoNotes,  String? cautionNotes,  DateTime? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.spaceOptions,_that.inviteInfo,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes);case _:
+return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addressGuide,_that.memberInfos,_that.waitingMemberInfos,_that.spaceOptions,_that.inviteInfo,_that.bankName,_that.bankAccountNumber,_that.bankAccountHolder,_that.paymentDeadlineMinutes,_that.infoNotes,_that.cautionNotes,_that.deletedAt);case _:
   return null;
 
 }
@@ -238,7 +240,7 @@ return $default(_that.id,_that.name,_that.address,_that.addressDetail,_that.addr
 
 
 class _Store extends Store {
-  const _Store({required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required  List<StoreMemberInfo> memberInfos, required  List<StoreMemberInfo> waitingMemberInfos, required  List<SpaceOption> spaceOptions, required this.inviteInfo, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.infoNotes, this.cautionNotes}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos,_spaceOptions = spaceOptions,super._();
+  const _Store({required this.id, required this.name, required this.address, required this.addressDetail, required this.addressGuide, required  List<StoreMemberInfo> memberInfos, required  List<StoreMemberInfo> waitingMemberInfos, required  List<SpaceOption> spaceOptions, required this.inviteInfo, this.bankName, this.bankAccountNumber, this.bankAccountHolder, this.paymentDeadlineMinutes, this.infoNotes, this.cautionNotes, this.deletedAt}): _memberInfos = memberInfos,_waitingMemberInfos = waitingMemberInfos,_spaceOptions = spaceOptions,super._();
   
 
 @override final  String id;
@@ -274,6 +276,8 @@ class _Store extends Store {
 @override final  int? paymentDeadlineMinutes;
 @override final  String? infoNotes;
 @override final  String? cautionNotes;
+/// 점포 삭제로 삭제 예정 점포가 된 시각(서버 시각). 없으면 삭제 예정이 아니다 (ADR-0007)
+@override final  DateTime? deletedAt;
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
@@ -285,18 +289,18 @@ _$StoreCopyWith<_Store> get copyWith => __$StoreCopyWithImpl<_Store>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, _waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, _spaceOptions)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.address, address) || other.address == address)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.addressGuide, addressGuide) || other.addressGuide == addressGuide)&&const DeepCollectionEquality().equals(other.memberInfos, _memberInfos)&&const DeepCollectionEquality().equals(other.waitingMemberInfos, _waitingMemberInfos)&&const DeepCollectionEquality().equals(other.spaceOptions, _spaceOptions)&&(identical(other.inviteInfo, inviteInfo) || other.inviteInfo == inviteInfo)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.bankAccountNumber, bankAccountNumber) || other.bankAccountNumber == bankAccountNumber)&&(identical(other.bankAccountHolder, bankAccountHolder) || other.bankAccountHolder == bankAccountHolder)&&(identical(other.paymentDeadlineMinutes, paymentDeadlineMinutes) || other.paymentDeadlineMinutes == paymentDeadlineMinutes)&&(identical(other.infoNotes, infoNotes) || other.infoNotes == infoNotes)&&(identical(other.cautionNotes, cautionNotes) || other.cautionNotes == cautionNotes)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),const DeepCollectionEquality().hash(_spaceOptions),inviteInfo,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes);
+    return Object.hash(runtimeType,id,name,address,addressDetail,addressGuide,const DeepCollectionEquality().hash(_memberInfos),const DeepCollectionEquality().hash(_waitingMemberInfos),const DeepCollectionEquality().hash(_spaceOptions),inviteInfo,bankName,bankAccountNumber,bankAccountHolder,paymentDeadlineMinutes,infoNotes,cautionNotes,deletedAt);
 }
 
 @override
 String toString() {
-    return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, spaceOptions: $spaceOptions, inviteInfo: $inviteInfo, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes)';
+    return 'Store(id: $id, name: $name, address: $address, addressDetail: $addressDetail, addressGuide: $addressGuide, memberInfos: $memberInfos, waitingMemberInfos: $waitingMemberInfos, spaceOptions: $spaceOptions, inviteInfo: $inviteInfo, bankName: $bankName, bankAccountNumber: $bankAccountNumber, bankAccountHolder: $bankAccountHolder, paymentDeadlineMinutes: $paymentDeadlineMinutes, infoNotes: $infoNotes, cautionNotes: $cautionNotes, deletedAt: $deletedAt)';
 }
 
 
@@ -307,7 +311,7 @@ abstract mixin class _$StoreCopyWith<$Res> implements $StoreCopyWith<$Res> {
   factory _$StoreCopyWith(_Store value, $Res Function(_Store) _then) = __$StoreCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String address, String addressDetail, String addressGuide, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, List<SpaceOption> spaceOptions, InviteInfo? inviteInfo, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes
+ String id, String name, String address, String addressDetail, String addressGuide, List<StoreMemberInfo> memberInfos, List<StoreMemberInfo> waitingMemberInfos, List<SpaceOption> spaceOptions, InviteInfo? inviteInfo, String? bankName, String? bankAccountNumber, String? bankAccountHolder, int? paymentDeadlineMinutes, String? infoNotes, String? cautionNotes, DateTime? deletedAt
 });
 
 
@@ -324,7 +328,7 @@ class __$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? spaceOptions = null,Object? inviteInfo = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? infoNotes = freezed,Object? cautionNotes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? address = null,Object? addressDetail = null,Object? addressGuide = null,Object? memberInfos = null,Object? waitingMemberInfos = null,Object? spaceOptions = null,Object? inviteInfo = freezed,Object? bankName = freezed,Object? bankAccountNumber = freezed,Object? bankAccountHolder = freezed,Object? paymentDeadlineMinutes = freezed,Object? infoNotes = freezed,Object? cautionNotes = freezed,Object? deletedAt = freezed,}) {
   return _then(_Store(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -341,7 +345,8 @@ as String?,bankAccountHolder: freezed == bankAccountHolder ? _self.bankAccountHo
 as String?,paymentDeadlineMinutes: freezed == paymentDeadlineMinutes ? _self.paymentDeadlineMinutes : paymentDeadlineMinutes // ignore: cast_nullable_to_non_nullable
 as int?,infoNotes: freezed == infoNotes ? _self.infoNotes : infoNotes // ignore: cast_nullable_to_non_nullable
 as String?,cautionNotes: freezed == cautionNotes ? _self.cautionNotes : cautionNotes // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

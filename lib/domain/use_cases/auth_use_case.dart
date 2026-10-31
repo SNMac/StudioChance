@@ -28,9 +28,14 @@ abstract interface class AuthUseCase {
   /// 로그아웃
   Future<void> signOut();
 
+  /// 계정 삭제를 막는 점포(다른 멤버가 있는 관리자 점포). 비어 있으면 삭제할 수 있다.
+  /// 계정 삭제 화면을 열기 전에 확인 화면과 안내 화면 중 무엇을 보일지 정하는 데 쓴다
+  Future<Either<Exception, List<StoreRef>>> findStoresBlockingDeletion();
+
   /// 계정 삭제. 즉시 확정되며 되돌릴 수 없다 (ADR-0005)
   /// - 다른 멤버가 있는 점포의 관리자이면 아무것도 쓰지 않고
-  ///   `StoreAdminHandoverRequiredException`(막힌 점포 목록 포함)으로 실패한다
+  ///   `StoreAdminHandoverRequiredException`(막힌 점포 목록 포함)으로 실패한다.
+  ///   화면을 연 뒤에 멤버가 늘었을 수 있어 [findStoresBlockingDeletion]과 별개로 다시 확인한다
   /// - 재인증하고, Apple이 연동되어 있으면 Apple 토큰을 revoke한다
   /// - 멤버인 점포는 모두 나가고, 승인 대기 중인 신청은 모두 취소한다
   /// - 혼자 쓰는 관리자 점포는 Soft Delete한다
@@ -103,18 +108,13 @@ class AuthUseCaseImpl implements AuthUseCase {
   }
 
   @override
-  Future<Either<Exception, void>> delete() async {
-    final currentUserResult = await _userRepository.getCurrentUser();
+  Future<Either<Exception, List<StoreRef>>> findStoresBlockingDeletion() {
+    return _withCurrentUser(_storesBlockingDeletion).run();
+  }
 
-    return currentUserResult.fold((error) => Future.value(left(error)), (
-      currentUser,
-    ) {
-      if (currentUser == null) {
-        return Future.value(
-          left(AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.')),
-        );
-      }
-
+  @override
+  Future<Either<Exception, void>> delete() {
+    return _withCurrentUser((currentUser) {
       // 막힐 사람에게 재인증 창부터 띄우지 않도록 점포 확인을 먼저 한다 (둘 다 쓰기 없음)
       // 사용자 문서는 점포 정리가 끝난 뒤에 덮어쓴다 — 덮어쓴 뒤로는 다음 로그인이 새 사용자가 된다
       return _ensureNoSharedAdminStores(currentUser)
@@ -126,8 +126,10 @@ class AuthUseCaseImpl implements AuthUseCase {
             ),
           )
           .flatMap(
-            (_) =>
-                _cleanUpStores(currentUser, only: {_StoreCleanup.softDelete}),
+            (_) => _cleanUpStores(
+              currentUser,
+              only: {_StoreCleanup.permanentlyDelete},
+            ),
           )
           .flatMap(
             (_) => TaskEither(
@@ -137,35 +139,29 @@ class AuthUseCaseImpl implements AuthUseCase {
               ),
             ),
           )
-          .flatMap((_) => TaskEither(() => _authRepository.delete()))
-          .run();
-    });
+          .flatMap((_) => TaskEither(() => _authRepository.delete()));
+    }).run();
+  }
+
+  /// 로그인된 사용자로 [action]을 한다. 사용자가 없으면 `AuthUserNotFoundException`
+  TaskEither<Exception, T> _withCurrentUser<T>(
+    TaskEither<Exception, T> Function(User currentUser) action,
+  ) {
+    return TaskEither(() => _userRepository.getCurrentUser()).flatMap(
+      (currentUser) => currentUser == null
+          ? TaskEither.left(
+              AuthUserNotFoundException(message: '로그인된 사용자가 없습니다.'),
+            )
+          : action(currentUser),
+    );
   }
 
   /// 다른 멤버가 있는 관리자 점포가 하나라도 있으면 실패한다.
   ///
   /// 관리자가 없는 점포가 남지 않도록 관리자 위임이나 점포 삭제를 먼저 하게 한다.
   /// 계정 삭제의 어떤 쓰기보다 먼저 실행해야 막혔을 때 아무것도 바뀌지 않는다.
-  /// 승인 대기자는 멤버가 아니므로 세지 않는다 (점포 삭제가 신청 기록까지 정리한다)
   TaskEither<Exception, void> _ensureNoSharedAdminStores(User currentUser) {
-    final adminStoreInfos = currentUser.storeInfos.where(
-      (info) => _StoreCleanup.of(info) == _StoreCleanup.softDelete,
-    );
-
-    return TaskEither.traverseList(
-      adminStoreInfos.toList(),
-      (info) => TaskEither(() => _storeUseCase.getMembership(info.id)).map(
-        (membership) => (
-          info: info,
-          hasOtherMembers:
-              membership?.hasMembersOtherThan(currentUser.id) ?? false,
-        ),
-      ),
-    ).flatMap((results) {
-      final blocked = results
-          .where((result) => result.hasOtherMembers)
-          .map((result) => (id: result.info.id, name: result.info.name))
-          .toList();
+    return _storesBlockingDeletion(currentUser).flatMap((blocked) {
       if (blocked.isEmpty) return TaskEither.right(null);
 
       return TaskEither.left(
@@ -177,6 +173,35 @@ class AuthUseCaseImpl implements AuthUseCase {
         ),
       );
     });
+  }
+
+  /// 다른 멤버가 있는 관리자 점포.
+  ///
+  /// 승인 대기자는 멤버가 아니므로 세지 않는다 (영구 삭제가 신청 기록까지 정리한다).
+  /// 삭제 예정 점포는 다른 멤버가 있어도 막지 않는다 — 복구는 관리자만 할 수 있어
+  /// 관리자가 떠나면 남겨 둘 이유가 없으므로 영구 삭제한다 (ADR-0007)
+  TaskEither<Exception, List<StoreRef>> _storesBlockingDeletion(
+    User currentUser,
+  ) {
+    final adminStoreInfos = currentUser.storeInfos.where(
+      (info) => info.canManageStore,
+    );
+
+    return TaskEither.traverseList(
+      adminStoreInfos.toList(),
+      (info) => TaskEither(() => _storeUseCase.getMembership(info.id)).map(
+        (membership) => (
+          info: info,
+          hasOtherMembers:
+              membership?.hasMembersOtherThan(currentUser.id) ?? false,
+        ),
+      ),
+    ).map(
+      (results) => results
+          .where((result) => result.hasOtherMembers)
+          .map((result) => (id: result.info.id, name: result.info.name))
+          .toList(),
+    );
   }
 
   /// 점포 중 [only]에 해당하는 정리만 차례로 한다 (정리 방법은 [_StoreCleanup.of])
@@ -198,11 +223,9 @@ class AuthUseCaseImpl implements AuthUseCase {
               _StoreCleanup.cancelJoinRequest =>
                 _storeUseCase.cancelJoinRequest(info.id),
               _StoreCleanup.leave => _storeUseCase.leaveStore(info.id),
-              // 관리자 계정이 사라지면 되살려도 쓸 수 없으므로 복구 여유 기간을 두지 않는다
-              _StoreCleanup.softDelete => _storeUseCase.softDeleteStore(
-                info.id,
-                expireImmediately: true,
-              ),
+              // 관리자 계정이 사라지면 복구할 사람이 없으므로 삭제 예정을 거치지 않는다
+              _StoreCleanup.permanentlyDelete =>
+                _storeUseCase.permanentlyDeleteStore(info.id),
             },
           ),
         );
@@ -235,12 +258,13 @@ enum _StoreCleanup {
   /// 관리자가 아닌 멤버. 멤버십을 남겨 두면 보이지 않는 멤버가 관리자의 계정 삭제를 막는다
   leave,
 
-  /// 관리자. [AuthUseCaseImpl._ensureNoSharedAdminStores]를 통과했다면 모두 혼자 쓰는 점포다
-  softDelete;
+  /// 관리자. [AuthUseCaseImpl._ensureNoSharedAdminStores]를 통과했다면 혼자 쓰는 점포이거나
+  /// 삭제 예정 점포다
+  permanentlyDelete;
 
   static _StoreCleanup of(UserStoreInfo info) {
     if (info.isPending) return cancelJoinRequest;
-    if (info.role == UserRole.admin) return softDelete;
+    if (info.role == UserRole.admin) return permanentlyDelete;
     return leave;
   }
 }

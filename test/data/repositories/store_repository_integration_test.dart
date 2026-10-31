@@ -327,7 +327,7 @@ void main() {
   // =========================================================================
 
   group('softDeleteStore', () {
-    test('softDeleteStore 후 멤버(staff)의 storeById 캐시도 제거된다', () async {
+    test('softDeleteStore 후 멤버의 storeById 항목은 남고 삭제 예정으로 표시된다', () async {
       final ownerUid = FakeFirestoreHelper.generateId();
       final staffUid = FakeFirestoreHelper.generateId();
       await _seedUserDoc(fakeFirestore, ownerUid);
@@ -375,8 +375,44 @@ void main() {
           ownerDoc.data()?['storeById'] as Map<String, dynamic>?;
       final staffStoreById =
           staffDoc.data()?['storeById'] as Map<String, dynamic>?;
-      expect(ownerStoreById?.containsKey(storeId), isFalse);
-      expect(staffStoreById?.containsKey(storeId), isFalse);
+      // 남은 기간을 보여주고, 복구할 때 점포 색상·메모가 돌아오도록 남긴다 (ADR-0007)
+      expect(ownerStoreById?[storeId]?['deletedAt'], isNotNull);
+      expect(staffStoreById?[storeId]?['deletedAt'], isNotNull);
+      expect(staffStoreById?[storeId]?['color'], 'RED');
+    });
+
+    test('점포 복구 후 멤버 정보에서 삭제 예정 표시가 사라진다', () async {
+      final ownerUid = FakeFirestoreHelper.generateId();
+      await _seedUserDoc(fakeFirestore, ownerUid);
+      final adminUser = User(
+        id: ownerUid,
+        name: '테스트 유저',
+        email: 'test@example.com',
+        nickname: null,
+        authProviders: [],
+        storeInfos: [],
+      );
+      final storeId = expectRight(
+        await repository.createStore(
+          store: _testStoreEntity(ownerUid, adminUser),
+          color: StoreColor.blue,
+          memo: '',
+        ),
+      ).id;
+      expectRight(await repository.softDeleteStore(storeId));
+
+      expectRight(await repository.restoreStore(storeId));
+
+      final store = expectRight(await repository.getStore(storeId));
+      expect(store?.isScheduledForDeletion, isFalse);
+      final ownerDoc = await fakeFirestore
+          .collection('users')
+          .doc(ownerUid)
+          .get();
+      final entry =
+          (ownerDoc.data()?['storeById'] as Map<String, dynamic>)[storeId]
+              as Map<String, dynamic>;
+      expect(entry.containsKey('deletedAt'), isFalse);
     });
   });
 

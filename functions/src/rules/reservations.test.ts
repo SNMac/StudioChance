@@ -5,7 +5,7 @@ import {
   assertSucceeds,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 
 import { createTestEnv } from './helpers.js';
 
@@ -57,6 +57,36 @@ test('ADMIN은 예약을 쓸 수 있다', async () => {
   await assertSucceeds(
     setDoc(doc(db, 'stores/s1/reservations/r4'), { name: '박영희' }),
   );
+});
+
+async function seedScheduledForDeletion(): Promise<void> {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(
+      doc(ctx.firestore(), 'stores/s1'),
+      { deletedAt: Timestamp.now() },
+      { merge: true },
+    );
+  });
+}
+
+test('삭제 예정 점포의 예약은 멤버가 계속 읽을 수 있다 (ADR-0007)', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('viewer1').firestore();
+  await assertSucceeds(getDoc(doc(db, 'stores/s1/reservations/r1')));
+});
+
+test('삭제 예정 점포에는 STAFF도 예약을 추가하지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(
+    setDoc(doc(db, 'stores/s1/reservations/r2'), { name: '김철수' }),
+  );
+});
+
+test('삭제 예정 점포의 예약은 ADMIN도 지우지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(deleteDoc(doc(db, 'stores/s1/reservations/r1')));
 });
 
 test('VIEWER는 예약을 쓰지 못한다', async () => {

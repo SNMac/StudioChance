@@ -17,6 +17,7 @@ void main() {
   late StoreUseCaseImpl useCase;
   late MockStoreRepository mockStoreRepo;
   late MockUserRepository mockUserRepo;
+  late MockServerClockRepository mockServerClockRepo;
 
   setUpAll(() {
     registerFallbackValue(FakeStore());
@@ -26,9 +27,14 @@ void main() {
   setUp(() {
     mockStoreRepo = MockStoreRepository();
     mockUserRepo = MockUserRepository();
+    mockServerClockRepo = MockServerClockRepository();
+    // 기본값: 기기 시계가 서버 시각과 맞는다
+    when(() => mockServerClockRepo.getServerClockOffset())
+        .thenAnswer((_) async => right(Duration.zero));
     useCase = StoreUseCaseImpl(
       storeRepository: mockStoreRepo,
       userRepository: mockUserRepo,
+      serverClockRepository: mockServerClockRepo,
     );
   });
 
@@ -225,20 +231,40 @@ void main() {
       verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
     });
 
-    test('expireImmediately를 Repository에 그대로 넘긴다', () async {
-      when(
-        () => mockStoreRepo.softDeleteStore(
-          any(),
-          expireImmediately: any(named: 'expireImmediately'),
-        ),
-      ).thenAnswer((_) async => right(null));
+    test('기기 시계가 하루 넘게 틀리면 쓰지 않고 시계를 고치라고 알린다', () async {
+      when(() => mockServerClockRepo.getServerClockOffset())
+          .thenAnswer((_) async => right(const Duration(days: 2)));
 
-      await useCase.softDeleteStore('store-123', expireImmediately: true);
+      final result = await useCase.softDeleteStore('store-123');
 
-      verify(
-        () =>
-            mockStoreRepo.softDeleteStore('store-123', expireImmediately: true),
-      ).called(1);
+      expect(expectLeft(result), isA<StoreDeviceClockMismatchException>());
+      verifyNever(() => mockStoreRepo.softDeleteStore(any()));
+    });
+
+    test('서버 시각을 구하지 못하면 확인 없이 삭제한다', () async {
+      when(() => mockServerClockRepo.getServerClockOffset())
+          .thenAnswer((_) async => left(Exception('오프라인')));
+      when(() => mockStoreRepo.softDeleteStore(any()))
+          .thenAnswer((_) async => right(null));
+
+      expectRight(await useCase.softDeleteStore('store-123'));
+      verify(() => mockStoreRepo.softDeleteStore('store-123')).called(1);
+    });
+
+    test('점포 복구는 Repository.restoreStore를 그대로 위임한다', () async {
+      when(() => mockStoreRepo.restoreStore(any()))
+          .thenAnswer((_) async => right(null));
+
+      expectRight(await useCase.restoreStore('store-123'));
+      verify(() => mockStoreRepo.restoreStore('store-123')).called(1);
+    });
+
+    test('영구 삭제는 Repository.permanentlyDeleteStore를 그대로 위임한다', () async {
+      when(() => mockStoreRepo.permanentlyDeleteStore(any()))
+          .thenAnswer((_) async => right(null));
+
+      expectRight(await useCase.permanentlyDeleteStore('store-123'));
+      verify(() => mockStoreRepo.permanentlyDeleteStore('store-123')).called(1);
     });
   });
 }

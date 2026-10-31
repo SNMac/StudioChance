@@ -218,19 +218,19 @@ void main() {
       expect(result, isNull);
     });
 
-    test('deletedAt이 있는 점포는 null을 반환한다 (soft delete)', () async {
+    test('삭제 예정 점포도 deletedAt과 함께 반환한다 (ADR-0007)', () async {
       final storeId = FakeFirestoreHelper.generateId();
       await fakeFirestore.collection('stores').doc(storeId).set({
         'name': '삭제된 점포',
         'address': '주소',
         'addressDetail': '상세',
         'addressGuide': '안내',
-        'memberById': {},
+        'memberById': <String, dynamic>{},
         'deletedAt': Timestamp.now(),
       });
 
       final result = await dataSource.getStore(storeId);
-      expect(result, isNull);
+      expect(result?.deletedAt, isNotNull);
     });
   });
 
@@ -372,63 +372,21 @@ void main() {
   // =========================================================================
 
   group('softDeleteStore', () {
-    test('softDelete 후 getStore가 null을 반환한다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
+    Future<Map<String, dynamic>> storeDoc(String storeId) async =>
+        (await fakeFirestore.collection('stores').doc(storeId).get()).data()!;
 
-      await dataSource.softDeleteStore(created.id, []);
+    Future<Map<String, dynamic>?> storeEntryOf(
+      String uid,
+      String storeId,
+    ) async {
+      final doc = await fakeFirestore.collection('users').doc(uid).get();
+      final storeById = doc.data()?['storeById'] as Map<String, dynamic>?;
+      return storeById?[storeId] as Map<String, dynamic>?;
+    }
 
-      final result = await dataSource.getStore(created.id);
-      expect(result, isNull);
-    });
-
-    test('softDelete 후 문서에 deletedAt 필드가 존재한다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-
-      await dataSource.softDeleteStore(created.id, []);
-
-      final doc = await fakeFirestore
-          .collection('stores')
-          .doc(created.id)
-          .get();
-      expect(doc.data()?.containsKey('deletedAt'), true);
-    });
-
-    test('softDelete 후 inviteInfo가 null이 된다', () async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-      // 발급은 서버가 하므로 발급된 모양을 직접 넣는다
-      await fakeFirestore.collection('stores').doc(created.id).update({
-        'inviteInfo': {'inviteCode': 'AB3D9F', 'createdAt': Timestamp.now()},
-      });
-
-      await dataSource.softDeleteStore(created.id, []);
-
-      // lookupInviteCode Callable이 이 불변식에 기대어 조회한다.
-      final doc = await fakeFirestore
-          .collection('stores')
-          .doc(created.id)
-          .get();
-      expect(doc.data()?['inviteInfo'], isNull);
-    });
-
-    test('전달된 memberUids의 storeById.{storeId} 캐시가 모두 삭제된다', () async {
+    /// 멤버 1명·승인 대기자 1명이 있고 사용자 문서마다 점포 항목이 있는 점포
+    Future<({String storeId, String memberUid, String waitingUid})>
+    seedStoreWithMembers() async {
       final storeId = FakeFirestoreHelper.generateId();
       final memberUid = FakeFirestoreHelper.generateId();
       final waitingUid = FakeFirestoreHelper.generateId();
@@ -442,7 +400,8 @@ void main() {
               'name': '테스트 점포',
               'role': 'STAFF',
               'color': 'RED',
-              'memo': '',
+              'memo': '주차 2대',
+              if (uid == waitingUid) 'isPending': true,
             },
           },
         });
@@ -453,65 +412,127 @@ void main() {
           'address': '서울',
           'addressDetail': '',
           'addressGuide': '',
-          'memberById': <String, dynamic>{},
-          'waitingMemberById': <String, dynamic>{},
+          'memberById': <String, dynamic>{
+            memberUid: <String, dynamic>{'role': 'STAFF'},
+          },
+          'waitingMemberById': <String, dynamic>{
+            waitingUid: <String, dynamic>{'role': 'STAFF'},
+          },
           'spaceOptions': <dynamic>[],
+          'inviteInfo': <String, dynamic>{
+            'inviteCode': 'AB3D9F',
+            'createdAt': Timestamp.now(),
+          },
         },
       );
-
-      await dataSource.softDeleteStore(storeId, [memberUid, waitingUid]);
-
-      for (final uid in [memberUid, waitingUid]) {
-        final doc = await fakeFirestore.collection('users').doc(uid).get();
-        final storeById = doc.data()?['storeById'] as Map<String, dynamic>?;
-        expect(storeById?.containsKey(storeId), isFalse);
-      }
-    });
-
-    // expiresAt이 지나면 TTL이 점포를 지우고 cascadeStoreDelete가 예약을 지운다
-    Future<DateTime> expiresAtAfterSoftDelete({
-      required bool expireImmediately,
-    }) async {
-      final uid = FakeFirestoreHelper.generateId();
-      await _seedUserDoc(fakeFirestore, uid);
-      final created = await dataSource.createStore(
-        _testStore(),
-        uid,
-        _creatorInfo,
-      );
-
-      await dataSource.softDeleteStore(
-        created.id,
-        [],
-        expireImmediately: expireImmediately,
-      );
-
-      final doc = await fakeFirestore
-          .collection('stores')
-          .doc(created.id)
-          .get();
-      return (doc.data()!['expiresAt'] as Timestamp).toDate();
+      return (storeId: storeId, memberUid: memberUid, waitingUid: waitingUid);
     }
 
-    test('기본으로는 복구 여유 기간 뒤에 만료된다', () async {
+    test('삭제 예정 점포도 getStore가 deletedAt과 함께 돌려준다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.softDeleteStore(seed.storeId);
+
+      final result = await dataSource.getStore(seed.storeId);
+      expect(result?.deletedAt, isNotNull);
+    });
+
+    test('초대 코드와 승인 대기 명단을 비운다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.softDeleteStore(seed.storeId);
+
+      // lookupInviteCode Callable이 inviteInfo가 null이라는 불변식에 기대어 조회한다
+      final doc = await storeDoc(seed.storeId);
+      expect(doc['inviteInfo'], isNull);
+      expect(doc['waitingMemberById'], isEmpty);
+      expect((doc['memberById'] as Map).keys, [seed.memberUid]);
+    });
+
+    test('멤버의 점포 항목은 남기고 삭제 예정만 표시한다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.softDeleteStore(seed.storeId);
+
+      final entry = await storeEntryOf(seed.memberUid, seed.storeId);
+      expect(entry?['deletedAt'], isNotNull);
+      expect(entry?['memo'], '주차 2대');
+    });
+
+    test('승인 대기자의 점포 항목은 지운다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.softDeleteStore(seed.storeId);
+
+      expect(await storeEntryOf(seed.waitingUid, seed.storeId), isNull);
+    });
+
+    test('점포 항목이 없는 멤버에게는 항목을 만들지 않는다', () async {
+      final seed = await seedStoreWithMembers();
+      await fakeFirestore.collection('users').doc(seed.memberUid).update({
+        'storeById.${seed.storeId}': FieldValue.delete(),
+      });
+
+      await dataSource.softDeleteStore(seed.storeId);
+
+      expect(await storeEntryOf(seed.memberUid, seed.storeId), isNull);
+    });
+
+    test('만료 시각은 기한보다 하루 늦다 (TTL이 기한 전에 지우지 않게)', () async {
+      final seed = await seedStoreWithMembers();
       final before = DateTime.now();
 
-      final expiresAt = await expiresAtAfterSoftDelete(
-        expireImmediately: false,
-      );
+      await dataSource.softDeleteStore(seed.storeId);
 
+      final expiresAt =
+          ((await storeDoc(seed.storeId))['expiresAt'] as Timestamp).toDate();
       expect(
-        expiresAt.isAfter(
-          before.add(const Duration(days: storeSoftDeleteDays - 1)),
+        expiresAt.isBefore(
+          before.add(const Duration(days: storeSoftDeleteDays)),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
-    test('expireImmediately면 바로 만료된다', () async {
-      final expiresAt = await expiresAtAfterSoftDelete(expireImmediately: true);
+    test('점포 복구는 점포와 멤버 항목에서 삭제 표시를 지운다', () async {
+      final seed = await seedStoreWithMembers();
+      await dataSource.softDeleteStore(seed.storeId);
 
-      expect(expiresAt.isAfter(DateTime.now()), isFalse);
+      await dataSource.restoreStore(seed.storeId);
+
+      final doc = await storeDoc(seed.storeId);
+      expect(doc.containsKey('deletedAt'), isFalse);
+      expect(doc.containsKey('expiresAt'), isFalse);
+      final entry = await storeEntryOf(seed.memberUid, seed.storeId);
+      expect(entry?.containsKey('deletedAt'), isFalse);
+      expect(entry?['memo'], '주차 2대');
+    });
+
+    test('삭제 예정이 아닌 점포를 복구해도 아무것도 바뀌지 않는다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.restoreStore(seed.storeId);
+
+      expect((await storeDoc(seed.storeId))['waitingMemberById'], isNotEmpty);
+    });
+
+    test('영구 삭제는 점포 문서와 멤버의 점포 항목을 함께 지운다', () async {
+      final seed = await seedStoreWithMembers();
+      await dataSource.softDeleteStore(seed.storeId);
+
+      await dataSource.permanentlyDeleteStore(seed.storeId);
+
+      expect(await dataSource.getStore(seed.storeId), isNull);
+      // cascadeStoreDelete를 기다리지 않고 바로 다시 읽은 점포 목록에서도 빠져야 한다
+      expect(await storeEntryOf(seed.memberUid, seed.storeId), isNull);
+    });
+
+    test('계정 삭제처럼 삭제 예정을 거치지 않은 점포도 승인 대기자 항목까지 지운다', () async {
+      final seed = await seedStoreWithMembers();
+
+      await dataSource.permanentlyDeleteStore(seed.storeId);
+
+      expect(await storeEntryOf(seed.waitingUid, seed.storeId), isNull);
     });
   });
 

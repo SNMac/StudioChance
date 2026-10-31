@@ -18,7 +18,7 @@ enum SCRoute {
   storeDetail,
   storeMemo,
   delegateAdmin,
-  accountDeletionBlocked,
+  accountDeletion,
 
   // ---------------------------------------------------------------------------
   // 온보딩 전용
@@ -67,8 +67,8 @@ enum SCRoute {
         return 'memo';
       case SCRoute.delegateAdmin:
         return 'delegate';
-      case SCRoute.accountDeletionBlocked:
-        return 'account-deletion-blocked';
+      case SCRoute.accountDeletion:
+        return 'account-deletion';
 
       case SCRoute.onboardingNickname:
         return 'nickname';
@@ -125,8 +125,8 @@ enum SCRoute {
       case SCRoute.onboardingNickname:
         return '/onboarding/nickname';
 
-      case SCRoute.accountDeletionBlocked:
-        return '/my-page/account-deletion-blocked';
+      case SCRoute.accountDeletion:
+        return '/my-page/account-deletion';
 
       default:
         throw UnsupportedError(

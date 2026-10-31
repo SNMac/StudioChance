@@ -15,6 +15,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -133,18 +134,231 @@ test('ADMIN은 inviteInfo가 있는 점포의 다른 필드를 수정할 수 있
   await assertSucceeds(updateDoc(doc(db, 'stores/s1'), { name: '새 이름' }));
 });
 
-// store_data_source.dart의 softDeleteStore와 같은 쓰기 모양
+// ─── 삭제 예정 점포 (ADR-0007) ──────────────────────────────────────────
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** store_data_source.dart의 softDeleteStore와 같은 쓰기 모양 */
+function storeDeletion(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    deletedAt: serverTimestamp(),
+    expiresAt: Timestamp.fromMillis(Date.now() + 8 * DAY_MS),
+    updatedAt: serverTimestamp(),
+    inviteInfo: null,
+    waitingMemberById: {},
+    ...overrides,
+  };
+}
+
+/** store_data_source.dart의 restoreStore와 같은 쓰기 모양 */
+function storeRestore(): Record<string, unknown> {
+  return {
+    deletedAt: deleteField(),
+    expiresAt: deleteField(),
+    updatedAt: serverTimestamp(),
+  };
+}
+
+/** [deletedAgoMs] 전에 삭제된 삭제 예정 점포로 만든다 */
+async function seedScheduledForDeletion(deletedAgoMs = DAY_MS): Promise<void> {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(
+      doc(ctx.firestore(), 'stores/s1'),
+      {
+        deletedAt: Timestamp.fromMillis(Date.now() - deletedAgoMs),
+        expiresAt: Timestamp.fromMillis(Date.now() - deletedAgoMs + 8 * DAY_MS),
+        inviteInfo: null,
+      },
+      { merge: true },
+    );
+  });
+}
+
+async function seedWaitingMember(): Promise<void> {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(
+      doc(ctx.firestore(), 'stores/s1'),
+      { waitingMemberById: { pending1: { role: 'STAFF' } } },
+      { merge: true },
+    );
+  });
+}
+
 test('softDeleteStore 쓰기 모양으로 ADMIN이 점포를 삭제할 수 있다', async () => {
   await seedInviteInfo();
+  await seedWaitingMember();
   const db = env.authenticatedContext('admin1').firestore();
-  await assertSucceeds(
+  await assertSucceeds(updateDoc(doc(db, 'stores/s1'), storeDeletion()));
+});
+
+test('STAFF는 점포를 삭제하지 못한다', async () => {
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), storeDeletion()));
+});
+
+test('점포 삭제 시각을 서버 시각이 아닌 값으로 쓰면 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(
+      doc(db, 'stores/s1'),
+      storeDeletion({ deletedAt: Timestamp.fromMillis(Date.now() - 30 * DAY_MS) }),
+    ),
+  );
+});
+
+test('만료 시각이 7일보다 이르면 거부된다 (TTL이 기한 전에 지우지 않게)', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(
+      doc(db, 'stores/s1'),
+      storeDeletion({ expiresAt: Timestamp.fromMillis(Date.now() + 6 * DAY_MS) }),
+    ),
+  );
+});
+
+test('만료 시각이 9일보다 늦으면 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(
+      doc(db, 'stores/s1'),
+      storeDeletion({ expiresAt: Timestamp.fromMillis(Date.now() + 30 * DAY_MS) }),
+    ),
+  );
+});
+
+test('점포 삭제 때 승인 대기 신청을 남기면 거부된다', async () => {
+  await seedWaitingMember();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(
+      doc(db, 'stores/s1'),
+      storeDeletion({ waitingMemberById: { pending1: { role: 'STAFF' } } }),
+    ),
+  );
+});
+
+test('점포 삭제 때 초대 코드를 남기면 거부된다', async () => {
+  await seedInviteInfo();
+  const db = env.authenticatedContext('admin1').firestore();
+  const { inviteInfo: _, ...withoutInviteInfo } = storeDeletion();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), withoutInviteInfo));
+});
+
+test('점포 삭제와 함께 멤버를 바꾸면 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(
+      doc(db, 'stores/s1'),
+      storeDeletion({ 'memberById.staff1': deleteField() }),
+    ),
+  );
+});
+
+test('일반 수정으로 삭제 표시 필드를 쓰면 거부된다', async () => {
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
     updateDoc(doc(db, 'stores/s1'), {
-      deletedAt: serverTimestamp(),
-      expiresAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      inviteInfo: null,
+      name: '새 이름',
+      expiresAt: Timestamp.fromMillis(Date.now() + DAY_MS),
     }),
   );
+});
+
+test('이미 삭제 예정인 점포를 다시 삭제하지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), storeDeletion()));
+});
+
+test('삭제 예정 점포는 멤버가 계속 읽을 수 있다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('viewer1').firestore();
+  await assertSucceeds(getDoc(doc(db, 'stores/s1')));
+});
+
+test('삭제 예정 점포는 ADMIN도 점포 정보를 수정하지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), { name: '새 이름' }));
+});
+
+test('삭제 예정 점포는 ADMIN도 멤버 역할을 바꾸지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { 'memberById.staff1.role': 'VIEWER' }),
+  );
+});
+
+test('삭제 예정 점포에는 가입 신청을 하지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('outsider').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      'waitingMemberById.outsider': { role: 'STAFF' },
+      updatedAt: serverTimestamp(),
+    }),
+  );
+});
+
+test('삭제 예정 점포에서도 스태프는 나갈 수 있다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'stores/s1'), {
+      'memberById.staff1': deleteField(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+});
+
+test('ADMIN은 기한 안에 점포를 복구할 수 있다', async () => {
+  await seedScheduledForDeletion(6 * DAY_MS);
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(updateDoc(doc(db, 'stores/s1'), storeRestore()));
+});
+
+test('기한이 지나면 TTL이 지우기 전이라도 복구하지 못한다', async () => {
+  await seedScheduledForDeletion(7 * DAY_MS + 60 * 1000);
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), storeRestore()));
+});
+
+test('STAFF는 점포를 복구하지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(updateDoc(doc(db, 'stores/s1'), storeRestore()));
+});
+
+test('복구하면서 다른 필드를 바꾸면 거부된다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), { ...storeRestore(), name: '새 이름' }),
+  );
+});
+
+test('복구하면서 만료 시각만 남기면 거부된다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertFails(
+    updateDoc(doc(db, 'stores/s1'), {
+      deletedAt: deleteField(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+});
+
+test('ADMIN은 삭제 예정 점포를 영구 삭제할 수 있다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('admin1').firestore();
+  await assertSucceeds(deleteDoc(doc(db, 'stores/s1')));
+});
+
+test('STAFF는 삭제 예정 점포를 영구 삭제하지 못한다', async () => {
+  await seedScheduledForDeletion();
+  const db = env.authenticatedContext('staff1').firestore();
+  await assertFails(deleteDoc(doc(db, 'stores/s1')));
 });
 
 test('inviteInfo를 넣어 점포를 만들면 거부된다', async () => {

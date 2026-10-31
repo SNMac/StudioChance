@@ -139,7 +139,8 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 - **발송**: Cloud Functions v2 (`functions/`, TypeScript, Node 24, 리전 `asia-northeast3`)
   - `notifyOnStoreUpdate`: `stores/{storeId}` 문서가 수정되면 아래 두 알림을 보낸다. 트리거가 바뀐 필드로 거를 수 없어 수정 1회당 실행 1회가 되도록 함수 하나에 모았다
     - 가입 신청: `waitingMemberById`에 키가 추가되면 해당 점포 ADMIN 전원에게 발송
-    - 멤버 구성 변화(관리자 위임·나가기·추방·승인·거절·점포 삭제): 당사자에게 발송. 분류 규칙은 `functions/src/notifications/membership_change.ts`
+    - 멤버 구성 변화(관리자 위임·나가기·추방·승인·거절·점포 삭제·점포 복구): 당사자에게 발송. 분류 규칙은 `functions/src/notifications/membership_change.ts`
+  - `cascadeStoreDelete`: 기한 전에 지워진 점포(영구 삭제)면 남은 멤버에게 알린다 (아래 "만료 문서 자동 정리")
   - 발송 실패 응답에서 폐기된 토큰을 감지해 `users/{uid}/private/fcm`의 `tokens`에서 자동 제거 — 클라이언트는 토큰 추가만 하면 된다
   - 테스트: `cd functions && npm test` (Node 내장 `node:test`)
   - 배포와 `firebase.json`/`.firebaserc` 준비: `docs/operations.md`
@@ -158,7 +159,7 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
   - **dev 실기기에서 초대 코드 조회가 전부 "권한이 없습니다"로 실패하면** App Check 디버그 토큰 미등록을 의심한다 → `docs/operations.md`
 - `issueInviteCode` (`functions/src/invite/`): 관리자의 초대 코드 발급·재발급. 클라이언트는 Rules상 `inviteInfo`를 `null`로만 쓸 수 있다 (ADR-0006).
   유효한 코드가 남아 있으면 그 코드를 돌려주고, 다른 점포의 코드와 겹치지 않게 고른다. 실패는 `HttpsError`(`permission-denied`·`not-found`)다
-- `getServerTime` (`functions/src/time/`): 초대 코드 남은 시간 표시를 서버 시각으로 보정하는 데만 쓴다. 모달을 열 때마다 호출하며(`serverClockOffsetProvider` → `ServerClockUseCase`) 실패하면 기기 시계로 표시한다
+- `getServerTime` (`functions/src/time/`): 서버 시각 보정에 쓴다 — 초대 코드 남은 시간, 삭제 예정 점포의 남은 기간과 기한 지난 점포 숨김, 점포 삭제 전 기기 시계 확인. 화면에서는 `serverClockOffsetProvider`(→ `ServerClockUseCase`)로 보는 동안 한 번 구하고 실패하면 기기 시계로 표시한다. 사용자 정보는 삭제 예정 점포가 있을 때만 구한다
 - 세 함수 모두 리전 `asia-northeast3`, `enforceAppCheck: true`, 인증 필수
 
 ## Firestore 에뮬레이터 테스트
@@ -185,11 +186,11 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 ## 만료 문서 자동 정리
 
 - **TTL 정책**은 `firestore.indexes.json`의 `fieldOverrides`(`ttl: true`)에 있다. 만료 후 최대 24시간 안에 지워진다
-  - `stores.expiresAt`: 점포 삭제 후 7일(`storeSoftDeleteDays`, 운영자 수동 복구 여유). 계정 삭제로 지운 점포는 바로 만료된다
+  - `stores.expiresAt`: 점포 삭제 후 8일. 화면의 기한(`deletedAt` + `storeSoftDeleteDays`일)보다 하루 늦게 둬 TTL이 기한 전에 지우지 않게 한다 (ADR-0007)
   - `inviteLookupAttempts.expiresAt`: 시도 창이 끝나는 시각(`expiresAtOf`)
-- **`cascadeStoreDelete`** (`functions/src/stores/`): 점포 문서가 지워지면 `recursiveDelete`로 예약 등 서브컬렉션을 지운다. TTL은 서브컬렉션을 지우지 않는다
+- **`cascadeStoreDelete`** (`functions/src/stores/`): 점포 문서가 지워지면(TTL·영구 삭제·계정 삭제) `recursiveDelete`로 예약 등 서브컬렉션을 지우고, 멤버·승인 대기자의 `storeById` 항목을 지운다. TTL은 서브컬렉션을 지우지 않고, 점포 삭제는 멤버 항목을 남긴다
 - **`purgeDeletedUsers`** (`functions/src/users/`): 매주 월요일 04:30 KST. 삭제한 지 7일(`PURGE_GRACE_DAYS`)이 지났고 작성한 예약이 하나도 남지 않은 삭제된 계정의 문서를 지운다 (ADR-0005)
-- 지워지기 전까지 만료 문서가 쿼리에 잡히므로 `getStore` 등의 `deletedAt` 가드는 유지한다
+- 지워지기 전까지 기한이 지난 점포가 남아 있으므로 `currentUserProvider`가 서버 시각으로 판정해 그 점포를 점포 목록에서 뺀다 (`User.withoutExpiredStores`). `getStore`는 삭제 예정 점포도 돌려주니 쓰는 쪽이 `Store.isScheduledForDeletion`을 본다
 - dev 동작 확인 절차: `docs/operations.md`
 
 ## Firestore Rules / Functions 배포 순서
@@ -202,8 +203,9 @@ Clean Architecture + MVVM. 폴더별 세부 구성은 `lib/`를 직접 본다.
 
 - 예약 통계(`stats`) 탭은 화면이 없어 탭해도 아무 동작도 하지 않는다 (`_onTabTapped`의 TODO).
 - `/my-page` 하위는 온보딩과 동일한 `_roleSubRoutes()`를 재사용한다 — 점포 추가 플로우를 중복 구현하지 않는다.
-- 점포별 기능은 마이페이지 점포 행을 탭해 여는 점포 상세(`storeDetailLocation(storeId)`)에 있다. 구성은 내 역할에 따라 다르다 (`StoreDetailScreen` 주석). 승인 대기 점포는 상세가 없고 행의 '신청 취소'만 동작한다.
-- 마이페이지 아래 화면(점포 상세·위임·내 설정·승인 대기 모달)은 실패를 스스로 알리지 않는다. 뒤에 깔린 `MyPageScreen`이 한 번만 알린다 — 아래 화면도 들으면 다이얼로그가 두 번 뜬다 (그 리스너 주석)
+- 점포별 기능은 마이페이지 점포 행을 탭해 여는 점포 상세(`storeDetailLocation(storeId)`)에 있다. 구성은 내 역할과 삭제 예정 여부에 따라 다르다 (`StoreDetailScreen` 주석). 승인 대기 점포는 상세가 없고 행의 '신청 취소'만 동작한다.
+- 점포 삭제는 삭제 예정 점포로 만든다 (ADR-0007). 7일 동안 읽기 전용으로 남고 관리자가 점포 복구·영구 삭제를 한다. 예약을 쓸 수 있는지는 `UserStoreInfo.canWriteReservations`로 본다
+- 마이페이지 아래 화면(점포 상세·위임·내 설정·계정 삭제·승인 대기 모달)은 실패를 스스로 알리지 않는다. 뒤에 깔린 `MyPageScreen`이 한 번만 알린다 — 아래 화면도 들으면 다이얼로그가 두 번 뜬다 (그 리스너 주석)
 - 승인 대기 멤버 관리는 `showPendingMemberModal(context, storeId)` 모달이며, 점포 상세의 '승인 대기' 행과 가입 신청 알림 딥링크 두 곳에서 같은 모달을 연다.
 - 점포 수정은 최상위 `/store-edit` 라우트(`pushStoreEdit`)다. 점포 상세의 '점포 정보 수정' 행과 예약 계산 내역 시트의 '요금 설정' 버튼이 `StoreEditLauncher` mixin으로 연다. 시트에서 열 때는 예약 모달을 닫지 않고 그 위에 쌓는다.
 - 점포 색상·점포 메모는 멤버마다 따로 두는 값이라 점포 상세 '내 설정'에서 고친다. 점포 수정 폼에는 없고 생성 폼에만 있다.

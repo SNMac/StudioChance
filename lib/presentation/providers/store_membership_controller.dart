@@ -10,7 +10,7 @@ import 'package:studio_chance/presentation/providers/store_detail_provider.dart'
 part 'store_membership_controller.g.dart';
 
 /// 점포 멤버 구성을 바꾸는 액션(역할 변경·추방·관리자 위임·점포 나가기·신청 취소·
-/// 점포 삭제)을 UseCase에 위임한다. (CLAUDE.md "Presentation → Domain 접근 규칙")
+/// 점포 삭제·점포 복구·영구 삭제)을 UseCase에 위임한다. (CLAUDE.md "Presentation → Domain 접근 규칙")
 ///
 /// 각 액션은 성공하면 true를 돌려준다. 화면은 이 값으로 다음 이동을 정하고,
 /// 실패는 [state]의 [AsyncError]를 듣고 알린다.
@@ -85,12 +85,31 @@ class StoreMembershipController extends _$StoreMembershipController {
     );
   }
 
-  /// 점포 삭제 — 앱에서는 되돌릴 수 없다 (CONTEXT.md "점포 삭제")
+  /// 점포 삭제 — 삭제 예정 점포가 되어 7일 안에 복구할 수 있다 (CONTEXT.md "점포 삭제")
   Future<bool> deleteStore(String storeId) {
     return _run(
       '점포 삭제',
       storeId,
       () => ref.read(storeUseCaseProvider).softDeleteStore(storeId),
+      refreshCurrentUser: true,
+    );
+  }
+
+  Future<bool> restoreStore(String storeId) {
+    return _run(
+      '점포 복구',
+      storeId,
+      () => ref.read(storeUseCaseProvider).restoreStore(storeId),
+      refreshCurrentUser: true,
+    );
+  }
+
+  /// 영구 삭제 — 되돌릴 수 없다 (CONTEXT.md "영구 삭제")
+  Future<bool> permanentlyDeleteStore(String storeId) {
+    return _run(
+      '영구 삭제',
+      storeId,
+      () => ref.read(storeUseCaseProvider).permanentlyDeleteStore(storeId),
       refreshCurrentUser: true,
     );
   }

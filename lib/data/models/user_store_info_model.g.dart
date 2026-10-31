@@ -13,6 +13,10 @@ _UserStoreInfoModel _$UserStoreInfoModelFromJson(Map<String, dynamic> json) =>
       color: $enumDecode(_$StoreColorEnumMap, json['color']),
       memo: json['memo'] as String,
       isPending: json['isPending'] as bool? ?? false,
+      deletedAt: _$JsonConverterFromJson<Timestamp, DateTime>(
+        json['deletedAt'],
+        const TimestampConverter().fromJson,
+      ),
     );
 
 Map<String, dynamic> _$UserStoreInfoModelToJson(_UserStoreInfoModel instance) =>
@@ -22,6 +26,10 @@ Map<String, dynamic> _$UserStoreInfoModelToJson(_UserStoreInfoModel instance) =>
       'color': _$StoreColorEnumMap[instance.color]!,
       'memo': instance.memo,
       'isPending': instance.isPending,
+      'deletedAt': ?_$JsonConverterToJson<Timestamp, DateTime>(
+        instance.deletedAt,
+        const TimestampConverter().toJson,
+      ),
     };
 
 const _$UserRoleEnumMap = {
@@ -40,3 +48,13 @@ const _$StoreColorEnumMap = {
   StoreColor.indigo: 'INDIGO',
   StoreColor.purple: 'PURPLE',
 };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);

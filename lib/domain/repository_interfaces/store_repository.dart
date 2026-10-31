@@ -16,10 +16,10 @@ abstract interface class StoreRepository {
   });
 
   /// 점포 조회
-  /// - ID로 조회. 없으면 null 반환
+  /// - ID로 조회. 없으면 null 반환. 삭제 예정 점포도 돌려준다 ([Store.deletedAt])
   Future<Either<Exception, Store?>> getStore(String storeId);
 
-  /// 점포 멤버 구성 조회 (멤버의 사용자 문서는 읽지 않는다). 없거나 삭제됐으면 null
+  /// 점포 멤버 구성 조회 (멤버의 사용자 문서는 읽지 않는다). 없거나 삭제 예정이면 null
   Future<Either<Exception, StoreMembership?>> getMembership(String storeId);
 
   /// 점포 정보 수정
@@ -30,12 +30,14 @@ abstract interface class StoreRepository {
     required Store store,
   });
 
-  /// 점포 삭제 (Soft Delete)
-  /// - [expireImmediately]: 복구 여유 기간 없이 바로 만료시킨다 (계정 삭제용)
-  Future<Either<Exception, void>> softDeleteStore(
-    String storeId, {
-    bool expireImmediately = false,
-  });
+  /// 점포 삭제 — 삭제 예정 점포로 만든다 (ADR-0007)
+  Future<Either<Exception, void>> softDeleteStore(String storeId);
+
+  /// 점포 복구 — 삭제 예정 점포를 삭제 전 상태로 되돌린다
+  Future<Either<Exception, void>> restoreStore(String storeId);
+
+  /// 영구 삭제 — 점포 문서를 바로 지운다
+  Future<Either<Exception, void>> permanentlyDeleteStore(String storeId);
 
   /// 초대 코드 발급/재발급. 유효한 코드가 남아 있으면 발급은 그 코드를 돌려준다
   Future<Either<Exception, InviteInfo>> issueInviteCode(

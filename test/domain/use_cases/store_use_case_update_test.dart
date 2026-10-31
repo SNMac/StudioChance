@@ -29,6 +29,7 @@ void main() {
     useCase = StoreUseCaseImpl(
       storeRepository: mockStoreRepo,
       userRepository: mockUserRepo,
+      serverClockRepository: MockServerClockRepository(),
     );
   });
 

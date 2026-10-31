@@ -35,5 +35,9 @@ const String joinApprovedNotificationType = 'joinApproved';
 /// 가입 거절 — 신청자가 받는다
 const String joinRejectedNotificationType = 'joinRejected';
 
-/// 점포 삭제 — 삭제한 사람을 뺀 멤버·승인 대기자가 받는다
+/// 점포 삭제·영구 삭제 — 삭제한 사람을 뺀 멤버·승인 대기자가 받는다.
+/// 삭제 예정이 됐는지, 영구 삭제됐는지, 가입 신청이 정리됐는지는 문구로만 구분한다
 const String storeDeletedNotificationType = 'storeDeleted';
+
+/// 점포 복구 — 복구한 사람을 뺀 멤버가 받는다
+const String storeRestoredNotificationType = 'storeRestored';

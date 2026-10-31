@@ -14,6 +14,7 @@ import 'package:studio_chance/domain/entities/store.dart';
 import 'package:studio_chance/domain/repository_interfaces/auth_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/holiday_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/reservation_repository.dart';
+import 'package:studio_chance/domain/repository_interfaces/server_clock_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/store_repository.dart';
 import 'package:studio_chance/domain/repository_interfaces/user_repository.dart';
 import 'package:studio_chance/domain/use_cases/auth_use_case.dart';
@@ -57,6 +58,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockHolidayRepository extends Mock implements HolidayRepository {}
 
 class MockReservationRepository extends Mock implements ReservationRepository {}
+
+class MockServerClockRepository extends Mock implements ServerClockRepository {}
 
 class MockStoreRepository extends Mock implements StoreRepository {}
 

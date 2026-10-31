@@ -420,9 +420,7 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
         storeAsync.isLoading;
 
     // 한 프레임 안에서 시계를 두 번 읽으면 만료 순간에 두 판단이 엇갈린다.
-    final clockOffset =
-        ref.watch(serverClockOffsetProvider).value ?? Duration.zero;
-    final now = DateTime.now().add(clockOffset);
+    final now = serverCorrectedNow(ref);
     final invite = _visibleInvite(store?.inviteInfo, now);
     _syncTicker(needed: invite != null);
     final code = invite?.inviteCode;
