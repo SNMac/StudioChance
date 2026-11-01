@@ -113,19 +113,24 @@ class HomeNavBar extends ConsumerWidget {
                   width: 44.0,
                   height: navBarHeight,
                   child: Center(
-                    child: Container(
-                      width: 24.0,
-                      height: 24.0,
-                      decoration: BoxDecoration(
-                        color: context.label,
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '$today',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: context.systemBackground,
+                    // 글자 배율 1.0 고정 (#58): 16pt 줄 높이가 원(24×24)을 꽉 채워
+                    // 1.1배부터 두 자리 날짜가 줄바꿈된다. 원 크기는 디자인 고정값
+                    child: MediaQuery.withNoTextScaling(
+                      child: Container(
+                        width: 24.0,
+                        height: 24.0,
+                        decoration: BoxDecoration(
+                          color: context.label,
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$today',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.normal,
+                                color: context.systemBackground,
+                              ),
                         ),
                       ),
                     ),

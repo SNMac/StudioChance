@@ -120,13 +120,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: OverflowBox(
                     maxHeight: calendarHeight,
                     alignment: Alignment.topCenter,
-                    child: const MonthlyCalendar(),
+                    // 글자 배율 1.0 고정 (#58): 캘린더 높이(monthlyCalendarHeightForMonth)와
+                    // 요일 헤더·날짜 셀·오늘 날짜 원(24×24)이 상수라 글자가 커지면
+                    // 잘리거나 줄바꿈된다
+                    child: MediaQuery.withNoTextScaling(
+                      child: const MonthlyCalendar(),
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: ThreeDayCalendar(
-                    onOpenDetailModal: _onOpenDetailModal,
-                    isInteractionBlocked: _isLoadingForModal,
+                  // 글자 배율 1.0 고정 (#58): 헤더·시간 레이블·현재 시간 캡슐·예약 셀이
+                  // 상수 또는 시간 비례 높이라 글자가 커지면 넘치거나 잘린다. 예약 셀은
+                  // 1.15배에서도 종일 슬롯을 넘는다. 예약 내용은 예약 상세·목록 모달에서
+                  // 기기 배율로 볼 수 있다 (모달은 Navigator 위라 이 고정을 받지 않는다)
+                  child: MediaQuery.withNoTextScaling(
+                    child: ThreeDayCalendar(
+                      onOpenDetailModal: _onOpenDetailModal,
+                      isInteractionBlocked: _isLoadingForModal,
+                    ),
                   ),
                 ),
               ],
