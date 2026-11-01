@@ -52,20 +52,27 @@ class TitleDateTimeButton extends StatelessWidget {
               spacing: 8,
               children: [
                 Text(title, style: textTheme.bodyLarge),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.tertiarySystemFill,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    content,
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.normal,
-                      color: isOpen ? context.systemBlue : context.label,
+                // 일시는 잘리면 안 되는 고정 형식 값이라, 큰 글자 배율에서 폭이 모자라면
+                // 말줄임 대신 한 줄을 유지한 채 줄어든다 (#58)
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.tertiarySystemFill,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        content,
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: isOpen ? context.systemBlue : context.label,
+                        ),
+                      ),
                     ),
                   ),
                 ),

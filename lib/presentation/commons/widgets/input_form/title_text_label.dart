@@ -10,16 +10,26 @@ class TitleTextLabel extends StatelessWidget {
   /// content 텍스트 앞에 표시할 선행 위젯 (예: 컬러 dot).
   final Widget? leading;
 
+  /// true면 content가 폭을 넘을 때 말줄임 대신 한 줄을 유지한 채 줄어든다.
+  /// 일시·금액처럼 잘리면 정보가 사라지는 고정 형식 값에 쓴다 (#58).
+  /// 점포명처럼 길이가 정해지지 않은 값은 false(말줄임)로 둔다.
+  final bool scaleDownToFit;
+
   const TitleTextLabel({
     super.key,
     required this.title,
     required this.content,
     this.leading,
+    this.scaleDownToFit = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final contentStyle = textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.normal,
+      color: context.label,
+    );
 
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(
@@ -54,15 +64,22 @@ class TitleTextLabel extends StatelessWidget {
                   children: [
                     ?leading,
                     Flexible(
-                      child: Text(
-                        content,
-                        textAlign: TextAlign.end,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: context.label,
-                        ),
-                      ),
+                      child: scaleDownToFit
+                          ? FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: Text(
+                                content,
+                                maxLines: 1,
+                                style: contentStyle,
+                              ),
+                            )
+                          : Text(
+                              content,
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                              style: contentStyle,
+                            ),
                     ),
                   ],
                 ),
