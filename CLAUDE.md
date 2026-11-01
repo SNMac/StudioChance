@@ -13,6 +13,7 @@ Firebase, Riverpod, GoRouter, Clean Architecture, MVVM을 사용하는 공간대
 - 콘솔 출력 시 `logger` 라이브러리 사용
 - UI 위젯은 `package:material_ui/material_ui.dart`·`package:cupertino_ui/cupertino_ui.dart`에서 import한다. `package:flutter/material.dart`·`cupertino.dart`는 CI가 막는다 (이유는 `ci.yml`의 해당 단계 주석)
   - 아직 `flutter/material`을 쓰는 서드파티 위젯(현재 `kpostal`)은 `MaterialUiCompatibilityBridge`로 그 위젯만 감싼다
+- 글자 크기는 기기 설정을 따르고 `maxTextScaleFactor`로만 제한한다. 고정 크기 UI의 배율 예외는 `MediaQuery.withNoTextScaling` 등으로 그 위젯 범위에만 걸고, 전역을 다시 고정하지 않는다
 - 한국어로 커밋 메시지, 주석 작성
 - 앱 내에서 ID를 자체 생성할 때는 `uuid` 패키지의 `const Uuid().v4()` 사용 (`DateTime.now().millisecondsSinceEpoch` 금지)
 
