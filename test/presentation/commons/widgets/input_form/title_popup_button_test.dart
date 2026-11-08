@@ -1,4 +1,5 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
@@ -36,6 +37,19 @@ void main() {
           ),
         );
         expect(tester.takeException(), isNull);
+        // 값은 줄바꿈 대신 한 줄로 말줄임되고, chevron은 행 안에 남는다
+        final label = tester.renderObject<RenderParagraph>(
+          find.text(_maxLengthStoreName),
+        );
+        expect(label.didExceedMaxLines, isTrue);
+        expect(
+          tester
+              .getRect(find.byIcon(CupertinoIcons.chevron_up_chevron_down))
+              .right,
+          lessThanOrEqualTo(
+            tester.getRect(find.byType(TitlePopupButton<String>)).right,
+          ),
+        );
 
         await tester.tap(find.byType(TitlePopupButton<String>));
         await tester.pumpAndSettle();
