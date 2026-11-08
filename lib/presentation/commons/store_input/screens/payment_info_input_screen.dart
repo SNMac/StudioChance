@@ -13,6 +13,7 @@ import 'package:studio_chance/presentation/commons/store_input/controllers/store
 import 'package:studio_chance/presentation/commons/store_input/controllers/store_update_controller.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/app_bar_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_bar/custom_app_bar.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/form_value_capsule.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/grouped_form_container.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/text_action_button.dart';
 import 'package:studio_chance/presentation/commons/widgets/input_form/title_text_field.dart';
@@ -293,33 +294,16 @@ class _DeadlinePickerRow extends StatelessWidget {
               children: [
                 Text('입금 마감 기한', style: textTheme.bodyLarge),
                 const SizedBox(width: formRowTitleContentGap),
-                // 큰 글자 배율에서 폭이 모자라면 값 쪽만 한 줄을 유지한 채 줄어든다 (#58)
                 Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.tertiarySystemFill,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        selectedMinutes != null
-                            ? _formatDuration(selectedMinutes!)
-                            : '선택',
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: isOpen
-                              ? context.systemBlue
-                              : (selectedMinutes != null
-                                    ? context.label
-                                    : context.tertiaryLabel),
-                        ),
-                      ),
-                    ),
+                  child: FormValueCapsule(
+                    text: selectedMinutes != null
+                        ? _formatDuration(selectedMinutes!)
+                        : '선택',
+                    color: isOpen
+                        ? context.systemBlue
+                        : (selectedMinutes != null
+                              ? context.label
+                              : context.tertiaryLabel),
                   ),
                 ),
               ],
