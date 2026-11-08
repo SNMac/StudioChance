@@ -36,7 +36,7 @@ class AppBarActionButton extends StatelessWidget {
 
     // 글자 배율 1.0 고정 (#58): ModalAppBar의 leadingWidth(60)와 iOS toolbarHeight(44)가
     // 고정이라 커지면 "취소"가 "취/소"로 줄바꿈되고 세로로 잘린다. iOS 내비게이션 바 버튼도
-    // Dynamic Type을 따르지 않는다. 제목은 AppBar가 자체 상한(1.34)으로 키운다
+    // Dynamic Type을 따르지 않는다. 제목은 고정하지 않고 전역 상한(maxTextScaleFactor)까지 커진다
     return MediaQuery.withNoTextScaling(
       child: TextButton(
         onPressed: onPressed,
