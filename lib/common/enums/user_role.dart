@@ -19,7 +19,7 @@ enum UserRole {
   };
 
   String get displayDescription => switch (this) {
-    UserRole.admin => '점포 관리 및 초대, 예약 관리',
+    UserRole.admin => '점포 및 예약 관리·멤버 초대',
     UserRole.staff => '초대받은 점포의 예약 관리',
     UserRole.viewer => '초대받은 점포의 예약 확인',
     UserRole.none => '역할 없음',

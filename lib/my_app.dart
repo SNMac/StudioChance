@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/widgets/app_toast.dart';
 import 'package:studio_chance/presentation/providers/notification_controller.dart';
 import 'package:studio_chance/router/app_router.dart';
@@ -86,16 +87,15 @@ class MyApp extends ConsumerWidget {
       child: MaterialApp.router(
         routerConfig: router,
 
-        // 기기 시스템 글자 크기 설정을 따르면 24×24 오늘 날짜 버튼, 60px 고정
-        // leadingWidth의 취소 버튼 등 고정 크기 위젯에서 텍스트가 넘치거나
-        // 줄바꿈되어 레이아웃이 깨짐 → 배율을 1.0으로 고정해 기기 설정 전체 무시
+        // 기기 글자 크기 설정을 따르되 maxTextScaleFactor로 상한을 둔다. 하한은 두지
+        // 않는다 — 작은 글자는 레이아웃을 깨지 않고 사용자가 직접 고른 값이다.
+        // 크기가 고정된 위젯(캘린더, 앱바 버튼 등)은 각 위젯 범위에서 배율을 고정한다
         //
         // ToastHost: 토스트(showAppToast)가 바텀시트·다이얼로그를 포함한 모든 화면 위에 뜨도록
         // Navigator를 바깥 Scaffold로 감싼다
         builder: (context, child) {
-          return MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.noScaling),
+          return MediaQuery.withClampedTextScaling(
+            maxScaleFactor: maxTextScaleFactor,
             child: ToastHost(child: child!),
           );
         },

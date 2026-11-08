@@ -1255,10 +1255,12 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         TitleTextLabel(
           title: _isAllDay ? '입실 일' : '입실 일시',
           content: _startTime.formattedDateTime(dateOnly: _isAllDay),
+          scaleDownToFit: true,
         ),
         TitleTextLabel(
           title: _isAllDay ? '퇴실 일' : '퇴실 일시',
           content: displayEnd.formattedDateTime(dateOnly: _isAllDay),
+          scaleDownToFit: true,
         ),
       ],
     );
@@ -1373,10 +1375,15 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
           content: _calculatedPrice.formattedPrice,
           onPressed: _onPricePressed,
         ),
-        TitleTextLabel(title: '추가 요금/할인', content: adjustment.formattedPrice),
+        TitleTextLabel(
+          title: '추가 요금/할인',
+          content: adjustment.formattedPrice,
+          scaleDownToFit: true,
+        ),
         TitleTextLabel(
           title: '최종 요금',
           content: (_calculatedPrice + adjustment).formattedPrice,
+          scaleDownToFit: true,
         ),
       ],
     );
@@ -1450,6 +1457,7 @@ class _ReservationDetailModalState extends ConsumerState<ReservationDetailModal>
         TitleTextLabel(
           title: '최종 요금',
           content: (_calculatedPrice + adjustment).formattedPrice,
+          scaleDownToFit: true,
         ),
       ],
     );

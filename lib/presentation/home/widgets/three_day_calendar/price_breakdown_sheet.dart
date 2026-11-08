@@ -211,13 +211,22 @@ class PriceBreakdownSheet extends StatelessWidget {
   }
 
   List<Widget> _summaryRows(int calculated) => [
-    TitleTextLabel(title: '계산 요금', content: calculated.formattedPrice),
+    TitleTextLabel(
+      title: '계산 요금',
+      content: calculated.formattedPrice,
+      scaleDownToFit: true,
+    ),
     const _Separator(),
-    TitleTextLabel(title: '추가 요금/할인', content: adjustment.formattedPrice),
+    TitleTextLabel(
+      title: '추가 요금/할인',
+      content: adjustment.formattedPrice,
+      scaleDownToFit: true,
+    ),
     const _Separator(),
     TitleTextLabel(
       title: '최종 요금',
       content: (calculated + adjustment).formattedPrice,
+      scaleDownToFit: true,
     ),
   ];
 }

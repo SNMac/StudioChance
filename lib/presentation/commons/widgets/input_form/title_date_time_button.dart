@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:studio_chance/constants/ui_constants.dart';
 import 'package:studio_chance/presentation/commons/extensions/context_colors.dart';
+import 'package:studio_chance/presentation/commons/widgets/input_form/form_value_capsule.dart';
 
 class TitleDateTimeButton extends StatelessWidget {
   final String title;
@@ -52,21 +53,10 @@ class TitleDateTimeButton extends StatelessWidget {
               spacing: 8,
               children: [
                 Text(title, style: textTheme.bodyLarge),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.tertiarySystemFill,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    content,
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.normal,
-                      color: isOpen ? context.systemBlue : context.label,
-                    ),
+                Flexible(
+                  child: FormValueCapsule(
+                    text: content,
+                    color: isOpen ? context.systemBlue : context.label,
                   ),
                 ),
               ],

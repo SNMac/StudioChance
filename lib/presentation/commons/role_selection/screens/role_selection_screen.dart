@@ -58,38 +58,47 @@ class RoleSelectionScreen extends ConsumerWidget {
         ],
       ),
       body: SafeAreaWithPadding(
-        child: Center(
-          child: SizedBox(
-            width: 240,
-            child: Column(
-              spacing: 32,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LargeSelectionButton(
-                  title: UserRole.admin.displayName,
-                  description: UserRole.admin.displayDescription,
-                  isSelected: selectedRole == UserRole.admin,
-                  onPressed: () => notifier.setRole(UserRole.admin),
+        // 큰 글자 배율에서 버튼 4개가 작은 기기 높이를 넘으면 스크롤된다 (#58).
+        // 넘치지 않을 때는 minHeight로 화면 가운데 정렬을 유지한다
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: SizedBox(
+                  width: 240,
+                  child: Column(
+                    spacing: 32,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      LargeSelectionButton(
+                        title: UserRole.admin.displayName,
+                        description: UserRole.admin.displayDescription,
+                        isSelected: selectedRole == UserRole.admin,
+                        onPressed: () => notifier.setRole(UserRole.admin),
+                      ),
+                      LargeSelectionButton(
+                        title: UserRole.staff.displayName,
+                        description: UserRole.staff.displayDescription,
+                        isSelected: selectedRole == UserRole.staff,
+                        onPressed: () => notifier.setRole(UserRole.staff),
+                      ),
+                      LargeSelectionButton(
+                        title: UserRole.viewer.displayName,
+                        description: UserRole.viewer.displayDescription,
+                        isSelected: selectedRole == UserRole.viewer,
+                        onPressed: () => notifier.setRole(UserRole.viewer),
+                      ),
+                      LargeSelectionButton(
+                        title: '나중에 설정',
+                        isNavigation: true,
+                        onPressed: onSkipPressed,
+                      ),
+                    ],
+                  ),
                 ),
-                LargeSelectionButton(
-                  title: UserRole.staff.displayName,
-                  description: UserRole.staff.displayDescription,
-                  isSelected: selectedRole == UserRole.staff,
-                  onPressed: () => notifier.setRole(UserRole.staff),
-                ),
-                LargeSelectionButton(
-                  title: UserRole.viewer.displayName,
-                  description: UserRole.viewer.displayDescription,
-                  isSelected: selectedRole == UserRole.viewer,
-                  onPressed: () => notifier.setRole(UserRole.viewer),
-                ),
-                LargeSelectionButton(
-                  title: '나중에 설정',
-                  isNavigation: true,
-                  onPressed: onSkipPressed,
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -441,15 +441,26 @@ class _InviteCodeSectionState extends ConsumerState<_InviteCodeSection> {
               ),
             ),
       children: [
-        SizedBox(
-          height: inputFormComponentHeight,
+        // 큰 글자 배율에서 발급 캡슐이 48보다 커지면 행이 함께 늘어난다 (#58)
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: inputFormComponentHeight,
+          ),
           child: Padding(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: horizontalPadding,
             ),
             child: Row(
               children: [
-                Expanded(child: Text('초대 코드', style: textTheme.bodyLarge)),
+                // 코드와 아이콘 3개가 폭을 먼저 쓰므로 제목은 줄바꿈 대신 말줄임한다 (#58)
+                Expanded(
+                  child: Text(
+                    '초대 코드',
+                    style: textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 if (code == null)
                   _ActionCapsule(
                     label: '발급',
@@ -525,8 +536,9 @@ class _PendingMemberRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return SizedBox(
-      height: inputFormComponentHeight,
+    // 큰 글자 배율에서 승인/거절 캡슐이 48보다 커지면 행이 함께 늘어난다 (#58)
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: inputFormComponentHeight),
       child: Padding(
         padding: const EdgeInsetsDirectional.symmetric(
           horizontal: horizontalPadding,

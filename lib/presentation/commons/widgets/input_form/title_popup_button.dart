@@ -45,75 +45,90 @@ class _TitlePopupButtonState<T> extends State<TitlePopupButton<T>> {
           children: [
             Text(widget.title, style: textTheme.bodyLarge),
 
-            PopupMenuButton<T>(
-              key: _menuKey,
-              onSelected: widget.onSelected,
-              color: context.tertiarySystemGroupedBackground,
-              surfaceTintColor: Colors.transparent,
-              elevation: 1,
-              offset: const Offset(0, 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.itemLeadingBuilder != null) ...[
-                    widget.itemLeadingBuilder!(widget.selectedValue),
-                    const SizedBox(width: 8),
-                  ],
+            // 큰 글자 배율이나 긴 점포명에서 폭이 모자라면 값 쪽만 말줄임한다 (#58).
+            // 전체 값은 팝업 메뉴에서 볼 수 있다
+            Flexible(
+              child: PopupMenuButton<T>(
+                key: _menuKey,
+                onSelected: widget.onSelected,
+                color: context.tertiarySystemGroupedBackground,
+                surfaceTintColor: Colors.transparent,
+                elevation: 1,
+                offset: const Offset(0, 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.itemLeadingBuilder != null) ...[
+                      widget.itemLeadingBuilder!(widget.selectedValue),
+                      const SizedBox(width: 8),
+                    ],
 
-                  Text(
-                    widget.itemLabelBuilder(widget.selectedValue),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.normal,
-                      color: context.secondaryLabel,
-                    ),
-                  ),
-
-                  const SizedBox(width: 4),
-
-                  Icon(
-                    CupertinoIcons.chevron_up_chevron_down,
-                    size: 16,
-                    color: context.secondaryLabel,
-                  ),
-                ],
-              ),
-
-              itemBuilder: (BuildContext context) {
-                return widget.items.map((T item) {
-                  final bool isSelected = item == widget.selectedValue;
-                  return PopupMenuItem<T>(
-                    value: item,
-                    child: SizedBox(
-                      height: 44,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            child: isSelected
-                                ? const Icon(CupertinoIcons.checkmark, size: 16)
-                                : null,
-                          ),
-
-                          if (widget.itemLeadingBuilder != null) ...[
-                            widget.itemLeadingBuilder!(item),
-                          ],
-
-                          Text(
-                            widget.itemLabelBuilder(item),
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.normal),
-                          ),
-                        ],
+                    Flexible(
+                      child: Text(
+                        widget.itemLabelBuilder(widget.selectedValue),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: context.secondaryLabel,
+                        ),
                       ),
                     ),
-                  );
-                }).toList();
-              },
+
+                    const SizedBox(width: 4),
+
+                    Icon(
+                      CupertinoIcons.chevron_up_chevron_down,
+                      size: 16,
+                      color: context.secondaryLabel,
+                    ),
+                  ],
+                ),
+
+                itemBuilder: (BuildContext context) {
+                  return widget.items.map((T item) {
+                    final bool isSelected = item == widget.selectedValue;
+                    return PopupMenuItem<T>(
+                      value: item,
+                      child: SizedBox(
+                        height: 44,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              child: isSelected
+                                  ? const Icon(
+                                      CupertinoIcons.checkmark,
+                                      size: 16,
+                                    )
+                                  : null,
+                            ),
+
+                            if (widget.itemLeadingBuilder != null) ...[
+                              widget.itemLeadingBuilder!(item),
+                            ],
+
+                            Flexible(
+                              child: Text(
+                                widget.itemLabelBuilder(item),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.normal),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList();
+                },
+              ),
             ),
           ],
         ),

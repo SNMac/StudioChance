@@ -1,3 +1,11 @@
+// 글자 배율
+/// 기기 글자 크기 설정을 따를 때 허용하는 최대 배율 (#58).
+///
+/// Android 130%까지는 그대로 따르고, iOS는 일반 크기 최대(xxxL ≈ 1.35)에서 살짝
+/// 깎인다. 그 위의 손쉬운 사용 크기는 막는다. 크기가 디자인상 고정된 위젯은 이 값과
+/// 별개로 위젯 범위에서 배율을 고정한다 — 전역을 다시 고정하지 않는다.
+const double maxTextScaleFactor = 1.3;
+
 const double inputFormComponentHeight = 48.0;
 
 /// 메모 필드 최소 높이 (MemoTextField minLines=3 + 패딩 기준)
